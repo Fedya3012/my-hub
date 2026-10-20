@@ -150,7 +150,7 @@ export const gdrive = {
   // Google's folder picker (an iframe on the page; untested inside the Android WebView, errors are shown as a toast). Picking a folder grants
   // the app (drive.file scope) access to just that folder; sync then lives inside it.
   pickerAvailable() { return !!GOOGLE_API_KEY; },
-  async pickFolder() {
+  async _picker() {
     const token = await account.accessToken();
     await new Promise((res, rej) => {
       if (window.google?.picker) return res();
@@ -159,6 +159,34 @@ export const gdrive = {
       const sc = Object.assign(document.createElement('script'), { src: 'https://apis.google.com/js/api.js', onload: load, onerror: () => rej(new Error('Không tải được hộp chọn của Google (offline?).')) });
       document.head.appendChild(sc);
     });
+    return token;
+  },
+  // Pick music files that already sit on Drive (drive.file only exposes what the user picks).
+  // Returns [{ id, name, mimeType, sizeBytes }] or null when cancelled.
+  async pickFiles() {
+    const token = await this._picker();
+    const P = google.picker;
+    return new Promise((res) => {
+      const view = new P.DocsView(P.ViewId.DOCS).setIncludeFolders(true).setSelectFolderEnabled(false);
+      new P.PickerBuilder().addView(view).enableFeature(P.Feature.MULTISELECT_ENABLED).setOAuthToken(token).setDeveloperKey(GOOGLE_API_KEY).setAppId(GOOGLE_PROJECT_NUMBER)
+        .setTitle('Chọn nhạc trên Drive').setCallback((d) => {
+          if (d.action === P.Action.PICKED) res(d.docs.map(x => ({ id: x.id, name: x.name, mimeType: x.mimeType, sizeBytes: +x.sizeBytes || 0 })));
+          else if (d.action === P.Action.CANCEL) res(null);
+        }).build().setVisible(true);
+    });
+  },
+  // Download a Drive file to a Blob (fetch streams, so progress is reported in bytes). onProgress(received, total)
+  async download(id, { onProgress, signal, size = 0 } = {}) {
+    const res = await authFetch(`${API}/files/${id}?alt=media`, { signal });
+    const total = +res.headers.get('content-length') || size;
+    if (!res.body?.getReader) return res.blob();
+    const reader = res.body.getReader(), parts = [];
+    let got = 0;
+    for (;;) { const { done, value } = await reader.read(); if (done) break; parts.push(value); got += value.length; onProgress?.(got, total); }
+    return new Blob(parts, { type: res.headers.get('content-type') || '' });
+  },
+  async pickFolder() {
+    const token = await this._picker();
     const P = google.picker;
     const picked = await new Promise((res) => {
       const view = new P.DocsView(P.ViewId.FOLDERS).setIncludeFolders(true).setSelectFolderEnabled(true).setMimeTypes('application/vnd.google-apps.folder');

@@ -15,6 +15,7 @@ import { badges, fmtTime, fmtTotal, techLine } from './lib/format.js';
 import { sheet, menu, trackMenu, pickPlaylist, linkPicker, ask, dragSort } from './ui/sheets.js';
 import { coverFlow } from './ui/coverflow.js';
 import { tasks } from '../../core/tasks.js';
+import { account } from '../../core/account.js';
 import { incremental, cmpVi, cmpViNum } from '../../core/perf.js';
 
 let root, ctx, route = '', offs = [], cleanups = [];
@@ -70,7 +71,7 @@ async function render() {
   const remembered = sessionStorage.getItem('music.tab');
   const tab = (NAMES[head] && (head !== 'browse' || !rest.length)) ? head : !head ? (folderMode ? 'browse' : tabs.includes(remembered) ? remembered : tabs[0]) : null;
   if (tab) sessionStorage.setItem('music.tab', tab);
-  root.innerHTML = `<div class="mlib page" data-grid="${prefs().gridSize}">
+  root.innerHTML = `<div class="mlib page" data-grid="${prefs().gridSize}"${!tab && !search && ['album', 'artist', 'playlist', 'folder'].includes(head) ? ' data-detail="1"' : ''}>
     <header class="mlib-head">
       <div class="mlib-title"><span class="eyebrow">Âm nhạc</span><h1>Nhạc</h1></div>
       <div class="mlib-actions">
@@ -765,10 +766,42 @@ function addMenu(anchor) {
   menu(anchor, [
     { icon: 'plusfile', label: 'Chọn tệp nhạc…', act: () => pickFiles(false) },
     { icon: 'folder', label: 'Chọn thư mục (sao chép vào app)…', act: () => pickFiles(true) },
+    { icon: 'cloud', label: 'Chọn nhạc trên Google Drive…', act: pickFromDrive },
     window.showDirectoryPicker ? { icon: 'link', label: 'Liên kết thư mục (không sao chép)…', hint: 'Máy tính', act: linkFolder } : null,
     '-',
     { icon: 'list', label: 'Danh sách phát mới…', act: async () => { const n = await ask('Tên danh sách phát', 'Danh sách mới'); if (n) { const p = await store.createPlaylist(n); go('playlist/' + p.id); } } },
   ], { title: 'Thêm nhạc' });
+}
+
+// Music that already lives on Google Drive: pick files in Google's picker, download them, import like local files.
+async function pickFromDrive() {
+  const { gdrive } = await import('../../core/storage/gdrive.js');
+  if (!account.signedIn || account.provider !== 'google') { toast('Đăng nhập Google để chọn nhạc trên Drive', 'warn'); location.hash = '#account'; return; }
+  let docs;
+  try { docs = await gdrive.pickFiles(); } catch (e) { toast(e.message, 'error'); return; }
+  if (!docs?.length) return;
+  const AUDIO = /\.(mp3|m4a|aac|flac|wav|ogg|oga|opus|wma|aiff?|alac|dsf|dff|ape|wv|webm|lrc|ttml|srt)$/i;
+  const list = docs.filter(d => AUDIO.test(d.name) || /^audio\//.test(d.mimeType));
+  if (!list.length) { toast('Không có tệp nhạc trong phần đã chọn', 'warn'); return; }
+  const run = async ({ signal, onProgress }) => {
+    const total = { added: 0, skipped: 0, failed: [], cancelled: false };
+    for (let i = 0; i < list.length; i++) {
+      if (signal?.aborted) { total.cancelled = true; break; }
+      const d = list[i];
+      onProgress(i, list.length, d.name);
+      try {
+        const blob = await gdrive.download(d.id, { signal, size: d.sizeBytes });
+        const f = new File([blob], d.name, { type: blob.type || d.mimeType });
+        f.relPath = 'Google Drive/' + d.name;
+        const r = await store.importFiles([f], { signal });
+        total.added += r.added; total.skipped += r.skipped; total.failed.push(...r.failed);
+        if (r.cancelled) { total.cancelled = true; break; }
+      } catch (e) { if (e?.name === 'AbortError') { total.cancelled = true; break; } total.failed.push(d.name); }
+    }
+    onProgress(list.length, list.length, '');
+    return total;
+  };
+  runImport(list, { run });
 }
 
 const nativeFolder = () => window.Capacitor?.isNativePlatform?.() && window.Capacitor.Plugins?.FolderPicker;

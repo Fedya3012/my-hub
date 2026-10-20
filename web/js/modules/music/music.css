@@ -287,6 +287,9 @@
 .mhero { position: relative; display: flex; align-items: flex-end; gap: 28px; padding: 64px 28px 26px; margin: -28px calc(-1 * max(16px, var(--sai-left))) 0;
   color: #fff; overflow: hidden; isolation: isolate; background: var(--h-bg, #1d2530); }
 @media (min-width: 861px) { .mhero { margin-inline: -36px; padding-inline: 36px; } }
+/* Phone: a detail page (album/artist/playlist/folder) has its own hero with a back button; the library header above it
+   (search, add) was overlapped by the hero's pull-up margin. */
+@media (max-width: 860px) { .mlib[data-detail] .mlib-head { display: none; } .mlib[data-detail] .mhero { margin-top: -8px; } }
 .mhero-bg { position: absolute; inset: -40px; z-index: -1; background-size: cover; background-position: center; filter: blur(48px) saturate(1.5) brightness(.6); transform: scale(1.1); }
 .mhero::after { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, transparent 30%, color-mix(in srgb, var(--h-bg, #000) 70%, transparent)); }
 .mhero-back { position: absolute; top: 14px; left: 14px; color: #fff; background: rgb(0 0 0 / .25); }
