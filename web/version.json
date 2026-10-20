@@ -1,7 +1,15 @@
 {
-  "app": "0.7.0.3",
+  "app": "0.7.0.4",
   "released": "2026-10-20",
   "changelog": [
+    {
+      "version": "0.7.0.4",
+      "date": "2026-10-20",
+      "notes": [
+        "Sửa nút Ngẫu nhiên (shuffle) ở Now Playing không đổi trạng thái",
+        "Sửa nút Phát album ở trang chủ không phát"
+      ]
+    },
     {
       "version": "0.7.0.3",
       "date": "2026-10-20",

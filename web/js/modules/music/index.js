@@ -197,7 +197,7 @@ const albumRow = (a) => `<a class="mrow" href="#music/album/${a.id}" data-art-ki
 const countSub = (g) => `${g.albumCount ?? g.albums?.length ?? 0} album · ${g.count ?? g.tracks.length} bài`;
 
 function bindCards(box) {
-  box.querySelectorAll('[data-play]').forEach(b => b.onclick = (e) => {
+  box.querySelectorAll('[data-play*=":"]').forEach(b => b.onclick = (e) => {   // not the coverflow's own bare data-play button
     e.preventDefault(); e.stopPropagation();
     const [kind, ...rest] = b.dataset.play.split(':');
     const id = rest.join(':');

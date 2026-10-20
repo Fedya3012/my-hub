@@ -123,7 +123,7 @@ window.addEventListener('popstate', () => { if (np) closeNowPlaying({ fromPop: t
 function wire() {
   const el = np.el;
   const on = (t, f) => { player.addEventListener(t, f); np.offs.push(() => player.removeEventListener(t, f)); };
-  on('track', renderTrack); on('state', renderState); on('status', renderStatus); on('volume', renderVol);
+  on('track', renderTrack); on('state', renderState); on('queue', renderState); on('status', renderStatus); on('volume', renderVol);
   const key = (e) => { if (e.key === 'Escape' && !document.querySelector('.msheet-wrap,.mpop')) closeNowPlaying(); };
   document.addEventListener('keydown', key); np.offs.push(() => document.removeEventListener('keydown', key));
   const vis = () => syncVideo();
