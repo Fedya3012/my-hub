@@ -10,6 +10,7 @@
 import { db, uid } from '../../../core/db.js';
 import { readAudioMeta } from './meta.js';
 import { registerVirtual } from './store.js';
+import { cmpViNum } from '../../../core/perf.js';
 
 export const AUDIO = /\.(mp3|flac|m4a|m4b|mp4|aac|alac|ogg|oga|opus|wav|wave|aif|aiff|aifc|wv|ape|dsf|dff|wma)$/i;
 const IMG = /^(cover|folder|front|album|albumart)\.(jpe?g|png|webp)$/i;
@@ -111,7 +112,7 @@ export async function walk(root, path = '', { max = 3000, signal } = {}) {
   await go(path);
   return out.slice(0, max);
 }
-export const byName = (a, b) => a.name.localeCompare(b.name, 'vi', { numeric: true });
+export const byName = (a, b) => cmpViNum(a.name, b.name);
 
 // ── Virtual tracks ──────────────────────────────────────────────
 function hash(s) { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619) >>> 0; return h.toString(36) + s.length.toString(36); }

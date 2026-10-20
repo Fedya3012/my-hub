@@ -126,3 +126,4 @@
 .ltag-side { min-width: 0; }
 .ltag-clean .chip { white-space: normal; max-width: 100%; text-align: left; height: auto; }
 .lcrop-zoom { width: min(420px, 100%); margin: 0 auto; }
+.mtree .mtree-n { content-visibility: auto; contain-intrinsic-size: auto 40px; }

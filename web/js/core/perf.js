@@ -4,6 +4,11 @@
 //   idle(fn, timeout)                   run when the main thread is free (requestIdleCallback fallback)
 //   debounce(fn, ms) / rafThrottle(fn)  coalesce bursts of events
 //   yieldToMain()                       let the browser paint between heavy steps
+// Shared collators: `a.localeCompare(b, 'vi')` builds a new collator on every call, which dominates
+// sorting a big library (20k titles took ~1 s). One Intl.Collator is ~20x faster.
+export const cmpVi = new Intl.Collator('vi').compare;
+export const cmpViNum = new Intl.Collator('vi', { numeric: true }).compare;
+
 export const idle = (fn, timeout = 500) => (window.requestIdleCallback
   ? requestIdleCallback(fn, { timeout })
   : setTimeout(() => fn({ timeRemaining: () => 8, didTimeout: true }), 1));

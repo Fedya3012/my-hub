@@ -206,6 +206,10 @@
 .mlist { display: flex; flex-direction: column; }
 .mrow { display: flex; align-items: center; gap: 12px; padding: 6px 8px; border-radius: 10px; cursor: pointer; color: inherit; text-decoration: none; min-height: 56px; }
 .mrow:hover { background: var(--surface-2); }
+/* Long lists: the browser skips layout and paint of rows that are far off screen (thousands of rows stay smooth). */
+.mlist > .mrow, .mgrid > .mcard { content-visibility: auto; }
+.mlist > .mrow { contain-intrinsic-size: auto 56px; }
+.mgrid > .mcard { contain-intrinsic-size: auto 232px; }
 .mrow:focus-visible { outline-offset: -2px; }
 .mrow-n { width: 26px; text-align: right; color: var(--muted); font-size: .86rem; flex: none; }
 .mrow-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }

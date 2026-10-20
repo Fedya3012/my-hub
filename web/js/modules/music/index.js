@@ -15,7 +15,7 @@ import { badges, fmtTime, fmtTotal, techLine } from './lib/format.js';
 import { sheet, menu, trackMenu, pickPlaylist, linkPicker, ask, dragSort } from './ui/sheets.js';
 import { coverFlow } from './ui/coverflow.js';
 import { tasks } from '../../core/tasks.js';
-import { incremental } from '../../core/perf.js';
+import { incremental, cmpVi, cmpViNum } from '../../core/perf.js';
 
 let root, ctx, route = '', offs = [], cleanups = [];
 let search = '';
@@ -278,16 +278,16 @@ function applyFilters(list) {
 }
 const text = (o) => String(o.name ?? o.title ?? '');
 const SPECIAL = {
-  trackNo: (a, b) => (a.discNo || 1) - (b.discNo || 1) || (a.trackNo || 999) - (b.trackNo || 999) || a.title.localeCompare(b.title, 'vi'),
+  trackNo: (a, b) => (a.discNo || 1) - (b.discNo || 1) || (a.trackNo || 999) - (b.trackNo || 999) || cmpVi(a.title, b.title),
   order: () => 0,
-  fileName: (a, b) => (a.fileName || a.title).localeCompare(b.fileName || b.title, 'vi', { numeric: true }),
-  name: (a, b) => text(a).localeCompare(text(b), 'vi', { numeric: true }),
+  fileName: (a, b) => cmpViNum(a.fileName || a.title, b.fileName || b.title),
+  name: (a, b) => cmpViNum(text(a), text(b)),
   quality: (a, b) => quality(a) - quality(b),
 };
 // Keys whose natural order is "biggest / newest first".
 const DESC_FIRST = ['plays', 'lastPlayed', 'addedAt', 'rating', 'year', 'quality', 'count', 'albumCount', 'updatedAt', 'createdAt'];
 const cmp = (k) => SPECIAL[k] || ((a, b) => typeof a[k] === 'string' || typeof b[k] === 'string'
-  ? String(a[k] || '').localeCompare(String(b[k] || ''), 'vi', { numeric: true }) : (a[k] || 0) - (b[k] || 0));
+  ? cmpViNum(String(a[k] || ''), String(b[k] || '')) : (a[k] || 0) - (b[k] || 0));
 function sortList(list, tab, key, def) {
   const k = key || prefs().sort[tab] || def;
   if (!k) return [...list];
@@ -437,11 +437,18 @@ const VIEWS = {
     const FS = { name: 'Tên', count: 'Số bài' };
     const key = sortKey('folders', FS);
     const rootNode = folderTree(L);
+    // Only the folders that are open are rendered; the rest are filled in when first opened
+    // (a library with thousands of folders used to render the whole tree up front: seconds of freeze).
+    const pend = new Map();
+    const kidsHtml = (n, depth) => sortList([...n.children.values()], 'folders', key).map(k => node(k, depth + 1)).join('')
+      + (n.tracks.length ? `<div class="mtree-files muted">${icon('music')} ${n.tracks.length} bài trong thư mục này · <a href="#music/folder/${encodeURIComponent(n.path)}">Mở</a></div>` : '');
     const node = (n, depth) => {
-      const kids = sortList([...n.children.values()], 'folders', key);
+      const sk = (route || 'home') + '#f:' + n.path;
+      const open = closed.has(sk) ? false : closed.has(sk + '!open') ? true : depth < 1;
       const head = `${artHtml(L.folderCover(n.path), 'folder:' + n.name, { cls: 'xxs', label: n.name })}<a href="#music/folder/${encodeURIComponent(n.path)}">${esc(n.name)}</a>`;
-      const inner = kids.map(k => node(k, depth + 1)).join('')
-        + (n.tracks.length ? `<div class="mtree-files muted">${icon('music')} ${n.tracks.length} bài trong thư mục này · <a href="#music/folder/${encodeURIComponent(n.path)}">Mở</a></div>` : '');
+      let inner = '';
+      if (open || (!n.children.size && !n.tracks.length)) inner = kidsHtml(n, depth);
+      else pend.set(n.path, { n, depth });
       return section('f:' + n.path, head, { cls: 'mtree-n', ic: 'folder', count: n.count, defaultOpen: depth < 1,
         tools: `<button class="icon-btn sm" data-fplay="${esc(n.path)}" aria-label="Phát thư mục ${esc(n.name)}">${icon('play')}</button>`, body: inner });
     };
@@ -450,8 +457,23 @@ const VIEWS = {
       + `<div class="mtool2">${xallBtn()}</div>
       ${rootNode.tracks.length ? `<p class="hint">${rootNode.tracks.length} bài nhập lẻ (không theo thư mục): <a href="#music/folder/">xem</a>. Dùng “Thêm nhạc → Chọn thư mục” để giữ cấu trúc thư mục.</p>` : ''}
       <div class="mtree">${tops.map(n => node(n, 0)).join('') || '<p class="muted">Chưa có thư mục nào.</p>'}</div>`;
-    bindToolbar(c); bindSections(c); hydrate(c);
-    c.querySelectorAll('[data-fplay]').forEach(b => b.onclick = (e) => {
+    const pathOf = (sec) => sec.dataset.sec.split('#f:')[1];
+    const watch = () => c.querySelectorAll('.mtree-n').forEach(sec => {
+      if (sec._watched) return;
+      sec._watched = true;
+      if (!pend.has(pathOf(sec))) return;
+      sec.addEventListener('msec:open', () => {
+        const p = pend.get(pathOf(sec));
+        if (!p) return;
+        pend.delete(pathOf(sec));
+        sec.querySelector(':scope > .msec-b').innerHTML = kidsHtml(p.n, p.depth);
+        bindSections(c); hydrate(c); watch();
+      }, { once: true });
+    });
+    bindToolbar(c); bindSections(c); hydrate(c); watch();
+    c.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-fplay]');
+      if (!b) return;
       e.stopPropagation();
       const p = b.dataset.fplay;
       const list = [...L.tracks.values()].filter(t => (t.folder || '') === p || (t.folder || '').startsWith(p + '/')).sort(SPECIAL.fileName);

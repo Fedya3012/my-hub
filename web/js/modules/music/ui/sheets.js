@@ -11,6 +11,7 @@ import { artHtml, hydrate } from '../lib/art.js';
 import { techLine, badges, khz, kbps, channelsLabel, fmtTime, dB, CODECS } from '../lib/format.js';
 import { prefs } from '../lib/prefs.js';
 import { incremental } from '../../../core/perf.js';
+import { cmpVi } from '../../../core/perf.js';
 
 const narrow = () => matchMedia('(max-width: 720px)').matches;
 
@@ -306,7 +307,7 @@ const TARGET_TYPES = ['book', 'fanfic', 'podcast', 'video', 'note'];
 // From a track/album/playlist: pick which item it plays with.
 export async function linkPicker({ sourceId, source, name }) {
   const items = (await db.items.where('type').anyOf(TARGET_TYPES).toArray()).filter(i => !i.deleted && i.id !== sourceId)
-    .sort((a, b) => a.title.localeCompare(b.title, 'vi'));
+    .sort((a, b) => cmpVi(a.title, b.title));
   const linked = await store.targetsOf(sourceId);
   const body = h(`<div class="stack">
     <p class="muted">Khi mở mục được gắn, “${esc(name)}” có thể tự phát làm nhạc nền.</p>

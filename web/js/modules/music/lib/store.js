@@ -9,6 +9,7 @@ import { readAudioMeta } from './meta.js';
 import { makeThumb, palette, forgetUrl, collageRef } from './art.js';
 import { isHiRes } from './format.js';
 import { prefs } from './prefs.js';
+import { cmpVi, cmpViNum } from '../../../core/perf.js';
 
 // ── Ids & names ─────────────────────────────────────────────────
 export const norm = (s) => String(s || '').normalize('NFC').toLowerCase().replace(/\s+/g, ' ').trim();
@@ -95,7 +96,7 @@ export async function library() {
       }
     }
     for (const al of A.values()) {
-      al.tracks.sort((a, b) => (a.discNo || 1) - (b.discNo || 1) || (a.trackNo || 999) - (b.trackNo || 999) || a.title.localeCompare(b.title, 'vi'));
+      al.tracks.sort((a, b) => (a.discNo || 1) - (b.discNo || 1) || (a.trackNo || 999) - (b.trackNo || 999) || cmpVi(a.title, b.title));
       al.duration = al.tracks.reduce((s, t) => s + (t.duration || 0), 0);
       al.hiRes = al.tracks.some(t => t.hiResNow);
       al.addedAt = maxOf(al.tracks, t => t.addedAt || 0);
@@ -265,7 +266,7 @@ function mostCommon(arr) {
 }
 function finishGroup(g) {
   g.title = g.name;
-  g.albums.sort((a, b) => (b.year || 0) - (a.year || 0) || a.title.localeCompare(b.title, 'vi'));
+  g.albums.sort((a, b) => (b.year || 0) - (a.year || 0) || cmpVi(a.title, b.title));
   g.cover = g.albums[0]?.cover;
   g.duration = g.tracks.reduce((s, t) => s + (t.duration || 0), 0);
   g.plays = g.tracks.reduce((s, t) => s + t.plays, 0);
@@ -602,7 +603,7 @@ export function evalSmart(rules, tracks) {
   let out = tracks.filter(t => (rules.match === 'any' ? rules.rules.some(r => test(t, r)) : rules.rules.every(r => test(t, r))));
   const s = rules.sort || 'random';
   if (s === 'random') out = shuffle(out);
-  else if (s === 'title') out.sort((a, b) => a.title.localeCompare(b.title, 'vi'));
+  else if (s === 'title') out.sort((a, b) => cmpVi(a.title, b.title));
   else out.sort((a, b) => (b[s] || 0) - (a[s] || 0));
   return rules.limit ? out.slice(0, +rules.limit) : out;
 }

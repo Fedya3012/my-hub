@@ -7,7 +7,7 @@ import { progress } from '../../core/progress.js';
 import { thisDevice } from '../../core/device.js';
 import { extensions } from '../../core/extensions.js';
 import { tasks } from '../../core/tasks.js';
-import { incremental, debounce } from '../../core/perf.js';
+import { incremental, debounce, cmpVi } from '../../core/perf.js';
 import { filesFromDrop } from '../../core/dnd.js';
 import { icon } from '../../core/icons.js';
 import { esc, h, modal, confirmBox, fmtBytes, fmtAgo, fmtDuration } from '../../core/ui.js';
@@ -25,7 +25,7 @@ const SORTS = {
   updated: ['Mới cập nhật', (a, b) => (b.updatedAt || 0) - (a.updatedAt || 0)],
   opened:  ['Mở gần đây', (a, b) => (b.lastOpenedAt || 0) - (a.lastOpenedAt || 0)],
   added:   ['Mới thêm', (a, b) => (b.createdAt || 0) - (a.createdAt || 0)],
-  title:   ['Tên A–Z', (a, b) => a.title.localeCompare(b.title, 'vi')],
+  title:   ['Tên A–Z', (a, b) => cmpVi(a.title, b.title)],
   rating:  ['Đánh giá', (a, b) => (b.rating || 0) - (a.rating || 0)],
 };
 
@@ -198,7 +198,7 @@ function renderTypeChips() {
 
 function renderTagOptions() {
   const sel = root.querySelector('#lib-tag');
-  const tags = [...new Set(data.items.flatMap(i => i.tags || []))].sort((a, b) => a.localeCompare(b, 'vi'));
+  const tags = [...new Set(data.items.flatMap(i => i.tags || []))].sort(cmpVi);
   sel.innerHTML = `<option value="">Mọi thẻ</option>` + tags.map(t => `<option ${t === state.tag ? 'selected' : ''}>${esc(t)}</option>`).join('');
 }
 
@@ -365,7 +365,7 @@ async function showPreview(file, item) {
 }
 
 async function addLink(item) {
-  const others = data.items.filter(i => i.id !== item.id).sort((a, b) => a.title.localeCompare(b.title, 'vi'));
+  const others = data.items.filter(i => i.id !== item.id).sort((a, b) => cmpVi(a.title, b.title));
   const body = h(`<div class="stack">
     <label>Quan hệ<select id="link-rel">${Object.entries(RELATIONS).map(([k, [l]]) => `<option value="${k}">${esc(item.title)} · ${l}…</option>`).join('')}</select></label>
     <label>Mục liên kết<select id="link-to">${others.map(o => `<option value="${o.id}">${CONTENT_TYPES[o.type]?.label} · ${esc(o.title)}</option>`).join('')}</select></label></div>`);

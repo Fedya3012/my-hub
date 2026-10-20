@@ -1,7 +1,15 @@
 {
-  "app": "0.7.0.1",
+  "app": "0.7.0.2",
   "released": "2026-10-20",
   "changelog": [
+    {
+      "version": "0.7.0.2",
+      "date": "2026-10-20",
+      "notes": [
+        "Hết tiếng \"tạch\" khi tạm dừng hoặc phát tiếp nhạc (giảm/tăng âm lượng mượt)",
+        "Thư viện lớn mượt hơn: sắp xếp nhanh hơn, danh sách bài và cây thư mục chỉ vẽ phần đang xem"
+      ]
+    },
     {
       "version": "0.7.0.1",
       "date": "2026-10-20",

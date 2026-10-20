@@ -198,7 +198,11 @@ export class Engine extends EventTarget {
     if (this.ctx?.state === 'suspended') await this.ctx.resume().catch(() => {});
     this.router?.resume();
     if (!this.el?.src) return;
-    try { await this.el.play(); }
+    const d = this.deck;
+    this._pauseTok = (this._pauseTok || 0) + 1;
+    const fadeIn = d && d.el.paused && !d.el.ended;
+    if (fadeIn) this._setFade(d, 0, 0);
+    try { await this.el.play(); if (fadeIn || d.fade < 1) this._fadeTo(d, 1, 0.12); }
     catch (e) { if (e.name !== 'AbortError') this._emit('error', { track: this.deck.track, message: e.message, blocked: e.name === 'NotAllowedError' }); }
   }
 
@@ -206,9 +210,10 @@ export class Engine extends EventTarget {
     const d = this.deck;
     if (!d || d.el.paused) return;
     for (const x of this.decks) if (x !== d && !x.el.paused) this._stopDeck(x);
-    if (this.ctx && fade) {
+    if (fade) {
+      const tok = this._pauseTok = (this._pauseTok || 0) + 1;
       this._fadeTo(d, 0, fade);
-      setTimeout(() => { if (this.deck === d) { d.el.pause(); this._setFade(d, 1, 0); } }, fade * 1000 + 30);
+      setTimeout(() => { if (this.deck === d && this._pauseTok === tok) { d.el.pause(); this._setFade(d, 1, 0); } }, fade * 1000 + 30);
     } else d.el.pause();
   }
 
