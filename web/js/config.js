@@ -11,7 +11,7 @@ export const APP_VERSION = '0.6.1';
 //   drive.appdata          -> hidden app folder: database snapshot, progress, devices
 //   drive.file             -> only files this app created (music, books, videos...)
 //   openid email profile   -> show the signed-in name, email and avatar
-export const GOOGLE_CLIENT_ID = '270033624356-3f8kpi7jvsbskh30ac5ilec10pm6a9um.apps.googleusercontent.com';   // e.g. '1234-abc.apps.googleusercontent.com'
+export const GOOGLE_CLIENT_ID = '';   // e.g. '1234-abc.apps.googleusercontent.com'
 export const GOOGLE_SCOPES = 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file openid email profile';
 export const DRIVE_FOLDER_NAME = 'My Hub';
 
