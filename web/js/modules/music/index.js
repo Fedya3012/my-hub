@@ -457,7 +457,10 @@ const VIEWS = {
     c.innerHTML = toolbar('folders', { sorts: FS, views: ['tree', 'list'], filters: false, count: `${rootNode.count} bài` })
       + `<div class="mtool2">${xallBtn()}</div>
       ${rootNode.tracks.length ? `<p class="hint">${rootNode.tracks.length} bài nhập lẻ (không theo thư mục): <a href="#music/folder/">xem</a>. Dùng “Thêm nhạc → Chọn thư mục” để giữ cấu trúc thư mục.</p>` : ''}
-      <div class="mtree">${tops.map(n => node(n, 0)).join('') || '<p class="muted">Chưa có thư mục nào.</p>'}</div>`;
+      <div class="mtree">${tops.length ? '' : '<p class="muted">Chưa có thư mục nào.</p>'}</div>`;
+    // Top-level folders come in chunks as the list scrolls (1,600+ at once = a multi-second freeze).
+    const treeBox = c.querySelector('.mtree');
+    if (tops.length) cleanups.push(incremental(treeBox, tops, (n) => node(n, 0), { chunk: 60, onChunk: () => queueMicrotask(() => { bindSections(c); hydrate(c); watch(); }) }));
     const pathOf = (sec) => sec.dataset.sec.split('#f:')[1];
     const watch = () => c.querySelectorAll('.mtree-n').forEach(sec => {
       if (sec._watched) return;
@@ -765,8 +768,8 @@ function markPlaying() {
 function addMenu(anchor) {
   menu(anchor, [
     { icon: 'plusfile', label: 'Chọn tệp nhạc…', act: () => pickFiles(false) },
-    { icon: 'folder', label: 'Chọn thư mục (sao chép vào app)…', act: () => pickFiles(true) },
-    { icon: 'cloud', label: 'Chọn nhạc trên Google Drive…', act: pickFromDrive },
+    { icon: 'folder', label: 'Chọn thư mục (sao chép vào app)…', hint: window.Capacitor?.isNativePlatform?.() ? 'Có cả Google Drive' : undefined, act: () => pickFiles(true) },
+    window.Capacitor?.isNativePlatform?.() ? null : { icon: 'cloud', label: 'Chọn nhạc trên Google Drive…', act: pickFromDrive },
     window.showDirectoryPicker ? { icon: 'link', label: 'Liên kết thư mục (không sao chép)…', hint: 'Máy tính', act: linkFolder } : null,
     '-',
     { icon: 'list', label: 'Danh sách phát mới…', act: async () => { const n = await ask('Tên danh sách phát', 'Danh sách mới'); if (n) { const p = await store.createPlaylist(n); go('playlist/' + p.id); } } },

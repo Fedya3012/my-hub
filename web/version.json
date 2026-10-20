@@ -1,7 +1,15 @@
 {
-  "app": "0.7.1.0",
+  "app": "0.7.1.1",
   "released": "2026-10-20",
   "changelog": [
+    {
+      "version": "0.7.1.1",
+      "date": "2026-10-20",
+      "notes": [
+        "Android: ẩn hộp chọn của Google (không đăng nhập được trong app); lấy nhạc từ Drive bằng Thêm nhạc, Chọn thư mục, chọn Google Drive",
+        "Tab Thư mục: danh sách thư mục cấp trên cùng hiện dần khi cuộn"
+      ]
+    },
     {
       "version": "0.7.1.0",
       "date": "2026-10-20",
