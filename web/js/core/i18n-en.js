@@ -1515,4 +1515,6 @@ export default {"(Google cấp quyền theo từng giờ). Bấm một lần đ�
 "Gộp theo":"Group by",
 "Đồng bộ từng chữ":"Word-synced",
 "Lời thường":"Plain lyrics",
-"Chế độ lời":"Lyrics mode"};
+"Chế độ lời":"Lyrics mode",
+"Không mở được thư mục":"Could not open the folder",
+"Thư mục này không có tệp nhạc":"This folder has no music files"};

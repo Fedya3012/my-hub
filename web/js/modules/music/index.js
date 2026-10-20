@@ -736,7 +736,54 @@ function addMenu(anchor) {
   ], { title: 'Thêm nhạc' });
 }
 
+const nativeFolder = () => window.Capacitor?.isNativePlatform?.() && window.Capacitor.Plugins?.FolderPicker;
+
+// Android: WebView cannot pick folders, so ask the native plugin, then feed the files over folder by folder.
+async function pickNativeFolder(P) {
+  let picked;
+  try { picked = await P.pickFolder(); } catch (e) { toast(e.message || 'Không mở được thư mục', 'warn'); return; }
+  if (!picked || picked.cancelled) return;
+  const entries = picked.files || [];
+  if (!entries.length) { toast('Thư mục này không có tệp nhạc', 'warn'); return; }
+  const byDir = new Map();
+  for (const e of entries) {
+    const d = e.relPath.split('/').slice(0, -1).join('/');
+    if (!byDir.has(d)) byDir.set(d, []);
+    byDir.get(d).push(e);
+  }
+  const run = async ({ signal, onProgress }) => {
+    const total = { added: 0, skipped: 0, failed: [], cancelled: false };
+    let done = 0;
+    for (const group of byDir.values()) {
+      if (signal?.aborted) { total.cancelled = true; break; }
+      const files = [];
+      for (const e of group) {
+        if (signal?.aborted) break;
+        onProgress(done + files.length, entries.length, e.name);
+        try {
+          const { path } = await P.copyToCache({ uri: e.uri, name: e.name });
+          const blob = await (await fetch(window.Capacitor.convertFileSrc('file://' + path))).blob();
+          const f = new File([blob], e.name, { type: blob.type });
+          f.relPath = e.relPath;
+          files.push(f);
+        } catch { total.failed.push(e.name); }
+      }
+      if (files.length) {
+        const r = await store.importFiles(files, { signal, onProgress: (i, n, name) => onProgress(done + i, entries.length, name) });
+        total.added += r.added; total.skipped += r.skipped; total.failed.push(...r.failed);
+        if (r.cancelled) total.cancelled = true;
+      }
+      done += group.length;
+      await P.clearCache();
+    }
+    return total;
+  };
+  runImport(entries, { run });
+}
+
 function pickFiles(folder) {
+  const P = folder && nativeFolder();
+  if (P) return pickNativeFolder(P);
   const inp = document.createElement('input');
   inp.type = 'file'; inp.multiple = true;
   if (folder) inp.webkitdirectory = true;
@@ -760,14 +807,14 @@ async function linkFolder() {
   } catch (e) { if (e.name !== 'AbortError') toast(e.message, 'error'); }
 }
 
-export async function runImport(files) {
+export async function runImport(files, { run } = {}) {
   if (!files.length) return;
   ctx?.storage?.persistOnce().then(r => { if (r.asked) toast(r.granted ? 'Đã bật lưu trữ bền vững: trình duyệt sẽ không tự xoá nhạc của bạn' : 'Trình duyệt chưa cho lưu trữ bền vững (có thể bật lại trong Cài đặt)', r.granted ? 'info' : 'warn'); }).catch(() => {});
   const s = sheet({ title: 'Đang thêm nhạc', body: `<div class="mimport"><div class="bar lg"><i style="width:0%"></i></div><p class="num" data-c>Đang đọc…</p><p class="muted mimport-f" data-f></p></div>` });
   const task = tasks.start({ label: 'Đang thêm nhạc', total: files.length, detail: 'Đang đọc…', cancellable: true });
   let res;
   try {
-    res = await store.importFiles(files, { signal: task.signal, onProgress: (i, n, name) => {
+    res = await (run || ((o) => store.importFiles(files, o)))({ signal: task.signal, onProgress: (i, n, name) => {
       task.update({ done: i, total: n || 1, detail: name || '' });
       s.el.querySelector('.bar i').style.width = (n ? i / n * 100 : 100) + '%';
       s.el.querySelector('[data-c]').textContent = `${i} / ${n} tệp`;

@@ -58,5 +58,7 @@
 "Đồng bộ từng chữ": "Word-synced",
 "Đồng bộ theo dòng": "Line-synced",
 "Lời thường": "Plain lyrics",
-"Chế độ lời": "Lyrics mode"
+"Chế độ lời": "Lyrics mode",
+"Không mở được thư mục": "Could not open the folder",
+"Thư mục này không có tệp nhạc": "This folder has no music files"
 }

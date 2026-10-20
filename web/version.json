@@ -1,7 +1,14 @@
 {
-  "app": "0.6.0",
+  "app": "0.6.1",
   "released": "2026-10-20",
   "changelog": [
+    {
+      "version": "0.6.1",
+      "date": "2026-10-20",
+      "notes": [
+        "Android: chọn thư mục nhạc trong Trình phát nhạc hoạt động (dùng màn hình chọn thư mục của Android), có hiển thị tiến độ và nút dừng"
+      ]
+    },
     {
       "version": "0.6.0",
       "date": "2026-10-20",
