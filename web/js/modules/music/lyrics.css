@@ -93,3 +93,13 @@
 .mly-results li { display: flex; gap: 10px; align-items: center; justify-content: space-between; padding: 8px; border-radius: 8px; background: rgb(127 127 127 / .08); }
 .mly-results li > div { min-width: 0; }
 .mly-prev { display: block; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Legibility: dimmed lines stay readable; line / plain modes (no per-letter spans) light up as a whole. */
+.ly.ly2 .ly-line { color: color-mix(in srgb, var(--fg) 52%, transparent); }
+.ly.ly2 .ly-line.past { color: color-mix(in srgb, var(--fg) 58%, transparent); }
+.ly.ly2 .ly-line.next { color: color-mix(in srgb, var(--fg) 66%, transparent); }
+.ly.ly2 .ly-line.on .ly-c { --dim: color-mix(in srgb, var(--fg) 52%, transparent); }
+.ly.ly2 .ly-line.on:not(:has(.ly-c)) { color: var(--fg); }
+.ly.ly2 .ly-line.ly-plain { color: color-mix(in srgb, var(--fg) 92%, transparent); transform: none; filter: none; opacity: 1; cursor: default; }
+.ly-mode { white-space: nowrap; font-size: .76rem; padding: 3px 10px; background: rgb(127 127 127 / .22); color: inherit; border: 0; border-radius: 999px; font-weight: 700; }
+.mnp[data-ambient="1"] .ly.ly2, .mnp[data-video="1"] .ly.ly2 { text-shadow: 0 1px 12px rgb(0 0 0 / .5); }

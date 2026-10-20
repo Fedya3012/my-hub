@@ -1,7 +1,17 @@
 {
-  "app": "0.5.3",
+  "app": "0.6.0",
   "released": "2026-10-20",
   "changelog": [
+    {
+      "version": "0.6.0",
+      "date": "2026-10-20",
+      "notes": [
+        "Thêm tiếng Anh: chọn ngôn ngữ trong Cài đặt → Giao diện",
+        "Android: menu bên trái ẩn/hiện thay cho thanh dưới; sửa lỗi hiển thị dưới thanh trạng thái và thanh điều hướng",
+        "Now Playing: icon và chữ rõ hơn, nút đang bật (xáo trộn, lặp lại…) sáng hẳn lên với vòng viền và chấm",
+        "Lời bài hát: chọn chế độ đồng bộ từng chữ, đồng bộ theo dòng hoặc lời thường"
+      ]
+    },
     {
       "version": "0.5.3",
       "date": "2026-10-20",
@@ -79,6 +89,8 @@
       "js/core/account-ui.js",
       "css/account.css",
       "css/native.css",
+      "js/core/i18n.js",
+      "js/core/i18n-en.js",
       "js/modules/account/manifest.js",
       "js/core/tasks.js",
       "js/core/skins.js",

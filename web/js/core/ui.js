@@ -89,7 +89,7 @@ export function fmtBytes(n) {
   return `${n.toFixed(n < 10 && i ? 1 : 0)} ${u[i]}`;
 }
 
-const rtf = new Intl.RelativeTimeFormat('vi', { numeric: 'auto' });
+const rtf = new Intl.RelativeTimeFormat(globalThis.__LOCALE_SHORT || 'vi', { numeric: 'auto' });
 export function fmtAgo(ts) {
   if (!ts) return 'chưa';
   const s = (Math.min(ts, Date.now()) - Date.now()) / 1000; // another device's clock may run ahead

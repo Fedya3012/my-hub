@@ -304,7 +304,7 @@ async function openDrawer(id) {
           : '<p class="muted">Mục này chưa có tệp đính kèm.</p>'}</div>
       <div class="block"><h3>Hoạt động</h3>
         <ul class="activity">${acts.slice(0, 5).map(a => `<li><span>${{ open: 'Đã mở', play: 'Đã phát', finish: 'Đã xong', import: 'Đã nhập' }[a.action] || a.action}</span><span class="muted">${fmtAgo(a.at)}</span></li>`).join('') || '<li class="muted">Chưa có</li>'}
-        <li><span>Thêm vào</span><span class="muted">${new Date(item.createdAt).toLocaleDateString('vi-VN')}</span></li></ul></div>
+        <li><span>Thêm vào</span><span class="muted">${new Date(item.createdAt).toLocaleDateString((globalThis.__LOCALE || 'vi-VN'))}</span></li></ul></div>
     </div>`;
   d.hidden = false;
   d.querySelector('.drawer-inner').scrollTop = 0;

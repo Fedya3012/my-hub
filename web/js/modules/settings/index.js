@@ -12,6 +12,7 @@ import { skinSectionHtml, bindSkins } from '../../core/skin-ui.js';
 import { paramsSectionHtml, bindParams } from '../../core/params-ui.js';
 import { gdrive } from '../../core/storage/gdrive.js';
 import { bus } from '../../core/bus.js';
+import { LANGS, lang, setLang } from '../../core/i18n.js';
 
 let root, ctx, offs = [];
 
@@ -87,6 +88,7 @@ async function render() {
 
     <section class="set-block">
       <h2 class="section-title">${icon('palette')}Giao diện</h2>
+      <div class="panel"><label>Ngôn ngữ<select id="k-lang" data-i18n="off">${LANGS.map(l => `<option value="${l.id}"${l.id === lang ? ' selected' : ''}>${l.label}</option>`).join('')}</select></label></div>
       ${await skinSectionHtml()}
       <div class="theme-grid" role="radiogroup" aria-label="Theme">
         ${themes.map(t => `<button class="theme-card${t.id === cur.id ? ' on' : ''}" role="radio" aria-checked="${t.id === cur.id}" data-theme-id="${t.id}">
@@ -166,6 +168,7 @@ async function render() {
   });
 
   bindSkins(root, render);
+  $('#k-lang').onchange = (e) => setLang(e.target.value);
   root.querySelectorAll('[data-theme-id]').forEach(b => b.onclick = async () => { await applyTheme(b.dataset.themeId); render(); });
   $('#k-accent').oninput = (e) => applyTheme(null, { accent: e.target.value });
   on('accent-reset', async () => { await applyTheme(null, { accent: null }); render(); });

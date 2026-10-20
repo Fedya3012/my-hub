@@ -36,7 +36,7 @@ export function khz(sr) {
 }
 const kNum = (sr) => { const k = sr / 1000; return Number.isInteger(k) ? String(k) : k.toFixed(1); };
 
-export const kbps = (bps) => bps ? Math.round(bps / 1000).toLocaleString('vi-VN') + ' kbps' : '';
+export const kbps = (bps) => bps ? Math.round(bps / 1000).toLocaleString((globalThis.__LOCALE || 'vi-VN')) + ' kbps' : '';
 
 export function channelsLabel(n) {
   return { 1: 'Mono', 2: 'Stereo', 3: '2.1', 4: 'Quad', 5: '4.1', 6: '5.1', 8: '7.1' }[n] || (n ? n + ' kênh' : '');

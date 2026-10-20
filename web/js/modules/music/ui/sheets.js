@@ -183,7 +183,7 @@ export async function infoSheet(t) {
       ${row('Tệp', file ? `<code>${esc(file.name)}</code>` : '')}${row('Dung lượng', file ? fmtBytes(file.size) : '')}
       ${row('Thư mục', esc(t.folder || ''))}
       ${row('Nơi lưu', file ? [file.locations?.local ? `<span class="pill">${icon('device')}Máy này</span>` : '', file.locations?.gdrive ? `<span class="pill">${icon('cloud')}Google Drive</span>` : '', file.syncStatus === 'pending-upload' ? '<span class="pill warn">Chờ tải lên</span>' : ''].join('') : '')}
-      ${row('Đã nghe', `${t.plays} lần${t.lastPlayed ? ' · lần cuối ' + new Date(t.lastPlayed).toLocaleDateString('vi-VN') : ''}`)}
+      ${row('Đã nghe', `${t.plays} lần${t.lastPlayed ? ' · lần cuối ' + new Date(t.lastPlayed).toLocaleDateString((globalThis.__LOCALE || 'vi-VN')) : ''}`)}
     </dl>${t.warnings?.length ? `<p class="hint">${esc(t.warnings.join(' · '))}</p>` : ''}</section></div>`);
   sheet({ title: 'Thông tin tệp', body, wide: true });
 }
@@ -218,7 +218,7 @@ export function queuePanel(el) {
     el.querySelector('.mq-row.cur')?.scrollIntoView({ block: 'center' });
     el.querySelector('[data-act="clear"]').onclick = () => player.clearUpcoming();
     el.querySelector('[data-act="save"]').onclick = async () => {
-      const name = await ask('Tên danh sách phát', 'Hàng chờ ' + new Date().toLocaleDateString('vi-VN'));
+      const name = await ask('Tên danh sách phát', 'Hàng chờ ' + new Date().toLocaleDateString((globalThis.__LOCALE || 'vi-VN')));
       if (name) { await store.createPlaylist(name, [...player.queue]); toast('Đã lưu “' + name + '”'); }
     };
     dragSort(el.querySelector('.mq'), (from, to) => player.move(from, to));

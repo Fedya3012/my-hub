@@ -8,7 +8,7 @@ import { player } from '../lib/player.js';
 import * as store from '../lib/store.js';
 import { fileUrl, artHtml, hydrate, hashHue } from '../lib/art.js';
 import { badges, techLine, fmtTime } from '../lib/format.js';
-import { parseLyrics, KaraokeView, mergeTranslation } from '../lib/lyrics.js';
+import { parseLyrics, KaraokeView, mergeTranslation, lyricsView, LY_MODES } from '../lib/lyrics.js';
 import { loadLyrics, SOURCE_LABEL } from '../lib/lyrics-sources.js';
 import { prefs, setPref } from '../lib/prefs.js';
 import { attachFx, preblur } from './np-fx.js';
@@ -379,13 +379,16 @@ async function renderLyrics(t, cur) {
   }
 }
 
+const MODE_LABEL = { word: 'Đồng bộ từng chữ', line: 'Đồng bộ theo dòng', plain: 'Lời thường' };
+
 function showLyrics(t, ly) {
   const P = prefs().np;
   const parsed = ly ? mergeTranslation(parseLyrics(ly.text, t.duration), ly.trText) : null;
   np.lyOffset = +ly?.offset || 0;
-  np.karaoke.fake = !!P.fakeKaraoke;
+  const mode = LY_MODES.includes(prefs().lyrics?.mode) ? prefs().lyrics.mode : 'word';
+  np.karaoke.fake = !!P.fakeKaraoke && mode === 'word';
   np.karaoke.duration = player.duration || t.duration || 0;
-  np.karaoke.set(parsed, LY_EMPTY());
+  np.karaoke.set(lyricsView(parsed, mode), LY_EMPTY());
   const box = np.el.querySelector('.mnp-lyrics');
   applyLyPrefs();
   box.querySelector('[data-ly-edit]')?.addEventListener('click', () => editLy(t));
@@ -398,6 +401,7 @@ function showLyrics(t, ly) {
   tools.innerHTML = `<span class="ly-fullhead"><b>${esc(t.title)}</b><small>${esc(t.artist || '')}</small></span>
     <span class="pill" title="${esc(SOURCE_LABEL[ly.source] || '')}">${kind}${parsed.lines.some(l => l.agent === 'v2') ? ' · song ca' : ''}</span>
     ${parsed.synced ? `<span class="ly-off" role="group" aria-label="Lệch thời gian lời"><button class="icon-btn sm" data-ly-off="-0.1" aria-label="Lời chậm lại 0,1 giây">−0,1s</button><span class="ly-off-v num" title="Dương: lời hiện sớm hơn · Âm: lời hiện muộn hơn"></span><button class="icon-btn sm" data-ly-off="0.1" aria-label="Lời sớm lên 0,1 giây">+0,1s</button></span>` : '<span class="ly-off"></span>'}
+    ${parsed.synced ? `<button class="btn small ly-mode" data-ly-mode aria-label="Chế độ lời" title="Chế độ lời">${esc(MODE_LABEL[mode])}</button>` : ''}
     ${hasTr ? `<button class="icon-btn sm" data-ly-tr aria-pressed="${!!prefs().lyrics?.tr}" aria-label="Hiện bản dịch / phiên âm" title="Bản dịch">${icon('translate')}</button>` : ''}
     <button class="icon-btn sm" data-ly-set aria-label="Kiểu chữ lời" title="Kiểu chữ">${icon('text-size')}</button>
     <button class="icon-btn sm" data-ly-full aria-pressed="${!!np.lyFull}" aria-label="Lời toàn màn hình" title="Toàn màn hình">${icon('fullscreen')}</button>
@@ -416,6 +420,8 @@ function showLyrics(t, ly) {
   if (B('tr')) B('tr').onclick = async (e) => { const v = prefs().lyrics?.tr ? 0 : 1; await setPref('lyrics.tr', v); e.currentTarget.setAttribute('aria-pressed', !!v); applyLyPrefs(); np.karaoke.recenter(); };
   B('full').onclick = (e) => { np.lyFull = !np.lyFull; e.currentTarget.setAttribute('aria-pressed', np.lyFull); if (np.lyFull && np.panel !== 'lyrics') setPanel('lyrics'); applyLyPrefs(); setTimeout(() => np?.karaoke.recenter(), 50); };
   B('set').onclick = (e) => lyricsStyleMenu(e.currentTarget);
+  if (B('mode')) B('mode').onclick = (e) => menu(e.currentTarget, LY_MODES.map(k => ({ icon: 'lyrics', label: MODE_LABEL[k] + (k === mode ? ' ✓' : ''),
+    act: async () => { await setPref('lyrics.mode', k); renderLyrics(t, np); } })), { title: 'Chế độ lời' });
 }
 
 function lyricsStyleMenu(anchor) {

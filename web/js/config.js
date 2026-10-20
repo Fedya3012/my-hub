@@ -1,6 +1,6 @@
 // App-wide configuration. Rename the app here (and in manifest.webmanifest).
 export const APP_NAME = 'My Hub';
-export const APP_VERSION = '0.5.3';
+export const APP_VERSION = '0.6.0';
 
 // ─── Tài khoản Google (đăng nhập + đồng bộ qua Google Drive) ─────────────────
 // Leave GOOGLE_CLIENT_ID empty to run in Local mode only (the Account page then shows the setup

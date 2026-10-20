@@ -17,7 +17,7 @@ try { state = { ...state, ...JSON.parse(sessionStorage.getItem('music.stats') ||
 const save = () => { try { sessionStorage.setItem('music.stats', JSON.stringify(state)); } catch { /* ignore */ } };
 
 const hm = (ms) => { const m = Math.round(ms / 60000); return m < 60 ? `${m} phút` : `${Math.floor(m / 60)} giờ ${m % 60 ? (m % 60) + ' phút' : ''}`.trim(); };
-const nf = (n) => n.toLocaleString('vi-VN');
+const nf = (n) => n.toLocaleString((globalThis.__LOCALE || 'vi-VN'));
 const dayKey = (t) => { const d = new Date(t); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
 const startOfDay = (t) => { const d = new Date(t); d.setHours(0, 0, 0, 0); return d.getTime(); };
 

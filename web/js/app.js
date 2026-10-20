@@ -1,4 +1,5 @@
 // App bootstrap: database, theme, modules, navigation, updates.
+import './core/i18n.js';   // interface language: must run before anything renders
 import { APP_NAME, APP_VERSION } from './config.js';
 import { tasks } from './core/tasks.js';   // progress tray: loaded first so any task shows at once
 import { db, getSetting } from './core/db.js';
@@ -35,6 +36,34 @@ async function renderNav() {
       ${icon(m.icon)}<span>${esc(m.name)}</span></a>`).join('');
   document.getElementById('nav-links').innerHTML = links;
   document.getElementById('tabbar').innerHTML = links;
+  const here = mods.find(m => m.route === route);
+  const title = document.getElementById('appbar-title');
+  if (title && here) title.textContent = here.name;
+}
+
+// Phone navigation drawer: ☰ button, swipe from the left edge, tap outside / Esc / pick a page to close.
+function initDrawer() {
+  const body = document.body, btn = document.getElementById('nav-toggle'), mq = matchMedia('(max-width: 860px)');
+  const set = (open) => { open = open && mq.matches; body.classList.toggle('nav-open', open); btn?.setAttribute('aria-expanded', String(open)); };
+  btn?.addEventListener('click', () => set(!body.classList.contains('nav-open')));
+  document.getElementById('nav-scrim')?.addEventListener('click', () => set(false));
+  document.getElementById('nav-links')?.addEventListener('click', (e) => { if (e.target.closest('a')) set(false); });
+  document.querySelector('.sidebar-foot')?.addEventListener('click', () => set(false));
+  window.addEventListener('hashchange', () => set(false));
+  mq.addEventListener?.('change', () => set(false));
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') set(false); });
+  let t = null;
+  document.addEventListener('touchstart', (e) => {
+    const p = e.touches[0], open = body.classList.contains('nav-open');
+    t = (e.touches.length === 1 && mq.matches && (open || (p.clientX < 22 && !body.classList.contains('mnp-open')))) ? { x: p.clientX, y: p.clientY, open } : null;
+  }, { passive: true });
+  document.addEventListener('touchmove', (e) => {
+    if (!t) return;
+    const p = e.touches[0], dx = p.clientX - t.x, dy = p.clientY - t.y;
+    if (Math.abs(dy) > Math.abs(dx) * 1.2 && Math.abs(dy) > 14) { t = null; return; }
+    if (!t.open && dx > 56) { set(true); t = null; } else if (t.open && dx < -56) { set(false); t = null; }
+  }, { passive: true });
+  document.addEventListener('touchend', () => { t = null; }, { passive: true });
 }
 
 async function renderStorageBadge() {
@@ -168,6 +197,7 @@ async function boot() {
   if (storageFull) toast('Bộ nhớ trình duyệt gần đầy: một số thay đổi chưa lưu được. Vào Cài đặt để giải phóng chỗ.', 'warn');
   window.addEventListener('unhandledrejection', (ev) => { if (isQuota(ev.reason)) { ev.preventDefault(); toast('Bộ nhớ trình duyệt đã đầy, không lưu được. Vào Cài đặt → Lưu trữ để giải phóng chỗ.', 'error'); } });
 
+  initDrawer();
   await safe(() => registerSW(), 'sw');
   autoCheck();
   setInterval(autoCheck, 3600e3);

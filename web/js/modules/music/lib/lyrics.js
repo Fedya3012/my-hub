@@ -365,6 +365,21 @@ const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // ── Karaoke view ────────────────────────────────────────────────
 // opts: { onSeek(t), onLong(line, index, el), fake, duration }; .autoScroll for plain lyrics.
+// Display mode: 'word' = as stored (per-word/letter karaoke where timed), 'line' = whole line lights up,
+// 'plain' = static text without timing (no highlight, no auto-follow).
+export const LY_MODES = ['word', 'line', 'plain'];
+export function lyricsView(parsed, mode = 'word') {
+  if (!parsed || mode === 'word' || !LY_MODES.includes(mode)) return parsed;
+  if (mode === 'line') {
+    if (!parsed.synced) return parsed;
+    const strip = (L) => ({ ...L, words: [], wordSynced: false, bg: L.bg ? { ...L.bg, words: [] } : L.bg });
+    return { ...parsed, words: false, lines: parsed.lines.map(strip) };
+  }
+  if (!parsed.synced) return parsed;
+  return { synced: false, words: false, offset: 0, format: 'plain', lines: parsed.lines.filter(l => l.text || l.t != null)
+    .map(l => ({ t: null, text: l.text || '', words: [], tr: l.tr, roman: l.roman, agent: l.agent, bg: l.bg?.text ? { text: l.bg.text, words: [] } : null })) };
+}
+
 export class KaraokeView {
   constructor(el, { onSeek, onLong, fake = true, duration = 0 } = {}) {
     ensureLyricsCss();

@@ -24,7 +24,9 @@
 <body>
 <!-- BODY:START -->
 <div class="app">
-  <nav class="sidebar" aria-label="Điều hướng">
+  <header class="appbar" id="appbar"><button class="icon-btn" id="nav-toggle" aria-label="Menu" aria-expanded="false" aria-controls="sidebar"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button><b class="appbar-title" id="appbar-title">My Hub</b></header>
+  <div class="nav-scrim" id="nav-scrim"></div>
+  <nav class="sidebar" id="sidebar" aria-label="Điều hướng">
     <div class="brand"><b id="app-name">My Hub</b><span id="app-version"></span></div>
     <div id="nav-links"></div>
     <div class="sidebar-foot"><a href="#settings" class="storage-badge" id="storage-badge"></a></div>

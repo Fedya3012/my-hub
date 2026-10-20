@@ -64,7 +64,7 @@
 
 /* ── Dock (mini player) ────────────────── */
 .mdock { position: fixed; z-index: 25; display: flex; align-items: center; gap: 6px; color: var(--fg);
-  left: max(8px, env(safe-area-inset-left, 0px)); right: max(8px, env(safe-area-inset-right, 0px)); bottom: calc(74px + env(safe-area-inset-bottom, 0px));
+  left: max(8px, var(--sai-left)); right: max(8px, var(--sai-right)); bottom: calc(8px + var(--sai-bottom));
   padding: 6px 8px 6px 6px; border-radius: calc(var(--radius) + 4px); overflow: hidden;
   background: color-mix(in srgb, var(--surface) 82%, transparent); backdrop-filter: blur(18px) saturate(1.4); -webkit-backdrop-filter: blur(18px) saturate(1.4);
   border: 1px solid var(--line); box-shadow: 0 8px 30px rgb(0 0 0 / .18); }
@@ -102,7 +102,7 @@
 .msheet-wrap.out { background: rgb(0 0 0 / 0); }
 .msheet { width: 100%; max-height: 88dvh; display: flex; flex-direction: column; background: var(--surface); color: var(--fg);
   border-radius: calc(var(--radius) + 8px) calc(var(--radius) + 8px) 0 0; box-shadow: 0 -10px 40px rgb(0 0 0 / .25);
-  transform: translateY(100%); transition: transform .24s cubic-bezier(.2, .8, .2, 1); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  transform: translateY(100%); transition: transform .24s cubic-bezier(.2, .8, .2, 1); padding-bottom: var(--sai-bottom); }
 .msheet-wrap.in .msheet { transform: none; }
 .msheet-wrap.out .msheet { transform: translateY(100%); }
 .msheet-grab { width: 44px; height: 5px; border-radius: 5px; background: var(--line); margin: 8px auto 2px; flex: none; touch-action: none; cursor: grab; padding: 6px 0; background-clip: content-box; box-sizing: content-box; }
@@ -280,7 +280,7 @@
 .mimport-f { font-size: .8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* Hero (album / artist / playlist pages) */
-.mhero { position: relative; display: flex; align-items: flex-end; gap: 28px; padding: 64px 28px 26px; margin: -28px calc(-1 * max(16px, env(safe-area-inset-left, 0px))) 0;
+.mhero { position: relative; display: flex; align-items: flex-end; gap: 28px; padding: 64px 28px 26px; margin: -28px calc(-1 * max(16px, var(--sai-left))) 0;
   color: #fff; overflow: hidden; isolation: isolate; background: var(--h-bg, #1d2530); }
 @media (min-width: 861px) { .mhero { margin-inline: -36px; padding-inline: 36px; } }
 .mhero-bg { position: absolute; inset: -40px; z-index: -1; background-size: cover; background-position: center; filter: blur(48px) saturate(1.5) brightness(.6); transform: scale(1.1); }
@@ -405,7 +405,7 @@
 /* ── Now Playing ───────────────────────── */
 body.mnp-open { overflow: hidden; }
 .mnp { position: fixed; inset: 0; z-index: 60; display: flex; flex-direction: column; color: var(--fg); background: var(--bg); --np-acc: var(--accent); --m-acc: var(--np-acc);
-  transform: translateY(100%); transition: transform .32s cubic-bezier(.2, .8, .2, 1); overflow: hidden; padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
+  transform: translateY(100%); transition: transform .32s cubic-bezier(.2, .8, .2, 1); overflow: hidden; padding: var(--sai-top) var(--sai-right) var(--sai-bottom) var(--sai-left); }
 .mnp.in { transform: none; }
 .mnp.out { transform: translateY(100%); }
 .mnp[data-ambient="1"] { color: #fff; background: var(--np-bg, #111); color-scheme: dark; --fg: #fff; --muted: rgb(255 255 255 / .66); --line: rgb(255 255 255 / .16); --surface-2: rgb(255 255 255 / .1); --accent-fg: #111; }
@@ -501,7 +501,7 @@ body.mnp-open { overflow: hidden; }
 .mnp[data-fx]:not([data-fx=""]) .mnp-fx { opacity: var(--fx-o, .8); }
 .mnp[data-video="1"] .mnp-fx { mix-blend-mode: screen; }
 /* Spectrum bars stay in a low band at the bottom so they never run through the title and controls. */
-.mnp[data-fx="bars"] .mnp-fx { opacity: calc(var(--fx-o, .8) * .55); -webkit-mask-image: linear-gradient(to top, #000 0, #000 8%, transparent 26%); mask-image: linear-gradient(to top, #000 0, #000 8%, transparent 26%); }
+.mnp[data-fx="bars"] .mnp-fx { opacity: calc(var(--fx-o, .8) * .55); -webkit-mask-image: linear-gradient(to top, #000 0, #000 6%, transparent 18%); mask-image: linear-gradient(to top, #000 0, #000 6%, transparent 18%); }
 /* The heavy blurred ambient stops drifting while a visualizer/video covers it, or the music is paused. */
 .mnp-bg-a, .mnp-bg-b { will-change: transform; }
 /* Pre-blurred source: no CSS filter and no blend mode (both forced a full-screen re-raster every frame). */
@@ -685,7 +685,7 @@ body.mnp-open { overflow: hidden; }
 .mtool .msort > .ic { width: 18px; height: 18px; color: var(--muted); flex: none; }
 
 /* Drag & drop targets (ui/dnd.js) */
-.mdropbar { position: fixed; z-index: 92; left: 50%; transform: translateX(-50%); bottom: calc(16px + var(--dock-h, 0px) + env(safe-area-inset-bottom, 0px));
+.mdropbar { position: fixed; z-index: 92; left: 50%; transform: translateX(-50%); bottom: calc(16px + var(--dock-h, 0px) + var(--sai-bottom));
   display: flex; flex-wrap: wrap; align-items: center; gap: 8px; max-width: min(900px, calc(100vw - 24px)); max-height: 40vh; overflow: auto; padding: 10px 12px;
   background: var(--surface); color: var(--fg); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 16px 50px rgb(0 0 0 / .25); }
 .mdropbar-t { font-weight: 600; font-size: .85rem; color: var(--muted); margin-right: 4px; }
@@ -696,3 +696,41 @@ body.mnp-open { overflow: hidden; }
   border-radius: 16px; background: color-mix(in srgb, var(--accent) 16%, transparent); font-weight: 700; pointer-events: none; }
 .mrow-drag, .mq-drag { cursor: grab; touch-action: none; }
 .mrow-drag:focus-visible, .mq-drag:focus-visible { outline: 2px solid var(--accent); border-radius: 6px; }
+
+/* ── Now Playing legibility ────────────────
+   Secondary text and idle icons stay readable on any cover/video backdrop; a switched-on control
+   (shuffle, repeat, lyrics, EQ, timer…) is unmistakable: tinted pill + ring + dot, not just a colour shift. */
+.mnp[data-ambient="1"], .mnp[data-video="1"] { --muted: rgb(255 255 255 / .86); }
+.mnp[data-ambient="1"] .mnp-tt h2, .mnp[data-video="1"] .mnp-tt h2,
+.mnp[data-ambient="1"] .mnp-tt p, .mnp[data-video="1"] .mnp-tt p,
+.mnp[data-ambient="1"] .mnp-times, .mnp[data-video="1"] .mnp-times,
+.mnp[data-ambient="1"] .mnp-from, .mnp[data-video="1"] .mnp-from { text-shadow: 0 1px 8px rgb(0 0 0 / .45); }
+.mnp-from small { opacity: .9; }
+.mnp-times, .mnp-techline { font-size: .8rem; }
+.mnp-techline { color: var(--muted); }
+.mnp-tools { color: var(--fg); }
+.mnp-tools .icon-btn, .mnp-ctrls .icon-btn, .mnp-top .icon-btn, .mnp-tabs .icon-btn { opacity: .92; }
+.mnp .icon-btn:hover { opacity: 1; background: rgb(127 127 127 / .24); }
+.mnp .icon-btn .ic { stroke-width: 2.1; }
+.mnp .icon-btn[aria-pressed="true"], .mnp-fav.on {
+  --on: var(--np-acc);
+  position: relative; opacity: 1; color: var(--on);
+  background: color-mix(in srgb, var(--on) 24%, transparent);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--on) 80%, transparent);
+}
+.mnp .icon-btn[aria-pressed="true"]::after { content: ''; position: absolute; left: 50%; bottom: 3px; width: 5px; height: 5px; margin-left: -2.5px; border-radius: 50%; background: var(--on); }
+.mnp .icon-btn.big[aria-pressed="true"]::after, .mnp-top .icon-btn[aria-pressed="true"]::after { display: none; }
+.mnp .icon-btn[aria-pressed="true"] .ic { stroke-width: 2.4; }
+.mnp .icon-btn.mnp-fav.on { --on: #ff5d73; }
+.mnp .icon-btn.mnp-fav.on::after { display: none; }
+/* Dark covers: the accent is lightened so the lit state keeps contrast against the dark backdrop */
+.mnp[data-ambient="1"] .icon-btn[aria-pressed="true"], .mnp[data-video="1"] .icon-btn[aria-pressed="true"] { --on: color-mix(in srgb, var(--np-acc) 70%, #fff); background: color-mix(in srgb, var(--np-acc) 38%, rgb(0 0 0 / .25)); }
+.mdock .icon-btn[aria-pressed="true"] { position: relative; color: var(--m-acc, var(--accent)); background: color-mix(in srgb, var(--m-acc, var(--accent)) 20%, transparent); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--m-acc, var(--accent)) 75%, transparent); }
+.mnp-tabs button[role="tab"] { color: color-mix(in srgb, var(--fg) 78%, transparent); }
+.mnp-tabs button[aria-selected="true"] { background: rgb(127 127 127 / .3); color: var(--fg); box-shadow: inset 0 -2px 0 var(--np-acc); }
+
+/* Lyrics toolbar sits above the fading lyrics, on its own soft backing, so it never ghosts out */
+.ly { -webkit-mask: linear-gradient(#000 0, #000 80%, transparent); mask: linear-gradient(#000 0, #000 80%, transparent); }
+.ly-tools { z-index: 3; padding: 4px 6px; margin-bottom: 4px; border-radius: 14px; background: color-mix(in srgb, var(--np-bg, var(--bg)) 62%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+.ly-tools .pill { background: rgb(127 127 127 / .24); color: inherit; }
+.ly-off-v { opacity: 1; }
