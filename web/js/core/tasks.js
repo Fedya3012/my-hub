@@ -2,7 +2,7 @@
 // Any module or core service reports long work here; a small tray shows every running task with
 // a progress bar, percent, speed / time left and a cancel button when the task allows it.
 //
-//   const t = tasks.start({ label: 'Đang tải lên Drive', total: bytes, unit: 'bytes', onCancel });
+//   const t = tasks.start({ label: 'Đang đồng bộ', total: bytes, unit: 'bytes', onCancel });
 //   t.update({ done, total, detail: 'bai-hat.flac' });   // or t.step(n) to add n
 //   t.finish('Đã tải lên 3 tệp');                       // or t.fail(error)
 //   await tasks.run({ label }, async (t) => { ... });    // start + finish/fail around a function

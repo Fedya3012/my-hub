@@ -7,8 +7,8 @@
 //   await progress.save(item, { position: 289, total: 688, unit: 'page' });  // books, manual
 //   extra: fields stored on the row too (the Music player keeps its queue in a virtual row 'music:session').
 //
-// Rows are keyed by itemId; the most recent write (from any device) wins. In Drive/Hybrid
-// mode a save pushes to Drive within a few seconds, and opening the app on another device
+// Rows are keyed by itemId; the most recent write (from any device) wins. In GitHub
+// mode a save pushes to GitHub within a few seconds, and opening the app on another device
 // pulls it right away (storage.syncLive), so playback resumes at the same spot.
 import { db, now } from './db.js';
 import { bus } from './bus.js';

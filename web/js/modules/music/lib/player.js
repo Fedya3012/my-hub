@@ -188,8 +188,7 @@ class Player extends EventTarget {
     return job.promise;
   }
 
-  // Progress (task tray, unit %): download from Drive when the file is only there (0–40 %, or
-  // 0–100 % when no decoding is needed), then decoding DSD / ALAC / AIFF to WAV (the rest).
+  // Progress (task tray, unit %): decoding DSD / ALAC / AIFF to WAV.
   async _resolve(track, job, onProgress) {
     const file = await mainFile(track.id);
     if (!file) throw Object.assign(new Error('Bài này chưa có tệp âm thanh (chỉ có thông tin).'), { nofile: true });
@@ -199,17 +198,16 @@ class Player extends EventTarget {
     let blob = kind ? await cachedDecode(file.id) : null;
     const decoded = kind || null;
     const needDecode = !!kind && !blob;
-    const download = !blob && !file.locations?.local && !!file.locations?.gdrive;
     const codec = track.tech?.codecLabel || kind?.toUpperCase() || '';
-    const task = needDecode || download ? (job.task = tasks.start({
-      label: needDecode ? `Đang giải mã ${codec}`.trim() : 'Đang tải bài hát từ Google Drive',
+    const task = needDecode ? (job.task = tasks.start({
+      label: `Đang giải mã ${codec}`.trim(),
       // Decoding is what stands between the tap and the music: show it at once.
-      detail: track.title || file.name || '', unit: 'percent', quiet: job.background, delay: needDecode ? 0 : 250,
+      detail: track.title || file.name || '', unit: 'percent', quiet: job.background, delay: 0,
     })) : null;
-    const dlSpan = download ? (needDecode ? 40 : 100) : 0;
+    const dlSpan = 0;
     try {
       if (!blob) {
-        const src = await storage.open(file, task ? { onProgress: ({ done, total }) => task.update({ done: total ? done / total * dlSpan : 0, detail: `${track.title || file.name} · tải từ Drive` }) } : undefined);
+        const src = await storage.open(file);
         if (needDecode) {
           this.status = 'Đang giải mã ' + codec + '…';
           this._emit('status');

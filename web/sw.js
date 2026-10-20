@@ -1,7 +1,7 @@
 // Service Worker: offline cache + update channel for App Manager.
 // Bump SW_VERSION whenever the shell changes; the browser then installs the new worker,
 // App Manager shows "Cập nhật lõi", and SKIP_WAITING switches over.
-const SW_VERSION = '0.7.1.1';
+const SW_VERSION = '0.8.0.0';
 const SHELL_CACHE = 'hub-shell-' + SW_VERSION;
 const RUNTIME_CACHE = 'hub-runtime';
 
@@ -52,8 +52,8 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
 
-  // Never cache Google auth/Drive API calls or version checks.
-  if (/googleapis\.com|accounts\.google\.com/.test(url.host) || url.pathname.endsWith('version.json') || url.pathname.startsWith('/__oauth')) return;
+  // Never cache GitHub API calls or version checks.
+  if (url.host === 'api.github.com' || url.pathname.endsWith('version.json')) return;
 
   // Page navigations: network first so new deploys show up, cached shell when offline.
   if (req.mode === 'navigate') {

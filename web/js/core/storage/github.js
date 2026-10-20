@@ -1,6 +1,6 @@
 // GitHub adapter: the library snapshot (hub-db.json) and the progress channel (hub-live.json) live as
 // two JSON files in a private repo "my-hub-data" of the signed-in user (Contents API, personal access
-// token). Same readSnapshot/writeSnapshot shape as gdrive.js; there is no file upload (put/get): music
+// token). readSnapshot/writeSnapshot of hub-db.json and hub-live.json; there is no file upload: music
 // and books stay on the device, only data syncs. Sign-in and the token belong to js/core/account.js.
 import { account } from '../account.js';
 

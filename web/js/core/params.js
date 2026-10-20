@@ -21,7 +21,7 @@
 //
 // Declared parameters automatically: appear in Cài đặt → "Thông số" (unless ui: false), are saved
 // (scope 'device' = this device only, in db.settings; scope 'sync' = every device, in a synced
-// db.collections row, so Google Drive sync carries them), and are part of the JSON backup
+// db.collections row, so GitHub sync carries them), and are part of the JSON backup
 // (both tables are exported). Types: bool | number | string | enum | color | json.
 //
 // Namespaces can also be backed by an adapter (existing storage keeps working: music prefs,

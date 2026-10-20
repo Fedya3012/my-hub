@@ -1,5 +1,5 @@
 // Windows shell for My Hub. It serves web/ from a fixed localhost port so the app keeps a
-// stable origin: IndexedDB data survives updates, and Google sign-in accepts
+// stable origin: IndexedDB data survives updates, 
 // http://localhost:<port> as an authorized JavaScript origin.
 const { app, BrowserWindow, Menu, dialog, shell } = require('electron');
 const https = require('https');
@@ -18,14 +18,8 @@ const TYPES = {
   '.woff2': 'font/woff2', '.wasm': 'application/wasm',
 };
 
-let oauthHash = '';   // token handed back by web/oauth.html after Google sign-in in the system browser
 function serve() {
   const server = http.createServer((req, res) => {
-    if (req.url.startsWith('/__oauth')) {
-      if (req.method === 'POST') { let b = ''; req.on('data', (d) => { if (b.length < 8192) b += d; }); req.on('end', () => { oauthHash = b; res.writeHead(204); res.end(); }); return; }
-      const t = oauthHash; oauthHash = '';
-      res.writeHead(200, { 'Content-Type': 'text/plain', 'Cache-Control': 'no-store' }); return res.end(t);
-    }
     let rel = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
     if (rel.endsWith('/')) rel += 'index.html';
     const file = path.normalize(path.join(WEB, rel));
@@ -60,7 +54,7 @@ function createWindow() {
   // App feel: no pinch/ctrl-zoom, no browser-style context menu on the page background.
   win.webContents.setVisualZoomLevelLimits(1, 1);
   win.webContents.on('context-menu', (e, params) => { if (!params.isEditable && !params.selectionText) e.preventDefault(); });
-  // Google sign-in (and every other link) opens in the system browser; oauth.html hands the token back via /__oauth.
+  // Every external link opens in the system browser.
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https?:/.test(url)) shell.openExternal(url);
     return { action: 'deny' };

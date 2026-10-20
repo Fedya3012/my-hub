@@ -140,7 +140,7 @@ async function showStorageFull(err) {
   };
   box.querySelector('[data-a="retry"]').onclick = () => location.reload();
   box.querySelector('[data-a="all"]').onclick = async () => {
-    if (!confirm('Xoá TOÀN BỘ dữ liệu của app trên máy này (thư viện, cài đặt, tệp đã lưu)? Dữ liệu đã đồng bộ lên Google Drive vẫn còn.')) return;
+    if (!confirm('Xoá TOÀN BỘ dữ liệu của app trên máy này (thư viện, cài đặt, tệp đã lưu)? Dữ liệu đã đồng bộ lên GitHub vẫn còn.')) return;
     try { db.close(); } catch { /* ignore */ }
     try { await new Promise((ok) => { const r = indexedDB.deleteDatabase(db.name); r.onsuccess = r.onerror = r.onblocked = ok; }); } catch { /* ignore */ }
     try { for (const k of await caches.keys()) await caches.delete(k); } catch { /* ignore */ }
@@ -155,7 +155,7 @@ async function boot() {
   catch (e) { if (isQuota(e)) { document.body.classList.add('ready'); return showStorageFull(e); } throw e; }
   await safe(() => syncModuleRows(), 'modules');
   await safe(() => thisDevice(), 'device');
-  safe(() => account.init(), 'account');         // restore the cached Google session (works offline) before routing
+  safe(() => account.init(), 'account');         // restore the cached GitHub session (works offline) before routing
   await safe(() => applyTheme(), 'theme');
   await safe(() => initCoreParams(), 'params');   // shared parameters (ctx.params) before any module starts
   await safe(() => seedIfEmpty(), 'seed');

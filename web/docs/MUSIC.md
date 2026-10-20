@@ -4,7 +4,7 @@ Trình phát nhạc của My Hub: bố cục và trải nghiệm lấy từ Noct
 
 ## 1. Schema bổ sung (Dexie `db.version(3)`)
 
-Mỗi bài nhạc vẫn là một `items` (type `music` hoặc `podcast`, moduleId `music`), nên tự hiện trong Thư viện, tìm kiếm, thẻ, yêu thích, sao lưu. Phần riêng của nhạc nằm ở các bảng mới, đều được đồng bộ Drive (trừ ghi chú bên dưới).
+Mỗi bài nhạc vẫn là một `items` (type `music` hoặc `podcast`, moduleId `music`), nên tự hiện trong Thư viện, tìm kiếm, thẻ, yêu thích, sao lưu. Phần riêng của nhạc nằm ở các bảng mới, đều được đồng bộ GitHub (trừ ghi chú bên dưới).
 
 | Bảng | Khoá / chỉ mục | Nội dung |
 |---|---|---|
@@ -30,7 +30,7 @@ Dùng lại bảng có sẵn:
 - **Playlist**: `collections` với `kind: 'playlist'` (thứ tự qua `links` relation `contains` + `order`) hoặc `kind: 'smart'` (`rules: { match: 'all'|'any', rules: [{field, op, value}], sort, limit }`).
 - **Nhạc gắn với sách / fanfic / podcast / video**: `links` relation `soundtrack-of`, `fromId` là bài, album, nghệ sĩ hoặc playlist, `toId` là mục được gắn. Thêm `source` (track/album/artist/playlist), `autoplay`, `shuffle`.
 - **Phiên nghe đồng bộ giữa máy**: bản ghi ảo `progress['music:session']` (hàng chờ, bài, vị trí, nguồn, máy) đi theo kênh live `hub-live.json`. Podcast và bài dài hơn 10 phút còn lưu tiến độ riêng theo item.
-- **Tệp**: `files` qua `storage` như mọi module, nên chạy ở cả ba chế độ Local / Google Drive / Kết hợp. Thư mục liên kết (Chrome/Edge máy tính) giữ handle, không chép tệp.
+- **Tệp**: `files` qua `storage` như mọi module, nên chạy ở cả hai chế độ Local / GitHub (tệp luôn ở trên máy). Thư mục liên kết (Chrome/Edge máy tính) giữ handle, không chép tệp.
 
 Video nền là một `files` (role `bgvideo`), chủ sở hữu là bài hoặc album, nên đồng bộ như mọi tệp. Video mặc định cho mọi bài nằm ở `settings['music.bgVideoDefault']`, chỉ trên máy đó.
 
@@ -72,7 +72,7 @@ Chỉ lưu trên từng máy (không đồng bộ): tuỳ chọn hiển thị v�
 - **Ảnh mọi nơi**: bài → ảnh riêng → bìa album → ảnh thư mục → ảnh tạo sẵn; nghệ sĩ → ảnh tự chọn → ghép 4 bìa album (hoặc bìa phổ biến nhất); danh sách phát, thể loại, năm, hãng đĩa, nhạc sĩ, thư mục → ảnh tự chọn → ghép 2×2 bìa. Ảnh tự chọn là `files` role `artwork` + `artwork-thumb`, `itemId` = `<loại>:<id>` (đồng bộ như tệp khác); ảnh ghép lưu ở Cache Storage `hub-music-art`. Menu ⋯ / chuột phải → “Đổi ảnh…”: chọn tệp, dán, kéo thả, lấy ảnh nhúng trong tệp, cắt vuông, về tự động.
 - **Duyệt theo thư mục** (Tuỳ chỉnh → Thư viện → “Duyệt theo thư mục (không quét thư viện)”): tab “Duyệt thư mục”, thêm thư mục máy / thẻ SD / USB bằng `showDirectoryPicker`, handle giữ trong bảng `handles` (chỉ máy này, hỏi lại quyền sau khi mở lại app). Phát thẳng từ handle (bài “ảo” `vt:…`, không nhập). Trình duyệt không có API này: chọn bằng `<input webkitdirectory>`, chỉ trong phiên. Không gõ được đường dẫn trực tiếp.
 - **Thống kê** (tab “Thống kê”): thời gian nghe theo ngày/tuần/tháng, bài/nghệ sĩ/album/thể loại nghe nhiều, chuỗi ngày, giờ nghe trong tuần, định dạng, chất lượng thư viện, thư viện tăng dần, bài hay bỏ qua. `plays` có thêm dòng `skip: 1` (nghe chưa tới ngưỡng tính lượt) và `ms` đã nghe; dòng skip không tính vào số lượt nghe.
-- **Video nền đi cùng bài**: video được chép vào bộ nhớ app (`files` role `bgvideo`, chủ là bài/album, không giữ đường dẫn gốc), nên xoá tệp video gốc không ảnh hưởng; đồng bộ qua Drive/tài khoản như tệp khác. Video không được nhúng vào chính tệp nhạc (trình duyệt không mux được MP4/MKV đủ tin cậy); xuất JSON nhạc chỉ chứa tham chiếu, bản thân video đi theo bộ nhớ app và đồng bộ tệp.
+- **Video nền đi cùng bài**: video được chép vào bộ nhớ app (`files` role `bgvideo`, chủ là bài/album, không giữ đường dẫn gốc), nên xoá tệp video gốc không ảnh hưởng; ở lại trên máy như tệp khác. Video không được nhúng vào chính tệp nhạc (trình duyệt không mux được MP4/MKV đủ tin cậy); xuất JSON nhạc chỉ chứa tham chiếu, bản thân video đi theo bộ nhớ app và đồng bộ tệp.
 
 ## 3. Định dạng và giới hạn trình duyệt
 

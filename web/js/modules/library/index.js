@@ -205,9 +205,9 @@ function renderTagOptions() {
 function storageBadges(item) {
   const fs = data.filesBy.get(item.id) || [];
   if (!fs.length) return '';
-  const local = fs.some(f => f.locations?.local), cloud = fs.some(f => f.locations?.gdrive), pending = fs.some(f => f.syncStatus === 'pending-upload');
-  return `<span class="loc" title="${[local && 'Có trên máy', cloud && 'Có trên Google Drive', pending && 'Chờ tải lên Drive'].filter(Boolean).join(' · ')}">
-    ${local ? icon('device') : ''}${cloud ? icon('cloud') : ''}${pending ? '<i class="pending-dot"></i>' : ''}</span>`;
+  const local = fs.some(f => f.locations?.local);
+  return `<span class="loc" title="${local ? 'Có trên máy' : ''}">
+    ${local ? icon('device') : ''}</span>`;
 }
 
 function filtered() {
@@ -300,7 +300,7 @@ async function openDrawer(id) {
           : '<p class="muted">Chưa liên kết với mục nào. Ví dụ: nối bài nhạc phim với bộ phim, cuốn sách với podcast bàn về nó.</p>'}</div>
       <div class="block"><h3>Tệp & nơi lưu</h3>
         ${files.length ? `<ul class="files">${files.map(f => `<li><span class="file-name">${esc(f.name)}</span><span class="num muted">${fmtBytes(f.size)}</span>
-          <span class="locs">${f.locations?.local ? `<span class="pill">${icon('device')}Máy (${f.locations.local.kind})</span>` : ''}${f.locations?.gdrive ? `<span class="pill">${icon('cloud')}Drive</span>` : ''}${f.syncStatus === 'pending-upload' ? '<span class="pill warn">Chờ tải lên</span>' : ''}</span></li>`).join('')}</ul>`
+          <span class="locs">${f.locations?.local ? `<span class="pill">${icon('device')}Máy (${f.locations.local.kind})</span>` : ''}</span></li>`).join('')}</ul>`
           : '<p class="muted">Mục này chưa có tệp đính kèm.</p>'}</div>
       <div class="block"><h3>Hoạt động</h3>
         <ul class="activity">${acts.slice(0, 5).map(a => `<li><span>${{ open: 'Đã mở', play: 'Đã phát', finish: 'Đã xong', import: 'Đã nhập' }[a.action] || a.action}</span><span class="muted">${fmtAgo(a.at)}</span></li>`).join('') || '<li class="muted">Chưa có</li>'}

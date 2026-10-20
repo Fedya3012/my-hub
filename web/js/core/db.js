@@ -1,5 +1,5 @@
 // Database layer (Dexie / IndexedDB). Offline-first: IndexedDB is always the
-// working copy; Google Drive (if enabled) only mirrors it. See docs/SCHEMA.md.
+// working copy; the GitHub repo (if enabled) only mirrors it. See docs/SCHEMA.md.
 const Dexie = window.Dexie;
 
 export const DB_NAME = 'my-hub';
@@ -15,7 +15,7 @@ db.version(1).stores({
   items: 'id, type, moduleId, title, *tags, status, favorite, createdAt, updatedAt, lastOpenedAt, deleted, [type+updatedAt]',
 
   // Physical files behind items. One item can have several (main file, cover, subtitles...).
-  // `locations` says where copies live: { local: {...}, gdrive: {...} }.
+  // `locations` says where copies live: { local: {...} }.
   files: 'id, itemId, role, hash, mime, syncStatus, updatedAt',
 
   // Blobs kept inside IndexedDB when OPFS is unavailable (small files, covers).
@@ -43,7 +43,7 @@ db.version(1).stores({
   // Custom themes created or imported by the user.
   themes: 'id',
 
-  // Outbound changes waiting to be pushed to Google Drive (hybrid / gdrive modes).
+  // Outbound changes waiting to be pushed to GitHub (github mode).
   syncQueue: '++seq, entity, entityId, op, createdAt',
 });
 
@@ -88,7 +88,7 @@ export const uid = () =>
 
 export const now = () => Date.now();
 
-// Tables whose changes are synced to Drive. activity (high volume) and modules
+// Tables whose changes are synced to GitHub. activity (high volume) and modules
 // (installed code versions differ per device) stay local.
 export const SYNCED_TABLES = ['items', 'files', 'links', 'collections', 'themes', 'tracks', 'albums', 'artists', 'plays', 'eqPresets', 'lyrics'];
 // Small, frequently changing tables synced on the fast "live" channel (hub-live.json).

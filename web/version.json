@@ -1,7 +1,16 @@
 {
-  "app": "0.7.1.1",
+  "app": "0.8.0.0",
   "released": "2026-10-20",
   "changelog": [
+    {
+      "version": "0.8.0.0",
+      "date": "2026-10-20",
+      "notes": [
+        "Bỏ hoàn toàn đồng bộ Google (đăng nhập Google, Google Drive, hộp chọn thư mục): chỉ còn Trên máy và GitHub",
+        "Máy đang dùng Google Drive hoặc Kết hợp tự chuyển sang GitHub (nếu đã đăng nhập GitHub) hoặc Trên máy; dữ liệu trên máy giữ nguyên",
+        "Tệp nhạc/sách luôn ở lại trên máy; tệp chỉ nằm trên Drive cũ cần thêm lại vào app"
+      ]
+    },
     {
       "version": "0.7.1.1",
       "date": "2026-10-20",

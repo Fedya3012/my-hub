@@ -1,6 +1,6 @@
 # Schema database (Dexie / IndexedDB)
 
-Định nghĩa trong `js/core/db.js`. IndexedDB luôn là bản làm việc chính (offline-first); Google Drive chỉ là bản sao đồng bộ.
+Định nghĩa trong `js/core/db.js`. IndexedDB luôn là bản làm việc chính (offline-first); kho GitHub chỉ là bản sao đồng bộ.
 
 ## Nguyên tắc
 

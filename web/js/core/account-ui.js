@@ -1,5 +1,5 @@
 // Account UI pieces used outside the account page: the sidebar badge, the Settings summary,
-// form dialogs that stay open on errors, and turning sync on after signing in with Google
+// form dialogs that stay open on errors, and turning sync on after signing in with GitHub
 // (with the "this device already has data" choice). The account page is js/modules/account/index.js.
 import { account } from './account.js';
 import { storage } from './storage/index.js';
@@ -18,12 +18,11 @@ registerIcons({
 });
 
 export const GITHUB_LOGO = `<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2z"/></svg>`;
-export const GOOGLE_LOGO = `<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.8h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.3z"/><path fill="#34A853" d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22z"/><path fill="#FBBC05" d="M6.4 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.4H3.1a10 10 0 0 0 0 9.2z"/><path fill="#EA4335" d="M12 6c1.5 0 2.8.5 3.8 1.5l2.9-2.9A10 10 0 0 0 3.1 7.4L6.4 10C7.2 7.7 9.4 6 12 6z"/></svg>`;
 
 // Messages from the sync backend (signed out from another device…).
 bus.on('account:notice', ({ kind, message }) => toast(message, kind || 'info'));
 
-// Google profile photo, with the initial underneath (shown offline or when the photo fails).
+// Profile photo, with the initial underneath (shown offline or when the photo fails).
 export function avatar(u = account.user, cls = '') {
   const name = account.displayName(u);
   const ch = (name.trim()[0] || '?').toUpperCase();
@@ -32,7 +31,7 @@ export function avatar(u = account.user, cls = '') {
   return `<span class="acct-avatar ${cls}" aria-hidden="true">${esc(ch)}${img}</span>`;
 }
 
-const MODE_LABEL = { local: 'Trên máy', gdrive: 'Tài khoản Google', github: 'Tài khoản GitHub', hybrid: 'Kết hợp' };
+const MODE_LABEL = { local: 'Trên máy', github: 'Tài khoản GitHub' };
 
 // Sidebar footer badge. s = storage.status(). Always links to the account page.
 export function badge(s) {
@@ -57,15 +56,14 @@ export function badge(s) {
 
 // Block for the top of Settings.
 export function accountSummary() {
-  const gh = account.provider === 'github';
   let body;
   if (account.signedIn) {
     body = `${avatar(account.user, 'md')}<span class="acct-sum-t"><strong>${esc(account.displayName())}</strong><span class="muted">${esc(account.email)}${account.needsReconnect ? ' · cần kết nối lại' : ''}</span></span>`;
   } else {
-    body = `<span class="mod-icon">${icon('user')}</span><span class="acct-sum-t"><strong>Đăng nhập để đồng bộ</strong><span class="muted">Bằng GitHub (dán token) hoặc Google. Đồng bộ thư viện và tiến độ nghe/đọc giữa máy tính và điện thoại.</span></span>`;
+    body = `<span class="mod-icon">${icon('user')}</span><span class="acct-sum-t"><strong>Đăng nhập để đồng bộ</strong><span class="muted">Bằng GitHub (dán token). Đồng bộ thư viện và tiến độ nghe/đọc giữa máy tính và điện thoại.</span></span>`;
   }
   return `<section class="set-block" id="set-account">
-      <h2 class="section-title">${icon('user')}${account.signedIn ? (gh ? 'Tài khoản GitHub' : 'Tài khoản Google') : 'Tài khoản'}</h2>
+      <h2 class="section-title">${icon('user')}${account.signedIn ? 'Tài khoản GitHub' : 'Tài khoản'}</h2>
       <a class="panel acct-summary" href="#account">${body}<span class="acct-sum-go">${icon('arrow')}</span></a>
     </section>`;
 }
@@ -110,20 +108,18 @@ export function formDialog({ title, intro = '', fields = [], extra = '', submit 
 
 // After signing in (or "Bật đồng bộ" / choosing a cloud mode in Settings): decide what happens to
 // this device's library, switch to a cloud mode and start the first sync (progress in the tray).
-// mode: 'gdrive' (default) or 'hybrid'. → 'merge' | 'replace' | 'later' | 'same'
-export async function afterSignIn(mode) {
+// → 'merge' | 'replace' | 'later' | 'same'
+export async function afterSignIn() {
   if (!account.signedIn) return 'later';
   const uid = account.uid;
   const cur = await storage.mode();
   const lastUid = await getSetting('account.lastUid', null);
-  const gh = account.provider === 'github';
-  const target = gh ? 'github' : (mode && mode !== 'github' ? mode : cur === 'hybrid' ? 'hybrid' : 'gdrive');
+  const target = 'github';
   if (cur !== 'local' && lastUid === uid) {
     if (cur !== target) await storage.setMode(target);
     storage.sync().catch(e => toast(e.message, 'error'));
     return 'same';
   }
-  if (lastUid && lastUid !== uid) await setSetting('gdrive.folderId', null);   // other Google account: other Drive
 
   let choice = 'merge';
   let remote = false;
@@ -135,14 +131,14 @@ export async function afterSignIn(mode) {
       title: 'Máy này đã có dữ liệu',
       body: `<div class="stack"><p>Thư viện trên máy này${other ? ' có thể thuộc một tài khoản khác' : ''} chưa nằm trong tài khoản <b>${esc(account.email)}</b>, và tài khoản đã có dữ liệu từ máy khác. Bạn muốn làm gì?</p>
         <ul class="acct-choices">
-          <li><b>Gộp</b> (khuyên dùng): giữ cả hai, mục nào sửa sau cùng thì thắng. ${gh ? '' : 'Tệp trên máy sẽ được tải lên Drive.'}</li>
+          <li><b>Gộp</b> (khuyên dùng): giữ cả hai, mục nào sửa sau cùng thì thắng.</li>
           <li><b>Dùng dữ liệu của tài khoản</b>: thay thư viện trên máy này bằng bản trong tài khoản. Những gì chỉ có trên máy này sẽ mất.</li>
           <li><b>Để sau</b>: vẫn đăng nhập nhưng chưa đồng bộ máy này.</li></ul></div>`,
       actions: [{ label: 'Để sau', value: 'later' }, { label: 'Dùng dữ liệu của tài khoản', value: 'replace', kind: 'danger-ghost' }, { label: 'Gộp', value: 'merge', kind: 'primary' }],
     }) || 'later';
   }
   if (choice === 'later') { bus.emit('account:changed', { user: account.user, signedIn: true, reason: 'later' }); return 'later'; }
-  if (choice === 'replace' && !(await confirmBox('Thay dữ liệu trên máy này?', 'Thư viện trên máy này sẽ được thay bằng dữ liệu trong tài khoản Google. Những mục chỉ có trên máy này sẽ bị xoá.', 'Thay dữ liệu'))) return afterSignIn(mode);
+  if (choice === 'replace' && !(await confirmBox('Thay dữ liệu trên máy này?', 'Thư viện trên máy này sẽ được thay bằng dữ liệu trong tài khoản. Những mục chỉ có trên máy này sẽ bị xoá.', 'Thay dữ liệu'))) return afterSignIn();
   await storage.setMode(target);
   await setSetting('account.lastUid', uid);
   try {
@@ -175,14 +171,7 @@ export async function githubDialog() {
 export async function signInGitHubFlow() {
   if (!(await githubDialog())) return null;
   toast(`Chào ${account.displayName()}!`);
-  return afterSignIn('github');
-}
-
-// Sign in from a click, then turn sync on.
-export async function signInFlow(mode) {
-  await account.signIn();
-  toast(`Chào ${account.displayName()}!`);
-  return afterSignIn(mode);
+  return afterSignIn();
 }
 
 // Wipe this device's library (same as Settings → "Xoá toàn bộ dữ liệu"), then reload.

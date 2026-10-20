@@ -30,7 +30,7 @@ export async function migrate({ from, to, db }) { /* tuỳ chọn: chạy khi c�
 - Ghi lịch sử: `logActivity(itemId, 'music', 'play')` → thống kê và "Tiếp tục" của Thư viện tự cập nhật.
 - Tiến độ (bắt buộc dùng để đồng bộ giữa các máy): `progress.track(item, audioOrVideoEl)` cho nhạc, video, podcast; `progress.save(item, { position, total, unit: 'page' })` cho sách. Khi mở item, đọc `progress.get(item.id)` để tiếp tục đúng chỗ.
 - Quan hệ: `linkItems(fromId, toId, 'soundtrack-of')`, đọc bằng `relatedItems(id)`.
-- Tệp: luôn dùng `storage`, không tự đọc OPFS hay Drive, để cả ba chế độ lưu trữ đều chạy.
+- Tệp: luôn dùng `storage`, không tự đọc OPFS, để cả hai chế độ lưu trữ đều chạy.
 
 ## Cập nhật module
 
@@ -74,7 +74,7 @@ my.get('fontSize'); await my.set('fontSize', 20); my.on(e => …);
 | `type` | `bool` (0/1) · `number` (kẹp theo `min`/`max`) · `string` · `enum` (`options: {giá trị: nhãn}`) · `color` (#hex, `nullable`) · `json` |
 | `default` | giá trị khi chưa lưu gì |
 | `label` | có nhãn và `ui !== false` → tự hiện ở **Cài đặt → Thông số dùng chung** |
-| `scope` | `'device'` (mặc định, chỉ máy này, bảng `settings` khoá `params.<ns>`) · `'sync'` (mọi thiết bị: dòng `collections` id `params:sync`, đi theo đồng bộ Google Drive) |
+| `scope` | `'device'` (mặc định, chỉ máy này, bảng `settings` khoá `params.<ns>`) · `'sync'` (mọi thiết bị: dòng `collections` id `params:sync`, đi theo đồng bộ GitHub) |
 | `readonly`, `hint`, `unit`, `step`, `section` | phụ |
 
 Cả hai nơi lưu đều nằm trong bản **xuất/nhập JSON**; sau khi nhập hoặc đồng bộ kéo về, `params` tự đọc lại và phát sự kiện (`source: 'sync'`). Không gian đã có kho riêng (Nhạc: `music.prefs`, theme, chế độ lưu trữ) dùng `adapter: { get(k), set(k, v) }` nên giá trị cũ giữ nguyên chỗ; `set` trả `false` = để params tự lưu.
@@ -127,4 +127,4 @@ Nút thu nhỏ (⌄) biến khay thành vòng tròn 48 px: vòng tiến độ ch
 
 ## Dung lượng
 
-App không đặt giới hạn số bài/album/tệp hay kích thước tệp. Giới hạn thật là hạn mức trình duyệt (`navigator.storage.estimate`) và dung lượng tài khoản Google (`about.storageQuota`), cả hai hiện trong Cài đặt với cảnh báo khi ≥ 85 %. Lần nhập đầu tiên app xin `navigator.storage.persist()`. Tải lên Drive dùng phiên resumable chia đoạn 2 MB, tự nối lại sau khi rớt mạng. Muốn không tốn chỗ: “Liên kết thư mục (không sao chép)” (File System Access, máy tính).
+App không đặt giới hạn số bài/album/tệp hay kích thước tệp. Giới hạn thật là hạn mức trình duyệt (`navigator.storage.estimate`) và dung lượng còn lại trên máy, hiện trong Cài đặt với cảnh báo khi ≥ 85 %. Lần nhập đầu tiên app xin `navigator.storage.persist()`. Muốn không tốn chỗ: “Liên kết thư mục (không sao chép)” (File System Access, máy tính).

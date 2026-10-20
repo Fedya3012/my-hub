@@ -54,8 +54,6 @@ input[type="email"], input[type="password"] {
 .acct-center .stack { width: 100%; }
 .acct-big-ic { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); }
 .acct-big-ic .ic { width: 28px; height: 28px; }
-.acct-google { min-height: 44px; font-weight: 600; }
-.acct-google .ic { width: 18px; height: 18px; }
 .acct-why { display: flex; flex-direction: column; gap: 14px; padding: 8px 4px; }
 .acct-why h2 { font-family: var(--font-display); font-size: 1.4rem; }
 .acct-why ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
@@ -111,9 +109,9 @@ input[type="email"], input[type="password"] {
 /* Dialog form */
 .acct-dialog .check { flex-direction: row; gap: 8px; }
 .acct-dialog label small { font-weight: 400; }
-.acct-google, .btn.block { flex-direction: row; }
+.btn.block { flex-direction: row; }
 
-/* Google profile photo over the initial (the initial shows offline or if the photo fails). */
+/* Profile photo over the initial (the initial shows offline or if the photo fails). */
 .acct-avatar { position: relative; overflow: hidden; }
 .acct-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
 .acct-big-ic .ic { width: 30px; height: 30px; }

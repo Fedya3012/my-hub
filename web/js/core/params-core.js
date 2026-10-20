@@ -1,7 +1,7 @@
 // Global parameters every module should honour (see core/params.js and docs/MODULES.md):
 //   ui        skin, theme, accent, radius, text scale, density, motion        (adapter: core/theme.js)
 //   locale    language, locale for numbers / dates                           (stored)
-//   storage   storage mode, hybrid policy, cache on open                     (adapter: db.settings keys)
+//   storage   storage mode                     (adapter: db.settings keys)
 //   account   signed in, email, name, sync state                             (live, read-only)
 //   device    id, name, platform, online, dark mode, reduced motion, memory  (live, read-only)
 //   audio     volume, output device, Hi-Res rule, bit-perfect, speed          (stored; the music module
@@ -72,17 +72,15 @@ export async function initCoreParams() {
   params.on('locale.lang', (e) => { document.documentElement.lang = e.value; });
 
   // ── storage ── (keys stay where they always were in db.settings)
-  const st = { mode: await getSetting('storage.mode', 'local'), hybridPolicy: await getSetting('storage.hybridPolicy', 'all'), cacheOnOpen: (await getSetting('storage.cacheOnOpen', true)) ? 1 : 0 };
+  const st = { mode: await getSetting('storage.mode', 'local') };
   params.define('storage', {
     title: 'Lưu trữ', icon: 'database', order: 3,
     params: {
-      mode: { type: 'enum', default: 'local', options: { local: 'Chỉ trên máy', gdrive: 'Tài khoản Google', hybrid: 'Kết hợp' }, label: 'Chế độ lưu trữ', readonly: true, ui: false },
-      hybridPolicy: { type: 'enum', default: 'all', options: { all: 'Dữ liệu và mọi tệp', 'db-only': 'Chỉ dữ liệu', 'small-files': 'Dữ liệu + tệp dưới 50 MB' }, label: 'Kết hợp: đồng bộ gì', ui: false },
-      cacheOnOpen: { type: 'bool', default: 1, label: 'Giữ bản tạm khi mở tệp trên Drive', ui: false },
+      mode: { type: 'enum', default: 'local', options: { local: 'Chỉ trên máy', github: 'Tài khoản GitHub' }, label: 'Chế độ lưu trữ', readonly: true, ui: false },
     },
     adapter: {
       get: (k) => st[k],
-      async set(k, v) { st[k] = v; await setSetting('storage.' + k, k === 'cacheOnOpen' ? !!v : v); },
+      async set(k, v) { st[k] = v; await setSetting('storage.' + k, v); },
     },
   });
   bus.on('storage:mode', (e) => { const old = st.mode; st.mode = e?.mode ?? e; if (old !== st.mode) params.changed('storage.mode', st.mode, old, 'storage'); });

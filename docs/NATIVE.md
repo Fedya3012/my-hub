@@ -4,9 +4,9 @@
 
 | Phần | Công cụ | Vì sao |
 |---|---|---|
-| Code app | `web/` (HTML/CSS/JS thuần, Dexie) | Giữ nguyên toàn bộ PWA: App Manager, Library, Music Player, Local + Google Drive, theme, Import/Export. Một code cho cả 2 nền tảng. |
+| Code app | `web/` (HTML/CSS/JS thuần, Dexie) | Giữ nguyên toàn bộ PWA: App Manager, Library, Music Player, Local + GitHub, theme, Import/Export. Một code cho cả 2 nền tảng. |
 | Windows `.exe` | **Electron** (`electron/main.js`) | Chạy Chromium đầy đủ: đủ codec nhạc (AAC, FLAC, Opus…), chọn thư mục nhạc, tự cập nhật từ GitHub Releases. |
-| Android `.apk` | **Capacitor** (`android/`) | Bọc `web/` thành APK thật, có sẵn plugin cho các tính năng native (phát nhạc nền, đăng nhập Google). |
+| Android `.apk` | **Capacitor** (`android/`) | Bọc `web/` thành APK thật, có sẵn plugin cho các tính năng native (phát nhạc nền). |
 | Build + phát hành | **GitHub Actions** (`.github/workflows/build.yml`) | Mỗi lần push lên `main`: build `.exe` + `.apk`; nếu có phiên bản mới thì tạo GitHub Release. |
 
 Cả hai lớp bọc chỉ là JavaScript, không có Rust/Kotlin để bảo trì. Claude chỉ cần sửa `web/` cho gần như mọi thay đổi.
@@ -53,10 +53,9 @@ Không có secret: workflow vẫn build APK debug để thử, nhưng không t�
 
 Tải `MyHub-x.y.z-x64-Setup.exe` ở trang Releases rồi chạy. Windows SmartScreen có thể báo "Windows protected your PC" vì app chưa có chứng chỉ ký số: bấm **More info → Run anyway**. Bản cài đặt tự cập nhật từ các Release sau.
 
-## Đăng nhập Google trong app
+## Đăng nhập trong app
 
-- Windows: app chạy ở `http://localhost:47821`. Thêm origin này vào **Authorized JavaScript origins** của OAuth Client ID (xem `web/docs/ACCOUNT.md`).
-- Android: Google chặn đăng nhập bên trong WebView, nên bản Android cần plugin đăng nhập Google native (việc tiếp theo). Trước khi có, bản Android dùng chế độ Local.
+App chỉ có đăng nhập **GitHub** (dán token, xem `web/docs/ACCOUNT.md`), dùng được như nhau trên Windows và Android. Không cần OAuth Client ID, trang GitHub Pages hay liên kết sâu.
 
 ## Chạy thử trên máy (tuỳ chọn)
 

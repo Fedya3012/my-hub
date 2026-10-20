@@ -1,17 +1,15 @@
-// Settings: storage mode (Local / Google account / Hybrid), theme, backup & restore.
+// Settings: storage mode (Local / GitHub account), theme, backup & restore.
 import { db, getSetting, setSetting, exportAll, importAll } from '../../core/db.js';
-import { DRIVE_FOLDER_NAME } from '../../config.js';
-import { MODES, HYBRID_POLICIES } from '../../core/storage/index.js';
+import { MODES } from '../../core/storage/index.js';
 import { tasks } from '../../core/tasks.js';
 import { allThemes, currentTheme, applyTheme, saveCurrentAsTheme, exportTheme, importTheme } from '../../core/theme.js';
 import { thisDevice, renameDevice } from '../../core/device.js';
 import { icon } from '../../core/icons.js';
 import { account } from '../../core/account.js';
-import { accountSummary, afterSignIn, signInFlow } from '../../core/account-ui.js';
+import { accountSummary, afterSignIn } from '../../core/account-ui.js';
 import { esc, h, modal, confirmBox, saveJson, pickJson, fmtBytes, fmtAgo } from '../../core/ui.js';
 import { skinSectionHtml, bindSkins } from '../../core/skin-ui.js';
 import { paramsSectionHtml, bindParams } from '../../core/params-ui.js';
-import { gdrive } from '../../core/storage/gdrive.js';
 import { bus } from '../../core/bus.js';
 import { LANGS, lang, setLang } from '../../core/i18n.js';
 
@@ -28,16 +26,13 @@ let paramsOff = null;
 
 async function render() {
   const st = await ctx.storage.status();
-  const cacheOnOpen = await getSetting('storage.cacheOnOpen', true);
-  const driveFolder = (await getSetting('gdrive.folderName')) || DRIVE_FOLDER_NAME;
   const themes = await allThemes();
   const cur = await currentTheme();
   const persisted = await navigator.storage?.persisted?.().catch(() => false);
   const me = await thisDevice();
   const devices = (await db.devices.orderBy('lastSeenAt').reverse().toArray());
   const liveAt = await getSetting('sync.liveAt', null);
-  const conn = st.drive.signedIn;   // signed in (an expired Google token is renewed on click)
-  const ghAcct = st.drive.provider === 'github';
+  const conn = st.cloud.signedIn;
 
   root.innerHTML = `
   <section class="page settings">
@@ -51,7 +46,7 @@ async function render() {
         ${Object.entries(MODES).map(([k, m]) => `
           <label class="mode-card${st.mode === k ? ' on' : ''}">
             <input type="radio" name="storage-mode" id="mode-${k}" value="${k}" ${st.mode === k ? 'checked' : ''}>
-            <span class="mode-icon">${icon(k === 'local' ? 'device' : k === 'gdrive' || k === 'github' ? 'user' : 'refresh')}</span>
+            <span class="mode-icon">${icon(k === 'local' ? 'device' : 'user')}</span>
             <strong>${m.label}</strong><span>${m.hint}</span></label>`).join('')}
       </div>
 
@@ -59,26 +54,19 @@ async function render() {
         <dl class="kv">
           <dt>Lưu tệp trên máy bằng</dt><dd>${st.backend === 'opfs' ? 'Hệ thống tệp riêng của ứng dụng (OPFS)' : 'IndexedDB'}</dd>
           <dt>Đã dùng trên máy</dt><dd>${quotaBar(st.usage?.usage, st.usage?.quota)}</dd>
-          ${conn && !ghAcct ? '<dt>Dung lượng Google</dt><dd data-drive-quota><span class="muted">Đang lấy…</span></dd>' : ''}
           <dt>Chống bị xoá tự động</dt><dd>${persisted ? '<span class="pill ok">Đã bật</span>' : '<button class="btn small" data-act="persist">Yêu cầu lưu trữ bền vững</button>'}</dd>
-          ${st.mode === 'github' ? '' : `<dt>Thư mục trên Drive</dt><dd><input id="set-dfolder" value="${esc(driveFolder)}" maxlength="80" style="max-width:220px"> <button class="btn small" data-act="dfolder">Lưu</button>${gdrive.pickerAvailable?.() && !ghAcct ? ' <button class="btn small" data-act="dpick">Chọn thư mục có sẵn…</button>' : ''}<div class="hint">My Hub chỉ đọc và ghi trong thư mục này (tự tạo nếu chưa có), không đụng tới phần còn lại của Drive. Tệp đã tải lên trước đó vẫn nằm ở thư mục cũ.</div></dd>`}
           ${st.mode !== 'local' ? `
-          <dt>${ghAcct ? 'Tài khoản GitHub' : 'Tài khoản'}</dt><dd>${!st.drive.configured ? '<span class="pill warn">Chưa cấu hình Client ID</span> <a class="btn small" href="#account">Hướng dẫn</a>'
-            : !st.drive.signedIn ? '<a class="btn small primary" href="#account">Đăng nhập</a>'
-            : `<span class="pill ${st.drive.needsReconnect ? 'warn' : 'ok'}">${st.drive.needsReconnect ? 'Cần kết nối lại' : 'Đã đăng nhập'}</span> ${esc(account.email)} <a class="btn small" href="#account">Quản lý</a>`}</dd>
+          <dt>Tài khoản GitHub</dt><dd>${!st.cloud.signedIn ? '<a class="btn small primary" href="#account">Đăng nhập</a>'
+            : `<span class="pill ${st.cloud.needsReconnect ? 'warn' : 'ok'}">${st.cloud.needsReconnect ? 'Cần kết nối lại' : 'Đã đăng nhập'}</span> ${esc(account.email)} <a class="btn small" href="#account">Quản lý</a>`}</dd>
           <dt>Chờ đồng bộ</dt><dd class="num">${st.pending} thay đổi · lần cuối ${fmtAgo(st.lastSync)}</dd>
           <dt>Tiến độ nghe/đọc</dt><dd>Đồng bộ vài giây sau mỗi lần dừng · lần cuối ${fmtAgo(liveAt)}</dd>
-          ${st.mode === 'github' ? '' : `<dt>Khi mở tệp trên Drive</dt><dd><label class="check"><input type="checkbox" id="set-cache" ${cacheOnOpen ? 'checked' : ''}> Lưu bản tạm trên máy để mở lại offline</label></dd>`}` : ''}
-          ${st.mode === 'hybrid' ? `
-          <dt>Đồng bộ gì lên Drive</dt><dd><select id="set-policy">${Object.entries(HYBRID_POLICIES).map(([k, v]) => `<option value="${k}" ${k === st.policy ? 'selected' : ''}>${v}</option>`).join('')}</select></dd>` : ''}
+          ` : ''}
         </dl>
-        <p class="hint">My Hub không tự đặt giới hạn số bài, số tệp hay kích thước tệp. Giới hạn duy nhất là hạn mức của trình duyệt trên máy này và dung lượng tài khoản Google; ứng dụng không thể nới các hạn mức đó, nhưng sẽ cảnh báo khi sắp đầy. Muốn không tốn chỗ: dùng “Liên kết thư mục (không sao chép)” trong Nhạc (máy tính).</p>
+        <p class="hint">My Hub không tự đặt giới hạn số bài, số tệp hay kích thước tệp. Giới hạn duy nhất là hạn mức của trình duyệt trên máy này ; ứng dụng không thể nới các hạn mức đó, nhưng sẽ cảnh báo khi sắp đầy. Muốn không tốn chỗ: dùng “Liên kết thư mục (không sao chép)” trong Nhạc (máy tính).</p>
         ${st.mode !== 'local' ? `<div class="row-actions">
           <button class="btn" data-act="sync" ${conn ? '' : 'disabled'}>${icon('refresh')}Đồng bộ ngay</button>
-          <button class="btn" data-act="evict" ${conn ? '' : 'disabled'}>Giải phóng bộ nhớ máy</button>
-          <button class="btn" data-act="unlink">Ngừng dùng ${ghAcct ? 'GitHub' : 'Drive'} (về Local)</button>
-          <button class="btn danger-ghost" data-act="cloudwipe" ${conn ? '' : 'disabled'}>${icon('trash')}Xoá dữ liệu trên ${ghAcct ? 'GitHub' : 'Drive'}</button></div>` : ''}
-        ${st.mode !== 'local' && !st.drive.configured ? `<p class="hint">Để bật đăng nhập Google, làm theo <a href="#account">hướng dẫn trong trang Tài khoản</a> (điền OAuth Client ID vào <code>js/config.js</code>). Trong lúc chờ, mọi thứ vẫn lưu trên máy.</p>` : ''}
+          <button class="btn" data-act="unlink">Ngừng dùng GitHub (về Local)</button>
+          <button class="btn danger-ghost" data-act="cloudwipe" ${conn ? '' : 'disabled'}>${icon('trash')}Xoá dữ liệu trên GitHub</button></div>` : ''}
       </div>
     </section>
 
@@ -88,7 +76,7 @@ async function render() {
         <ul class="devices">${devices.map(d => `<li><span class="mod-icon">${icon(d.platform === 'android' || d.platform === 'ios' ? 'device' : 'apps')}</span>
           <span class="dev-main"><strong>${esc(d.name)}</strong>${d.id === me.id ? ' <span class="pill s-core">Máy này</span>' : ''}<span class="muted">Hoạt động ${fmtAgo(d.lastSeenAt)}</span></span>
           ${d.id === me.id ? '<button class="btn small" data-act="rename">Đổi tên</button>' : ''}</li>`).join('')}</ul>
-        <p class="hint">${st.mode === 'local' ? 'Đăng nhập Google (chế độ Tài khoản Google hoặc Kết hợp) để tiến độ (đang nghe tới đâu, đọc tới trang nào) theo bạn sang điện thoại, máy Windows và bản APK.' : 'Dừng nhạc trên một máy, mở app trên máy khác sẽ tiếp tục đúng chỗ đó.'}</p>
+        <p class="hint">${st.mode === 'local' ? 'Đăng nhập GitHub (chế độ Tài khoản GitHub) để tiến độ (đang nghe tới đâu, đọc tới trang nào) theo bạn sang điện thoại, máy Windows và bản APK.' : 'Dừng nhạc trên một máy, mở app trên máy khác sẽ tiếp tục đúng chỗ đó.'}</p>
       </div>
     </section>
 
@@ -131,70 +119,44 @@ async function render() {
 
   const $ = (s) => root.querySelector(s);
   paramsOff?.(); paramsOff = bindParams(root, ctx.toast);
-  const dq = root.querySelector('[data-drive-quota]');
-  if (dq) gdrive.quota().then(q => { dq.innerHTML = quotaBar(q.usage, q.limit) + (q.trash ? ` <span class="muted">(thùng rác ${fmtBytes(q.trash)})</span>` : ''); })
-    .catch(e => { dq.innerHTML = `<span class="muted">Không lấy được (${esc(e.message.slice(0, 80))})</span>`; });
   const on = (act, fn) => root.querySelector(`[data-act="${act}"]`)?.addEventListener('click', fn);
 
   root.querySelectorAll('input[name="storage-mode"]').forEach(r => r.onchange = async () => {
     if (r.value !== 'local') {   // needs the matching account; asks what to do with this device's data
-      const need = r.value === 'github' ? 'github' : 'google';
-      if (!account.signedIn || account.provider !== need) { ctx.toast(need === 'github' ? 'Đăng nhập GitHub để bật chế độ này' : 'Đăng nhập Google để bật chế độ này', 'warn'); render(); ctx.go('account'); return; }
-      await afterSignIn(r.value); render();
+      if (!account.signedIn) { ctx.toast('Đăng nhập GitHub để bật chế độ này', 'warn'); render(); ctx.go('account'); return; }
+      await afterSignIn(); render();
       return;
     }
     await ctx.storage.setMode(r.value);
     ctx.toast('Chế độ lưu trữ: ' + MODES[r.value].label);
     render();
   });
-  $('#set-cache')?.addEventListener('change', e => setSetting('storage.cacheOnOpen', e.target.checked));
-  $('#set-policy')?.addEventListener('change', e => setSetting('storage.hybridPolicy', e.target.value));
   on('persist', async () => { const ok = await ctx.storage.adapters.local.persist(); ctx.toast(ok ? 'Đã bật lưu trữ bền vững' : 'Trình duyệt chưa cho phép', ok ? 'info' : 'warn'); render(); });
-  on('connect', async () => { try { await signInFlow(st.mode); } catch (e) { ctx.toast(e.message, 'error'); } render(); });
   on('rename', async () => {
     const name = await modal({ title: 'Tên thiết bị', body: h(`<label>Tên hiển thị trên các máy khác<input id="dev-name" value="${esc(me.name)}"></label>`),
       actions: [{ label: 'Huỷ', value: null }, { label: 'Lưu', kind: 'primary', value: b => b.querySelector('input').value.trim() }] });
     if (name) { await renameDevice(name); render(); }
   });
-  // Both show their progress in the task tray (storage.sync / storage.evictCached).
+  // Both show their progress in the task tray (storage.sync).
   on('sync', async (e) => {
     const b = e.currentTarget; b.disabled = true;
     try {
-      if (account.provider === 'google' && account.signedIn && !account.tokenValid()) await account.reconnect();   // inside the click: popup allowed
       const r = await ctx.storage.sync();
-      if (r?.skipped) ctx.toast(r.skipped === 'offline' ? 'Đang offline, sẽ đồng bộ khi có mạng' : r.skipped === 'signed-out' ? 'Chưa đăng nhập' : 'Chưa kết nối được ' + (ghAcct ? 'GitHub' : 'Google Drive'), 'warn');
+      if (r?.skipped) ctx.toast(r.skipped === 'offline' ? 'Đang offline, sẽ đồng bộ khi có mạng' : r.skipped === 'signed-out' ? 'Chưa đăng nhập' : 'Chưa kết nối được GitHub', 'warn');
       else if (r && !r.cancelled && !r.pulled && !r.uploaded) ctx.toast('Đã đồng bộ, không có thay đổi mới');
     } catch (err) { ctx.toast(err.message, 'error'); }
     finally { b.disabled = false; }
   });
   // Drop the cloud side: Local only again (the cloud copy stays), or also erase what My Hub stored there.
-  on('dfolder', async () => {
-    const name = ($('#set-dfolder').value || '').replace(/[\\']/g, '').trim();
-    if (!name) return ctx.toast('Nhập tên thư mục', 'warn');
-    await setSetting('gdrive.folderName', name); await setSetting('gdrive.folderId', null);
-    ctx.toast('Thư mục Drive: ' + name); render();
-  });
-  on('dpick', async (e) => {
-    const b = e.currentTarget; b.disabled = true;
-    try { const f = await gdrive.pickFolder(); if (f) ctx.toast('Thư mục Drive: ' + f.name); }
-    catch (err) { ctx.toast(err.message, 'error'); }
-    render();
-  });
   on('unlink', async () => {
-    if (!(await confirmBox('Ngừng dùng ' + (ghAcct ? 'GitHub' : 'Drive') + '?', 'App chuyển về chế độ Local, dữ liệu trên máy giữ nguyên và bản trên đám mây không bị xoá. Bật lại bất cứ lúc nào.', 'Chuyển về Local'))) return;
+    if (!(await confirmBox('Ngừng dùng GitHub?', 'App chuyển về chế độ Local, dữ liệu trên máy giữ nguyên và bản trên đám mây không bị xoá. Bật lại bất cứ lúc nào.', 'Chuyển về Local'))) return;
     await ctx.storage.setMode('local');
     ctx.toast('Chế độ lưu trữ: ' + MODES.local.label);
     render();
   });
   on('cloudwipe', async () => {
-    if (!(await confirmBox('Xoá dữ liệu trên ' + (ghAcct ? 'GitHub' : 'Drive') + '?', 'Mọi thứ My Hub đã lưu trên ' + (ghAcct ? 'kho my-hub-data' : 'Google Drive') + ' sẽ bị xoá. Dữ liệu trên máy này giữ nguyên và app chuyển về Local.', 'Xoá'))) return;
+    if (!(await confirmBox('Xoá dữ liệu trên GitHub?', 'Mọi thứ My Hub đã lưu trong kho my-hub-data sẽ bị xoá. Dữ liệu trên máy này giữ nguyên và app chuyển về Local.', 'Xoá'))) return;
     try { await ctx.storage.deleteCloudData(); await ctx.storage.setMode('local'); ctx.toast('Đã xoá dữ liệu trên đám mây'); }
-    catch (err) { ctx.toast(err.message, 'error'); }
-    render();
-  });
-  on('evict', async (e) => {
-    const b = e.currentTarget; b.disabled = true;
-    try { const n = await ctx.storage.evictCached({ olderThanDays: 0 }); ctx.toast(`Đã giải phóng ${n} tệp (vẫn còn trên Drive)`); }
     catch (err) { ctx.toast(err.message, 'error'); }
     render();
   });
@@ -244,7 +206,7 @@ async function render() {
     } catch (e) { ctx.toast(e.message, 'error'); }
   });
   on('wipe', async () => {
-    if (!(await confirmBox('Xoá toàn bộ dữ liệu?', 'Mọi mục, liên kết, cài đặt và tệp lưu trên máy này sẽ mất. Dữ liệu trên Google Drive không bị ảnh hưởng.', 'Xoá hết'))) return;
+    if (!(await confirmBox('Xoá toàn bộ dữ liệu?', 'Mọi mục, liên kết, cài đặt và tệp lưu trên máy này sẽ mất. Dữ liệu đã đồng bộ lên GitHub không bị ảnh hưởng.', 'Xoá hết'))) return;
     const files = await db.files.toArray();
     const t = tasks.start({ label: 'Đang xoá dữ liệu', total: files.length + 1, detail: 'Xoá tệp trên máy…' });
     try {

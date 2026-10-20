@@ -183,7 +183,7 @@ export async function infoSheet(t) {
       ${row('ReplayGain album', t.rg?.albumGain != null ? `${dB(t.rg.albumGain, 2)} · đỉnh ${(+t.rg.albumPeak || 0).toFixed(4)}` : '')}
       ${row('Tệp', file ? `<code>${esc(file.name)}</code>` : '')}${row('Dung lượng', file ? fmtBytes(file.size) : '')}
       ${row('Thư mục', esc(t.folder || ''))}
-      ${row('Nơi lưu', file ? [file.locations?.local ? `<span class="pill">${icon('device')}Máy này</span>` : '', file.locations?.gdrive ? `<span class="pill">${icon('cloud')}Google Drive</span>` : '', file.syncStatus === 'pending-upload' ? '<span class="pill warn">Chờ tải lên</span>' : ''].join('') : '')}
+      ${row('Nơi lưu', file ? (file.locations?.local ? `<span class="pill">${icon('device')}Máy này</span>` : '') : '')}
       ${row('Đã nghe', `${t.plays} lần${t.lastPlayed ? ' · lần cuối ' + new Date(t.lastPlayed).toLocaleDateString((globalThis.__LOCALE || 'vi-VN')) : ''}`)}
     </dl>${t.warnings?.length ? `<p class="hint">${esc(t.warnings.join(' · '))}</p>` : ''}</section></div>`);
   sheet({ title: 'Thông tin tệp', body, wide: true });
