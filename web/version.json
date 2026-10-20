@@ -1,7 +1,14 @@
 {
-  "app": "0.7.0.7",
+  "app": "0.7.0.8",
   "released": "2026-10-20",
   "changelog": [
+    {
+      "version": "0.7.0.8",
+      "date": "2026-10-20",
+      "notes": [
+        "Cài đặt: ô Thư mục trên Drive luôn hiện (kể cả khi đang ở chế độ Local)"
+      ]
+    },
     {
       "version": "0.7.0.7",
       "date": "2026-10-20",

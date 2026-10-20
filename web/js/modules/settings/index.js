@@ -61,14 +61,14 @@ async function render() {
           <dt>Đã dùng trên máy</dt><dd>${quotaBar(st.usage?.usage, st.usage?.quota)}</dd>
           ${conn && !ghAcct ? '<dt>Dung lượng Google</dt><dd data-drive-quota><span class="muted">Đang lấy…</span></dd>' : ''}
           <dt>Chống bị xoá tự động</dt><dd>${persisted ? '<span class="pill ok">Đã bật</span>' : '<button class="btn small" data-act="persist">Yêu cầu lưu trữ bền vững</button>'}</dd>
+          ${st.mode === 'github' ? '' : `<dt>Thư mục trên Drive</dt><dd><input id="set-dfolder" value="${esc(driveFolder)}" maxlength="80" style="max-width:220px"> <button class="btn small" data-act="dfolder">Lưu</button>${gdrive.pickerAvailable?.() && !ghAcct ? ' <button class="btn small" data-act="dpick">Chọn thư mục có sẵn…</button>' : ''}<div class="hint">My Hub chỉ đọc và ghi trong thư mục này (tự tạo nếu chưa có), không đụng tới phần còn lại của Drive. Tệp đã tải lên trước đó vẫn nằm ở thư mục cũ.</div></dd>`}
           ${st.mode !== 'local' ? `
           <dt>${ghAcct ? 'Tài khoản GitHub' : 'Tài khoản'}</dt><dd>${!st.drive.configured ? '<span class="pill warn">Chưa cấu hình Client ID</span> <a class="btn small" href="#account">Hướng dẫn</a>'
             : !st.drive.signedIn ? '<a class="btn small primary" href="#account">Đăng nhập</a>'
             : `<span class="pill ${st.drive.needsReconnect ? 'warn' : 'ok'}">${st.drive.needsReconnect ? 'Cần kết nối lại' : 'Đã đăng nhập'}</span> ${esc(account.email)} <a class="btn small" href="#account">Quản lý</a>`}</dd>
           <dt>Chờ đồng bộ</dt><dd class="num">${st.pending} thay đổi · lần cuối ${fmtAgo(st.lastSync)}</dd>
           <dt>Tiến độ nghe/đọc</dt><dd>Đồng bộ vài giây sau mỗi lần dừng · lần cuối ${fmtAgo(liveAt)}</dd>
-          ${st.mode === 'github' ? '' : `<dt>Thư mục trên Drive</dt><dd><input id="set-dfolder" value="${esc(driveFolder)}" maxlength="80" style="max-width:220px"> <button class="btn small" data-act="dfolder">Lưu</button>${gdrive.pickerAvailable?.() && !ghAcct ? ' <button class="btn small" data-act="dpick">Chọn thư mục có sẵn…</button>' : ''}<div class="hint">My Hub chỉ đọc và ghi trong thư mục này (tự tạo nếu chưa có), không đụng tới phần còn lại của Drive. Tệp đã tải lên trước đó vẫn nằm ở thư mục cũ.</div></dd>
-          <dt>Khi mở tệp trên Drive</dt><dd><label class="check"><input type="checkbox" id="set-cache" ${cacheOnOpen ? 'checked' : ''}> Lưu bản tạm trên máy để mở lại offline</label></dd>`}` : ''}
+          ${st.mode === 'github' ? '' : `<dt>Khi mở tệp trên Drive</dt><dd><label class="check"><input type="checkbox" id="set-cache" ${cacheOnOpen ? 'checked' : ''}> Lưu bản tạm trên máy để mở lại offline</label></dd>`}` : ''}
           ${st.mode === 'hybrid' ? `
           <dt>Đồng bộ gì lên Drive</dt><dd><select id="set-policy">${Object.entries(HYBRID_POLICIES).map(([k, v]) => `<option value="${k}" ${k === st.policy ? 'selected' : ''}>${v}</option>`).join('')}</select></dd>` : ''}
         </dl>
