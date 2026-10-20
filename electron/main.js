@@ -1,7 +1,7 @@
 // Windows shell for My Hub. It serves web/ from a fixed localhost port so the app keeps a
 // stable origin: IndexedDB data survives updates, 
 // http://localhost:<port> as an authorized JavaScript origin.
-const { app, BrowserWindow, Menu, dialog, shell } = require('electron');
+const { app, BrowserWindow, Menu, dialog, shell, ipcMain } = require('electron');
 const https = require('https');
 const http = require('http');
 const fs = require('fs');
@@ -48,7 +48,7 @@ function createWindow() {
     width: 1280, height: 820, minWidth: 360, minHeight: 560,
     backgroundColor: '#eef1f4', autoHideMenuBar: true, show: false,
     icon: path.join(__dirname, '..', 'build', 'icon.png'),
-    webPreferences: { contextIsolation: true, sandbox: true },
+    webPreferences: { contextIsolation: true, sandbox: true, preload: path.join(__dirname, 'preload.js') },
   });
   win.once('ready-to-show', () => win.show());
   // App feel: no pinch/ctrl-zoom, no browser-style context menu on the page background.
@@ -71,6 +71,7 @@ const newer = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').m
 function setupUpdates() {
   const win = () => BrowserWindow.getAllWindows()[0];
   if (process.env.PORTABLE_EXECUTABLE_DIR) {
+    ipcMain.handle('hub:update-install', async () => { shell.openExternal(`https://github.com/${REPO}/releases/latest`); return { portable: true }; });
     const check = () => https.get({ host: 'api.github.com', path: `/repos/${REPO}/releases/latest`, headers: { 'User-Agent': 'my-hub' } }, (res) => {
       let body = ''; res.on('data', (d) => body += d); res.on('end', async () => {
         try {
@@ -99,6 +100,11 @@ function setupUpdates() {
     if (r.response === 0) autoUpdater.quitAndInstall(true, true);
   });
   const check = () => autoUpdater.checkForUpdates().catch(() => {});
+  // "Cập nhật lõi" in the app: the web files are inside this installer, so a new core means a new installer.
+  ipcMain.handle('hub:update-install', async () => {
+    const r = await autoUpdater.checkForUpdates();   // autoDownload: the restart dialog follows 'update-downloaded'
+    return { version: r?.updateInfo?.version, available: !!r?.isUpdateAvailable };
+  });
   setTimeout(check, 8000); setInterval(check, 6 * 3600e3);
 }
 

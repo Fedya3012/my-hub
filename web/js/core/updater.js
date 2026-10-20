@@ -18,6 +18,7 @@ export const cmpVer = (a = '0', b = '0') => {
 };
 
 let registration = null;
+const DESKTOP_VERSION_URL = 'https://raw.githubusercontent.com/Fedya3012/my-hub/main/web/version.json';
 export const swState = { supported: 'serviceWorker' in navigator, active: false, waiting: false, error: null };
 
 export async function registerSW() {
@@ -66,7 +67,8 @@ function askSW(msg) {
 
 // Compare what is installed with version.json on the server.
 export async function checkForUpdates() {
-  const res = await fetch(VERSION_URL + '?t=' + Date.now(), { cache: 'no-store' });
+  // The Windows app serves its own bundled files, so its version.json is always the installed one: ask GitHub.
+  const res = await fetch((window.hubDesktop ? DESKTOP_VERSION_URL : VERSION_URL) + '?t=' + Date.now(), { cache: 'no-store' });
   if (!res.ok) throw new Error('Không đọc được version.json (' + res.status + ')');
   const remote = await res.json();
   const rows = await db.modules.toArray();
@@ -100,6 +102,11 @@ export async function applyModuleUpdate(u) {
 }
 
 export async function applyShellUpdate() {
+  if (window.hubDesktop) {   // Windows: download the new installer (progress/restart dialog come from the shell)
+    const r = await window.hubDesktop.installUpdate();
+    throw new Error(r.portable ? 'Bản portable không tự cập nhật: đã mở trang tải, hãy tải bản mới.'
+      : r.available ? `Đang tải bản ${r.version} ở nền. Xong sẽ hỏi khởi động lại.` : 'Chưa thấy bản cài mới trên GitHub (có thể đang build), thử lại sau vài phút.');
+  }
   if (!registration) throw new Error('Service Worker chưa hoạt động trong môi trường này.');
   if (!registration.waiting) await registration.update();
   if (registration.waiting) registration.waiting.postMessage({ type: 'SKIP_WAITING' });

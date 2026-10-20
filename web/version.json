@@ -1,7 +1,14 @@
 {
-  "app": "0.8.0.1",
+  "app": "0.8.0.2",
   "released": "2026-10-20",
   "changelog": [
+    {
+      "version": "0.8.0.2",
+      "date": "2026-10-21",
+      "notes": [
+        "Windows: Kiểm tra cập nhật lõi giờ đọc phiên bản mới từ GitHub và nút Cập nhật tải bản cài mới (trước đây chỉ so với bản đã cài nên không thấy gì)"
+      ]
+    },
     {
       "version": "0.8.0.1",
       "date": "2026-10-21",
