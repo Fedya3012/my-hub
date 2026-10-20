@@ -50,9 +50,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: node scripts/sync-version.js
-      - run: npx electron-builder --win --publish never
-        env:
-          APP_VERSION4: ${{ needs.version.outputs.version }}
+      # File names carry the real x.y.z.w version (package.json holds a semver mapping of it).
+      - run: npx electron-builder --win --publish never "-c.nsis.artifactName=MyHub-${{ needs.version.outputs.version }}-x64-Setup.exe" "-c.portable.artifactName=MyHub-${{ needs.version.outputs.version }}-portable.exe"
       - uses: actions/upload-artifact@v4
         with:
           name: windows
