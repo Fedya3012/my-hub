@@ -13,6 +13,7 @@
     "android:sync": "cap sync android"
   },
   "dependencies": {
+    "@capacitor/app": "^8.1.2",
     "electron-updater": "^6.6.2"
   },
   "devDependencies": {

@@ -1,7 +1,15 @@
 {
-  "app": "0.7.0.2",
+  "app": "0.7.0.3",
   "released": "2026-10-20",
   "changelog": [
+    {
+      "version": "0.7.0.3",
+      "date": "2026-10-20",
+      "notes": [
+        "Đăng nhập Google bằng trình duyệt cho app Android và Windows (bấm nút, đăng nhập rồi tự quay lại app) để dùng Google Drive",
+        "Đã điền Google Client ID"
+      ]
+    },
     {
       "version": "0.7.0.2",
       "date": "2026-10-20",

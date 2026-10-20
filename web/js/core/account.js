@@ -15,7 +15,7 @@
 // re-request (prompt '' + login_hint) gets a new one without the account chooser. Browsers only
 // allow its popup during a click, so an expired session shows "Kết nối lại" (one click) instead
 // of failing. localStorage is never part of the JSON backup.
-import { GOOGLE_CLIENT_ID, GOOGLE_SCOPES } from '../config.js';
+import { GOOGLE_CLIENT_ID, GOOGLE_SCOPES, OAUTH_PAGE } from '../config.js';
 import { bus } from './bus.js';
 
 const LS = 'myhub.google.session';
@@ -48,9 +48,48 @@ function loadGis() {
 
 // One token request at a time. prompt: '' = silent when already granted, 'select_account' =
 // account chooser, 'consent' = consent screen again.
+// Android app and Windows app: Google refuses its sign-in popup inside a WebView/Electron window, so the
+// sign-in runs in the system browser (implicit flow). The redirect lands on OAUTH_PAGE (web/oauth.html on
+// GitHub Pages), which hands the token back: Android through the com.myhub.app://oauth link, Windows through
+// the app's own localhost server (/__oauth, polled here).
+const NATIVE = () => !!window.Capacitor?.isNativePlatform?.();
+const DESKTOP = () => /Electron\//.test(navigator.userAgent);
+const viaBrowser = () => NATIVE() || DESKTOP();
+function browserToken({ prompt = '', hint } = {}) {
+  const nonce = Math.random().toString(36).slice(2);
+  const state = (NATIVE() ? 'a.' : 'd.') + nonce;
+  const q = new URLSearchParams({ client_id: GOOGLE_CLIENT_ID, redirect_uri: OAUTH_PAGE, response_type: 'token', scope: GOOGLE_SCOPES,
+    include_granted_scopes: 'true', state, prompt: prompt || 'none', ...(hint ? { login_hint: hint } : {}) });
+  return new Promise((resolve, reject) => {
+    let done = false, timer, off;
+    const finish = (fn, v) => { if (done) return; done = true; clearInterval(timer); off?.(); fn(v); };
+    const onHash = (hash) => {
+      const r = Object.fromEntries(new URLSearchParams(String(hash).replace(/^#/, '')));
+      if (r.state !== state) return false;
+      if (r.error) finish(reject, err(r.error === 'access_denied' ? 'Bạn đã từ chối quyền truy cập.' : r.error === 'interaction_required' || r.error === 'login_required' ? 'Cần đăng nhập lại Google.' : 'Google từ chối: ' + r.error, r.error));
+      else if (!(r.scope || '').includes('drive.appdata')) finish(reject, err('Cần cho phép My Hub lưu dữ liệu trên Google Drive (đánh dấu cả hai ô quyền Drive) để đồng bộ.', 'scope_missing'));
+      else finish(resolve, { access_token: r.access_token, expires_at: Date.now() + (+r.expires_in || 3600) * 1000 });
+      return true;
+    };
+    if (NATIVE()) {
+      const App = window.Capacitor.Plugins?.App;
+      if (!App) return reject(err('Bản Android này chưa có thành phần đăng nhập bằng trình duyệt. Cập nhật app lên bản mới nhất.', 'no_plugin'));
+      const h = App.addListener('appUrlOpen', (e) => { if (/^com\.myhub\.app:\/\/oauth/.test(e.url || '')) onHash((e.url.split('#')[1]) || ''); });
+      off = () => Promise.resolve(h).then(x => x?.remove?.());
+    } else {
+      timer = setInterval(async () => {
+        try { const t = await (await fetch('/__oauth', { cache: 'no-store' })).text(); if (t) onHash(t); } catch { /* retry */ }
+      }, 1000);
+    }
+    setTimeout(() => finish(reject, err('Hết thời gian chờ đăng nhập Google. Thử lại.', 'timeout')), 5 * 60_000);
+    window.open('https://accounts.google.com/o/oauth2/v2/auth?' + q, '_blank');
+  });
+}
+
 async function requestToken({ prompt = '', hint } = {}) {
   if (!GOOGLE_CLIENT_ID) throw err('Chưa cấu hình Google Client ID (js/config.js).', 'not_configured');
   if (pending) return pending;
+  if (viaBrowser()) { pending = browserToken({ prompt, hint }).finally(() => { pending = null; }); return pending; }
   await loadGis();
   pending = new Promise((resolve, reject) => {
     const o = google.accounts.oauth2;
