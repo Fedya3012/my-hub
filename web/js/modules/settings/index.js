@@ -3,7 +3,6 @@ import { db, getSetting, setSetting, exportAll, importAll } from '../../core/db.
 import { MODES, HYBRID_POLICIES } from '../../core/storage/index.js';
 import { tasks } from '../../core/tasks.js';
 import { allThemes, currentTheme, applyTheme, saveCurrentAsTheme, exportTheme, importTheme } from '../../core/theme.js';
-import { removeSamples } from '../../core/seed.js';
 import { thisDevice, renameDevice } from '../../core/device.js';
 import { icon } from '../../core/icons.js';
 import { account } from '../../core/account.js';
@@ -116,7 +115,6 @@ async function render() {
         <div class="row-actions">
           <button class="btn primary" data-act="export">${icon('download')}Xuất JSON</button>
           <button class="btn" data-act="import">${icon('upload')}Nhập JSON</button>
-          <button class="btn" data-act="samples">Xoá dữ liệu mẫu</button>
           <button class="btn danger-ghost" data-act="wipe">${icon('trash')}Xoá toàn bộ dữ liệu</button>
         </div>
       </div>
@@ -210,7 +208,6 @@ async function render() {
       ctx.toast(`Đã nhập ${n} bản ghi`); await applyTheme(); render();
     } catch (e) { ctx.toast(e.message, 'error'); }
   });
-  on('samples', async () => { const n = await removeSamples(); ctx.toast(`Đã xoá ${n} mục mẫu`); });
   on('wipe', async () => {
     if (!(await confirmBox('Xoá toàn bộ dữ liệu?', 'Mọi mục, liên kết, cài đặt và tệp lưu trên máy này sẽ mất. Dữ liệu trên Google Drive không bị ảnh hưởng.', 'Xoá hết'))) return;
     const files = await db.files.toArray();

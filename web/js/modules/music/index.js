@@ -108,10 +108,9 @@ function renderEmpty(c) {
     <div class="mempty-art" aria-hidden="true"><span class="mempty-disc"></span></div>
     <h2>Thư viện nhạc đang trống</h2>
     <p class="muted">Thêm tệp hoặc cả thư mục nhạc: FLAC, ALAC, WAV, AIFF, DSD (DSF/DFF), MP3, AAC, Opus, Vorbis… Ảnh bìa, lời (.lrc) và ReplayGain được đọc tự động. Tệp được lưu theo chế độ lưu trữ trong Cài đặt (máy này, Google Drive hoặc kết hợp).</p>
-    <div class="row-actions"><button class="btn primary" data-a="files">${icon('plusfile')}Chọn tệp nhạc</button><button class="btn" data-a="folder">${icon('folder')}Chọn thư mục</button><button class="btn" data-a="demo">${icon('sparkle')}Nạp nhạc demo</button><a class="btn" href="#music/browse">${icon('folder')}Duyệt thư mục (không nhập)</a></div></div>`;
+    <div class="row-actions"><button class="btn primary" data-a="files">${icon('plusfile')}Chọn tệp nhạc</button><button class="btn" data-a="folder">${icon('folder')}Chọn thư mục</button><a class="btn" href="#music/browse">${icon('folder')}Duyệt thư mục (không nhập)</a></div></div>`;
   c.querySelector('[data-a="files"]').onclick = () => pickFiles(false);
   c.querySelector('[data-a="folder"]').onclick = () => pickFiles(true);
-  c.querySelector('[data-a="demo"]').onclick = () => import('./service.js').then(m => m.loadDemo(true));
 }
 
 // ── Building blocks ─────────────────────────────────────────────
@@ -733,7 +732,6 @@ function addMenu(anchor) {
     { icon: 'folder', label: 'Chọn thư mục (sao chép vào app)…', act: () => pickFiles(true) },
     window.showDirectoryPicker ? { icon: 'link', label: 'Liên kết thư mục (không sao chép)…', hint: 'Máy tính', act: linkFolder } : null,
     '-',
-    { icon: 'sparkle', label: 'Nạp nhạc demo', act: () => import('./service.js').then(m => m.loadDemo(true)) },
     { icon: 'list', label: 'Danh sách phát mới…', act: async () => { const n = await ask('Tên danh sách phát', 'Danh sách mới'); if (n) { const p = await store.createPlaylist(n); go('playlist/' + p.id); } } },
   ], { title: 'Thêm nhạc' });
 }

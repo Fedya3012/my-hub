@@ -98,7 +98,6 @@ async function showStorageFull(err) {
     <p>Không ghi thêm được dữ liệu (${esc(err?.name || 'QuotaExceededError')}).${est?.quota ? ` Đang dùng ${mb(est.usage || 0)} trên ${mb(est.quota)}.` : ''} App không tự đặt giới hạn nào; hạn mức này do trình duyệt đặt cho trang. Giải phóng chỗ rồi thử lại:</p>
     <div class="row-actions" style="flex-wrap:wrap;justify-content:center">
       <button class="btn primary" data-a="cache">Xoá bộ đệm (an toàn)</button>
-      <button class="btn" data-a="demo">Xoá nhạc demo</button>
       <button class="btn" data-a="retry">Thử lại</button>
       <button class="btn danger" data-a="all">Xoá toàn bộ dữ liệu app</button></div>
     <p class="muted" data-msg></p></div>`);
@@ -109,10 +108,6 @@ async function showStorageFull(err) {
     try { await db.open(); await db.blobs?.clear?.(); } catch { /* ignore */ }
     try { const root = await navigator.storage.getDirectory(); for await (const [n] of root.entries()) if (/decode|cache|thumb/i.test(n)) await root.removeEntry(n, { recursive: true }); } catch { /* ignore */ }
     say('Đã xoá bộ đệm. Đang tải lại…'); setTimeout(() => location.reload(), 600);
-  };
-  box.querySelector('[data-a="demo"]').onclick = async () => {
-    try { await db.open(); const items = await db.items.filter(i => i.meta?.sample).toArray(); for (const i of items) { await db.items.delete(i.id); await db.files.where('itemId').equals(i.id).delete(); await db.tracks?.where?.('itemId')?.equals(i.id)?.delete?.(); } say(`Đã xoá ${items.length} mục demo. Đang tải lại…`); setTimeout(() => location.reload(), 600); }
-    catch (e) { say('Không xoá được: ' + e.message + '. Thử "Xoá bộ đệm" hoặc xoá toàn bộ.'); }
   };
   box.querySelector('[data-a="retry"]').onclick = () => location.reload();
   box.querySelector('[data-a="all"]').onclick = async () => {

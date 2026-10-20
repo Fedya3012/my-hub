@@ -1,7 +1,15 @@
 {
-  "app": "0.5.1",
+  "app": "0.5.2",
   "released": "2026-10-20",
   "changelog": [
+    {
+      "version": "0.5.2",
+      "date": "2026-10-20",
+      "notes": [
+        "Giao diện giống ứng dụng hơn: không chọn chữ lung tung, thanh cuộn gọn, bỏ menu trình duyệt",
+        "Xóa toàn bộ dữ liệu và nhạc mẫu (bản cũ tự dọn lần đầu mở)"
+      ]
+    },
     {
       "version": "0.5.0",
       "date": "2026-10-20",
@@ -62,6 +70,7 @@
       "js/core/account.js",
       "js/core/account-ui.js",
       "css/account.css",
+      "css/native.css",
       "js/modules/account/manifest.js",
       "js/core/tasks.js",
       "js/core/skins.js",

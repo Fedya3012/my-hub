@@ -49,7 +49,6 @@ export async function start(context) {
   offs.push(() => player.removeEventListener('track', accent));
   document.addEventListener('keydown', keys);
   offs.push(() => document.removeEventListener('keydown', keys));
-  if (!(await getSetting('music.demoSeeded')) && (await db.items.filter(i => !!i.meta?.sample).count())) loadDemo(false);
 }
 
 export async function stop() {
@@ -144,86 +143,4 @@ async function drawerBlock({ item, el, refresh }) {
   });
   box.querySelectorAll('[data-auto]').forEach(b => b.onclick = async () => { const m = linked[+b.dataset.auto]; await db.links.update(m.link.id, { autoplay: m.link.autoplay ? 0 : 1 }); redo(); });
   box.querySelectorAll('[data-rm]').forEach(b => b.onclick = async () => { await store.unlinkMusic(linked[+b.dataset.rm].link.id); redo(); });
-}
-
-// ── Demo library ────────────────────────────────────────────────
-// Short synthesized pieces in several formats (FLAC 24/96, ALAC, MP3, AAC, Opus, DSD…) so every
-// badge, the decoders and the karaoke lyrics can be tried. Marked as samples: Cài đặt → "Xoá dữ liệu mẫu".
-const DEMO_MIME = { flac: 'audio/flac', m4a: 'audio/mp4', opus: 'audio/ogg', mp3: 'audio/mpeg' };
-
-// Progress in the task tray: "Đang tải nhạc demo" (files downloaded / total, then the import
-// "Đang nạp nhạc demo" track by track, then the background video and sample playlists).
-export async function loadDemo(manual) {
-  let man;
-  try { man = await (await fetch(new URL('../../../demo/music/manifest.json', import.meta.url), { cache: 'no-cache' })).json(); }
-  catch { if (manual) toast('Bản cài này không kèm nhạc demo.', 'warn'); await setSetting('music.demoSeeded', true); return; }
-  await setSetting('music.demoSeeded', true);
-  const task = tasks.start({ label: 'Đang tải nhạc demo', total: man.tracks.length, detail: 'Chuẩn bị…' });
-  try {
-    const r = await loadDemoWith(man, task);
-    task.finish(`Đã nạp ${r.added} bài demo`);
-    if (manual) toast(`Đã nạp ${r.added} bài demo`);
-  } catch (e) {
-    console.error('[music demo]', e);
-    task.fail(e);
-    if (manual) toast('Không nạp được nhạc demo: ' + e.message, 'error');
-  }
-}
-
-async function loadDemoWith(man, task) {
-  const files = [];
-  const base = new URL('../../../demo/music/', import.meta.url);
-  for (const t of man.tracks) {
-    task.update({ detail: t.file });
-    // `src` is where the bytes are served when the host only allows some extensions
-    // (the Artifact demo serves FLAC/DSD as .webm); `file` is the real name.
-    const res = await fetch(new URL(t.src || t.file, base));
-    if (res.ok) {
-      const blob = await res.blob();
-      files.push(new File([blob], t.file, { type: t.src ? (DEMO_MIME[t.file.split('.').pop()] || '') : blob.type }));
-      if (t.lrc) { const l = await fetch(new URL(t.lrcSrc || t.lrc, base)); if (l.ok) files.push(new File([await l.blob()], t.lrc, { type: 'text/plain' })); }
-    }
-    task.step();
-  }
-  task.update({ label: 'Đang nạp nhạc demo', done: 0, total: files.filter(f => !/\.lrc$/i.test(f.name)).length || 1, detail: '' });
-  const r = await store.importFiles(files.map(f => Object.assign(f, { relPath: 'Demo/' + f.name })), { sample: true,
-    onProgress: (i, n, name) => task.update({ done: i, total: n || 1, detail: name || '' }) });
-  // Sample playlists + links: Dune (book) plays a calm playlist, the fanfic plays an album.
-  const L = await store.library();
-  const tracks = [...L.tracks.values()].filter(t => t.sample);
-  const byTitle = (s) => tracks.find(t => t.title.toLowerCase().includes(s));
-  // Sample background video behind the lyrics of an album (Noctis style).
-  for (const v of man.videos || []) {
-    task.update({ detail: 'Video nền: ' + v.file });
-    const al = [...L.albums.values()].find(a => a.sample && a.title === v.album);
-    const res = al && await fetch(new URL(v.file, new URL('../../../demo/music/', import.meta.url))).catch(() => null);
-    if (res?.ok) await store.setBgVideo('album', al.id, new File([await res.blob()], v.file, { type: 'video/webm' })).catch(e => console.warn(e));
-  }
-  task.update({ detail: 'Tạo danh sách phát mẫu…' });
-  const items = await db.items.toArray();
-  const dune = items.find(i => i.type === 'book' && i.meta?.sample && /Dune|Xứ Cát/.test(i.title));
-  const fic = items.find(i => i.type === 'fanfic' && i.meta?.sample);
-  const pod = items.find(i => i.type === 'podcast' && i.meta?.sample && /Dune/.test(i.title));
-  await withoutSyncHooks(async () => {
-    const t = now();
-    const calm = { id: uid(), kind: 'playlist', moduleId: 'music', name: 'Nhạc đọc Xứ Cát', description: 'Nhạc nền yên tĩnh, tự phát khi mở cuốn sách.', createdAt: t, updatedAt: t, rev: 1, deleted: 0, sample: true };
-    const smart = { id: uid(), kind: 'smart', moduleId: 'music', name: 'Lossless & Hi-Res', rules: { match: 'all', rules: [{ field: 'lossless', op: 'is', value: 1 }], sort: 'title' }, createdAt: t, updatedAt: t, rev: 1, deleted: 0, sample: true };
-    await db.collections.bulkPut([calm, smart]);
-    const pick = [byTitle('tĩnh'), byTitle('bình minh'), byTitle('sương')].filter(Boolean);
-    await db.links.bulkPut(pick.map((x, i) => ({ id: uid(), fromId: calm.id, toId: x.id, relation: 'contains', order: i + 1, createdAt: t, updatedAt: t, rev: 1, sample: true })));
-    const L2 = [];
-    if (dune) L2.push({ id: uid(), fromId: calm.id, toId: dune.id, relation: 'soundtrack-of', source: 'playlist', autoplay: 1, shuffle: 0, createdAt: t, updatedAt: t, rev: 1, sample: true });
-    const duong = [...L.albums.values()].find(a => a.sample && /Đường về/.test(a.title));
-    if (fic && duong) L2.push({ id: uid(), fromId: duong.id, toId: fic.id, relation: 'soundtrack-of', source: 'album', autoplay: 1, shuffle: 1, createdAt: t, updatedAt: t, rev: 1, sample: true });
-    const demoAlbum = [...L.albums.values()].find(a => a.sample && /Demo Sessions/.test(a.title));
-    if (pod && demoAlbum) L2.push({ id: uid(), fromId: demoAlbum.id, toId: pod.id, relation: 'soundtrack-of', source: 'album', autoplay: 0, shuffle: 0, createdAt: t, updatedAt: t, rev: 1, sample: true });
-    await db.links.bulkPut(L2);
-    // A little listening history so "Nghe gần đây" and play counts aren't empty.
-    const D = 864e5;
-    await db.plays.bulkPut(tracks.slice(0, 4).flatMap((x, i) => Array.from({ length: 4 - i }, (_, k) => ({ id: uid(), itemId: x.id, at: t - (i + k * 2 + 1) * D / 3, ms: (x.duration || 15) * 1000, completed: 1, deviceId: 'sample-windows', sample: 1 }))));
-    const fav = byTitle('bình minh');
-    if (fav) await db.items.update(fav.id, { favorite: 1, rating: 5 });
-  });
-  store.invalidate();
-  return r;
 }

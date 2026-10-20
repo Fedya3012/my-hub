@@ -1,7 +1,7 @@
 // Windows shell for My Hub. It serves web/ from a fixed localhost port so the app keeps a
 // stable origin: IndexedDB data survives updates, and Google sign-in accepts
 // http://localhost:<port> as an authorized JavaScript origin.
-const { app, BrowserWindow, shell } = require('electron');
+const { app, BrowserWindow, Menu, shell } = require('electron');
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
@@ -50,6 +50,9 @@ function createWindow() {
     webPreferences: { contextIsolation: true, sandbox: true },
   });
   win.once('ready-to-show', () => win.show());
+  // App feel: no pinch/ctrl-zoom, no browser-style context menu on the page background.
+  win.webContents.setVisualZoomLevelLimits(1, 1);
+  win.webContents.on('context-menu', (e, params) => { if (!params.isEditable && !params.selectionText) e.preventDefault(); });
   // Google sign-in opens a popup that must stay inside the app; other links open in the browser.
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https:\/\/accounts\.google\.com\//.test(url)) return { action: 'allow' };
@@ -66,6 +69,7 @@ else {
     if (w) { if (w.isMinimized()) w.restore(); w.focus(); }
   });
   app.whenReady().then(async () => {
+    Menu.setApplicationMenu(null);
     try { await serve(); } catch (e) { console.error('[my-hub] port in use', e.message); }
     createWindow();
     // Installed builds check GitHub Releases and install updates on the next restart.

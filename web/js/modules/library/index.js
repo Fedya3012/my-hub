@@ -3,7 +3,6 @@
 import { db, uid, now, softDeleteItem, logActivity, linkItems, relatedItems } from '../../core/db.js';
 import { CONTENT_TYPES, STATUS, detectType } from '../../core/content-types.js';
 import { listModules } from '../../core/registry.js';
-import { removeSamples } from '../../core/seed.js';
 import { progress } from '../../core/progress.js';
 import { thisDevice } from '../../core/device.js';
 import { extensions } from '../../core/extensions.js';
@@ -55,7 +54,6 @@ export async function mount(el, context) {
           <button class="btn primary" data-act="add">${icon('plus')}<span>Thêm mục</span></button>
         </div>
       </header>
-      <div id="lib-samples"></div>
       <div class="stats" id="lib-stats"></div>
       <section class="continue" id="lib-continue"></section>
       <div class="toolbar">
@@ -130,7 +128,7 @@ async function refresh() {
   for (const f of files) { if (!filesBy.has(f.itemId)) filesBy.set(f.itemId, []); filesBy.get(f.itemId).push(f); }
   data = { items, filesBy, modules, usage, me,
     progress: new Map(prog.map(p => [p.itemId, p])), devices: new Map(devices.map(d => [d.id, d])) };
-  renderSamples(); renderStats(); renderContinue(); renderTypeChips(); renderTagOptions(); renderResults();
+  renderStats(); renderContinue(); renderTypeChips(); renderTagOptions(); renderResults();
 }
 
 const pOf = (item) => data.progress.get(item.id);
@@ -145,15 +143,6 @@ function moduleFor(item) {
   if (m.status === 'planned') return { m, ready: false, reason: `${m.name} sắp có` };
   if (!m.core && !m.state.enabled) return { m, ready: false, reason: `${m.name} đang tắt` };
   return { m, ready: true };
-}
-
-function renderSamples() {
-  const n = data.items.filter(i => i.meta?.sample).length;
-  const el = root.querySelector('#lib-samples');
-  el.innerHTML = n ? `<div class="notice">${icon('note')}<p><strong>${n} mục mẫu</strong> đang hiển thị để bạn xem thử. Nhập tệp thật hoặc thêm mục mới bất cứ lúc nào.</p><button class="btn small" data-act="clear-samples">Xoá dữ liệu mẫu</button></div>` : '';
-  el.querySelector('[data-act]')?.addEventListener('click', async () => {
-    const k = await removeSamples(); ctx.toast(`Đã xoá ${k} mục mẫu`); refresh();
-  });
 }
 
 function renderStats() {
