@@ -17,6 +17,7 @@ win:
       arch: [x64]
 nsis:
   oneClick: false
+  perMachine: false
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: true
   shortcutName: My Hub
@@ -24,3 +25,6 @@ portable:
   artifactName: MyHub-${version}-portable.${ext}
 publish:
   provider: github
+  owner: Fedya3012
+  repo: my-hub
+  releaseType: release

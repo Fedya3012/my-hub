@@ -1,7 +1,8 @@
 // Windows shell for My Hub. It serves web/ from a fixed localhost port so the app keeps a
 // stable origin: IndexedDB data survives updates, and Google sign-in accepts
 // http://localhost:<port> as an authorized JavaScript origin.
-const { app, BrowserWindow, Menu, shell } = require('electron');
+const { app, BrowserWindow, Menu, dialog, shell } = require('electron');
+const https = require('https');
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
@@ -62,6 +63,40 @@ function createWindow() {
   win.loadURL(`http://localhost:${PORT}/#library`);
 }
 
+const REPO = 'Fedya3012/my-hub';
+const newer = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number); for (let i = 0; i < 3; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); return false; };
+
+// Installed (Setup.exe) builds download the new version from GitHub Releases in the background
+// and offer to restart into it. The portable build cannot replace itself, so it only tells the
+// user a newer release exists and opens the download page.
+function setupUpdates() {
+  const win = () => BrowserWindow.getAllWindows()[0];
+  if (process.env.PORTABLE_EXECUTABLE_DIR) {
+    const check = () => https.get({ host: 'api.github.com', path: `/repos/${REPO}/releases/latest`, headers: { 'User-Agent': 'my-hub' } }, (res) => {
+      let body = ''; res.on('data', (d) => body += d); res.on('end', async () => {
+        try {
+          const rel = JSON.parse(body), v = String(rel.tag_name || '').replace(/^v/, '');
+          if (!v || !newer(v, app.getVersion())) return;
+          const r = await dialog.showMessageBox(win(), { type: 'info', buttons: ['Mở trang tải', 'Để sau'], defaultId: 0, cancelId: 1, title: 'My Hub', message: `Có phiên bản mới ${v}`, detail: 'Bản portable không tự cập nhật. Hãy tải bản mới (hoặc dùng bản Setup để tự cập nhật).' });
+          if (r.response === 0) shell.openExternal(rel.html_url);
+        } catch { /* offline or rate-limited: try again later */ }
+      });
+    }).on('error', () => {});
+    setTimeout(check, 8000); setInterval(check, 6 * 3600e3);
+    return;
+  }
+  const { autoUpdater } = require('electron-updater');
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+  autoUpdater.on('error', (e) => console.warn('[updater]', e?.message || e));
+  autoUpdater.on('update-downloaded', async (info) => {
+    const r = await dialog.showMessageBox(win(), { type: 'info', buttons: ['Khởi động lại ngay', 'Để sau'], defaultId: 0, cancelId: 1, title: 'My Hub', message: `Đã tải xong phiên bản ${info.version}`, detail: 'Khởi động lại để cập nhật. Dữ liệu của bạn được giữ nguyên. Chọn "Để sau" thì bản mới tự cài khi bạn đóng app.' });
+    if (r.response === 0) autoUpdater.quitAndInstall(true, true);
+  });
+  const check = () => autoUpdater.checkForUpdates().catch(() => {});
+  setTimeout(check, 8000); setInterval(check, 6 * 3600e3);
+}
+
 if (!app.requestSingleInstanceLock()) app.quit();
 else {
   app.on('second-instance', () => {
@@ -72,10 +107,7 @@ else {
     Menu.setApplicationMenu(null);
     try { await serve(); } catch (e) { console.error('[my-hub] port in use', e.message); }
     createWindow();
-    // Installed builds check GitHub Releases and install updates on the next restart.
-    if (app.isPackaged) {
-      try { require('electron-updater').autoUpdater.checkForUpdatesAndNotify(); } catch (e) { console.warn('[updater]', e.message); }
-    }
+    if (app.isPackaged) setupUpdates();
   });
   app.on('window-all-closed', () => app.quit());
 }

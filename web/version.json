@@ -1,7 +1,15 @@
 {
-  "app": "0.5.2",
+  "app": "0.5.3",
   "released": "2026-10-20",
   "changelog": [
+    {
+      "version": "0.5.3",
+      "date": "2026-10-20",
+      "notes": [
+        "Sửa lỗi hiển thị chồng lấn trên Windows: thanh phát nhạc tràn mép, sóng nhạc đè lên tên bài và nút điều khiển",
+        "Windows: tự tải và cập nhật phiên bản mới từ GitHub, hỏi khởi động lại để cập nhật (giữ nguyên dữ liệu)"
+      ]
+    },
     {
       "version": "0.5.2",
       "date": "2026-10-20",

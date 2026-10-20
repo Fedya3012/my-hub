@@ -85,13 +85,15 @@
 @media (max-width: 860px) { .mdock .mplay { width: 40px; height: 40px; } }
 @media (min-width: 861px) {
   .mdock { left: var(--sidebar); right: 0; bottom: 0; border-radius: 0; border-width: 1px 0 0; padding: 10px 20px; gap: 18px;
-    display: grid; grid-template-columns: minmax(200px, 1fr) auto minmax(260px, 1.4fr) auto; }
+    display: grid; grid-template-columns: minmax(120px, 1fr) auto minmax(100px, 1.4fr) auto; }
+  .mdock > * { min-width: 0; }
+  .mdock-seek input { flex: 1; min-width: 0; }
   .mdock-line { display: none; }
   .mdock .mart.sm { width: 54px; }
   .mdock-ctrls { gap: 4px; }
   .mdock-seek { display: flex !important; align-items: center; gap: 10px; font-size: .74rem; color: var(--muted); min-width: 0; }
   .mdock-side { display: flex !important; align-items: center; gap: 2px; }
-  .mvol { width: 96px !important; }
+  .mvol { width: 80px !important; }
 }
 
 /* ── Sheets & menus ────────────────────── */
@@ -498,7 +500,8 @@ body.mnp-open { overflow: hidden; }
 .mnp-fx { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0; transition: opacity .8s var(--ease-out, ease); }
 .mnp[data-fx]:not([data-fx=""]) .mnp-fx { opacity: var(--fx-o, .8); }
 .mnp[data-video="1"] .mnp-fx { mix-blend-mode: screen; }
-.mnp[data-fx="bars"] .mnp-fx { opacity: calc(var(--fx-o, .8) * .7); }
+/* Spectrum bars stay in a low band at the bottom so they never run through the title and controls. */
+.mnp[data-fx="bars"] .mnp-fx { opacity: calc(var(--fx-o, .8) * .55); -webkit-mask-image: linear-gradient(to top, #000 0, #000 8%, transparent 26%); mask-image: linear-gradient(to top, #000 0, #000 8%, transparent 26%); }
 /* The heavy blurred ambient stops drifting while a visualizer/video covers it, or the music is paused. */
 .mnp-bg-a, .mnp-bg-b { will-change: transform; }
 /* Pre-blurred source: no CSS filter and no blend mode (both forced a full-screen re-raster every frame). */
