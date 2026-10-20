@@ -1,7 +1,7 @@
 // Service Worker: offline cache + update channel for App Manager.
 // Bump SW_VERSION whenever the shell changes; the browser then installs the new worker,
 // App Manager shows "Cập nhật lõi", and SKIP_WAITING switches over.
-const SW_VERSION = '0.7.0';
+const SW_VERSION = '0.7.0.1';
 const SHELL_CACHE = 'hub-shell-' + SW_VERSION;
 const RUNTIME_CACHE = 'hub-runtime';
 

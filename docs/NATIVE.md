@@ -15,7 +15,7 @@ Cả hai lớp bọc chỉ là JavaScript, không có Rust/Kotlin để bảo tr
 
 Phiên bản duy nhất nằm ở `APP_VERSION` trong `web/js/config.js`.
 
-1. Claude sửa code, tăng `APP_VERSION` (vd. `0.5.1` → `0.5.2`), thêm ghi chú vào `web/version.json` (`changelog`), push lên `main`.
+1. Claude sửa code, tăng `APP_VERSION` (4 số x.x.x.x, vd. `0.7.0.1` → `0.7.0.2`; số cuối cho bản nhỏ), thêm ghi chú vào `web/version.json` (`changelog`), push lên `main`.
 2. GitHub Actions build và tạo Release `v0.5.2` gồm:
    - `MyHub-0.5.2.apk` (Android)
    - `MyHub-0.5.2-x64-Setup.exe` (Windows, cài đặt, tự cập nhật)

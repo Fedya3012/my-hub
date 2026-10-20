@@ -1,6 +1,6 @@
 appId: com.myhub.app
 productName: My Hub
-artifactName: MyHub-${version}-${arch}-Setup.${ext}
+artifactName: MyHub-${env.APP_VERSION4}-${arch}-Setup.${ext}
 directories:
   output: dist
 files:
@@ -22,7 +22,7 @@ nsis:
   createDesktopShortcut: true
   shortcutName: My Hub
 portable:
-  artifactName: MyHub-${version}-portable.${ext}
+  artifactName: MyHub-${env.APP_VERSION4}-portable.${ext}
 publish:
   provider: github
   owner: Fedya3012

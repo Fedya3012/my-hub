@@ -1,7 +1,7 @@
 {
   "name": "my-hub",
   "productName": "My Hub",
-  "version": "0.6.0",
+  "version": "0.7.1",
   "private": true,
   "description": "My Hub: thư viện cá nhân offline (Windows + Android)",
   "author": "Fedya",
@@ -21,5 +21,6 @@
     "@capacitor/core": "^8.5.3",
     "electron": "^44.9.1",
     "electron-builder": "^26.15.3"
-  }
+  },
+  "displayVersion": "0.7.0.1"
 }

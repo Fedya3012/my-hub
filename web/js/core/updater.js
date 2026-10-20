@@ -13,7 +13,7 @@ import { MANIFESTS, forgetLoaded, loadModule } from './registry.js';
 
 export const cmpVer = (a = '0', b = '0') => {
   const pa = String(a).split('.').map(Number), pb = String(b).split('.').map(Number);
-  for (let i = 0; i < 3; i++) if ((pa[i] || 0) !== (pb[i] || 0)) return (pa[i] || 0) - (pb[i] || 0);
+  for (let i = 0; i < 4; i++) if ((pa[i] || 0) !== (pb[i] || 0)) return (pa[i] || 0) - (pb[i] || 0);
   return 0;
 };
 

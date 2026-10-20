@@ -1,7 +1,14 @@
 {
-  "app": "0.7.0",
+  "app": "0.7.0.1",
   "released": "2026-10-20",
   "changelog": [
+    {
+      "version": "0.7.0.1",
+      "date": "2026-10-20",
+      "notes": [
+        "Số phiên bản có 4 số (x.x.x.x) để mỗi lần cập nhật số tăng chậm hơn"
+      ]
+    },
     {
       "version": "0.7.0",
       "date": "2026-10-20",

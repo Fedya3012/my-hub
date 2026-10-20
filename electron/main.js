@@ -64,7 +64,7 @@ function createWindow() {
 }
 
 const REPO = 'Fedya3012/my-hub';
-const newer = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number); for (let i = 0; i < 3; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); return false; };
+const newer = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number); for (let i = 0; i < 4; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); return false; };
 
 // Installed (Setup.exe) builds download the new version from GitHub Releases in the background
 // and offer to restart into it. The portable build cannot replace itself, so it only tells the
@@ -76,7 +76,7 @@ function setupUpdates() {
       let body = ''; res.on('data', (d) => body += d); res.on('end', async () => {
         try {
           const rel = JSON.parse(body), v = String(rel.tag_name || '').replace(/^v/, '');
-          if (!v || !newer(v, app.getVersion())) return;
+          if (!v || !newer(v, require('../package.json').displayVersion || app.getVersion())) return;
           const r = await dialog.showMessageBox(win(), { type: 'info', buttons: ['Mở trang tải', 'Để sau'], defaultId: 0, cancelId: 1, title: 'My Hub', message: `Có phiên bản mới ${v}`, detail: 'Bản portable không tự cập nhật. Hãy tải bản mới (hoặc dùng bản Setup để tự cập nhật).' });
           if (r.response === 0) shell.openExternal(rel.html_url);
         } catch { /* offline or rate-limited: try again later */ }
