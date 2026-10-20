@@ -147,9 +147,9 @@ export const gdrive = {
   async connect() { return account.signedIn ? account.reconnect() : account.signIn(); },
   async disconnect() { await account.signOut(); },
 
-  // Google's folder picker (needs the web; blocked inside the Android WebView). Picking a folder grants
+  // Google's folder picker (an iframe on the page; untested inside the Android WebView, errors are shown as a toast). Picking a folder grants
   // the app (drive.file scope) access to just that folder; sync then lives inside it.
-  pickerAvailable() { return !!GOOGLE_API_KEY && !window.Capacitor?.isNativePlatform?.(); },
+  pickerAvailable() { return !!GOOGLE_API_KEY; },
   async pickFolder() {
     const token = await account.accessToken();
     await new Promise((res, rej) => {

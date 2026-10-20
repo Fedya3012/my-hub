@@ -1,7 +1,14 @@
 {
-  "app": "0.7.0.8",
+  "app": "0.7.0.9",
   "released": "2026-10-20",
   "changelog": [
+    {
+      "version": "0.7.0.9",
+      "date": "2026-10-20",
+      "notes": [
+        "Nút Chọn thư mục có sẵn trên Drive giờ hiện cả trên Android (nếu hộp chọn của Google không mở được sẽ báo lỗi)"
+      ]
+    },
     {
       "version": "0.7.0.8",
       "date": "2026-10-20",
