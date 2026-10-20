@@ -150,13 +150,14 @@ export const gdrive = {
   async folderId() {
     let id = await getSetting('gdrive.folderId');
     if (id) return id;
-    const q = encodeURIComponent(`name='${DRIVE_FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`);
+    const name = String((await getSetting('gdrive.folderName')) || DRIVE_FOLDER_NAME).replace(/[\\']/g, '');
+    const q = encodeURIComponent(`name='${name}' and mimeType='application/vnd.google-apps.folder' and trashed=false`);
     const found = await (await authFetch(`${API}/files?q=${q}&fields=files(id)`)).json();
     id = found.files[0]?.id;
     if (!id) {
       id = (await (await authFetch(`${API}/files`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: DRIVE_FOLDER_NAME, mimeType: 'application/vnd.google-apps.folder' }),
+        body: JSON.stringify({ name, mimeType: 'application/vnd.google-apps.folder' }),
       })).json()).id;
     }
     await setSetting('gdrive.folderId', id);

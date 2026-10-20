@@ -1,5 +1,6 @@
 // Settings: storage mode (Local / Google account / Hybrid), theme, backup & restore.
 import { db, getSetting, setSetting, exportAll, importAll } from '../../core/db.js';
+import { DRIVE_FOLDER_NAME } from '../../config.js';
 import { MODES, HYBRID_POLICIES } from '../../core/storage/index.js';
 import { tasks } from '../../core/tasks.js';
 import { allThemes, currentTheme, applyTheme, saveCurrentAsTheme, exportTheme, importTheme } from '../../core/theme.js';
@@ -28,6 +29,7 @@ let paramsOff = null;
 async function render() {
   const st = await ctx.storage.status();
   const cacheOnOpen = await getSetting('storage.cacheOnOpen', true);
+  const driveFolder = (await getSetting('gdrive.folderName')) || DRIVE_FOLDER_NAME;
   const themes = await allThemes();
   const cur = await currentTheme();
   const persisted = await navigator.storage?.persisted?.().catch(() => false);
@@ -65,7 +67,8 @@ async function render() {
             : `<span class="pill ${st.drive.needsReconnect ? 'warn' : 'ok'}">${st.drive.needsReconnect ? 'Cần kết nối lại' : 'Đã đăng nhập'}</span> ${esc(account.email)} <a class="btn small" href="#account">Quản lý</a>`}</dd>
           <dt>Chờ đồng bộ</dt><dd class="num">${st.pending} thay đổi · lần cuối ${fmtAgo(st.lastSync)}</dd>
           <dt>Tiến độ nghe/đọc</dt><dd>Đồng bộ vài giây sau mỗi lần dừng · lần cuối ${fmtAgo(liveAt)}</dd>
-          ${st.mode === 'github' ? '' : `<dt>Khi mở tệp trên Drive</dt><dd><label class="check"><input type="checkbox" id="set-cache" ${cacheOnOpen ? 'checked' : ''}> Lưu bản tạm trên máy để mở lại offline</label></dd>`}` : ''}
+          ${st.mode === 'github' ? '' : `<dt>Thư mục trên Drive</dt><dd><input id="set-dfolder" value="${esc(driveFolder)}" maxlength="80" style="max-width:220px"> <button class="btn small" data-act="dfolder">Lưu</button><div class="hint">My Hub chỉ đọc và ghi trong thư mục này (tự tạo nếu chưa có), không đụng tới phần còn lại của Drive. Tệp đã tải lên trước đó vẫn nằm ở thư mục cũ.</div></dd>
+          <dt>Khi mở tệp trên Drive</dt><dd><label class="check"><input type="checkbox" id="set-cache" ${cacheOnOpen ? 'checked' : ''}> Lưu bản tạm trên máy để mở lại offline</label></dd>`}` : ''}
           ${st.mode === 'hybrid' ? `
           <dt>Đồng bộ gì lên Drive</dt><dd><select id="set-policy">${Object.entries(HYBRID_POLICIES).map(([k, v]) => `<option value="${k}" ${k === st.policy ? 'selected' : ''}>${v}</option>`).join('')}</select></dd>` : ''}
         </dl>
@@ -165,6 +168,12 @@ async function render() {
     finally { b.disabled = false; }
   });
   // Drop the cloud side: Local only again (the cloud copy stays), or also erase what My Hub stored there.
+  on('dfolder', async () => {
+    const name = ($('#set-dfolder').value || '').replace(/[\\']/g, '').trim();
+    if (!name) return ctx.toast('Nhập tên thư mục', 'warn');
+    await setSetting('gdrive.folderName', name); await setSetting('gdrive.folderId', null);
+    ctx.toast('Thư mục Drive: ' + name); render();
+  });
   on('unlink', async () => {
     if (!(await confirmBox('Ngừng dùng ' + (ghAcct ? 'GitHub' : 'Drive') + '?', 'App chuyển về chế độ Local, dữ liệu trên máy giữ nguyên và bản trên đám mây không bị xoá. Bật lại bất cứ lúc nào.', 'Chuyển về Local'))) return;
     await ctx.storage.setMode('local');
