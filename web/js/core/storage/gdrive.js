@@ -4,7 +4,7 @@
 //   sees files it created or the user picked).
 // - Sign-in and the access token belong to the Google account (js/core/account.js).
 // Works in the browser, installed PWA and the Bubblewrap/TWA APK (runs in Chrome).
-import { DRIVE_FOLDER_NAME } from '../../config.js';
+import { DRIVE_FOLDER_NAME, GOOGLE_API_KEY, GOOGLE_PROJECT_NUMBER } from '../../config.js';
 import { getSetting, setSetting } from '../db.js';
 import { abortError } from '../tasks.js';
 import { account } from '../account.js';
@@ -146,6 +146,30 @@ export const gdrive = {
   // Kept for older callers: signing in / out is the account's job.
   async connect() { return account.signedIn ? account.reconnect() : account.signIn(); },
   async disconnect() { await account.signOut(); },
+
+  // Google's folder picker (needs the web; blocked inside the Android WebView). Picking a folder grants
+  // the app (drive.file scope) access to just that folder; sync then lives inside it.
+  pickerAvailable() { return !!GOOGLE_API_KEY && !window.Capacitor?.isNativePlatform?.(); },
+  async pickFolder() {
+    const token = await account.accessToken();
+    await new Promise((res, rej) => {
+      if (window.google?.picker) return res();
+      const load = () => window.gapi.load('picker', { callback: res, onerror: () => rej(new Error('Không tải được hộp chọn của Google.')) });
+      if (window.gapi?.load) return load();
+      const sc = Object.assign(document.createElement('script'), { src: 'https://apis.google.com/js/api.js', onload: load, onerror: () => rej(new Error('Không tải được hộp chọn của Google (offline?).')) });
+      document.head.appendChild(sc);
+    });
+    const P = google.picker;
+    const picked = await new Promise((res) => {
+      const view = new P.DocsView(P.ViewId.FOLDERS).setIncludeFolders(true).setSelectFolderEnabled(true).setMimeTypes('application/vnd.google-apps.folder');
+      new P.PickerBuilder().addView(view).setOAuthToken(token).setDeveloperKey(GOOGLE_API_KEY).setAppId(GOOGLE_PROJECT_NUMBER).setTitle('Chọn thư mục để My Hub đồng bộ')
+        .setCallback((d) => { if (d.action === P.Action.PICKED) res(d.docs[0]); else if (d.action === P.Action.CANCEL) res(null); }).build().setVisible(true);
+    });
+    if (!picked) return null;
+    await setSetting('gdrive.folderId', picked.id);
+    await setSetting('gdrive.folderName', picked.name);
+    return picked;
+  },
 
   async folderId() {
     let id = await getSetting('gdrive.folderId');

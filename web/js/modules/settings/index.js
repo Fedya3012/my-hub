@@ -67,7 +67,7 @@ async function render() {
             : `<span class="pill ${st.drive.needsReconnect ? 'warn' : 'ok'}">${st.drive.needsReconnect ? 'Cần kết nối lại' : 'Đã đăng nhập'}</span> ${esc(account.email)} <a class="btn small" href="#account">Quản lý</a>`}</dd>
           <dt>Chờ đồng bộ</dt><dd class="num">${st.pending} thay đổi · lần cuối ${fmtAgo(st.lastSync)}</dd>
           <dt>Tiến độ nghe/đọc</dt><dd>Đồng bộ vài giây sau mỗi lần dừng · lần cuối ${fmtAgo(liveAt)}</dd>
-          ${st.mode === 'github' ? '' : `<dt>Thư mục trên Drive</dt><dd><input id="set-dfolder" value="${esc(driveFolder)}" maxlength="80" style="max-width:220px"> <button class="btn small" data-act="dfolder">Lưu</button><div class="hint">My Hub chỉ đọc và ghi trong thư mục này (tự tạo nếu chưa có), không đụng tới phần còn lại của Drive. Tệp đã tải lên trước đó vẫn nằm ở thư mục cũ.</div></dd>
+          ${st.mode === 'github' ? '' : `<dt>Thư mục trên Drive</dt><dd><input id="set-dfolder" value="${esc(driveFolder)}" maxlength="80" style="max-width:220px"> <button class="btn small" data-act="dfolder">Lưu</button>${gdrive.pickerAvailable?.() && !ghAcct ? ' <button class="btn small" data-act="dpick">Chọn thư mục có sẵn…</button>' : ''}<div class="hint">My Hub chỉ đọc và ghi trong thư mục này (tự tạo nếu chưa có), không đụng tới phần còn lại của Drive. Tệp đã tải lên trước đó vẫn nằm ở thư mục cũ.</div></dd>
           <dt>Khi mở tệp trên Drive</dt><dd><label class="check"><input type="checkbox" id="set-cache" ${cacheOnOpen ? 'checked' : ''}> Lưu bản tạm trên máy để mở lại offline</label></dd>`}` : ''}
           ${st.mode === 'hybrid' ? `
           <dt>Đồng bộ gì lên Drive</dt><dd><select id="set-policy">${Object.entries(HYBRID_POLICIES).map(([k, v]) => `<option value="${k}" ${k === st.policy ? 'selected' : ''}>${v}</option>`).join('')}</select></dd>` : ''}
@@ -173,6 +173,12 @@ async function render() {
     if (!name) return ctx.toast('Nhập tên thư mục', 'warn');
     await setSetting('gdrive.folderName', name); await setSetting('gdrive.folderId', null);
     ctx.toast('Thư mục Drive: ' + name); render();
+  });
+  on('dpick', async (e) => {
+    const b = e.currentTarget; b.disabled = true;
+    try { const f = await gdrive.pickFolder(); if (f) ctx.toast('Thư mục Drive: ' + f.name); }
+    catch (err) { ctx.toast(err.message, 'error'); }
+    render();
   });
   on('unlink', async () => {
     if (!(await confirmBox('Ngừng dùng ' + (ghAcct ? 'GitHub' : 'Drive') + '?', 'App chuyển về chế độ Local, dữ liệu trên máy giữ nguyên và bản trên đám mây không bị xoá. Bật lại bất cứ lúc nào.', 'Chuyển về Local'))) return;

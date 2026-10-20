@@ -1,7 +1,14 @@
 {
-  "app": "0.7.0.6",
+  "app": "0.7.0.7",
   "released": "2026-10-20",
   "changelog": [
+    {
+      "version": "0.7.0.7",
+      "date": "2026-10-20",
+      "notes": [
+        "Cài đặt: nút Chọn thư mục có sẵn trên Drive (hộp chọn của Google, Windows và trình duyệt) để đồng bộ đúng thư mục đó"
+      ]
+    },
     {
       "version": "0.7.0.6",
       "date": "2026-10-20",
