@@ -1,7 +1,14 @@
 {
-  "app": "0.8.0.0",
+  "app": "0.8.0.1",
   "released": "2026-10-20",
   "changelog": [
+    {
+      "version": "0.8.0.1",
+      "date": "2026-10-21",
+      "notes": [
+        "Windows: khi không tự cập nhật được, app hiện lỗi thật và nút mở trang tải"
+      ]
+    },
     {
       "version": "0.8.0.0",
       "date": "2026-10-20",

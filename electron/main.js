@@ -87,7 +87,13 @@ function setupUpdates() {
   const { autoUpdater } = require('electron-updater');
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
-  autoUpdater.on('error', (e) => console.warn('[updater]', e?.message || e));
+  let shownErr = false;
+  autoUpdater.on('error', (e) => {
+    console.warn('[updater]', e?.message || e);
+    if (shownErr) return; shownErr = true;   // one dialog per run, with the real reason
+    dialog.showMessageBox(win(), { type: 'warning', buttons: ['Mở trang tải', 'Đóng'], defaultId: 0, cancelId: 1, title: 'My Hub', message: 'Không tự cập nhật được', detail: String(e?.message || e).slice(0, 600) + '\n\nBạn có thể tải bản Setup mới ở trang Releases và chạy đè lên, dữ liệu vẫn giữ.' })
+      .then((r) => { if (r.response === 0) shell.openExternal('https://github.com/Fedya3012/my-hub/releases/latest'); }).catch(() => {});
+  });
   autoUpdater.on('update-downloaded', async (info) => {
     const r = await dialog.showMessageBox(win(), { type: 'info', buttons: ['Khởi động lại ngay', 'Để sau'], defaultId: 0, cancelId: 1, title: 'My Hub', message: `Đã tải xong phiên bản ${info.version}`, detail: 'Khởi động lại để cập nhật. Dữ liệu của bạn được giữ nguyên. Chọn "Để sau" thì bản mới tự cài khi bạn đóng app.' });
     if (r.response === 0) autoUpdater.quitAndInstall(true, true);
