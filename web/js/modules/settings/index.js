@@ -34,7 +34,8 @@ async function render() {
   const me = await thisDevice();
   const devices = (await db.devices.orderBy('lastSeenAt').reverse().toArray());
   const liveAt = await getSetting('sync.liveAt', null);
-  const conn = st.drive.signedIn;   // signed in with Google (an expired token is renewed on click)
+  const conn = st.drive.signedIn;   // signed in (an expired Google token is renewed on click)
+  const ghAcct = st.drive.provider === 'github';
 
   root.innerHTML = `
   <section class="page settings">
@@ -48,7 +49,7 @@ async function render() {
         ${Object.entries(MODES).map(([k, m]) => `
           <label class="mode-card${st.mode === k ? ' on' : ''}">
             <input type="radio" name="storage-mode" id="mode-${k}" value="${k}" ${st.mode === k ? 'checked' : ''}>
-            <span class="mode-icon">${icon(k === 'local' ? 'device' : k === 'gdrive' ? 'user' : 'refresh')}</span>
+            <span class="mode-icon">${icon(k === 'local' ? 'device' : k === 'gdrive' || k === 'github' ? 'user' : 'refresh')}</span>
             <strong>${m.label}</strong><span>${m.hint}</span></label>`).join('')}
       </div>
 
@@ -56,15 +57,15 @@ async function render() {
         <dl class="kv">
           <dt>Lưu tệp trên máy bằng</dt><dd>${st.backend === 'opfs' ? 'Hệ thống tệp riêng của ứng dụng (OPFS)' : 'IndexedDB'}</dd>
           <dt>Đã dùng trên máy</dt><dd>${quotaBar(st.usage?.usage, st.usage?.quota)}</dd>
-          ${conn ? '<dt>Dung lượng Google</dt><dd data-drive-quota><span class="muted">Đang lấy…</span></dd>' : ''}
+          ${conn && !ghAcct ? '<dt>Dung lượng Google</dt><dd data-drive-quota><span class="muted">Đang lấy…</span></dd>' : ''}
           <dt>Chống bị xoá tự động</dt><dd>${persisted ? '<span class="pill ok">Đã bật</span>' : '<button class="btn small" data-act="persist">Yêu cầu lưu trữ bền vững</button>'}</dd>
           ${st.mode !== 'local' ? `
-          <dt>Tài khoản Google</dt><dd>${!st.drive.configured ? '<span class="pill warn">Chưa cấu hình Client ID</span> <a class="btn small" href="#account">Hướng dẫn</a>'
-            : !st.drive.signedIn ? '<button class="btn small primary" data-act="connect">Đăng nhập Google</button>'
+          <dt>${ghAcct ? 'Tài khoản GitHub' : 'Tài khoản'}</dt><dd>${!st.drive.configured ? '<span class="pill warn">Chưa cấu hình Client ID</span> <a class="btn small" href="#account">Hướng dẫn</a>'
+            : !st.drive.signedIn ? '<a class="btn small primary" href="#account">Đăng nhập</a>'
             : `<span class="pill ${st.drive.needsReconnect ? 'warn' : 'ok'}">${st.drive.needsReconnect ? 'Cần kết nối lại' : 'Đã đăng nhập'}</span> ${esc(account.email)} <a class="btn small" href="#account">Quản lý</a>`}</dd>
           <dt>Chờ đồng bộ</dt><dd class="num">${st.pending} thay đổi · lần cuối ${fmtAgo(st.lastSync)}</dd>
           <dt>Tiến độ nghe/đọc</dt><dd>Đồng bộ vài giây sau mỗi lần dừng · lần cuối ${fmtAgo(liveAt)}</dd>
-          <dt>Khi mở tệp trên Drive</dt><dd><label class="check"><input type="checkbox" id="set-cache" ${cacheOnOpen ? 'checked' : ''}> Lưu bản tạm trên máy để mở lại offline</label></dd>` : ''}
+          ${st.mode === 'github' ? '' : `<dt>Khi mở tệp trên Drive</dt><dd><label class="check"><input type="checkbox" id="set-cache" ${cacheOnOpen ? 'checked' : ''}> Lưu bản tạm trên máy để mở lại offline</label></dd>`}` : ''}
           ${st.mode === 'hybrid' ? `
           <dt>Đồng bộ gì lên Drive</dt><dd><select id="set-policy">${Object.entries(HYBRID_POLICIES).map(([k, v]) => `<option value="${k}" ${k === st.policy ? 'selected' : ''}>${v}</option>`).join('')}</select></dd>` : ''}
         </dl>
@@ -131,8 +132,9 @@ async function render() {
   const on = (act, fn) => root.querySelector(`[data-act="${act}"]`)?.addEventListener('click', fn);
 
   root.querySelectorAll('input[name="storage-mode"]').forEach(r => r.onchange = async () => {
-    if (r.value !== 'local') {   // needs the Google account; asks what to do with this device's data
-      if (!account.signedIn) { ctx.toast(account.configured() ? 'Đăng nhập Google để bật đồng bộ' : 'Đăng nhập Google chưa được bật, xem hướng dẫn', 'warn'); ctx.go('account'); return; }
+    if (r.value !== 'local') {   // needs the matching account; asks what to do with this device's data
+      const need = r.value === 'github' ? 'github' : 'google';
+      if (!account.signedIn || account.provider !== need) { ctx.toast(need === 'github' ? 'Đăng nhập GitHub để bật chế độ này' : 'Đăng nhập Google để bật chế độ này', 'warn'); render(); ctx.go('account'); return; }
       await afterSignIn(r.value); render();
       return;
     }
@@ -153,9 +155,9 @@ async function render() {
   on('sync', async (e) => {
     const b = e.currentTarget; b.disabled = true;
     try {
-      if (account.signedIn && !account.tokenValid()) await account.reconnect();   // inside the click: popup allowed
+      if (account.provider === 'google' && account.signedIn && !account.tokenValid()) await account.reconnect();   // inside the click: popup allowed
       const r = await ctx.storage.sync();
-      if (r?.skipped) ctx.toast(r.skipped === 'offline' ? 'Đang offline, sẽ đồng bộ khi có mạng' : r.skipped === 'signed-out' ? 'Chưa đăng nhập Google' : 'Chưa kết nối được Google Drive', 'warn');
+      if (r?.skipped) ctx.toast(r.skipped === 'offline' ? 'Đang offline, sẽ đồng bộ khi có mạng' : r.skipped === 'signed-out' ? 'Chưa đăng nhập' : 'Chưa kết nối được ' + (ghAcct ? 'GitHub' : 'Google Drive'), 'warn');
       else if (r && !r.cancelled && !r.pulled && !r.uploaded) ctx.toast('Đã đồng bộ, không có thay đổi mới');
     } catch (err) { ctx.toast(err.message, 'error'); }
     finally { b.disabled = false; }

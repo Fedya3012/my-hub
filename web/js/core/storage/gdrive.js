@@ -129,10 +129,10 @@ export const gdrive = {
   id: 'gdrive',
   label: 'Google Drive',
 
-  configured() { return account.configured(); },
+  configured() { return account.googleConfigured(); },
   // Signed in with a valid token (or one that can be renewed silently on the next request).
-  connected() { return account.signedIn && account.tokenValid(); },
-  linked() { return account.signedIn; },
+  connected() { return account.provider === 'google' && account.signedIn && account.tokenValid(); },
+  linked() { return account.provider === 'google' && account.signedIn; },
   async available() { return this.connected() && navigator.onLine; },
 
   // Google account storage quota (bytes): { limit, usage, usageInDrive, usageInDriveTrash }. limit is

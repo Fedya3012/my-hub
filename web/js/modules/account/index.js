@@ -7,9 +7,10 @@ import { tasks } from '../../core/tasks.js';
 import { thisDevice, renameDevice } from '../../core/device.js';
 import { icon } from '../../core/icons.js';
 import { esc, confirmBox, fmtAgo, fmtBytes } from '../../core/ui.js';
-import { avatar, formDialog, afterSignIn, signInFlow, wipeLocal, GOOGLE_LOGO } from '../../core/account-ui.js';
+import { avatar, formDialog, afterSignIn, signInFlow, signInGitHubFlow, githubDialog, wipeLocal, GOOGLE_LOGO, GITHUB_LOGO } from '../../core/account-ui.js';
 
 let root, ctx, offs = [];
+let showSetup = false;        // the Google Client ID guide instead of the sign-in cards
 let notice = null;            // { kind: 'ok' | 'warn' | 'error', text } shown once at the top
 
 export async function mount(el, context) {
@@ -45,8 +46,8 @@ function noticeHtml() {
 
 async function render() {
   if (!root) return;
-  if (!account.configured()) return renderSetup();
   if (account.signedIn) return renderSignedIn();
+  if (showSetup && !account.googleConfigured()) return renderSetup();
   return renderSignedOut();
 }
 
@@ -78,7 +79,8 @@ function renderSetup() {
       <li><b>Đăng nhập trên từng máy</b><p>Mở lại trang này, bấm <i>Đăng nhập bằng Google</i>, rồi đăng nhập cùng tài khoản trên điện thoại. Thư viện, tiến độ nghe/đọc và tệp sẽ tự đồng bộ.</p></li>
     </ol>
     <div class="panel acct-security-note">${icon('shield')}<p>Client ID là công khai theo thiết kế, không có mật khẩu hay khoá bí mật nào trong app. My Hub chỉ thấy thư mục ẩn của chính nó và các tệp nó tạo trên Drive, không đọc được phần còn lại của Drive. Chi tiết trong <code>docs/ACCOUNT.md</code>.</p></div>
-    <div class="row-actions"><a class="btn" href="#settings">${icon('settings')}Cài đặt lưu trữ</a></div>`);
+    <div class="row-actions"><button class="btn" data-act="back">Quay lại</button><a class="btn" href="#settings">${icon('settings')}Cài đặt lưu trữ</a></div>`);
+  root.querySelector('[data-act=back]').onclick = () => { showSetup = false; render(); };
   root.querySelectorAll('[data-copy]').forEach(b => b.onclick = async () => {
     try { await navigator.clipboard.writeText(b.dataset.copy); ctx.toast('Đã sao chép'); } catch { ctx.toast('Hãy chọn và sao chép thủ công', 'warn'); }
   });
@@ -86,33 +88,50 @@ function renderSetup() {
 
 // ── Signed out ─────────────────────────────────────────────────
 function renderSignedOut() {
-  root.innerHTML = page('Đồng bộ giữa các máy', 'Tài khoản Google', `
+  const g = account.googleConfigured();
+  root.innerHTML = page('Đồng bộ giữa các máy', 'Đăng nhập', `
     <div class="acct-auth">
+      <div class="panel acct-card acct-center">
+        <span class="acct-big-ic">${GITHUB_LOGO}</span>
+        <h2>Đăng nhập bằng GitHub</h2>
+        <p class="muted">Dán một token GitHub của bạn. Thư viện và tiến độ nghe/đọc lưu trong một kho <b>riêng tư</b> trên GitHub của chính bạn; tệp nhạc/sách ở lại trên từng máy. Dùng được trên cả Windows và Android.</p>
+        <p class="form-err" role="alert" hidden data-e="github"></p>
+        <button class="btn primary block" data-act="github">${GITHUB_LOGO}Đăng nhập bằng GitHub</button>
+        <p class="hint">${navigator.onLine ? 'Không cần cài thêm gì, chỉ cần tạo token một lần.' : 'Đang offline: cần có mạng để đăng nhập.'}</p>
+      </div>
       <div class="panel acct-card acct-center">
         <span class="acct-big-ic">${GOOGLE_LOGO}</span>
         <h2>Đăng nhập bằng Google</h2>
-        <p class="muted">Dùng tài khoản Google của bạn. Dữ liệu được lưu trong Google Drive của chính bạn, trong một thư mục ẩn chỉ My Hub đọc được.</p>
-        <p class="form-err" role="alert" hidden></p>
-        <button class="btn primary block acct-google" data-act="google">${GOOGLE_LOGO}Đăng nhập bằng Google</button>
-        <p class="hint">${navigator.onLine ? 'Một cửa sổ Google sẽ mở ra để chọn tài khoản và cho phép truy cập Drive.' : 'Đang offline: cần có mạng để đăng nhập.'}</p>
+        <p class="muted">Đồng bộ thư viện, tiến độ <b>và cả tệp</b> qua Google Drive của bạn (thư mục ẩn chỉ My Hub đọc được).${g ? '' : ' Cần bật Google Client ID một lần.'}</p>
+        <p class="form-err" role="alert" hidden data-e="google"></p>
+        ${g ? `<button class="btn block acct-google" data-act="google">${GOOGLE_LOGO}Đăng nhập bằng Google</button>`
+          : `<button class="btn block" data-act="google-setup">Xem hướng dẫn bật Google</button>`}
+        <p class="hint">${g ? 'Một cửa sổ Google sẽ mở ra để chọn tài khoản và cho phép truy cập Drive. Chưa dùng được trong app Android.' : 'Chưa bật cho bản cài đặt này.'}</p>
       </div>
-      <aside class="acct-why">
-        <h2>Một tài khoản, mọi thiết bị</h2>
-        <ul>
-          <li>${icon('refresh')}<span><b>Thư viện đồng bộ</b> giữa máy tính, điện thoại và bản APK.</span></li>
-          <li>${icon('play')}<span><b>Nghe, đọc tiếp đúng chỗ</b>: dừng trên Windows, mở điện thoại là tiếp tục.</span></li>
-          <li>${icon('cloud')}<span><b>Tệp được sao lưu</b> vào Google Drive của bạn, mở trên máy khác khi cần.</span></li>
-          <li>${icon('device')}<span><b>Vẫn chạy offline</b>: mọi thay đổi được lưu trên máy rồi gửi đi khi có mạng.</span></li>
-        </ul>
-        <p class="hint">Không muốn đăng nhập? App vẫn dùng đầy đủ ở chế độ Trên máy. <a href="#settings">Cài đặt lưu trữ</a></p>
-      </aside>
-    </div>`);
-  root.querySelector('[data-act=google]').onclick = async (e) => {
-    const errEl = root.querySelector('.form-err');
-    errEl.hidden = true;
-    try { await busy(e.currentTarget, () => signInFlow()); }
-    catch (err) { if (root.isConnected && errEl.isConnected) { errEl.textContent = err.message; errEl.hidden = false; } else ctx.toast(err.message, 'error'); }
+    </div>
+    <aside class="acct-why">
+      <h2>Một tài khoản, mọi thiết bị</h2>
+      <ul>
+        <li>${icon('refresh')}<span><b>Thư viện đồng bộ</b> giữa máy tính, điện thoại và bản APK.</span></li>
+        <li>${icon('play')}<span><b>Nghe, đọc tiếp đúng chỗ</b>: dừng trên Windows, mở điện thoại là tiếp tục.</span></li>
+        <li>${icon('cloud')}<span><b>Đồng bộ tệp</b> chỉ có với Google Drive; GitHub đồng bộ dữ liệu.</span></li>
+        <li>${icon('device')}<span><b>Vẫn chạy offline</b>: mọi thay đổi được lưu trên máy rồi gửi đi khi có mạng.</span></li>
+      </ul>
+      <p class="hint">Không muốn đăng nhập? App vẫn dùng đầy đủ ở chế độ Trên máy. <a href="#settings">Cài đặt lưu trữ</a></p>
+    </aside>`);
+  const showErr = (which, err) => {
+    const errEl = root.querySelector(`[data-e="${which}"]`);
+    if (root.isConnected && errEl?.isConnected) { errEl.textContent = err.message; errEl.hidden = false; } else ctx.toast(err.message, 'error');
   };
+  root.querySelector('[data-act=github]').onclick = async (e) => {
+    root.querySelector('[data-e=github]').hidden = true;
+    try { await busy(e.currentTarget, () => signInGitHubFlow()); } catch (err) { showErr('github', err); }
+  };
+  root.querySelector('[data-act=google]')?.addEventListener('click', async (e) => {
+    root.querySelector('[data-e=google]').hidden = true;
+    try { await busy(e.currentTarget, () => signInFlow()); } catch (err) { showErr('google', err); }
+  });
+  root.querySelector('[data-act=google-setup]')?.addEventListener('click', () => { showSetup = true; render(); });
 }
 
 // ── Signed in ──────────────────────────────────────────────────
@@ -127,19 +146,22 @@ async function renderSignedIn() {
   const driveFiles = await db.files.filter(f => !!f.locations?.gdrive).toArray();
   const on = st.mode !== 'local';
   const reconnect = account.needsReconnect;
+  const gh = account.provider === 'github';
+  const cloudName = gh ? 'GitHub' : 'Google Drive';
   const running = tasks.all().find(t => t.id === ctx.storage.taskId && t.state === 'running');
   const syncState = !on ? ['warn', 'Chưa bật trên máy này'] : !navigator.onLine ? ['warn', 'Offline'] : reconnect ? ['warn', 'Cần kết nối lại']
     : st.pending ? ['warn', `${st.pending} thay đổi chờ gửi`] : ['ok', 'Đã đồng bộ'];
 
-  root.innerHTML = page('Tài khoản Google', `Xin chào, ${esc(account.displayName(u))}`, `
-    ${reconnect && navigator.onLine ? `<div class="notice warn">${icon('info')}<p><b>Phiên Google đã hết hạn trên máy này</b> (Google cấp quyền theo từng giờ). Bấm một lần để tiếp tục đồng bộ, không cần nhập lại mật khẩu.</p><button class="btn primary" data-act="reconnect">${GOOGLE_LOGO}Kết nối lại</button></div>` : ''}
+  root.innerHTML = page(gh ? 'Tài khoản GitHub' : 'Tài khoản Google', `Xin chào, ${esc(account.displayName(u))}`, `
+    ${reconnect && navigator.onLine && gh ? `<div class="notice warn">${icon('info')}<p><b>Token GitHub không còn hiệu lực trên máy này.</b> Tạo token mới và dán lại để tiếp tục đồng bộ.</p><button class="btn primary" data-act="reconnect">Nhập token mới</button></div>` : ''}
+    ${reconnect && navigator.onLine && !gh ? `<div class="notice warn">${icon('info')}<p><b>Phiên Google đã hết hạn trên máy này</b> (Google cấp quyền theo từng giờ). Bấm một lần để tiếp tục đồng bộ, không cần nhập lại mật khẩu.</p><button class="btn primary" data-act="reconnect">${GOOGLE_LOGO}Kết nối lại</button></div>` : ''}
     ${!on ? `<div class="notice">${icon('refresh')}<p><b>Máy này chưa đồng bộ với tài khoản.</b> Bật để thư viện, tiến độ và tệp trên máy này đi cùng tài khoản Google. Hiện đang dùng chế độ “Trên máy”.</p><button class="btn primary" data-act="enable">Bật đồng bộ</button></div>` : ''}
     <div class="acct-grid">
       <section class="panel acct-profile" aria-labelledby="h-profile">
         <div class="acct-hero">${avatar(u, 'lg')}<div class="acct-hero-t"><h2 id="h-profile">${esc(account.displayName(u))}</h2><span class="muted">${esc(u?.email || '')}</span>
-          <span class="acct-pills"><span class="pill">${GOOGLE_LOGO}Google</span><span class="pill">Đăng nhập ${fmtAgo(account.signedInAt)}</span></span></div></div>
+          <span class="acct-pills"><span class="pill">${gh ? GITHUB_LOGO + 'GitHub' : GOOGLE_LOGO + 'Google'}</span><span class="pill">Đăng nhập ${fmtAgo(account.signedInAt)}</span></span></div></div>
         <dl class="kv">
-          <dt>Lưu dữ liệu ở</dt><dd>Google Drive của ${esc(u?.email || 'bạn')} · thư mục ẩn của app + thư mục “My Hub”</dd>
+          <dt>Lưu dữ liệu ở</dt><dd>${gh ? `Kho riêng tư <code>${esc(u?.login || '')}/my-hub-data</code> trên GitHub · thư viện và tiến độ (tệp ở lại trên máy)` : `Google Drive của ${esc(u?.email || 'bạn')} · thư mục ẩn của app + thư mục “My Hub”`}</dd>
           <dt>Chế độ trên máy này</dt><dd>${esc(ctx.storage.MODES?.[st.mode]?.label || { local: 'Chỉ trên máy', gdrive: 'Tài khoản Google', hybrid: 'Kết hợp' }[st.mode])}<a class="btn small" href="#settings">Đổi</a></dd>
         </dl>
       </section>
@@ -149,7 +171,7 @@ async function renderSignedIn() {
         <dl class="kv">
           <dt>Lần đồng bộ cuối</dt><dd>${on ? fmtAgo(st.lastSync) : '—'}</dd>
           <dt>Tiến độ nghe/đọc</dt><dd>${on ? `Gửi vài giây sau mỗi lần dừng · ${fmtAgo(liveAt)}` : '—'}</dd>
-          <dt>Tệp trên Drive</dt><dd class="num">${driveFiles.length} tệp · ${fmtBytes(driveFiles.reduce((s, f) => s + (f.locations.gdrive.size || f.size || 0), 0))}</dd>
+          ${gh ? '' : `<dt>Tệp trên Drive</dt><dd class="num">${driveFiles.length} tệp · ${fmtBytes(driveFiles.reduce((s, f) => s + (f.locations.gdrive.size || f.size || 0), 0))}</dd>`}
           <dt>Máy này lưu tệp bằng</dt><dd>${st.backend === 'opfs' ? 'OPFS' : 'IndexedDB'}${st.usage ? ` · <span class="num">${fmtBytes(st.usage.usage)}</span>` : ''}</dd>
         </dl>
         <div class="acct-progress" data-f="sync-progress" ${running ? '' : 'hidden'} aria-live="polite">
@@ -170,15 +192,15 @@ async function renderSignedIn() {
       </section>
 
       <section class="panel acct-security" aria-labelledby="h-sec">
-        <h2 class="panel-title" id="h-sec">${icon('shield')}Đăng xuất & dữ liệu trên Drive</h2>
+        <h2 class="panel-title" id="h-sec">${icon('shield')}Đăng xuất & dữ liệu trên ${cloudName}</h2>
         <div class="acct-actions">
           <button class="btn" data-act="signout">${icon('logout')}Đăng xuất</button>
           <button class="btn" data-act="signout-all" ${on ? '' : 'disabled'}>${icon('logout')}Đăng xuất mọi thiết bị</button>
         </div>
         <p class="hint">Đăng xuất không xoá thư viện trên máy; app chuyển về chế độ Trên máy.</p>
         <div class="acct-danger">
-          <div><b>Xoá dữ liệu trên Google Drive</b><p class="hint">Xoá thư mục ẩn của My Hub (thư viện, tiến độ, thiết bị) và mọi tệp app đã tải lên Drive, rồi ngắt kết nối. Thư viện trên máy này vẫn còn. Không thể hoàn tác.</p></div>
-          <button class="btn danger-ghost" data-act="delete">${icon('trash')}Xoá dữ liệu trên Drive</button>
+          <div><b>Xoá dữ liệu trên ${cloudName}</b><p class="hint">${gh ? 'Xoá hai tệp dữ liệu (thư viện, tiến độ, thiết bị) trong kho my-hub-data, rồi ngắt kết nối. Kho vẫn còn, bạn có thể tự xoá trên GitHub.' : 'Xoá thư mục ẩn của My Hub (thư viện, tiến độ, thiết bị) và mọi tệp app đã tải lên Drive, rồi ngắt kết nối.'} Thư viện trên máy này vẫn còn. Không thể hoàn tác.</p></div>
+          <button class="btn danger-ghost" data-act="delete">${icon('trash')}Xoá dữ liệu trên ${cloudName}</button>
         </div>
       </section>
     </div>`);
@@ -187,16 +209,18 @@ async function renderSignedIn() {
 }
 
 function wireSignedIn(me) {
+  const gh = account.provider === 'github';
+  const renew = () => (gh ? githubDialog() : account.reconnect());   // GitHub: paste a new token
   const on = (act, fn) => root.querySelector(`[data-act="${act}"]`)?.addEventListener('click', fn);
   on('enable', () => afterSignIn());
   on('reconnect', async (e) => {
-    try { await busy(e.currentTarget, () => account.reconnect()); ctx.toast('Đã kết nối lại'); ctx.storage.syncSoon(300); }
+    try { await busy(e.currentTarget, () => renew()); ctx.toast('Đã kết nối lại'); ctx.storage.syncSoon(300); }
     catch (err) { ctx.toast(err.message, 'error'); }
   });
   on('sync', async (e) => {
     const b = e.currentTarget; b.disabled = true;
     try {
-      if (!account.tokenValid()) await account.reconnect();   // inside the click: the popup is allowed
+      if (!account.tokenValid()) await renew();   // inside the click: the popup is allowed
       const r = await ctx.storage.sync();
       if (r?.skipped === 'offline') ctx.toast('Đang offline, sẽ đồng bộ khi có mạng', 'warn');
       else if (r?.skipped) ctx.toast('Chưa thể đồng bộ: ' + r.skipped, 'warn');
@@ -216,7 +240,7 @@ function wireSignedIn(me) {
   on('signout', () => formDialog({
     title: 'Đăng xuất khỏi máy này?', submit: 'Đăng xuất', kind: 'primary',
     intro: 'Thay đổi chưa gửi sẽ được đồng bộ lần cuối nếu có mạng. Sau đó app dùng chế độ Trên máy.',
-    extra: `<label class="check"><input type="checkbox" name="revoke"> Thu hồi quyền của My Hub với Google Drive (các máy khác sẽ phải bấm “Kết nối lại”)</label>
+    extra: `${gh ? '' : '<label class="check"><input type="checkbox" name="revoke"> Thu hồi quyền của My Hub với Google Drive (các máy khác sẽ phải bấm “Kết nối lại”)</label>'}
       <label class="check"><input type="checkbox" name="wipe"> Xoá luôn thư viện và tệp trên máy này</label>`,
     onSubmit: async (v) => {
       if ((await ctx.storage.mode()) !== 'local' && navigator.onLine && account.tokenValid()) await ctx.storage.sync({ quiet: true }).catch(() => {});
@@ -232,7 +256,7 @@ function wireSignedIn(me) {
     if (!(await confirmBox('Đăng xuất mọi thiết bị?', 'Mọi máy đang dùng tài khoản này (kể cả máy này) sẽ đăng xuất lần tới khi có mạng. Dữ liệu trên các máy vẫn còn; đăng nhập lại để đồng bộ tiếp.', 'Đăng xuất tất cả'))) return;
     try {
       if (account.tokenValid()) await ctx.storage.sync({ quiet: true }).catch(() => {});
-      else await account.reconnect();
+      else await renew();
       await ctx.storage.signOutEverywhere();
       ctx.toast('Đã đăng xuất mọi thiết bị');
     } catch (err) { ctx.toast(err.message, 'error'); }
@@ -240,15 +264,15 @@ function wireSignedIn(me) {
   on('delete', () => {
     const email = account.email;
     formDialog({
-      title: 'Xoá dữ liệu My Hub trên Google Drive?', submit: 'Xoá vĩnh viễn', kind: 'danger',
-      intro: `Thư mục ẩn của My Hub và mọi tệp app đã tải lên Drive của <b>${esc(email)}</b> sẽ bị xoá; các máy khác không còn gì để đồng bộ. Tệp chỉ nằm trên Drive (chưa có bản trên máy này) sẽ mất. Không thể hoàn tác.`,
+      title: gh ? 'Xoá dữ liệu My Hub trên GitHub?' : 'Xoá dữ liệu My Hub trên Google Drive?', submit: 'Xoá vĩnh viễn', kind: 'danger',
+      intro: gh ? `Hai tệp dữ liệu của My Hub trong kho <code>my-hub-data</code> của <b>${esc(email)}</b> sẽ bị xoá; các máy khác không còn gì để đồng bộ. Thư viện trên các máy vẫn còn.` : `Thư mục ẩn của My Hub và mọi tệp app đã tải lên Drive của <b>${esc(email)}</b> sẽ bị xoá; các máy khác không còn gì để đồng bộ. Tệp chỉ nằm trên Drive (chưa có bản trên máy này) sẽ mất. Không thể hoàn tác.`,
       fields: [{ name: 'confirm', label: 'Gõ XOÁ để xác nhận', autocomplete: 'off', placeholder: 'XOÁ' }],
       extra: '<label class="check"><input type="checkbox" name="signout" checked> Đăng xuất khỏi máy này sau khi xoá</label>',
       onSubmit: async (v) => {
         const typed = String(v.confirm || '').trim().toUpperCase();
         if (typed !== 'XOÁ' && typed !== 'XOA') throw new Error('Gõ đúng chữ XOÁ để xác nhận.');
         if (!navigator.onLine) throw new Error('Cần có mạng để xoá dữ liệu trên Drive.');
-        if (!account.tokenValid()) await account.reconnect();
+        if (!account.tokenValid()) await renew();
         const n = await ctx.storage.deleteCloudData();
         if (n < 0) throw new Error('Đã huỷ. Một phần dữ liệu có thể đã bị xoá.');
         if (v.signout) await account.signOut();
@@ -257,7 +281,7 @@ function wireSignedIn(me) {
       },
     }).then((n) => {
       if (n == null || n === false) return;
-      notice = { kind: 'ok', text: `Đã xoá ${n} tệp của My Hub trên Google Drive. Thư viện trên máy này vẫn dùng được ở chế độ Trên máy.` };
+      notice = { kind: 'ok', text: `Đã xoá ${n} tệp của My Hub trên ${gh ? 'GitHub' : 'Google Drive'}. Thư viện trên máy này vẫn dùng được ở chế độ Trên máy.` };
       render();
     });
   });

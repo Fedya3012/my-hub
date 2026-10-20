@@ -3,6 +3,7 @@
 // (with the "this device already has data" choice). The account page is js/modules/account/index.js.
 import { account } from './account.js';
 import { storage } from './storage/index.js';
+import { github } from './storage/github.js';
 import { db, getSetting, setSetting } from './db.js';
 import { bus } from './bus.js';
 import { icon, registerIcons } from './icons.js';
@@ -16,6 +17,7 @@ registerIcons({
   key: '<circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M17 6l3 3M15 8l2 2"/>',
 });
 
+export const GITHUB_LOGO = `<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2z"/></svg>`;
 export const GOOGLE_LOGO = `<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.8h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.3z"/><path fill="#34A853" d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22z"/><path fill="#FBBC05" d="M6.4 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.4H3.1a10 10 0 0 0 0 9.2z"/><path fill="#EA4335" d="M12 6c1.5 0 2.8.5 3.8 1.5l2.9-2.9A10 10 0 0 0 3.1 7.4L6.4 10C7.2 7.7 9.4 6 12 6z"/></svg>`;
 
 // Messages from the sync backend (signed out from another device…).
@@ -30,7 +32,7 @@ export function avatar(u = account.user, cls = '') {
   return `<span class="acct-avatar ${cls}" aria-hidden="true">${esc(ch)}${img}</span>`;
 }
 
-const MODE_LABEL = { local: 'Trên máy', gdrive: 'Tài khoản Google', hybrid: 'Kết hợp' };
+const MODE_LABEL = { local: 'Trên máy', gdrive: 'Tài khoản Google', github: 'Tài khoản GitHub', hybrid: 'Kết hợp' };
 
 // Sidebar footer badge. s = storage.status(). Always links to the account page.
 export function badge(s) {
@@ -48,23 +50,22 @@ export function badge(s) {
   const label = MODE_LABEL[s.mode] || s.mode;
   return {
     href: '#account',
-    title: 'Chế độ lưu trữ: ' + label + (account.configured() ? ' · Đăng nhập Google để đồng bộ giữa các máy' : ''),
-    html: `${icon(s.mode === 'local' ? 'device' : 'cloud')}<span class="acct-badge-t"><b>${esc(label)}${s.pending ? ` · ${s.pending} chờ` : ''}</b>${account.configured() ? '<small>Đăng nhập Google</small>' : ''}</span>`,
+    title: 'Chế độ lưu trữ: ' + label + (account.configured() ? ' · Đăng nhập để đồng bộ giữa các máy' : ''),
+    html: `${icon(s.mode === 'local' ? 'device' : 'cloud')}<span class="acct-badge-t"><b>${esc(label)}${s.pending ? ` · ${s.pending} chờ` : ''}</b><small>Đăng nhập để đồng bộ</small></span>`,
   };
 }
 
 // Block for the top of Settings.
 export function accountSummary() {
+  const gh = account.provider === 'github';
   let body;
-  if (!account.configured()) {
-    body = `<span class="mod-icon">${icon('user')}</span><span class="acct-sum-t"><strong>Tài khoản Google chưa được bật</strong><span class="muted">Làm theo hướng dẫn để đăng nhập Google và đồng bộ giữa máy tính và điện thoại. App vẫn dùng bình thường ở chế độ Trên máy.</span></span>`;
-  } else if (account.signedIn) {
+  if (account.signedIn) {
     body = `${avatar(account.user, 'md')}<span class="acct-sum-t"><strong>${esc(account.displayName())}</strong><span class="muted">${esc(account.email)}${account.needsReconnect ? ' · cần kết nối lại' : ''}</span></span>`;
   } else {
-    body = `<span class="mod-icon">${GOOGLE_LOGO}</span><span class="acct-sum-t"><strong>Đăng nhập bằng Google</strong><span class="muted">Đồng bộ thư viện, tiến độ nghe/đọc và tệp giữa máy tính và điện thoại qua Google Drive của bạn.</span></span>`;
+    body = `<span class="mod-icon">${icon('user')}</span><span class="acct-sum-t"><strong>Đăng nhập để đồng bộ</strong><span class="muted">Bằng GitHub (dán token) hoặc Google. Đồng bộ thư viện và tiến độ nghe/đọc giữa máy tính và điện thoại.</span></span>`;
   }
   return `<section class="set-block" id="set-account">
-      <h2 class="section-title">${icon('user')}Tài khoản Google</h2>
+      <h2 class="section-title">${icon('user')}${account.signedIn ? (gh ? 'Tài khoản GitHub' : 'Tài khoản Google') : 'Tài khoản'}</h2>
       <a class="panel acct-summary" href="#account">${body}<span class="acct-sum-go">${icon('arrow')}</span></a>
     </section>`;
 }
@@ -88,6 +89,9 @@ export function formDialog({ title, intro = '', fields = [], extra = '', submit 
     const close = (v) => { el.remove(); document.removeEventListener('keydown', onKey); resolve(v); };
     const onKey = (e) => { if (e.key === 'Escape') close(null); };
     el.querySelectorAll('[data-close]').forEach(b => b.onclick = () => close(null));
+    el.querySelectorAll('[data-copy]').forEach(b => b.onclick = async () => {
+      try { await navigator.clipboard.writeText(b.dataset.copy); toast('Đã sao chép'); } catch { toast('Hãy chọn và sao chép thủ công', 'warn'); }
+    });
     el.addEventListener('click', (e) => { if (e.target === el) close(null); });
     form.onsubmit = async (e) => {
       e.preventDefault();
@@ -112,7 +116,8 @@ export async function afterSignIn(mode) {
   const uid = account.uid;
   const cur = await storage.mode();
   const lastUid = await getSetting('account.lastUid', null);
-  const target = mode || (cur === 'hybrid' ? 'hybrid' : 'gdrive');
+  const gh = account.provider === 'github';
+  const target = gh ? 'github' : (mode && mode !== 'github' ? mode : cur === 'hybrid' ? 'hybrid' : 'gdrive');
   if (cur !== 'local' && lastUid === uid) {
     if (cur !== target) await storage.setMode(target);
     storage.sync().catch(e => toast(e.message, 'error'));
@@ -128,10 +133,10 @@ export async function afterSignIn(mode) {
     const other = lastUid && lastUid !== uid;
     choice = await modal({
       title: 'Máy này đã có dữ liệu',
-      body: `<div class="stack"><p>Thư viện trên máy này${other ? ' có thể thuộc một tài khoản Google khác' : ''} chưa nằm trong tài khoản <b>${esc(account.email)}</b>, và tài khoản đã có dữ liệu từ máy khác. Bạn muốn làm gì?</p>
+      body: `<div class="stack"><p>Thư viện trên máy này${other ? ' có thể thuộc một tài khoản khác' : ''} chưa nằm trong tài khoản <b>${esc(account.email)}</b>, và tài khoản đã có dữ liệu từ máy khác. Bạn muốn làm gì?</p>
         <ul class="acct-choices">
-          <li><b>Gộp</b> (khuyên dùng): giữ cả hai, mục nào sửa sau cùng thì thắng. Tệp trên máy sẽ được tải lên Drive.</li>
-          <li><b>Dùng dữ liệu của tài khoản</b>: thay thư viện trên máy này bằng bản trên Drive. Những gì chỉ có trên máy này sẽ mất.</li>
+          <li><b>Gộp</b> (khuyên dùng): giữ cả hai, mục nào sửa sau cùng thì thắng. ${gh ? '' : 'Tệp trên máy sẽ được tải lên Drive.'}</li>
+          <li><b>Dùng dữ liệu của tài khoản</b>: thay thư viện trên máy này bằng bản trong tài khoản. Những gì chỉ có trên máy này sẽ mất.</li>
           <li><b>Để sau</b>: vẫn đăng nhập nhưng chưa đồng bộ máy này.</li></ul></div>`,
       actions: [{ label: 'Để sau', value: 'later' }, { label: 'Dùng dữ liệu của tài khoản', value: 'replace', kind: 'danger-ghost' }, { label: 'Gộp', value: 'merge', kind: 'primary' }],
     }) || 'later';
@@ -148,6 +153,29 @@ export async function afterSignIn(mode) {
     if (r?.skipped === 'offline') toast('Đang offline, sẽ đồng bộ khi có mạng', 'warn');
   }).catch(e => toast('Đồng bộ lỗi: ' + e.message, 'error'));
   return choice;
+}
+
+// GitHub sign-in: a dialog that takes a personal access token, then turns sync on.
+export const GITHUB_TOKEN_URL = 'https://github.com/settings/tokens/new?scopes=repo&description=My%20Hub';
+export async function githubDialog() {
+  const ok = await formDialog({
+    title: 'Đăng nhập bằng GitHub',
+    intro: `Dán một <b>token GitHub</b> (Personal access token). Cách tạo trong 1 phút: mở <a href="${GITHUB_TOKEN_URL}" target="_blank" rel="noopener">trang tạo token</a>, chọn thời hạn (ví dụ <i>No expiration</i>), giữ ô <b>repo</b> được chọn, bấm <i>Generate token</i> rồi sao chép chuỗi bắt đầu bằng <code>ghp_</code>. My Hub sẽ tạo một kho <b>riêng tư</b> tên <code>my-hub-data</code> để lưu thư viện và tiến độ. Token chỉ lưu trên máy này.`,
+    fields: [{ name: 'token', label: 'Token GitHub', type: 'password', autocomplete: 'off', placeholder: 'ghp_…' }],
+    extra: `<div class="acct-copy"><code>${esc(GITHUB_TOKEN_URL)}</code><button type="button" class="btn small" data-copy="${esc(GITHUB_TOKEN_URL)}">Sao chép địa chỉ</button></div>`,
+    submit: 'Đăng nhập',
+    onSubmit: async (v) => {
+      if (!navigator.onLine) throw new Error('Đang offline: cần có mạng để đăng nhập.');
+      await account.signInGitHub(v.token);
+      await github.ensureRepo();
+    },
+  });
+  return !!ok;
+}
+export async function signInGitHubFlow() {
+  if (!(await githubDialog())) return null;
+  toast(`Chào ${account.displayName()}!`);
+  return afterSignIn('github');
 }
 
 // Sign in from a click, then turn sync on.

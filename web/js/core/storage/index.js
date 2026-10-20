@@ -17,10 +17,15 @@ import { bus } from '../bus.js';
 import { tasks, abortError } from '../tasks.js';
 import { local } from './local.js';
 import { gdrive } from './gdrive.js';
+import { github } from './github.js';
+
+// Where the library snapshot and progress live: the signed-in account's own cloud.
+const cloud = () => account.provider === 'github' ? github : gdrive;
 
 export const MODES = {
   local:  { label: 'Chỉ trên máy', hint: 'Dữ liệu và tệp nằm trên thiết bị này. Không cần mạng, không cần tài khoản.' },
   gdrive: { label: 'Tài khoản Google', hint: 'Đăng nhập Google: thư viện, tiến độ và tệp đồng bộ qua Google Drive của bạn giữa máy tính và điện thoại. Tệp mở khi cần, giữ bản tạm; vẫn chạy offline.' },
+  github: { label: 'Tài khoản GitHub', hint: 'Đăng nhập GitHub (dán token): thư viện và tiến độ đồng bộ qua một kho riêng tư của bạn. Tệp nhạc/sách ở lại trên từng máy; muốn đồng bộ cả tệp thì dùng Google Drive.' },
   hybrid: { label: 'Kết hợp', hint: 'Tệp lưu trên máy là chính, tự sao lưu và đồng bộ lên Google Drive của tài khoản khi có mạng.' },
 };
 
@@ -151,7 +156,7 @@ export const storage = {
     ]);
     return {
       mode, policy, backend, usage, pending, lastSync,
-      drive: { configured: gdrive.configured(), connected: gdrive.connected(), signedIn: account.signedIn, needsReconnect: account.needsReconnect },
+      drive: { provider: account.provider, configured: account.provider === 'github' || gdrive.configured(), connected: cloud().connected(), signedIn: account.signedIn, needsReconnect: account.needsReconnect },
     };
   },
 
@@ -186,7 +191,7 @@ export const storage = {
       } else {
         row.locations.local = source.handle ? await local.link(id, source.handle)
           : await local.put(id, blob, { signal: r.signal, onProgress: (d) => r.report(hashW + d, 'ghi vào máy') });
-        row.syncStatus = mode === 'local' ? 'local-only' : 'pending-upload';
+        row.syncStatus = mode === 'local' || cloud() !== gdrive ? 'local-only' : 'pending-upload';
       }
       await db.files.put(row);
       r.report(hashW + storeW);
@@ -268,16 +273,16 @@ export const storage = {
     if (mode === 'local') return { skipped: 'local' };
     if (!account.signedIn) return { skipped: 'signed-out' };
     if (!navigator.onLine) return { skipped: 'offline' };
-    if (!gdrive.connected()) {
+    if (!cloud().connected()) {
       try { await account.accessToken(); } catch { return { skipped: 'not-connected' }; }
     }
     bus.emit('sync:start');
-    const task = tasks.start({ label: 'Đồng bộ Google Drive', detail: 'Đang tải dữ liệu từ Drive…', unit: 'percent', cancellable: true, delay: 600, quiet });
+    const task = tasks.start({ label: 'Đồng bộ ' + cloud().label, detail: 'Đang tải dữ liệu từ ' + cloud().label + '…', unit: 'percent', cancellable: true, delay: 600, quiet });
     this.taskId = task.id;
     const signal = task.signal;
     const part = (from, span) => (d, n) => task.update({ done: from + (n ? Math.min(1, d / n) * span : 0) });
     try {
-      const remote = await gdrive.readSnapshot('hub-db.json', { signal, onProgress: part(0, 30) });
+      const remote = await cloud().readSnapshot('hub-db.json', { signal, onProgress: part(0, 30) });
       task.check();
       task.update({ done: 30, detail: 'Đang gộp dữ liệu…' });
       const lastQ = (await db.syncQueue.orderBy('seq').last())?.seq || 0;
@@ -301,14 +306,14 @@ export const storage = {
         }
       }));
       task.update({ done: 50, detail: pulled ? `Đã nhận ${pulled} thay đổi · đang đẩy dữ liệu lên Drive…` : 'Đang đẩy dữ liệu lên Drive…' });
-      await gdrive.writeSnapshot(remote.id, { format: 'my-hub-snapshot', schema: db.verno, at: new Date().toISOString(), tables: merged, tombstones: tombs }, 'hub-db.json', { signal, onProgress: part(50, 20) });
+      await cloud().writeSnapshot(remote.id, { format: 'my-hub-snapshot', schema: db.verno, at: new Date().toISOString(), tables: merged, tombstones: tombs }, 'hub-db.json', { signal, onProgress: part(50, 20) });
       await db.syncQueue.where('seq').belowOrEqual(lastQ).delete();   // changes made during the sync go next time
       await setSetting('sync.fullPushNeeded', false);
 
       // Files
       const policy = await getSetting('storage.hybridPolicy', 'all');
       let uploaded = 0;
-      if (policy !== 'db-only') {
+      if (policy !== 'db-only' && cloud() === gdrive) {
         const pending = (await db.files.where('syncStatus').equals('pending-upload').toArray())
           .filter(f => !(policy === 'small-files' && f.size > 50 * 1024 * 1024));
         if (pending.length) {
@@ -365,21 +370,21 @@ export const storage = {
   },
   // Does the account already hold a library? (hub-db.json in appDataFolder)
   async remoteHasData() {
-    const r = await gdrive.readSnapshot('hub-db.json');
+    const r = await cloud().readSnapshot('hub-db.json');
     return !!r.data && Object.values(r.data.tables || {}).some(rows => rows?.length);
   },
   // "Gộp": the next sync merges everything (newer wins) and uploads this device's files.
   async mergeLocal() {
     await setSetting('sync.fullPushNeeded', true);
-    await withoutSyncHooks(() => db.files.filter(f => f.syncStatus === 'local-only' && !!f.locations?.local && !f.locations?.gdrive)
+    await withoutSyncHooks(() => db.files.filter(f => f.syncStatus === 'local-only' && !!f.locations?.local && !f.locations?.gdrive && cloud() === gdrive)
       .modify({ syncStatus: 'pending-upload' }));
   },
   // "Dùng dữ liệu của tài khoản": replace this device's library with the snapshot.
   async replaceLocal() {
-    const task = tasks.start({ label: 'Đang lấy dữ liệu từ Google Drive', detail: 'Đang tải…', unit: 'percent', cancellable: true });
+    const task = tasks.start({ label: 'Đang lấy dữ liệu từ ' + cloud().label, detail: 'Đang tải…', unit: 'percent', cancellable: true });
     try {
-      const remote = await gdrive.readSnapshot('hub-db.json', { signal: task.signal, onProgress: (d, n) => task.update({ done: n ? d / n * 60 : 30 }) });
-      const live = await gdrive.readSnapshot('hub-live.json', { signal: task.signal });
+      const remote = await cloud().readSnapshot('hub-db.json', { signal: task.signal, onProgress: (d, n) => task.update({ done: n ? d / n * 60 : 30 }) });
+      const live = await cloud().readSnapshot('hub-live.json', { signal: task.signal });
       task.check();
       task.update({ done: 65, detail: 'Đang thay dữ liệu trên máy…' });
       const tombs = remote.data?.tombstones || {};
@@ -426,7 +431,7 @@ export const storage = {
     leavingAll = true;
     let r;
     try { r = await this.syncLive({ quiet: true }); } finally { leavingAll = false; }
-    if (r?.skipped && !r.signedOut) throw new Error('Chưa gửi được yêu cầu lên Google Drive, thử lại sau.');
+    if (r?.skipped && !r.signedOut) throw new Error('Chưa gửi được yêu cầu lên ' + cloud().label + ', thử lại sau.');
     await account.signOut({ reason: 'signout-all', revoke: true });
   },
   // 'signed-out' for a device whose sign-out request is newer than its last activity.
@@ -439,6 +444,11 @@ export const storage = {
   // Delete everything My Hub stored in this Google account: the hidden app folder (library,
   // progress, devices) and every file the app uploaded. Local copies stay on this device.
   async deleteCloudData() {
+    if (cloud() === github) {
+      const task = tasks.start({ label: 'Đang xoá dữ liệu trên GitHub', detail: 'Đang xoá…', unit: 'items' });
+      try { const n = await github.deleteAll(); await db.syncQueue.clear(); task.finish(`Đã xoá ${n} tệp dữ liệu`); return n; }
+      catch (e) { task.fail(e); throw e; }
+    }
     const task = tasks.start({ label: 'Đang xoá dữ liệu trên Google Drive', detail: 'Đang liệt kê…', unit: 'items', cancellable: true });
     try {
       const appData = await gdrive.listAppData();
@@ -469,11 +479,11 @@ export const storage = {
 let liveTimer = null, liveBusy = null, leavingAll = false;
 storage.syncLive = async function ({ quiet = false } = {}) {
   if ((await this.mode()) === 'local' || !account.signedIn || !navigator.onLine) return { skipped: true };
-  if (!gdrive.connected()) { try { await account.accessToken(); } catch { return { skipped: 'not-connected' }; } }
+  if (!cloud().connected()) { try { await account.accessToken(); } catch { return { skipped: 'not-connected' }; } }
   if (liveBusy) return liveBusy;
   liveBusy = (async () => {
     await touchDevice();
-    const remote = await gdrive.readSnapshot('hub-live.json');
+    const remote = await cloud().readSnapshot('hub-live.json');
     // Sign-out requests ({ deviceId | '*': when }): newest per device.
     const marks = { ...(remote.data?.signouts || {}) };
     for (const [k, at] of Object.entries(await getSetting('sync.signouts', {}))) if (!(marks[k] >= at)) marks[k] = at;
@@ -486,7 +496,7 @@ storage.syncLive = async function ({ quiet = false } = {}) {
       if (changed.length) await db.table(t).bulkPut(changed);
       out[t] = all; pulled += changed.length;
     }
-    await gdrive.writeSnapshot(remote.id, { format: 'my-hub-live', at: new Date().toISOString(), tables: out, signouts: marks }, 'hub-live.json');
+    await cloud().writeSnapshot(remote.id, { format: 'my-hub-live', at: new Date().toISOString(), tables: out, signouts: marks }, 'hub-live.json');
     if (dropped) { await account.signOut({ reason: 'remote', revoke: false }); return { signedOut: true }; }
     await setSetting('sync.liveAt', now());
     if (pulled && !quiet) bus.emit('progress:pulled', { pulled });

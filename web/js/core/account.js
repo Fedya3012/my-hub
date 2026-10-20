@@ -1,5 +1,8 @@
-// Account = the user's Google account ("Tài khoản Google"). One sign-in gives both the identity
-// (name, email, avatar) and the Drive access used for sync (js/core/storage/gdrive.js).
+// Account = the user's Google account ("Tài khoản Google") or GitHub account ("Tài khoản GitHub").
+// Google: one sign-in gives the identity (name, email, avatar) and the Drive access used for sync
+// (js/core/storage/gdrive.js). GitHub: a personal access token (pasted once; works inside the Android
+// WebView, where Google's popup does not) that syncs the library + progress through a private repo
+// (js/core/storage/github.js); files stay on the device. account.provider is 'google' | 'github'.
 //
 //   account.init();                          // at boot: restores the cached session (offline too)
 //   account.signedIn / account.user / account.email / account.uid
@@ -18,6 +21,8 @@ import { bus } from './bus.js';
 const LS = 'myhub.google.session';
 const USERINFO = 'https://www.googleapis.com/oauth2/v3/userinfo';
 const DRIVE_SCOPES = ['https://www.googleapis.com/auth/drive.appdata', 'https://www.googleapis.com/auth/drive.file'];
+const GH_API = 'https://api.github.com';
+const FOREVER = Number.MAX_SAFE_INTEGER;   // GitHub tokens have no short expiry; a 401 invalidates them
 const EARLY = 60_000;           // treat a token as expired this long before it really is
 
 let sess = null;                // { user: { sub, email, name, picture }, signedInAt, token: { access_token, expires_at } | null }
@@ -71,9 +76,21 @@ async function fetchProfile(accessToken) {
   return { sub: String(p.sub || ''), email: p.email || '', name: p.name || p.given_name || '', picture: p.picture || '' };
 }
 
+async function fetchGitHubUser(token) {
+  let res;
+  try { res = await fetch(`${GH_API}/user`, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' }, cache: 'no-store' }); }
+  catch { throw err('Không kết nối được GitHub (đang offline?).', 'offline'); }
+  if (res.status === 401) throw err('Token GitHub không đúng hoặc đã hết hạn.', 'bad_token');
+  if (!res.ok) throw err(`GitHub trả lỗi ${res.status}.`, 'github');
+  const p = await res.json();
+  return { sub: 'github:' + p.id, login: p.login, email: '@' + p.login, name: p.name || p.login, picture: p.avatar_url || '' };
+}
+
 export const account = {
-  provider: 'google',
-  configured() { return !!GOOGLE_CLIENT_ID; },
+  get provider() { return sess?.provider || 'google'; },
+  googleConfigured() { return !!GOOGLE_CLIENT_ID; },
+  // Some sign-in is always possible: GitHub needs no setup (Google needs a Client ID, see googleConfigured()).
+  configured() { return true; },
 
   get signedIn() { return !!sess; },
   get user() { return sess?.user || null; },
@@ -104,8 +121,24 @@ export const account = {
     write(sess); emit(same ? 'reconnect' : 'signin');
     return user;
   },
+  // GitHub: validate the pasted token, then keep it on this device (localStorage, never in the JSON backup).
+  async signInGitHub(token) {
+    token = String(token || '').trim();
+    if (!token) throw err('Dán token GitHub vào ô nhập.', 'bad_token');
+    const user = await fetchGitHubUser(token);
+    const same = sess?.user?.sub === user.sub;
+    sess = { provider: 'github', user, signedInAt: Date.now(), token: { access_token: token, expires_at: FOREVER } };
+    write(sess); emit(same ? 'reconnect' : 'signin');
+    return user;
+  },
   // Same account again without the chooser (the 1 h token expired). Works silently inside a click.
   async reconnect() {
+    if (sess?.provider === 'github') {
+      if (!sess.token) throw err('Cần nhập lại token GitHub.', 'token_needed');
+      sess = { ...sess, user: await fetchGitHubUser(sess.token.access_token) };
+      write(sess); emit('reconnect');
+      return sess.user;
+    }
     if (!sess) return this.signIn();
     const t = await requestToken({ prompt: '', hint: sess.user?.email });
     sess = { ...sess, token: t };
@@ -116,7 +149,12 @@ export const account = {
 
   // A valid access token; renewed silently when expired. Throws code 'reconnect' when that needs a click.
   async accessToken() {
-    if (!sess) throw err('Bạn chưa đăng nhập Google.', 'signed_out');
+    if (!sess) throw err('Bạn chưa đăng nhập.', 'signed_out');
+    if (sess.provider === 'github') {
+      if (this.tokenValid()) return sess.token.access_token;
+      emit('needs-reconnect');
+      throw err('Token GitHub không còn hiệu lực. Nhập token mới trong trang Tài khoản.', 'reconnect');
+    }
     if (this.tokenValid()) return sess.token.access_token;
     try { await this.reconnect(); }
     catch (e) {
@@ -132,9 +170,9 @@ export const account = {
   // revoke: also withdraw My Hub's access at Google (other devices then have to sign in again
   // once their current token expires, at most 1 h).
   async signOut({ reason = 'signout', revoke = false } = {}) {
-    const tok = sess?.token?.access_token;
+    const tok = sess?.token?.access_token, sess0 = sess;
     sess = null; write(null);
-    if (revoke && tok && window.google?.accounts?.oauth2) { try { google.accounts.oauth2.revoke(tok, () => {}); } catch { /* ignore */ } }
+    if (revoke && tok && sess0?.provider !== 'github' && window.google?.accounts?.oauth2) { try { google.accounts.oauth2.revoke(tok, () => {}); } catch { /* ignore */ } }
     emit(reason);
   },
 };

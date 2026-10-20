@@ -1,7 +1,16 @@
 {
-  "app": "0.6.1",
+  "app": "0.7.0",
   "released": "2026-10-20",
   "changelog": [
+    {
+      "version": "0.7.0",
+      "date": "2026-10-20",
+      "notes": [
+        "Đăng nhập bằng GitHub (dán token) để đồng bộ thư viện và tiến độ giữa Windows và Android, không cần Google",
+        "Google Drive vẫn là lựa chọn để đồng bộ cả tệp (cần bật Google Client ID)",
+        "Trang Tài khoản có hai cách đăng nhập: GitHub và Google"
+      ]
+    },
     {
       "version": "0.6.1",
       "date": "2026-10-20",
