@@ -1,0 +1,12 @@
+/* Tạp chí — editorial homepage: big serif headlines, cream paper, hairline rules, no glass. */
+@scope ([data-skin-base="editorial"]) to ([data-skin-base]:not([data-skin-base="editorial"])) {
+  :scope h1 { font-size: clamp(2.3rem, 5.5vw, 3.6rem); font-weight: 600; font-optical-sizing: auto; line-height: 1.02; }
+  :scope .page-head { border-bottom: 1px solid var(--fg); padding-bottom: 14px; }
+  :scope .section-title, :scope .msub { font-family: var(--font-display); font-size: 1.25rem; font-weight: 600; letter-spacing: -.01em; }
+  :scope .eyebrow { letter-spacing: .18em; color: var(--accent); }
+  :scope .card, :scope .panel, :scope .stat { box-shadow: none; }
+  :scope .card-title, :scope .mcard-t { font-family: var(--font-display); font-weight: 600; font-size: 1.02rem; }
+  :scope .nav-link.active { background: none; color: var(--fg); text-decoration: underline 2px var(--accent); text-underline-offset: 6px; }
+  :scope .mart.card { box-shadow: none; border-radius: 2px; }
+  :scope .chip.on, :scope .chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+}

@@ -1,0 +1,8 @@
+{
+  "appId": "com.myhub.app",
+  "appName": "My Hub",
+  "webDir": "web",
+  "android": {
+    "allowMixedContent": false
+  }
+}

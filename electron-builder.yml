@@ -1,0 +1,26 @@
+appId: com.myhub.app
+productName: My Hub
+artifactName: MyHub-${version}-${arch}-Setup.${ext}
+directories:
+  output: dist
+files:
+  - electron/**
+  - web/**
+  - build/icon.png
+  - package.json
+win:
+  icon: build/icon.png
+  target:
+    - target: nsis
+      arch: [x64]
+    - target: portable
+      arch: [x64]
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  shortcutName: My Hub
+portable:
+  artifactName: MyHub-${version}-portable.${ext}
+publish:
+  provider: github

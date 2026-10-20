@@ -1,0 +1,120 @@
+/* Account: sidebar badge, Settings summary, account page (js/modules/account), form dialogs.
+   Uses the tokens of css/app.css only, so every theme (light, dark, custom) applies. */
+
+/* ── Avatar & badge ────────────────────── */
+.acct-avatar { display: inline-grid; place-items: center; flex: none; width: 36px; height: 36px; border-radius: 50%;
+  background: color-mix(in srgb, var(--accent) 18%, var(--surface)); color: var(--accent); font-weight: 700; font-size: .95rem; line-height: 1; }
+.acct-avatar.sm { width: 28px; height: 28px; font-size: .8rem; }
+.acct-avatar.md { width: 44px; height: 44px; font-size: 1.05rem; }
+.acct-avatar.lg { width: 64px; height: 64px; font-size: 1.6rem; font-family: var(--font-display); }
+.storage-badge { min-width: 0; }
+.acct-badge-t { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
+.acct-badge-t b { font-weight: 600; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.acct-badge-t small { font-size: .74rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 860px) {
+  .sidebar-foot { min-width: 0; }
+  .storage-badge { padding: 6px 8px; max-width: 52vw; }
+}
+
+/* ── Settings summary ──────────────────── */
+.acct-summary { flex-direction: row; align-items: center; gap: 14px; color: var(--fg); text-decoration: none; }
+.acct-summary:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+.acct-sum-t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.acct-sum-t .muted { font-size: .86rem; overflow-wrap: anywhere; }
+.acct-sum-go { color: var(--muted); display: inline-flex; }
+
+/* ── Page ──────────────────────────────── */
+.acct .notice.ok { background: color-mix(in srgb, var(--ok) 10%, var(--surface)); border-color: color-mix(in srgb, var(--ok) 35%, var(--line)); }
+.acct .notice.ok > .ic { color: var(--ok); }
+.acct .notice.warn { background: color-mix(in srgb, var(--warn) 10%, var(--surface)); border-color: color-mix(in srgb, var(--warn) 35%, var(--line)); }
+.acct .notice.warn > .ic { color: var(--warn); }
+.acct .notice.error { background: color-mix(in srgb, var(--danger) 9%, var(--surface)); border-color: color-mix(in srgb, var(--danger) 35%, var(--line)); }
+.acct .notice.error > .ic { color: var(--danger); }
+.notice.small { padding: 8px 12px; font-size: .84rem; margin: 0; }
+
+input[type="email"], input[type="password"] {
+  font: inherit; font-size: .92rem; color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: calc(var(--radius) - 4px); min-height: 40px; padding: 0 10px; width: 100%; }
+.acct input[type="email"], .acct input[type="password"], .acct input[type="text"], .acct-dialog input:not([type="checkbox"]) { min-height: 44px; width: 100%; }
+.acct input:focus, .acct-dialog input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent); }
+.btn.block { width: 100%; }
+.btn.link-btn { border: 0; background: none; color: var(--accent); min-height: 36px; padding: 0 4px; align-self: center; }
+.btn.link-btn:hover { text-decoration: underline; }
+.btn .task-spin { width: 14px; height: 14px; }
+.ic.flip { transform: scaleX(-1); }
+.form-err { color: var(--danger); font-size: .86rem; font-weight: 500; }
+.form-ok { color: var(--ok); font-size: .86rem; }
+.hint.ok { color: var(--ok); }
+
+/* Signed out */
+.acct-auth { display: grid; grid-template-columns: minmax(0, 440px) minmax(0, 1fr); gap: calc(var(--gap) * 1.5); align-items: start; }
+.acct-auth.single { grid-template-columns: minmax(0, 440px); }
+.acct-card { gap: 16px; padding: 22px; }
+.acct-card h2 { font-size: 1.15rem; }
+.acct-center { align-items: center; text-align: center; }
+.acct-center .stack { width: 100%; }
+.acct-big-ic { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); }
+.acct-big-ic .ic { width: 28px; height: 28px; }
+.acct-google { min-height: 44px; font-weight: 600; }
+.acct-google .ic { width: 18px; height: 18px; }
+.acct-why { display: flex; flex-direction: column; gap: 14px; padding: 8px 4px; }
+.acct-why h2 { font-family: var(--font-display); font-size: 1.4rem; }
+.acct-why ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.acct-why li { display: flex; gap: 12px; align-items: flex-start; }
+.acct-why li .ic { color: var(--accent); margin-top: 2px; }
+@media (max-width: 860px) {
+  .acct-auth { grid-template-columns: minmax(0, 1fr); }
+  .acct-why { padding: 0; }
+  .acct-why h2 { font-size: 1.15rem; }
+}
+
+/* Setup guide */
+.acct-steps { list-style: none; counter-reset: step; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.acct-steps > li { counter-increment: step; position: relative; padding: 16px 18px 16px 62px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+  display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.acct-steps > li::before { content: counter(step); position: absolute; left: 16px; top: 14px; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%;
+  background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); font-weight: 700; }
+.acct-steps p { font-size: .9rem; overflow-wrap: anywhere; }
+.acct-copy { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.acct-copy code { overflow-wrap: anywhere; padding: 6px 10px; }
+.acct-code { margin: 0; padding: 12px 14px; border-radius: calc(var(--radius) - 4px); background: var(--surface-2); font-family: var(--font-mono); font-size: .78rem; overflow-x: auto; white-space: pre; }
+.acct-security-note { flex-direction: row; align-items: flex-start; font-size: .88rem; }
+.acct-security-note > .ic { color: var(--ok); }
+@media (max-width: 480px) { .acct-steps > li { padding: 14px 14px 14px 54px; } .acct-steps > li::before { left: 12px; width: 30px; height: 30px; } }
+
+/* Signed in */
+.acct-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--gap); align-items: start; }
+@media (max-width: 1000px) { .acct-grid { grid-template-columns: minmax(0, 1fr); } }
+.acct-hero { display: flex; gap: 16px; align-items: center; min-width: 0; }
+.acct-hero-t { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.acct-hero-t h2 { font-family: var(--font-display); font-size: 1.35rem; overflow-wrap: anywhere; }
+.acct-hero-t .muted { overflow-wrap: anywhere; }
+.acct-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.acct-pills .pill .ic { width: 12px; height: 12px; }
+.acct-ellipsis { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.acct-profile .kv dd .btn, .acct-sync .kv dd .btn { margin-left: auto; }
+.acct-progress { display: flex; flex-direction: column; gap: 6px; }
+.acct-prog-row { display: flex; justify-content: space-between; gap: 10px; font-size: .84rem; color: var(--muted); }
+.acct-prog-t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.acct-progress .bar i { transition: width .25s ease; }
+.acct-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.acct-danger { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 14px; border-radius: calc(var(--radius) - 2px);
+  border: 1px solid color-mix(in srgb, var(--danger) 35%, var(--line)); background: color-mix(in srgb, var(--danger) 5%, var(--surface)); }
+.acct-danger > div { flex: 1 1 220px; min-width: 0; }
+.acct-devices .devices .btn { flex: none; }
+.acct-choices { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 8px; font-size: .9rem; }
+@media (max-width: 480px) {
+  .acct-hero .acct-avatar.lg { width: 52px; height: 52px; font-size: 1.3rem; }
+  .acct-actions .btn, .acct-danger .btn { flex: 1 1 100%; }
+  .acct-profile .kv dd .btn, .acct-sync .kv dd .btn { margin-left: 0; }
+}
+
+/* Dialog form */
+.acct-dialog .check { flex-direction: row; gap: 8px; }
+.acct-dialog label small { font-weight: 400; }
+.acct-google, .btn.block { flex-direction: row; }
+
+/* Google profile photo over the initial (the initial shows offline or if the photo fails). */
+.acct-avatar { position: relative; overflow: hidden; }
+.acct-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.acct-big-ic .ic { width: 30px; height: 30px; }
+.acct .notice > .btn { flex: none; }

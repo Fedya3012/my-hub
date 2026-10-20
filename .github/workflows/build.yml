@@ -1,0 +1,142 @@
+# Builds the Windows .exe and the Android .apk on every push to main.
+# When APP_VERSION in web/js/config.js is a version that has no release yet, it also
+# publishes GitHub Release v<version> with both files (Obtainium and the Windows
+# auto-updater read that release). Bumping APP_VERSION is all a release needs.
+name: Build & Release
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['**.md']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      code: ${{ steps.v.outputs.code }}
+      release: ${{ steps.tag.outputs.release }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: v
+        run: node scripts/sync-version.js
+      - id: tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "v${{ steps.v.outputs.version }}" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            echo "Release v${{ steps.v.outputs.version }} already exists: build only, no new release."
+          else
+            echo "release=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  windows:
+    needs: version
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node scripts/sync-version.js
+      - run: npx electron-builder --win --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: |
+            dist/*.exe
+            dist/*.blockmap
+            dist/latest.yml
+          if-no-files-found: error
+
+  android:
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+      - run: npm ci
+      - run: npx cap sync android
+      - name: Restore signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::warning::ANDROID_KEYSTORE_BASE64 secret is missing: building a debug APK only (see docs/NATIVE.md)."
+            exit 0
+          fi
+          echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+      - name: Build APK
+        working-directory: android
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          chmod +x gradlew
+          TASK=assembleRelease; [ -z "$ANDROID_KEYSTORE_PATH" ] && TASK=assembleDebug
+          ./gradlew "$TASK" --no-daemon -PappVersionCode=${{ needs.version.outputs.code }} -PappVersionName=${{ needs.version.outputs.version }}
+          mkdir -p ../dist
+          if [ "$TASK" = assembleRelease ]; then
+            cp app/build/outputs/apk/release/app-release.apk ../dist/MyHub-${{ needs.version.outputs.version }}.apk
+          else
+            cp app/build/outputs/apk/debug/app-debug.apk ../dist/MyHub-${{ needs.version.outputs.version }}-debug.apk
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android
+          path: dist/*.apk
+          if-no-files-found: error
+
+  release:
+    needs: [version, windows, android]
+    if: needs.version.outputs.release == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Check the APK is release-signed
+        run: |
+          if ls dist/*-debug.apk >/dev/null 2>&1; then
+            echo "::error::No release signing key in GitHub Secrets. Add the 4 ANDROID_* secrets (docs/NATIVE.md), then re-run this workflow."
+            exit 1
+          fi
+      - name: Release notes from version.json
+        run: |
+          node -e '
+            const v = require("./web/version.json"), ver = "${{ needs.version.outputs.version }}";
+            const e = (v.changelog || []).find(c => c && c.version === ver);
+            const notes = e ? e.notes : [];
+            const body = (notes.length ? notes.map(n => "- " + n).join("\n") : "- Cập nhật " + ver) +
+              "\n\n**Android:** MyHub-" + ver + ".apk (cài/cập nhật bằng Obtainium)\n**Windows:** MyHub-" + ver + "-x64-Setup.exe (cài đặt, tự cập nhật) hoặc MyHub-" + ver + "-portable.exe (chạy luôn)";
+            require("fs").writeFileSync("notes.md", body);'
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.version.outputs.version }}
+          name: My Hub ${{ needs.version.outputs.version }}
+          body_path: notes.md
+          files: dist/*
+          make_latest: true

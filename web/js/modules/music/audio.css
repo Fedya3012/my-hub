@@ -1,0 +1,95 @@
+/* Audio path UI: 31-band EQ strip, Hi-Res signal path, outputs, timers, ambient mixer.
+   Loaded by service.js next to music.css (owned separately so both can change independently). */
+
+/* ── 31-band graphic EQ ─────────────────── */
+.g31:empty { display: none; }
+.g31 { display: flex; gap: 2px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity;
+  padding: 6px 2px 4px; margin: 6px 0 4px; scrollbar-width: thin; -webkit-overflow-scrolling: touch; }
+.g31-b { flex: 0 0 30px; display: flex; flex-direction: column; align-items: center; gap: 4px; scroll-snap-align: start; }
+.g31-b .num { font-size: .64rem; color: var(--muted); white-space: nowrap; line-height: 1; }
+.g31-b output { min-height: 1em; }
+.g31-t { --p: .5; position: relative; width: 30px; height: 168px; touch-action: pan-x; cursor: ns-resize; outline: none; border-radius: 8px; }
+.g31-t::before { content: ''; position: absolute; left: 50%; top: 6px; bottom: 6px; width: 4px; margin-left: -2px; border-radius: 4px;
+  background: color-mix(in srgb, var(--fg) 14%, transparent); }
+.g31-t::after { content: ''; position: absolute; left: 7px; right: 7px; top: 50%; height: 1px; background: color-mix(in srgb, var(--fg) 30%, transparent); }
+.g31-t i { position: absolute; left: 50%; width: 4px; margin-left: -2px; border-radius: 4px; background: var(--m-acc, var(--accent));
+  top: calc(6px + (1 - max(var(--p), .5)) * (100% - 12px)); bottom: calc(6px + min(var(--p), .5) * (100% - 12px)); }
+.g31-t b { position: absolute; left: 50%; width: 22px; height: 12px; margin: -6px 0 0 -11px; border-radius: 6px;
+  top: calc(6px + (1 - var(--p)) * (100% - 12px)); background: var(--surface); border: 2px solid color-mix(in srgb, var(--fg) 35%, transparent);
+  box-shadow: 0 1px 3px rgb(0 0 0 / .2); transition: transform .1s; will-change: top; }
+.g31-t.nz b { border-color: var(--m-acc, var(--accent)); }
+.g31-t.drag b, .g31-t:focus-visible b { transform: scale(1.18); border-color: var(--m-acc, var(--accent)); }
+.g31-t:focus-visible { box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 40%, transparent); }
+.meq[data-mode="g31"] .meq-graph { height: 150px; }
+.meq-bar .seg { flex-wrap: nowrap; }
+@media (max-width: 420px) { .meq-bar { flex-wrap: wrap; gap: 8px; } .g31-t { height: 150px; } }
+
+/* ── Shared panel bits ──────────────────── */
+.mau { display: flex; flex-direction: column; gap: 12px; }
+.mau-tabs { align-self: flex-start; max-width: 100%; overflow-x: auto; }
+.mau-tabs button { padding: 0 12px; font-size: .84rem; white-space: nowrap; }
+.mau-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line); min-width: 0; }
+.mau-row > div { display: flex; flex-direction: column; min-width: 0; }
+.mau-row b { font-weight: 500; }
+.mau-row small { color: var(--muted); font-size: .8rem; }
+.mau-row select { max-width: 60%; min-width: 0; }
+.mau-row > span:first-child { color: var(--muted); font-size: .86rem; flex: none; }
+.mau-rng { display: flex; align-items: center; gap: 8px; flex: 1; max-width: 300px; min-width: 0; }
+.mau-rng input { flex: 1; min-width: 0; }
+.mau-rng output { min-width: 62px; text-align: right; font-size: .8rem; }
+.mau-num { display: inline-flex; flex-direction: row !important; flex-wrap: nowrap; align-items: center; gap: 6px; }
+.mau-num input { width: 74px !important; flex: none; }
+.mau-num span { color: var(--muted); font-size: .84rem; }
+.mau-inline { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.mau h4 { margin: 8px 0 0; font-size: .9rem; font-weight: 600; }
+.mau .mchoices { display: flex; flex-wrap: wrap; gap: 8px; }
+.mau .row-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.mau-wide { width: min(240px, 50vw); }
+.mau-card { border: 1px solid var(--line); border-radius: var(--radius); padding: 4px 14px 8px; }
+.mau-card .mau-row:last-child { border-bottom: 0; }
+.mau-why { margin: 0; }
+
+/* ── Signal path ────────────────────────── */
+.mau-bp { border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; }
+.mau-verdict { font-size: .86rem; padding: 8px 12px; border-radius: calc(var(--radius) - 4px);
+  background: color-mix(in srgb, #d97706 14%, transparent); color: var(--fg); }
+.mau-verdict.ok { background: color-mix(in srgb, #16a34a 16%, transparent); }
+.mau-path { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; position: relative; }
+.mau-path li { display: flex; gap: 12px; padding: 8px 0; position: relative; }
+.mau-path li:not(:last-child)::after { content: ''; position: absolute; left: 11px; top: 34px; bottom: -6px; width: 2px; background: var(--line); }
+.mau-path li > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.mau-path b { font-weight: 600; font-size: .9rem; }
+.mau-path .num { font-size: .84rem; overflow-wrap: anywhere; }
+.mau-path small { color: var(--muted); font-size: .78rem; }
+.mau-path i { flex: none; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-weight: 700; font-size: .8rem; }
+.mau-path i .ic { width: 15px; height: 15px; }
+.mau-ok { background: color-mix(in srgb, #16a34a 22%, transparent); color: #16a34a; }
+.mau-no { background: color-mix(in srgb, #dc2626 20%, transparent); color: #dc2626; }
+.mau-warn { background: color-mix(in srgb, #d97706 22%, transparent); color: #d97706; }
+.mau-na { background: var(--surface-2); color: var(--muted); }
+
+/* ── Timers ─────────────────────────────── */
+.mau-status { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border-radius: var(--radius);
+  background: color-mix(in srgb, var(--m-acc, var(--accent)) 12%, var(--surface)); }
+.mau-status[hidden] { display: none; }
+.mau-status > div { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.mau-status > div > span { display: inline-flex; align-items: center; gap: 6px; flex: 1 1 auto; font-variant-numeric: tabular-nums; }
+.mau-status .ic { width: 18px; height: 18px; color: var(--m-acc, var(--accent)); }
+.chip.sm { min-height: 28px; padding: 0 10px; font-size: .8rem; }
+
+/* ── Ambient mixer ──────────────────────── */
+.mau-mix { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.mau-snd { display: flex; flex-direction: column; gap: 8px; padding: 10px; border: 1px solid var(--line); border-radius: var(--radius); transition: border-color .15s, background .15s; }
+.mau-snd.on { border-color: var(--m-acc, var(--accent)); background: color-mix(in srgb, var(--m-acc, var(--accent)) 8%, transparent); }
+.mau-snd-b { display: flex; align-items: center; gap: 8px; border: 0; background: none; color: inherit; font: inherit; padding: 0; cursor: pointer; text-align: left; }
+.mau-snd-b .ic { width: 20px; height: 20px; color: var(--muted); }
+.mau-snd.on .mau-snd-b .ic { color: var(--m-acc, var(--accent)); }
+.mau-snd input { width: 100%; }
+@media (max-width: 420px) { .mau-mix { grid-template-columns: 1fr 1fr; } }
+
+/* ── Dock: running-timer chip ───────────── */
+.mdock-timer { display: inline-flex; align-items: center; gap: 4px; border: 0; border-radius: 999px; padding: 4px 8px; cursor: pointer; font: inherit;
+  font-size: .74rem; color: var(--m-acc, var(--accent)); background: color-mix(in srgb, var(--m-acc, var(--accent)) 14%, transparent); flex: none; }
+.mdock-timer[hidden] { display: none; }
+.mdock-timer .ic { width: 15px; height: 15px; }
+.mau .seg button { padding: 0 12px; font-size: .84rem; white-space: nowrap; }

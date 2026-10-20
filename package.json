@@ -1,0 +1,25 @@
+{
+  "name": "my-hub",
+  "productName": "My Hub",
+  "version": "0.5.1",
+  "private": true,
+  "description": "My Hub: thư viện cá nhân offline (Windows + Android)",
+  "author": "Fedya",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "electron .",
+    "version:sync": "node scripts/sync-version.js",
+    "build:win": "electron-builder --win --publish never",
+    "android:sync": "cap sync android"
+  },
+  "dependencies": {
+    "electron-updater": "^6.6.2"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/cli": "^8.5.3",
+    "@capacitor/core": "^8.5.3",
+    "electron": "^44.9.1",
+    "electron-builder": "^26.15.3"
+  }
+}

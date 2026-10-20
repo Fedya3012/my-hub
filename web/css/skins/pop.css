@@ -1,0 +1,16 @@
+/* Kẹo dẻo — playful prototype look: chunky radii, thick outlines, offset "sticker" shadows,
+   bouncy spring motion (tokens), warm orange + lemon accents. */
+@scope ([data-skin-base="pop"]) to ([data-skin-base]:not([data-skin-base="pop"])) {
+  :scope h1 { font-size: clamp(2.1rem, 5vw, 3.1rem); }
+  :scope .btn { border-width: 2px; font-weight: 600; border-radius: 999px; }
+  :scope .btn.primary { box-shadow: 0 4px 0 color-mix(in srgb, var(--accent) 60%, #000); }
+  :scope .btn.primary:active { box-shadow: 0 1px 0 color-mix(in srgb, var(--accent) 60%, #000); transform: translateY(3px); }
+  :scope .card:hover, :scope .skin-card:hover { box-shadow: 0 10px 0 color-mix(in srgb, var(--accent-2) 55%, transparent); }
+  :scope .mart.card { box-shadow: 0 8px 0 color-mix(in srgb, var(--accent-2) 45%, transparent); }
+  :scope .mcard:hover .mart { transform: translateY(-6px) rotate(-1.5deg); }
+  :scope .nav-link.active { background: var(--accent-2); color: #231a14; }
+  :scope .chip { border-width: 2px; font-weight: 600; }
+  :scope .chip.on, :scope .chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+  :scope .mtabs a[aria-selected="true"] { border-bottom-width: 4px; border-radius: 4px; }
+  :scope .panel, :scope .stat, :scope .mstats { border-width: 2px; }
+}

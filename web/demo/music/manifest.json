@@ -1,0 +1,38 @@
+{
+  "tracks": [
+    {
+      "file": "01-binh-minh.flac",
+      "lrc": "01-binh-minh.lrc"
+    },
+    {
+      "file": "02-mua-pho-co.flac",
+      "lrc": null
+    },
+    {
+      "file": "03-den-long.m4a",
+      "lrc": null
+    },
+    {
+      "file": "04-gio-dong.mp3",
+      "lrc": "04-gio-dong.lrc"
+    },
+    {
+      "file": "05-anh-trang.m4a",
+      "lrc": null
+    },
+    {
+      "file": "06-suong-som.opus",
+      "lrc": null
+    },
+    {
+      "file": "07-tinh-lang.dsf",
+      "lrc": null
+    }
+  ],
+  "videos": [
+    {
+      "file": "canvas-duong-ve.webm",
+      "album": "Đường về"
+    }
+  ]
+}

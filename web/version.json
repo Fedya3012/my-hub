@@ -1,0 +1,208 @@
+{
+  "app": "0.5.1",
+  "released": "2026-10-20",
+  "changelog": [
+    {
+      "version": "0.5.0",
+      "date": "2026-10-20",
+      "notes": [
+        "Tài khoản Google thay Supabase",
+        "Hi-Res, EQ 31 dải, 2 đầu ra, hẹn giờ, âm nền",
+        "Sửa thẻ ghi vào tệp, ảnh bìa mọi nơi, duyệt thư mục, thống kê",
+        "Lời bài hát nâng cao",
+        "5 skin, visualizer, video nền",
+        "Thông số dùng chung, kéo-thả, bỏ giới hạn, vòng tròn tác vụ, hiệu năng"
+      ]
+    },
+    {
+      "version": "0.4.0",
+      "date": "2026-10-20",
+      "notes": [
+        "Tài khoản Google: đăng nhập Google, đăng xuất (máy này / mọi thiết bị), thiết bị, đồng bộ mọi thiết bị qua Google Drive",
+        "Thanh tiến trình cho đồng bộ, tải, nhập, giải mã, sao lưu",
+        "Nhạc 0.3.0: Nghệ sĩ album, Nhạc sĩ, Năm, Hãng đĩa; Singles & EP; sắp xếp mọi nơi; Mở rộng/Thu gọn tất cả; karaoke từng chữ cái"
+      ]
+    },
+    "Module Trình phát nhạc: thư viện nhạc, Now Playing, EQ, ReplayGain, Hi-Res, nhạc nền cho sách/fanfic/podcast.",
+    "Lõi: đường dẫn con (#music/album/…), dịch vụ nền cho module, khu dock trình phát, điểm mở rộng giữa các module, loại nội dung Fanfic.",
+    "Database v3: tracks, albums, artists, plays, eqPresets, lyrics (đồng bộ qua Drive, có trong sao lưu JSON)."
+  ],
+  "shell": {
+    "files": [
+      "./",
+      "index.html",
+      "manifest.webmanifest",
+      "css/app.css",
+      "vendor/dexie.min.js",
+      "icons/icon.svg",
+      "icons/icon-192.png",
+      "icons/icon-512.png",
+      "icons/maskable-512.png",
+      "js/app.js",
+      "js/config.js",
+      "js/core/db.js",
+      "js/core/bus.js",
+      "js/core/icons.js",
+      "js/core/ui.js",
+      "js/core/seed.js",
+      "js/core/registry.js",
+      "js/core/content-types.js",
+      "js/core/theme.js",
+      "js/core/updater.js",
+      "js/core/storage/index.js",
+      "js/core/storage/local.js",
+      "js/core/storage/gdrive.js",
+      "js/modules/library/manifest.js",
+      "js/modules/app-manager/manifest.js",
+      "js/modules/settings/manifest.js",
+      "js/modules/music/manifest.js",
+      "js/core/progress.js",
+      "js/core/device.js",
+      "js/core/extensions.js",
+      "js/core/account.js",
+      "js/core/account-ui.js",
+      "css/account.css",
+      "js/modules/account/manifest.js",
+      "js/core/tasks.js",
+      "js/core/skins.js",
+      "js/core/skin-ui.js",
+      "css/skins/aurora.css",
+      "css/skins/pop.css",
+      "css/skins/noir.css",
+      "css/skins/editorial.css",
+      "js/core/perf.js",
+      "js/core/params.js",
+      "js/core/params-core.js",
+      "js/core/params-ui.js",
+      "js/core/dnd.js"
+    ]
+  },
+  "modules": {
+    "library": {
+      "name": "Thư viện",
+      "version": "0.4.0",
+      "minApp": "0.3.0",
+      "files": [
+        "js/modules/library/index.js"
+      ],
+      "changelog": [
+        {
+          "version": "0.3.1",
+          "date": "2026-10-20",
+          "notes": [
+            "Tiến trình & tài khoản"
+          ]
+        },
+        "Ngăn chi tiết có khối do module khác thêm vào: thông tin tệp nhạc, nhạc nền gắn với sách/fanfic/podcast.",
+        "Hỗ trợ loại Fanfic."
+      ]
+    },
+    "app-manager": {
+      "name": "Quản lý ứng dụng",
+      "version": "0.1.0",
+      "minApp": "0.1.0",
+      "files": [
+        "js/modules/app-manager/index.js"
+      ],
+      "changelog": [
+        "Danh sách module, bật/tắt, thứ tự, cập nhật từng module, quay lại bản trước."
+      ]
+    },
+    "settings": {
+      "name": "Cài đặt",
+      "version": "0.4.0",
+      "minApp": "0.2.0",
+      "files": [
+        "js/modules/settings/index.js"
+      ],
+      "changelog": [
+        {
+          "version": "0.3.0",
+          "date": "2026-10-20",
+          "notes": [
+            "Tiến trình & tài khoản"
+          ]
+        },
+        "Mục Thiết bị: xem các máy dùng chung, đổi tên máy này."
+      ]
+    },
+    "music": {
+      "name": "Trình phát nhạc",
+      "version": "0.4.0",
+      "minApp": "0.3.0",
+      "files": [
+        "js/modules/music/index.js",
+        "js/modules/music/service.js",
+        "js/modules/music/music.css",
+        "js/modules/music/lib/meta.js",
+        "js/modules/music/lib/decode.js",
+        "js/modules/music/lib/decode-worker.js",
+        "js/modules/music/lib/engine.js",
+        "js/modules/music/lib/player.js",
+        "js/modules/music/lib/store.js",
+        "js/modules/music/lib/format.js",
+        "js/modules/music/lib/art.js",
+        "js/modules/music/lib/lyrics.js",
+        "js/modules/music/lib/eq.js",
+        "js/modules/music/lib/icons.js",
+        "js/modules/music/lib/prefs.js",
+        "js/modules/music/ui/dock.js",
+        "js/modules/music/ui/nowplaying.js",
+        "js/modules/music/ui/sheets.js",
+        "js/modules/music/ui/eq-panel.js",
+        "js/modules/music/ui/coverflow.js",
+        "js/modules/music/ui/editor.js",
+        "js/modules/music/ui/customize.js",
+        "js/modules/music/library.css",
+        "js/modules/music/lib/tagclean.js",
+        "js/modules/music/lib/tagwriter.js",
+        "js/modules/music/lib/folders.js",
+        "js/modules/music/lib/libicons.js",
+        "js/modules/music/ui/tageditor.js",
+        "js/modules/music/ui/artpicker.js",
+        "js/modules/music/ui/browse.js",
+        "js/modules/music/ui/stats.js",
+        "js/modules/music/ui/visualizer.js",
+        "js/modules/music/ui/np-fx.js",
+        "js/modules/music/audio.css",
+        "js/modules/music/lib/ambient.js",
+        "js/modules/music/lib/lyrics-sources.js",
+        "js/modules/music/lib/outputs.js",
+        "js/modules/music/lib/timers.js",
+        "js/modules/music/lyrics.css",
+        "js/modules/music/ui/audio-icons.js",
+        "js/modules/music/ui/audio-panel.js",
+        "js/modules/music/ui/lyrics-editor.js",
+        "js/modules/music/ui/lyrics-mini.js",
+        "js/modules/music/ui/timers.js",
+        "js/modules/music/lib/params-bridge.js",
+        "js/modules/music/ui/dnd.js"
+      ],
+      "changelog": [
+        {
+          "version": "0.3.0",
+          "date": "2026-10-20",
+          "notes": [
+            "Thanh tiến trình cho đồng bộ, tải, nhập, giải mã, sao lưu",
+            "Nhạc 0.3.0: Nghệ sĩ album, Nhạc sĩ, Năm, Hãng đĩa; Singles & EP; sắp xếp mọi nơi; Mở rộng/Thu gọn tất cả; karaoke từng chữ cái"
+          ]
+        },
+        "Video nền sau lời bài hát (kiểu Noctis): cho từng bài, cả album hoặc mặc định; chỉnh độ tối, độ mờ, khi nào hiện; tự nhận canvas.mp4 hoặc video trùng tên bài khi nhập thư mục.",
+        "Bản đầu tiên: thư viện Bài hát/Album/Nghệ sĩ/Thể loại/Thư mục/Danh sách phát, Cover Flow, Now Playing kiểu bìa/CD/vinyl/cassette, nền ambient, lời karaoke từng chữ.",
+        "Audiophile: định dạng, bit depth, sample rate, bitrate, kênh, huy hiệu Hi-Res, đường tín hiệu; giải mã DSD (DSF/DFF), ALAC, AIFF ngay trong app.",
+        "EQ tham số + đồ hoạ 10 dải, preset AutoEQ, ReplayGain, gapless, crossfade thông minh, hẹn giờ, tốc độ phát, đồng bộ phiên nghe giữa thiết bị."
+      ]
+    },
+    "account": {
+      "name": "Tài khoản",
+      "version": "0.2.0",
+      "minApp": "0.3.0",
+      "files": [
+        "js/modules/account/index.js"
+      ],
+      "changelog": [
+        "Tài khoản Google: đăng nhập, đăng xuất máy này / mọi thiết bị, danh sách thiết bị, xoá dữ liệu trên Drive; đồng bộ giữa máy tính và điện thoại."
+      ]
+    }
+  }
+}

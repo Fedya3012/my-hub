@@ -1,0 +1,11 @@
+/* Neon Noir — black stage, hairline borders, cyan/magenta neon glows on active things. */
+@scope ([data-skin-base="noir"]) to ([data-skin-base]:not([data-skin-base="noir"])) {
+  :scope h1 { text-transform: uppercase; font-size: clamp(1.8rem, 4vw, 2.5rem); letter-spacing: -.005em; }
+  :scope .nav-link.active { background: transparent; color: var(--accent); box-shadow: inset 2px 0 0 var(--accent); text-shadow: 0 0 12px color-mix(in srgb, var(--accent) 60%, transparent); }
+  :scope .btn.primary { box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 45%, transparent); }
+  :scope .card:hover { box-shadow: 0 0 0 1px var(--accent), 0 0 24px color-mix(in srgb, var(--accent) 30%, transparent); }
+  :scope .mcard:hover .mart { box-shadow: 0 0 0 1px var(--accent), 0 0 30px color-mix(in srgb, var(--accent-2) 35%, transparent); }
+  :scope .mtabs a[aria-selected="true"] { color: var(--accent); text-shadow: 0 0 10px color-mix(in srgb, var(--accent) 50%, transparent); }
+  :scope .mplay { box-shadow: 0 0 22px color-mix(in srgb, var(--m-acc, var(--accent)) 50%, transparent); }
+  :scope .eyebrow { color: var(--accent-2); letter-spacing: .2em; }
+}
