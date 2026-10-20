@@ -450,7 +450,7 @@ const VIEWS = {
       if (open || (!n.children.size && !n.tracks.length)) inner = kidsHtml(n, depth);
       else pend.set(n.path, { n, depth });
       return section('f:' + n.path, head, { cls: 'mtree-n', ic: 'folder', count: n.count, defaultOpen: depth < 1,
-        tools: `<button class="icon-btn sm" data-fplay="${esc(n.path)}" aria-label="Phát thư mục ${esc(n.name)}">${icon('play')}</button>`, body: inner });
+        tools: `<button class="icon-btn sm" data-fplay="${esc(n.path)}" aria-label="Phát thư mục ${esc(n.name)}">${icon('play')}</button><button class="icon-btn sm" data-fdel="${esc(n.path)}" aria-label="Gỡ thư mục ${esc(n.name)}">${icon('trash')}</button>`, body: inner });
     };
     const tops = sortList([...rootNode.children.values()], 'folders', key);
     c.innerHTML = toolbar('folders', { sorts: FS, views: ['tree', 'list'], filters: false, count: `${rootNode.count} bài` })
@@ -471,7 +471,20 @@ const VIEWS = {
       }, { once: true });
     });
     bindToolbar(c); bindSections(c); hydrate(c); watch();
-    c.addEventListener('click', (e) => {
+    c.addEventListener('click', async (e) => {
+      const d = e.target.closest('[data-fdel]');
+      if (d) {   // remove a folder's songs from the library (the original files are never touched)
+        e.stopPropagation();
+        const p = d.dataset.fdel;
+        const ids = [...L.tracks.values()].filter(t => (t.folder || '') === p || (t.folder || '').startsWith(p + '/')).map(t => t.id);
+        if (!ids.length || !await confirmBox('Gỡ thư mục?', `“${p.split('/').at(-1)}”: ${ids.length} bài sẽ bị gỡ khỏi thư viện (và bản sao trong app). Tệp gốc trên máy không bị xoá.`, 'Gỡ')) return;
+        const task = tasks.start({ label: 'Đang gỡ thư mục', total: ids.length, detail: p });
+        try {
+          for (let i = 0; i < ids.length; i += 25) { await store.deleteTracks(ids.slice(i, i + 25)); task.update({ done: Math.min(ids.length, i + 25), total: ids.length, detail: p }); }
+          task.finish(`Đã gỡ ${ids.length} bài`);
+        } catch (err) { task.fail(err); }
+        return;
+      }
       const b = e.target.closest('[data-fplay]');
       if (!b) return;
       e.stopPropagation();

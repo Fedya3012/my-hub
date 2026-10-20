@@ -1,7 +1,15 @@
 {
-  "app": "0.7.0.4",
+  "app": "0.7.0.5",
   "released": "2026-10-20",
   "changelog": [
+    {
+      "version": "0.7.0.5",
+      "date": "2026-10-20",
+      "notes": [
+        "Nhạc: nút Gỡ thư mục ở tab Thư mục (gỡ các bài của thư mục khỏi thư viện, tệp gốc không bị xoá), có hiển thị tiến độ",
+        "Cài đặt: nút Ngừng dùng Drive/GitHub (về Local) và Xoá dữ liệu trên Drive/GitHub"
+      ]
+    },
     {
       "version": "0.7.0.4",
       "date": "2026-10-20",

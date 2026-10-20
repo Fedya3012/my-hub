@@ -72,7 +72,9 @@ async function render() {
         <p class="hint">My Hub không tự đặt giới hạn số bài, số tệp hay kích thước tệp. Giới hạn duy nhất là hạn mức của trình duyệt trên máy này và dung lượng tài khoản Google; ứng dụng không thể nới các hạn mức đó, nhưng sẽ cảnh báo khi sắp đầy. Muốn không tốn chỗ: dùng “Liên kết thư mục (không sao chép)” trong Nhạc (máy tính).</p>
         ${st.mode !== 'local' ? `<div class="row-actions">
           <button class="btn" data-act="sync" ${conn ? '' : 'disabled'}>${icon('refresh')}Đồng bộ ngay</button>
-          <button class="btn" data-act="evict" ${conn ? '' : 'disabled'}>Giải phóng bộ nhớ máy</button></div>` : ''}
+          <button class="btn" data-act="evict" ${conn ? '' : 'disabled'}>Giải phóng bộ nhớ máy</button>
+          <button class="btn" data-act="unlink">Ngừng dùng ${ghAcct ? 'GitHub' : 'Drive'} (về Local)</button>
+          <button class="btn danger-ghost" data-act="cloudwipe" ${conn ? '' : 'disabled'}>${icon('trash')}Xoá dữ liệu trên ${ghAcct ? 'GitHub' : 'Drive'}</button></div>` : ''}
         ${st.mode !== 'local' && !st.drive.configured ? `<p class="hint">Để bật đăng nhập Google, làm theo <a href="#account">hướng dẫn trong trang Tài khoản</a> (điền OAuth Client ID vào <code>js/config.js</code>). Trong lúc chờ, mọi thứ vẫn lưu trên máy.</p>` : ''}
       </div>
     </section>
@@ -161,6 +163,19 @@ async function render() {
       else if (r && !r.cancelled && !r.pulled && !r.uploaded) ctx.toast('Đã đồng bộ, không có thay đổi mới');
     } catch (err) { ctx.toast(err.message, 'error'); }
     finally { b.disabled = false; }
+  });
+  // Drop the cloud side: Local only again (the cloud copy stays), or also erase what My Hub stored there.
+  on('unlink', async () => {
+    if (!(await confirmBox('Ngừng dùng ' + (ghAcct ? 'GitHub' : 'Drive') + '?', 'App chuyển về chế độ Local, dữ liệu trên máy giữ nguyên và bản trên đám mây không bị xoá. Bật lại bất cứ lúc nào.', 'Chuyển về Local'))) return;
+    await ctx.storage.setMode('local');
+    ctx.toast('Chế độ lưu trữ: ' + MODES.local.label);
+    render();
+  });
+  on('cloudwipe', async () => {
+    if (!(await confirmBox('Xoá dữ liệu trên ' + (ghAcct ? 'GitHub' : 'Drive') + '?', 'Mọi thứ My Hub đã lưu trên ' + (ghAcct ? 'kho my-hub-data' : 'Google Drive') + ' sẽ bị xoá. Dữ liệu trên máy này giữ nguyên và app chuyển về Local.', 'Xoá'))) return;
+    try { await ctx.storage.deleteCloudData(); await ctx.storage.setMode('local'); ctx.toast('Đã xoá dữ liệu trên đám mây'); }
+    catch (err) { ctx.toast(err.message, 'error'); }
+    render();
   });
   on('evict', async (e) => {
     const b = e.currentTarget; b.disabled = true;
