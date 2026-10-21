@@ -763,3 +763,27 @@ export function attachListenLog(player) {
 }
 let markLogged = () => {};
 import('./player.js').then(m => attachListenLog(m.player)).catch(() => {});
+
+// Album covers and thumbnails are made on each device (they are not synced): when an album's cover file is not on
+// this device, read its first track's embedded picture again and store it here. Cheap: one tag read per album.
+export async function rebuildMissingCovers() {
+  const albums = await db.albums.toArray();
+  let made = 0;
+  for (const al of albums) {
+    if (!al.coverFileId) continue;
+    const row = await db.files.get(al.coverFileId);
+    if (!row || row.deleted || (await storage.adapters.local.get(row.locations?.local))) continue;
+    const track = await db.tracks.where('albumId').equals(al.id).first();
+    if (!track) continue;
+    try {
+      const file = await mainFile(track.itemId);
+      if (!file) continue;
+      const meta = await readAudioMeta(file, { name: file.name });
+      if (!meta?.picture) continue;
+      await setAlbumCover(al.id, new Blob([meta.picture.data], { type: meta.picture.mime || 'image/jpeg' }));
+      made++;
+    } catch { /* unreadable file: try again next time */ }
+  }
+  if (made) invalidate();
+  return made;
+}

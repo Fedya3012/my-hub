@@ -342,6 +342,13 @@ export const storage = {
     const mode = activeMode, d = drives[mode];
     if (!d?.files || !d.connected() || !navigator.onLine) return { skipped: true };
     // Derived images (album cover, thumbnail) stay on this device: they are not uploaded to the drive's app folder.
+    // Covers and thumbnails uploaded before this rule are removed from the drive (only the app's own copies, by key).
+    const d0 = drives[mode];
+    for (const f of (await db.files.toArray()).filter(f => DEVICE_ONLY_ROLES.has(f.role) && f.locations?.[mode]?.key && !f.linked)) {
+      await d0.removeFile(f.locations[mode].key).catch(() => {});
+      const { [mode]: _gone, ...rest } = f.locations;
+      await db.files.update(f.id, { locations: rest });
+    }
     const todo = (await db.files.toArray()).filter(f => f.locations?.local && !f.locations[mode] && !f.deleted && f.size >= 0 && !DEVICE_ONLY_ROLES.has(f.role));
     if (!todo.length) return { uploaded: 0 };
     const total = todo.reduce((a, f) => a + (f.size || 0), 0);
