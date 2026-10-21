@@ -111,6 +111,64 @@ public class FolderPickerPlugin extends Plugin {
     });
   }
 
+  // "Chỉ trên máy này": pick a folder once, keep read permission across restarts, then list its music/book files
+  // without copying them. Playback and import read each file straight from its content:// uri.
+  @PluginMethod
+  public void pickRoot(PluginCall call) {
+    Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+    i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+    startActivityForResult(call, i, "onRootPicked");
+  }
+
+  @ActivityCallback
+  private void onRootPicked(PluginCall call, ActivityResult result) {
+    if (call == null) return;
+    if (result.getResultCode() != Activity.RESULT_OK || result.getData() == null || result.getData().getData() == null) {
+      JSObject r = new JSObject();
+      r.put("cancelled", true);
+      call.resolve(r);
+      return;
+    }
+    Uri tree = result.getData().getData();
+    try {
+      getContext().getContentResolver().takePersistableUriPermission(tree, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+    } catch (SecurityException e) {
+      call.reject("Không giữ được quyền đọc thư mục này");
+      return;
+    }
+    JSObject r = new JSObject();
+    r.put("treeUri", tree.toString());
+    call.resolve(r);
+  }
+
+  @PluginMethod
+  public void listTree(PluginCall call) {
+    final String treeStr = call.getString("treeUri");
+    if (treeStr == null) { call.reject("Thiếu treeUri"); return; }
+    getBridge().execute(() -> {
+      try {
+        Uri tree = Uri.parse(treeStr);
+        JSArray files = new JSArray();
+        walk(tree, DocumentsContract.getTreeDocumentId(tree), "", files);
+        JSObject r = new JSObject();
+        r.put("files", files);
+        call.resolve(r);
+      } catch (Exception e) {
+        call.reject(e.getMessage() == null ? "Không đọc được thư mục" : e.getMessage());
+      }
+    });
+  }
+
+  @PluginMethod
+  public void releaseRoot(PluginCall call) {
+    final String treeStr = call.getString("treeUri");
+    if (treeStr == null) { call.resolve(); return; }
+    try {
+      getContext().getContentResolver().releasePersistableUriPermission(Uri.parse(treeStr), Intent.FLAG_GRANT_READ_URI_PERMISSION);
+    } catch (Exception ignored) { }
+    call.resolve();
+  }
+
   @PluginMethod
   public void clearCache(PluginCall call) {
     File dir = new File(getContext().getCacheDir(), "folderimport");
