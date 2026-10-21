@@ -9,6 +9,8 @@ import { icon } from '../../core/icons.js';
 import { esc, h, toast, confirmBox } from '../../core/ui.js';
 import { player } from './lib/player.js';
 import * as store from './lib/store.js';
+import { detectOutput, watchOutput, OUT_NAMES } from './lib/listening.js';
+import { thisDevice } from '../../core/device.js';
 import { loadPrefs, prefs, setPref, TABS } from './lib/prefs.js';
 import { artHtml, hydrate, fileUrl } from './lib/art.js';
 import { badges, fmtTime, fmtTotal, techLine } from './lib/format.js';
@@ -57,7 +59,7 @@ export async function navigate(sub) {
 export async function migrate() { /* 0.1.0: nothing to migrate yet */ }
 
 const go = (r) => { location.hash = 'music' + (r ? '/' + r : ''); };
-const BOTTOM_ICONS = { home: 'home', songs: 'music', albums: 'album', artists: 'user', albumArtists: 'user', playlists: 'queue', genres: 'tag', folders: 'folder', years: 'calendar' };
+const BOTTOM_ICONS = { home: 'home', songs: 'music', new: 'star', stats: 'list', albums: 'album', artists: 'user', albumArtists: 'user', playlists: 'queue', genres: 'tag', folders: 'folder', years: 'calendar' };
 
 // ── Shell ───────────────────────────────────────────────────────
 async function render() {
@@ -67,10 +69,11 @@ async function render() {
   const arg = rest.join('/');
   const folderMode = !!prefs().folderMode;
   const tabs = [...(folderMode ? ['browse'] : []), ...prefs().tabs.filter(t => t[1]).map(t => t[0])];
-  const NAMES = { ...TABS, browse: 'Duyệt thư mục', stats: TABS.stats || 'Thống kê' };
-  // Bottom bar: the five main tabs (those switched on), in the user's tab order.
-  const MAIN = ['home', 'songs', 'albums', 'artists', 'playlists'];
-  const bottomTabs = (MAIN.filter(t => tabs.includes(t)).length >= 3 ? MAIN.filter(t => tabs.includes(t)) : tabs).slice(0, 5);
+  const NAMES = { ...TABS, songs: 'Âm nhạc', browse: 'Duyệt thư mục', new: 'Mới', stats: TABS.stats || 'Thống kê' };
+  const SONG_NAMES = { ...NAMES, songs: 'Bài hát' };
+  // Library sections (reached from the "Âm nhạc" menu); the bottom bar has five fixed entries.
+  const SECTION_TABS = tabs.filter(t => !['home', 'stats', 'new'].includes(t));
+  const bottomTabs = ['home', 'songs', 'new', 'stats'];
   const remembered = sessionStorage.getItem('music.tab');
   const tab = (NAMES[head] && (head !== 'browse' || !rest.length)) ? head : !head ? (folderMode ? 'browse' : tabs.includes(remembered) ? remembered : tabs[0]) : null;
   if (tab) sessionStorage.setItem('music.tab', tab);
@@ -81,17 +84,19 @@ async function render() {
         <label class="search mlib-search">${icon('search')}<input type="search" placeholder="Tìm bài, album, nghệ sĩ…" value="${esc(search)}" aria-label="Tìm trong nhạc"></label>
         <button class="btn primary" data-act="add">${icon('plus')}<span>Thêm nhạc</span></button>
         <button class="icon-btn" data-act="clean" aria-label="Dọn dữ liệu Nhạc" title="Dọn dữ liệu Nhạc: xoá bài đã mất tệp gốc">${icon('refresh')}</button>
-        <button class="icon-btn" data-act="custom" aria-label="Tuỳ chỉnh">${icon('settings')}</button>
       </div>
     </header>
-    ${tab || search || head === 'browse' ? `<nav class="mtabs" role="tablist">${tabs.map(t => `<a role="tab" href="#music/${t}" aria-selected="${!search && (t === tab || (t === 'browse' && head === 'browse'))}">${NAMES[t]}</a>`).join('')}</nav>` : ''}
+    ${SECTION_TABS.includes(tab) || head === 'browse' ? `<details class="msections"><summary>${icon('list')}<span>${esc(tab === 'songs' ? 'Âm nhạc · Bài hát' : 'Âm nhạc · ' + (NAMES[tab] || NAMES.browse))}</span><i aria-hidden="true">▾</i></summary>
+      <div class="msections-menu" role="menu">${SECTION_TABS.map(t => `<a role="menuitem" href="#music/${t}" class="${t === tab ? 'on' : ''}">${esc(SONG_NAMES[t])}</a>`).join('')}</div></details>` : ''}
+    <div class="mon" data-on aria-live="polite"></div>
     <div class="mcontent"></div></div>
-    <nav class="mbottom" aria-label="Mục chính của Nhạc">${bottomTabs.map(t => `<a href="#music/${t}" class="${t === tab && !search ? 'on' : ''}" ${t === tab && !search ? 'aria-current="page"' : ''}>${icon(BOTTOM_ICONS[t] || 'disc')}<span>${NAMES[t]}</span></a>`).join('')}</nav>`;
+    <nav class="mbottom" aria-label="Mục chính của Nhạc">${bottomTabs.map(t => { const on = (t === tab || (t === 'songs' && SECTION_TABS.includes(tab))) && !search; return `<a href="#music/${t}" class="${on ? 'on' : ''}" ${on ? 'aria-current="page"' : ''}>${icon(BOTTOM_ICONS[t] || 'disc')}<span>${NAMES[t]}</span></a>`; }).join('')}<button type="button" data-act="settings">${icon('settings')}<span>Cài đặt</span></button></nav>`;
   document.body.classList.add('m-has-bottom');
   const c = root.querySelector('.mcontent');
   root.querySelector('[data-act="add"]').onclick = (e) => addMenu(e.currentTarget);
   root.querySelector('[data-act="clean"]').onclick = async () => { const m = await import('../../core/storage/cleanup.js'); if ((await m.cleanDataAction('music', 'Nhạc'))?.removed) render(); };
-  root.querySelector('[data-act="custom"]').onclick = () => import('./ui/customize.js').then(m => m.customizeSheet(() => render()));
+  root.querySelector('[data-act="settings"]').onclick = () => import('./ui/customize.js').then(m => m.customizeSheet(() => render()));
+  bindListening(root.querySelector('[data-on]'));
   const si = root.querySelector('.mlib-search input');
   si.oninput = debounce(() => { search = si.value.trim(); cleanups.forEach(f => f()); cleanups = []; renderBody(c, L, tab, head, arg); }, 180);
   si.onkeydown = (e) => { if (e.key === 'Escape') { si.value = ''; search = ''; render(); } };
@@ -347,6 +352,7 @@ function albumsHtml(list, key, def = 'year') {
 }
 // ── Tabs ────────────────────────────────────────────────────────
 const VIEWS = {
+  async new(c, L) { return newPage(c, L); },
   async home(c, L) {
     const tracks = [...L.tracks.values()];
     const albums = [...L.albums.values()].sort((a, b) => b.addedAt - a.addedAt);
@@ -881,3 +887,54 @@ function pickImage(fn) {
 }
 
 function debounce(f, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => f(...a), ms); }; }
+
+// ── "Đang nghe trên…": this device / another device, and the headphones or speaker in use ──
+function bindListening(el) {
+  if (!el) return;
+  let out = null;
+  const draw = async () => {
+    out = out || await detectOutput();
+    const me = await thisDevice();
+    const s = await player.session().catch(() => null);
+    const row = (ic, where, o, live) => `<span class="mon-i">${icon(ic)}</span><span class="mon-t"><b>${live ? 'Đang nghe trên ' : 'Lần nghe gần nhất trên '}${esc(where)}</b><small>${esc(OUT_NAMES[o?.kind] || 'Loa')}${o?.label && o.label !== 'Loa mặc định' ? ' · ' + esc(o.label) : ''}</small></span>`;
+    if (player.playing) el.innerHTML = row('music', me.name || 'máy này', out, true);
+    else if (s && !s.mine && s.state === 'playing' && Date.now() - (s.updatedAt || 0) < 90000) el.innerHTML = row('device', s.where || 'thiết bị khác', s.output, true);
+    else el.innerHTML = '';
+    el.hidden = !el.innerHTML;
+  };
+  const stop = watchOutput((o) => { out = o; draw(); });
+  const t = setInterval(draw, 15000);
+  const on = () => draw();
+  for (const ev of ['state', 'track']) player.addEventListener(ev, on);
+  cleanups.push(() => { stop(); clearInterval(t); for (const ev of ['state', 'track']) player.removeEventListener(ev, on); });
+  draw();
+}
+
+// ── Mới: suggestions by mood, your playlists, genres and recent additions ──
+const MOODS = [
+  ['Thư giãn', 'leaf', /ambient|chill|lo-?fi|acoustic|jazz|classical|piano|new age|easy|bossa|sleep/i],
+  ['Năng lượng', 'bolt', /rock|dance|electro|edm|hip|rap|metal|punk|house|techno|drum/i],
+  ['Tập trung', 'target', /instrumental|ambient|classical|post|soundtrack|score|study|minimal/i],
+  ['Lãng mạn', 'heart', /ballad|soul|r&b|rnb|romance|love|blues|bolero|slow/i],
+  ['Vui vẻ', 'sun', /pop|funk|disco|reggae|latin|ska|happy|dance/i],
+  ['Trầm lắng', 'moon', /sad|melanch|folk|singer|indie|slowcore|dark|gothic/i],
+];
+const MOOD_HUE = [190, 12, 215, 340, 45, 265];
+async function newPage(c, L) {
+  const tracks = [...L.tracks.values()];
+  const moods = MOODS.map(([name, ic, re], i) => ({ name, ic, hue: MOOD_HUE[i], list: tracks.filter(t => re.test((t.genres || []).join(' ') + ' ' + (t.mood || ''))) })).filter(m => m.list.length);
+  const pls = [...store.BUILTIN_SMART.map(s => ({ ...s, kind: 'smart', cover: L.smartCover(s) })), ...L.playlists];
+  const genres = [...L.genres.values()].sort((a, b) => b.tracks.length - a.tracks.length).slice(0, 18);
+  const albums = [...L.albums.values()].sort((a, b) => b.addedAt - a.addedAt).slice(0, 12);
+  c.innerHTML = `<div class="mnew">
+    ${moods.length ? `<section><h2 class="section-title">${icon('star')}Theo tâm trạng</h2><div class="mmoods">${moods.map((m, i) => `<button type="button" class="mmood" data-mood="${i}" style="--h:${m.hue}"><b>${m.name}</b><small>${m.list.length} bài</small><span class="mmood-play">${icon('play-fill')}</span></button>`).join('')}</div></section>` : `<p class="muted">Chưa đủ thể loại để gợi ý theo tâm trạng. Thêm thể loại vào bài hát để có gợi ý.</p>`}
+    <section><h2 class="section-title">${icon('queue')}Danh sách phát <a class="bk-more" href="#music/playlists">Tất cả</a></h2><div class="mgrid sm">${pls.slice(0, 12).map(p => card('playlist', { id: p.id, name: p.name, cover: p.cover }, p.count != null ? p.count + ' bài' : (p.kind === 'smart' ? 'Thông minh' : ''))).join('') || '<p class="muted">Chưa có danh sách phát.</p>'}</div></section>
+    ${genres.length ? `<section><h2 class="section-title">${icon('tag')}Thể loại</h2><div class="mchips">${genres.map(g => `<a class="chip" href="#music/genre/${encodeURIComponent(g.id)}">${esc(g.name)} <small class="num">${g.tracks.length}</small></a>`).join('')}</div></section>` : ''}
+    ${albums.length ? `<section><h2 class="section-title">${icon('plus')}Mới thêm</h2><div class="mgrid sm">${albums.map(a => card('album', a, esc(a.artist || ''))).join('')}</div></section>` : ''}</div>`;
+  c.querySelectorAll('[data-mood]').forEach(b => b.onclick = () => {
+    const m = moods[+b.dataset.mood];
+    const list = [...m.list].sort(() => Math.random() - .5).slice(0, 200);
+    player.play(list, { start: 0, source: { kind: 'mood', id: m.name, name: 'Tâm trạng: ' + m.name } });
+  });
+  bindCards(c);
+}
