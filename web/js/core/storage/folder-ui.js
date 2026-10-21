@@ -36,12 +36,12 @@ export async function folderPicker(el, mode, toast) {
       : node.error ? `<div class="hint" style="padding-left:8px;color:#b3261e">${esc(node.error)}</div>`
       : node.dirs.map(c => rowHtml(c, depth + 1)).join('');
     return `<div>
-      <div style="display:flex;flex-direction:row;align-items:center;gap:6px;min-height:44px;padding:0 8px;background:${on ? '#eef7f7' : 'transparent'};border-radius:10px;opacity:${inherited ? .6 : 1}">
+      <div style="display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px;min-height:44px;padding:0 8px;background:${on ? '#eef7f7' : 'transparent'};border-radius:10px;opacity:${inherited ? .6 : 1}">
         <button type="button" data-open="${esc(e.path)}" aria-expanded="${isOpen}" aria-label="${isOpen ? 'Thu gọn' : 'Mở'} ${esc(e.name)}" style="flex:none;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:0;background:none;cursor:pointer;padding:0">${ARROW(isOpen)}</button>
         <input type="checkbox" data-pick="${esc(e.path)}" aria-label="Đồng bộ ${esc(e.name)}" ${on || inherited ? 'checked' : ''} ${inherited ? 'disabled' : ''} style="width:20px;height:20px;accent-color:#0f7f88;flex:none">
         ${FOLDER}
         <span style="flex:1;min-width:0;font-size:15px;font-weight:${on ? 700 : 600};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(e.name)}</span>
-        ${on ? `<span style="display:flex;gap:4px;flex:none">${APPS.map(([k, l]) => `<label title="${l}" style="display:flex;flex-direction:row;align-items:center;gap:3px;min-height:28px;padding:0 8px;border-radius:999px;font-size:12px;cursor:pointer;background:#fff;border:1px solid #cfd8dc"><input type="checkbox" data-app="${esc(e.path)}" value="${k}" ${mine.includes(k) ? 'checked' : ''} style="width:14px;height:14px;accent-color:#0f7f88">${l}</label>`).join('')}</span>` : ''}
+        ${on ? `<span style="display:flex;gap:6px;flex:1 0 100%;padding:0 0 8px 66px">${APPS.map(([k, l]) => `<label title="${l}" style="display:flex;flex-direction:row;align-items:center;gap:3px;min-height:28px;padding:0 8px;border-radius:999px;font-size:12px;cursor:pointer;background:#fff;border:1px solid #cfd8dc"><input type="checkbox" data-app="${esc(e.path)}" value="${k}" ${mine.includes(k) ? 'checked' : ''} style="width:14px;height:14px;accent-color:#0f7f88">${l}</label>`).join('')}</span>` : ''}
       </div>
       ${isOpen ? `<div style="margin-left:23px;padding-left:10px;border-left:1px solid #dde6e8">${sub}</div>` : ''}
     </div>`;
@@ -53,10 +53,20 @@ export async function folderPicker(el, mode, toast) {
     if (root.error) { el.innerHTML = `<p class="hint">Không mở được thư mục: ${esc(root.error)}</p>`; kids.delete(''); return; }
     el.innerHTML = `
       <p class="hint" style="margin:0 0 8px">${chosen.size ? 'Đã chọn ' + chosen.size + ' thư mục' : 'Chưa chọn thư mục nào'} · tích thư mục cha là gồm cả thư mục con</p>
-      <div style="background:#fff;border:1px solid #e3e8ea;border-radius:14px;padding:6px">
+      <div style="background:#fff;border:1px solid #e3e8ea;border-radius:14px;overflow:hidden">
+        <div style="display:flex;flex-direction:row;align-items:center;gap:8px;padding:10px 14px;font-size:13px;color:#34464b;background:#f4f7f8"><strong>${esc(d.label)}</strong><span style="flex:1"></span>${root.dirs.length ? `<label style="display:flex;flex-direction:row;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" data-all ${root.dirs.every(c => chosen.has(c.path)) ? 'checked' : ''} style="width:18px;height:18px;accent-color:#0f7f88">Chọn tất cả</label>` : ''}</div>
+        <div style="padding:6px">
         ${root.dirs.length ? root.dirs.map(c => rowHtml(c, 0)).join('') : `<p class="hint" style="margin:10px 12px">Chưa có thư mục nào trong thư mục ứng dụng của ${esc(d.label)}. Thêm thư mục trên ${esc(d.label)} (trong thư mục Apps của app), rồi mở lại đây.</p>`}
+        </div>
       </div>
       ${chosen.size ? `<label style="display:flex;flex-direction:row;align-items:center;gap:8px;min-height:44px;margin-top:8px"><input type="checkbox" data-auto ${auto ? 'checked' : ''} style="width:20px;height:20px;flex:none;accent-color:#0f7f88"><span>Tự xoá khỏi thư viện những tệp đã bị xoá trên ${esc(d.label)} (khi đồng bộ)</span></label>` : ''}`;
+    el.querySelector('[data-all]')?.addEventListener('change', async (e) => {
+      for (const c of root.dirs) { if (e.target.checked) chosen.add(c.path); else chosen.delete(c.path); }
+      if (e.target.checked) for (const x of [...chosen]) if (root.dirs.some(c => c.path !== x && under(x, c.path))) chosen.delete(x);
+      await setFolders([...chosen]);
+      toast?.(e.target.checked ? 'Đã chọn tất cả thư mục' : 'Đã bỏ chọn tất cả');
+      draw();
+    });
     el.querySelector('[data-auto]')?.addEventListener('change', async (e) => { auto = e.target.checked; await setAutoRemove(auto); toast?.(auto ? 'Đã bật tự xoá tệp đã mất' : 'Đã tắt tự xoá tệp đã mất'); });
     el.querySelectorAll('[data-open]').forEach(b => b.onclick = async () => {
       const p = b.dataset.open;
