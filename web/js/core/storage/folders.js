@@ -3,7 +3,7 @@
 // remembered by path + size (sync.folderDone), so a second sync only fetches what is new.
 // The files are NOT copied into the app: they stay on the drive and are fetched only when played or opened.
 import { drives, storage } from './index.js';
-import { getSetting, setSetting } from '../db.js';
+import { db, getSetting, setSetting } from '../db.js';
 import { tasks } from '../tasks.js';
 
 const MUSIC = /\.(mp3|flac|m4a|m4b|mp4|aac|alac|ogg|oga|opus|wav|wave|aif|aiff|aifc|wv|ape|dsf|dff|wma)$/i;
@@ -33,6 +33,31 @@ async function walk(d, sub, out) {
   return out;
 }
 
+export const autoRemove = async () => (await getSetting('sync.autoRemove', true)) !== false;
+export const setAutoRemove = (on) => setSetting('sync.autoRemove', !!on);
+
+// Library entries whose drive file was deleted: a file linked from a chosen folder that the full scan no longer lists.
+// Skipped when auto-removal is off or the scan found nothing at all (a failed listing must never wipe the library).
+async function pruneMissing(mode, folders, found) {
+  if (!found.length || !(await autoRemove())) return 0;
+  const here = new Set(found.map(e => e.path.toLowerCase()));
+  const rows = await db.files.filter(f => f.linked && f.locations?.[mode]?.key && folders.some(fo => inFolder(f.locations[mode].key.toLowerCase(), fo.toLowerCase()))).toArray();
+  const gone = rows.filter(f => !here.has(f.locations[mode].key.toLowerCase()));
+  if (!gone.length) return 0;
+  const done = (await getSetting('sync.folderDone', {})) || {};
+  const ids = { music: [], books: [] };
+  for (const f of gone) {
+    delete done[f.locations[mode].key];
+    const item = await db.items.get(f.itemId);
+    if (item && !item.deleted) (item.type === 'book' ? ids.books : ids.music).push(item.id);
+    else await db.files.delete(f.id);
+  }
+  await setSetting('sync.folderDone', done);
+  if (ids.music.length) await (await import('../../modules/music/lib/store.js')).deleteTracks(ids.music);
+  if (ids.books.length) await (await import('../../modules/books/lib/store.js')).removeBooks(ids.books);
+  return ids.music.length + ids.books.length;
+}
+
 // Imports the new music and book files of the chosen folders. → { added, failed, skipped? }
 export async function syncFolders({ signal } = {}) {
   const mode = await storage.mode();
@@ -60,16 +85,18 @@ export async function syncFolders({ signal } = {}) {
   } catch (e) { scan.fail(e); throw e; }
   scan.finish(`Quét xong: ${dirs} thư mục, ${found.length} tệp`);
 
+  const removed = await pruneMissing(mode, folders, found);
+
   const { isBookFile } = await import('../../modules/books/lib/formats.js');
   const done = (await getSetting('sync.folderDone', {})) || {};
   // A music file is imported only when a chosen folder above it feeds music; a book only when one feeds books.
   const todo = found.filter(e => ((MUSIC.test(e.name) && allows(e.path, 'music')) || (!MUSIC.test(e.name) && isBookFile({ name: e.name }) && allows(e.path, 'books'))) && done[e.path] !== e.size);
-  if (!todo.length) return { added: 0, failed: [] };
+  if (!todo.length) return { added: 0, failed: [], removed };
 
   const task = tasks.start({ label: `Đang nhập ${todo.length} tệp từ ${d.label}`, total: todo.length, unit: 'items', cancellable: true });
   const music = await import('../../modules/music/lib/store.js');
   const books = await import('../../modules/books/ui/importer.js');
-  const res = { added: 0, failed: [] };
+  const res = { added: 0, failed: [], removed };
   for (let i = 0; i < todo.length; i++) {
     task.check();
     const e = todo[i];
