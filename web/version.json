@@ -1,7 +1,15 @@
 {
-  "app": "0.9.6.6",
+  "app": "0.9.6.7",
   "released": "2026-10-21",
   "changelog": [
+    {
+      "version": "0.9.6.7",
+      "date": "2026-10-21",
+      "notes": [
+        "Trình phát nhạc: hết tiếng \"tạch\" khi tạm dừng trên Android (giữ âm lượng về 0 đến khi phát lại)",
+        "Thư mục đồng bộ: Dọn dữ liệu xoá luôn bài và tệp đã nhập từ thư mục đã bỏ; bỏ thư mục rồi thêm lại sẽ nhập sạch"
+      ]
+    },
     {
       "version": "0.9.6.6",
       "date": "2026-10-21",
@@ -515,7 +523,7 @@
     },
     "music": {
       "name": "Trình phát nhạc",
-      "version": "0.4.0",
+      "version": "0.4.1",
       "minApp": "0.3.0",
       "files": [
         "js/modules/music/index.js",
@@ -566,6 +574,13 @@
         "js/modules/music/ui/dnd.js"
       ],
       "changelog": [
+        {
+          "version": "0.4.1",
+          "date": "2026-10-21",
+          "notes": [
+            "Trình phát nhạc: hết tiếng \"tạch\" khi tạm dừng trên Android (giữ âm lượng về 0 đến khi phát lại)"
+          ]
+        },
         {
           "version": "0.3.0",
           "date": "2026-10-20",
