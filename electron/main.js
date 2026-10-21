@@ -62,11 +62,11 @@ function createWindow() {
   win.loadURL(`http://localhost:${PORT}/#library`);
 }
 
-// Cloud drives (WebDAV, pCloud, OneDrive token): WebDAV servers rarely send CORS headers, so the page asks the main
+// Cloud drives (Dropbox, OneDrive token): some providers send no CORS headers, so the page asks the main
 // process to make the request (no CORS there). Only http(s) and only the methods the app uses.
 function setupHttp() {
   ipcMain.handle('hub:http', async (_e, { url, method = 'GET', headers = {}, body = null }) => {
-    if (!/^https?:\/\//i.test(url) || !['GET', 'PUT', 'DELETE', 'POST', 'HEAD', 'PROPFIND'].includes(method)) throw new Error('Yêu cầu không hợp lệ');
+    if (!/^https?:\/\//i.test(url) || !['GET', 'PUT', 'DELETE', 'POST', 'HEAD'].includes(method)) throw new Error('Yêu cầu không hợp lệ');
     const res = await net.fetch(url, { method, headers, body: body == null ? undefined : (typeof body === 'string' ? body : Buffer.from(body)), bypassCustomProtocolHandlers: true });
     const buf = method === 'HEAD' ? new ArrayBuffer(0) : await res.arrayBuffer();
     return { status: res.status, headers: Object.fromEntries(res.headers.entries()), body: buf };

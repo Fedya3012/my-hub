@@ -48,18 +48,34 @@ async function render() {
   await addDriveCard();
 }
 
-// Dropbox / OneDrive / WebDAV / pCloud: sign-in buttons on this page too (same flow as Settings → Lưu trữ).
-const DRIVES = [['dropbox', 'Dropbox', 'Đăng nhập bằng mã, cần App key của một app Dropbox miễn phí.'], ['onedrive', 'OneDrive', 'Đăng nhập bằng mã, cần Client ID của một app Microsoft miễn phí.'], ['webdav', 'WebDAV', 'Nextcloud, Synology, Koofr, pCloud… nhập địa chỉ thư mục, tên, mật khẩu.'], ['pcloud', 'pCloud', 'Đăng nhập bằng email và mật khẩu pCloud (qua WebDAV của pCloud), cần tạo sẵn một thư mục.']];
+// Dropbox / OneDrive: sign-in buttons on this page too (same flow as Settings → Lưu trữ).
+const DRIVES = [['dropbox', 'Dropbox', 'Đăng nhập bằng mã, cần App key của một app Dropbox miễn phí.'], ['onedrive', 'OneDrive', 'Đăng nhập bằng mã, cần Client ID của một app Microsoft miễn phí.']];
 async function addDriveCard() {
   const sec = root?.querySelector('.page');
   if (!sec) return;
   const cur = await ctx.storage.mode();
+  const slot = sec.querySelector('[data-drive-cards]');
+  if (slot) {   // signed out: the drives sit next to GitHub as equal sign-in cards
+    slot.innerHTML = DRIVES.map(([id, label, tip]) => `
+      <div class="panel acct-card acct-center">
+        <span class="acct-big-ic">${icon('cloud')}</span>
+        <h2>${cur === id ? label + ' · đang dùng' : 'Đăng nhập bằng ' + label}</h2>
+        <p class="muted">${esc(tip)}</p>
+        <button class="btn ${cur === id ? '' : 'primary'} block" data-drive="${id}">${cur === id ? 'Đổi tài khoản ' + label : 'Kết nối ' + label}</button>
+      </div>`).join('');
+    bindDriveButtons(sec);
+    return;
+  }
   sec.querySelector('.acct-drives')?.remove();
   sec.insertAdjacentHTML('beforeend', `<section class="panel acct-drives" style="margin-top:20px">
     <h2 class="section-title">${icon('cloud')}Đồng bộ qua ổ đám mây (cả tệp nhạc/sách)</h2>
-    <p class="muted">Ngoài GitHub, bạn có thể đồng bộ thư viện, tiến độ và cả tệp nhạc/sách qua Dropbox, OneDrive, WebDAV hoặc pCloud.</p>
+    <p class="muted">Ngoài GitHub, bạn có thể đồng bộ thư viện, tiến độ và cả tệp nhạc/sách qua Dropbox hoặc OneDrive.</p>
     <div class="row-actions" style="flex-wrap:wrap">${DRIVES.map(([id, label, tip]) => `<button class="btn ${cur === id ? 'primary' : ''}" data-drive="${id}" title="${esc(tip)}">${icon('cloud')}${cur === id ? label + ' · đang dùng (đổi tài khoản)' : 'Kết nối ' + label}</button>`).join('')}</div>
     <p class="hint">${DRIVES.map(([, l, tip]) => `<b>${l}</b>: ${esc(tip)}`).join(' · ')}</p></section>`);
+  bindDriveButtons(sec);
+}
+
+function bindDriveButtons(sec) {
   sec.querySelectorAll('[data-drive]').forEach(b => b.onclick = async () => {
     const { useDrive } = await import('../../core/storage/cloud-ui.js');
     await useDrive(b.dataset.drive, { reconnect: true });
@@ -79,8 +95,8 @@ async function busy(btn, fn) {
 
 // ── Signed out ─────────────────────────────────────────────────
 function renderSignedOut() {
-  root.innerHTML = page('Đồng bộ giữa các máy', 'Đăng nhập', `
-    <div class="acct-auth">
+  root.innerHTML = page('Đồng bộ giữa các máy', 'Tài khoản đồng bộ', `
+    <div class="acct-auth" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;align-items:start">
       <div class="panel acct-card acct-center">
         <span class="acct-big-ic">${GITHUB_LOGO}</span>
         <h2>Đăng nhập bằng GitHub</h2>
@@ -89,7 +105,9 @@ function renderSignedOut() {
         <button class="btn primary block" data-act="github">${GITHUB_LOGO}Đăng nhập bằng GitHub</button>
         <p class="hint">${navigator.onLine ? 'Không cần cài thêm gì, chỉ cần tạo token một lần.' : 'Đang offline: cần có mạng để đăng nhập.'}</p>
       </div>
+      <div data-drive-cards style="display:contents"></div>
     </div>
+    <p class="hint">Chọn một tài khoản để đồng bộ thư viện và tiến độ. Dropbox, OneDrive, WebDAV và pCloud còn đồng bộ được cả tệp nhạc/sách. Chỉ dùng một tài khoản đồng bộ tại một thời điểm.</p>
     <aside class="acct-why">
       <h2>Một tài khoản, mọi thiết bị</h2>
       <ul>

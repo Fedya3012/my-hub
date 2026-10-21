@@ -1,6 +1,5 @@
-// Connection settings of the cloud drives (WebDAV / pCloud, Dropbox, OneDrive): kept in localStorage on this
+// Connection settings of the cloud drives (Dropbox, OneDrive): kept in localStorage on this
 // device only, never in the JSON backup (they hold passwords and tokens). Shape per provider:
-//   webdav / pcloud   : { url, user, pass }
 //   dropbox           : { appKey, access, refresh, expires }
 //   onedrive          : { clientId, access, refresh, expires }
 const KEY = 'myhub.clouds';

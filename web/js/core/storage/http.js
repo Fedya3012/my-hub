@@ -1,5 +1,5 @@
-// One HTTP function for the cloud drives (WebDAV, Dropbox). Where the page can use plain fetch it does;
-// WebDAV servers rarely send CORS headers, so the apps route those calls through the shell:
+// One HTTP function for the cloud drives (Dropbox, OneDrive). Where the page can use plain fetch it does;
+// the apps route those calls through the shell where the provider's CORS rules would block the page:
 //   Windows app  → main process (window.hubDesktop.http, no CORS)
 //   Android app  → Capacitor's native HTTP plugin (no CORS; GET / PUT / DELETE only, which is all we use)
 // Result: { status, ok, header(name), text(), blob() }. Progress: onProgress(done, total) where available.
@@ -56,7 +56,7 @@ export async function http(url, { method = 'GET', headers = {}, body, signal, on
     if (e?.code) throw e;
     const why = String(e?.message || e).replace(/^Error invoking remote method '[^']*': (Error: )?/, '').slice(0, 160);
     throw err(viaShell && !nativeShell()
-      ? 'Trình duyệt không cho gọi máy chủ này (thiếu CORS). Dùng app Windows hoặc Android, hoặc bật CORS cho máy chủ WebDAV.'
+      ? 'Trình duyệt không cho gọi máy chủ này (thiếu CORS). Dùng app Windows hoặc Android.'
       : `Không kết nối được máy chủ. Kiểm tra mạng và địa chỉ. (${why})`, 'offline');
   }
 }

@@ -1,7 +1,16 @@
 {
-  "app": "0.9.5.0",
+  "app": "0.9.5.1",
   "released": "2026-10-21",
   "changelog": [
+    {
+      "version": "0.9.5.1",
+      "date": "2026-10-21",
+      "notes": [
+        "Chỉ còn Dropbox và OneDrive (đã bỏ pCloud và WebDAV). Trang Tài khoản có thẻ Dropbox và OneDrive cạnh GitHub",
+        "Chọn thư mục trên Dropbox hoặc OneDrive (cả Android): nhạc và sách trong đó hiện trong thư viện, không sao chép vào app; nghe thì phát thẳng từ ổ",
+        "Android: thêm quyền camera (quét mã vạch sách)"
+      ]
+    },
     {
       "version": "0.9.5.0",
       "date": "2026-10-21",

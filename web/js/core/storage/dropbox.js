@@ -130,4 +130,29 @@ export const dropbox = {
     return r.blob();
   },
   async removeFile(key) { const r = await rpc('/files/delete_v2', { path: '/' + key }); if (!r.ok && !(await notFound(r))) throw await bad(r, 'xoá tệp'); },
+
+  // Folder picking: the app folder's own folders and files. sub = path under it ('' = the top).
+  async listDir(sub = '') {
+    const out = [];
+    let r = await rpc('/files/list_folder', { path: sub ? '/' + sub : '', recursive: false, include_deleted: false });
+    for (;;) {
+      if (!r.ok) throw await bad(r, 'mở thư mục');
+      const j = JSON.parse(await r.text());
+      for (const e of j.entries) {
+        if (e['.tag'] !== 'folder' && e['.tag'] !== 'file') continue;
+        out.push({ name: e.name, path: e.path_display.replace(/^\/+/, ''), isDir: e['.tag'] === 'folder', size: e.size || 0 });
+      }
+      if (!j.has_more) break;
+      r = await rpc('/files/list_folder/continue', { cursor: j.cursor });
+    }
+    return out.sort((a, b) => (b.isDir - a.isDir) || a.name.localeCompare(b.name, 'vi'));
+  },
+  // The bytes (kept in memory only by the caller: used to read tags when a folder is imported).
+  getPath(path, opts) { return this.getFile(path, opts); },
+  // A direct link Dropbox serves for about four hours: the player streams from it.
+  async streamUrl(path) {
+    const r = await rpc('/files/get_temporary_link', { path: '/' + path });
+    if (!r.ok) throw await bad(r, 'lấy đường dẫn phát');
+    return JSON.parse(await r.text()).link;
+  },
 };

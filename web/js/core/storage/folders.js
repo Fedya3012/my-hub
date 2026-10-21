@@ -1,4 +1,4 @@
-// Chosen folders on a folder-capable drive (WebDAV, pCloud): the user ticks one or more folders on the drive
+// Chosen folders on a folder-capable drive (Dropbox, OneDrive): the user ticks one or more folders on the drive
 // and every music / book file inside them (any depth) is imported into the library. Files already imported are
 // remembered by path + size (sync.folderDone), so a second sync only fetches what is new.
 // The files are NOT copied into the app: they stay on the drive and are fetched only when played or opened.
