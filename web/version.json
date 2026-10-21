@@ -1,7 +1,18 @@
 {
-  "app": "0.9.5.6",
+  "app": "0.9.5.7",
   "released": "2026-10-21",
   "changelog": [
+    {
+      "version": "0.9.5.7",
+      "date": "2026-10-21",
+      "notes": [
+        "Nhạc: thanh tab dưới (Trang chủ, Bài hát, Album, Nghệ sĩ, Danh sách phát) trên điện thoại và Windows; thanh nhạc nổi không còn đè lên thanh tab",
+        "Nhạc: thanh nhạc nổi trên điện thoại có thanh tiến độ kéo được và thời gian; bớt thanh cuộn trong các danh sách",
+        "Thư mục đồng bộ: mỗi thư mục chọn được app nhận tệp (Nhạc, Sách hoặc cả hai)",
+        "Vòng tròn tác vụ biến mất ngay khi đồng bộ hoặc tải xong (tác vụ lỗi vẫn ở lại để xem)",
+        "Android: tự ẩn thanh điều hướng hệ thống khi dùng app, vuốt từ mép dưới để hiện lại"
+      ]
+    },
     {
       "version": "0.9.5.6",
       "date": "2026-10-21",
