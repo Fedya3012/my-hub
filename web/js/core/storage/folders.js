@@ -38,11 +38,15 @@ export const setAutoRemove = (on) => setSetting('sync.autoRemove', !!on);
 
 // Library entries whose drive file was deleted: a file linked from a chosen folder that the full scan no longer lists.
 // Skipped when auto-removal is off or the scan found nothing at all (a failed listing must never wipe the library).
-async function pruneMissing(mode, folders, found) {
-  if (!found.length || !(await autoRemove())) return 0;
+async function pruneMissing(mode, folders, found, missing = []) {
+  // A folder the drive reported as gone (404/409) is authoritative: its entries go even if nothing else was found.
+  if ((!found.length && !missing.length) || !(await autoRemove())) return 0;
   const here = new Set(found.map(e => e.path.toLowerCase()));
   const rows = await db.files.filter(f => f.linked && f.locations?.[mode]?.key && folders.some(fo => inFolder(f.locations[mode].key.toLowerCase(), fo.toLowerCase()))).toArray();
-  const gone = rows.filter(f => !here.has(f.locations[mode].key.toLowerCase()));
+  return removeLinked(mode, rows.filter(f => !here.has(f.locations[mode].key.toLowerCase())));
+}
+
+async function removeLinked(mode, gone) {
   if (!gone.length) return 0;
   const done = (await getSetting('sync.folderDone', {})) || {};
   const ids = { music: [], books: [] };
@@ -56,6 +60,28 @@ async function pruneMissing(mode, folders, found) {
   if (ids.music.length) await (await import('../../modules/music/lib/store.js')).deleteTracks(ids.music);
   if (ids.books.length) await (await import('../../modules/books/lib/store.js')).removeBooks(ids.books);
   return ids.music.length + ids.books.length;
+}
+
+// Linked files outside every chosen folder (the folder was unticked, or deleted and then dropped from the list):
+// look each one up in its parent folder on the drive and remove those that are gone.
+export async function pruneOrphans() {
+  const mode = await storage.mode();
+  const d = drives[mode];
+  if (!d?.listDir || !d.connected() || !navigator.onLine) return 0;
+  const folders = await folderList();
+  const rows = await db.files.filter(f => f.linked && f.locations?.[mode]?.key && !folders.some(fo => inFolder(f.locations[mode].key.toLowerCase(), fo.toLowerCase()))).toArray();
+  const cache = new Map();
+  const names = async (dir) => {
+    if (!cache.has(dir)) cache.set(dir, d.listDir(dir).then(l => new Set(l.map(e => e.path.toLowerCase())), e => e?.code === 'missing' ? new Set() : null));
+    return cache.get(dir);
+  };
+  const gone = [];
+  for (const f of rows) {
+    const key = f.locations[mode].key;
+    const set = await names(key.includes('/') ? key.slice(0, key.lastIndexOf('/')) : '');
+    if (set && !set.has(key.toLowerCase())) gone.push(f);
+  }
+  return removeLinked(mode, gone);
 }
 
 // Imports the new music and book files of the chosen folders. → { added, failed, skipped? }
@@ -89,7 +115,7 @@ export async function syncFolders({ signal, pruneOnly = false } = {}) {
   } catch (e) { scan.fail(e); throw e; }
   scan.finish(`Quét xong: ${dirs} thư mục, ${found.length} tệp`);
 
-  const removed = await pruneMissing(mode, folders.filter(f => !missing.includes(f)), found);
+  const removed = await pruneMissing(mode, folders, found, missing);
   if (pruneOnly) return { added: 0, failed: [], removed, missing };
 
   const { isBookFile } = await import('../../modules/books/lib/formats.js');
