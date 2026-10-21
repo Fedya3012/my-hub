@@ -1,6 +1,6 @@
 # Hệ thống lưu trữ linh hoạt
 
-Code: `js/core/storage/` (`index.js` = trình quản lý, `local.js`, `github.js`). Module không gọi adapter trực tiếp, chỉ dùng:
+Code: `js/core/storage/` (`index.js` = trình quản lý, `local.js`, `github.js`, `dropbox.js`, `webdav.js`, `http.js`, `clouds.js`, `cloud-ui.js`). Module không gọi adapter trực tiếp, chỉ dùng:
 
 ```js
 const file = await storage.addFile(itemId, fileOrBlob, { role: 'main' });
@@ -15,6 +15,8 @@ await storage.sync();                          // đồng bộ ngay
 |---|---|---|---|
 | **Chỉ trên máy** | IndexedDB | OPFS, dự phòng IndexedDB; hoặc liên kết thẳng tới thư mục (desktop) | Đầy đủ |
 | **Tài khoản GitHub** (`github`) | IndexedDB + snapshot trong kho riêng tư `my-hub-data` | Luôn ở lại trên máy (không tải lên) | Đầy đủ |
+| **Dropbox** (`dropbox`) | IndexedDB + `hub-db.json`, `hub-live.json` trong thư mục app | Tải lên Dropbox sau khi thêm, máy khác tải về khi mở | Đầy đủ (tệp đã tải về) |
+| **WebDAV** (`webdav`), **FileJump** (`filejump`) | Như Dropbox, trong một thư mục trên máy chủ WebDAV | Như Dropbox | Đầy đủ |
 
 Chế độ GitHub cần đăng nhập **tài khoản GitHub** (đăng nhập, đăng xuất, thiết bị, xoá dữ liệu); xem [ACCOUNT.md](ACCOUNT.md). Đăng xuất thì về Chỉ trên máy. Các chế độ cũ (`gdrive`, `hybrid`, `account`) được đọc thành `github` nếu đã đăng nhập GitHub, nếu không thì `local`.
 
@@ -42,3 +44,12 @@ Ví dụ: đang nghe dở trên Windows, mở app trên điện thoại thì ngh
 - **Android / APK (TWA)**: chạy trong Chrome nên OPFS, IndexedDB, Service Worker đều hoạt động. Không có chọn thư mục, nên tệp được sao chép vào app.
 - **Windows (Chrome/Edge)**: có thêm `showDirectoryPicker`, có thể liên kết thư mục nhạc sẵn có mà không sao chép (`local.link`).
 - Bấm "Yêu cầu lưu trữ bền vững" để trình duyệt không tự xoá dữ liệu khi máy đầy.
+
+
+## Ổ đám mây: Dropbox, WebDAV, FileJump
+
+- Ba chế độ này đẩy cùng dữ liệu như GitHub (snapshot + kênh tiến độ) **và** tệp nhạc/sách. `storage.syncFiles()` tải lên các tệp chưa có trên ổ (một tác vụ có thanh tiến trình theo byte, huỷ được), rồi ghi `locations.<chế độ> = { key }` vào hàng tệp. Máy khác gọi `storage.open(file)`: nếu máy chưa có thì tải về từ ổ (có tiến trình), giữ lại trên máy và lần sau mở thẳng. Xoá tệp cũng xoá bản trên ổ.
+- Thông tin kết nối (mật khẩu, token) nằm trong `localStorage` của máy (`clouds.js`), không vào bản sao lưu JSON.
+- **WebDAV / FileJump**: nhập địa chỉ một thư mục **có sẵn**, tên đăng nhập, mật khẩu (nên là mật khẩu ứng dụng). Chỉ dùng GET / PUT / DELETE trong đúng thư mục đó (không PROPFIND/MKCOL vì plugin HTTP của Android không gửi được). Chống mất cập nhật bằng `If-Match` theo ETag. Trình duyệt chỉ gọi được nếu máy chủ bật CORS; app Windows (qua tiến trình chính, `window.hubDesktop.http`) và Android (plugin `CapacitorHttp`) không bị CORS. FileJump: lấy địa chỉ WebDAV trong https://filejump.com/kb/webdav-setup.
+- **Dropbox**: OAuth PKCE **không cần trang chuyển hướng**, Dropbox hiện một mã để dán vào app nên chạy giống nhau ở trình duyệt, Windows và Android. Cần App key của một app Dropbox miễn phí: vào https://www.dropbox.com/developers/apps → *Create app* → *Scoped access* → *App folder* → đặt tên → tab *Permissions* bật `files.content.write` và `files.content.read` → *Submit* → chép **App key** ở tab *Settings*. Dán App key vào hộp kết nối (hoặc đặt `DROPBOX_APP_KEY` trong `js/config.js`). Tệp lớn tải lên theo phiên 8 MB, không giới hạn dung lượng ngoài hạn mức Dropbox (gói miễn phí 2 GB).
+- Đổi sang ổ khác: bật chế độ mới, app hỏi Gộp / Dùng dữ liệu của ổ / Để sau như khi đăng nhập GitHub. Tệp trên máy được tải lên ổ mới ở lần đồng bộ đầu.

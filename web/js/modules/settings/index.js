@@ -1,6 +1,6 @@
 // Settings: storage mode (Local / GitHub account), theme, backup & restore.
 import { db, getSetting, setSetting, exportAll, importAll } from '../../core/db.js';
-import { MODES } from '../../core/storage/index.js';
+import { MODES, isDrive } from '../../core/storage/index.js';
 import { tasks } from '../../core/tasks.js';
 import { allThemes, currentTheme, applyTheme, saveCurrentAsTheme, exportTheme, importTheme } from '../../core/theme.js';
 import { thisDevice, renameDevice } from '../../core/device.js';
@@ -46,7 +46,7 @@ async function render() {
         ${Object.entries(MODES).map(([k, m]) => `
           <label class="mode-card${st.mode === k ? ' on' : ''}">
             <input type="radio" name="storage-mode" id="mode-${k}" value="${k}" ${st.mode === k ? 'checked' : ''}>
-            <span class="mode-icon">${icon(k === 'local' ? 'device' : 'user')}</span>
+            <span class="mode-icon">${icon(k === 'local' ? 'device' : k === 'github' ? 'user' : 'cloud')}</span>
             <strong>${m.label}</strong><span>${m.hint}</span></label>`).join('')}
       </div>
 
@@ -55,7 +55,12 @@ async function render() {
           <dt>Lưu tệp trên máy bằng</dt><dd>${st.backend === 'opfs' ? 'Hệ thống tệp riêng của ứng dụng (OPFS)' : 'IndexedDB'}</dd>
           <dt>Đã dùng trên máy</dt><dd>${quotaBar(st.usage?.usage, st.usage?.quota)}</dd>
           <dt>Chống bị xoá tự động</dt><dd>${persisted ? '<span class="pill ok">Đã bật</span>' : '<button class="btn small" data-act="persist">Yêu cầu lưu trữ bền vững</button>'}</dd>
-          ${st.mode !== 'local' ? `
+          ${st.cloud.drive ? `
+          <dt>${esc(st.cloud.label)}</dt><dd><span class="pill ${st.cloud.connected ? 'ok' : 'warn'}">${st.cloud.connected ? 'Đã kết nối' : 'Chưa kết nối'}</span> <button class="btn small" data-act="reconnect">${st.cloud.connected ? 'Đổi tài khoản' : 'Kết nối'}</button></dd>
+          <dt>Chờ đồng bộ</dt><dd class="num">${st.pending} thay đổi · lần cuối ${fmtAgo(st.lastSync)}</dd>
+          <dt>Tệp nhạc/sách</dt><dd>Tự tải lên ${esc(st.cloud.label)} sau khi thêm; máy khác tải về khi mở lần đầu</dd>
+          <dt>Tiến độ nghe/đọc</dt><dd>Đồng bộ vài giây sau mỗi lần dừng · lần cuối ${fmtAgo(liveAt)}</dd>
+          ` : st.mode !== 'local' ? `
           <dt>Tài khoản GitHub</dt><dd>${!st.cloud.signedIn ? '<a class="btn small primary" href="#account">Đăng nhập</a>'
             : `<span class="pill ${st.cloud.needsReconnect ? 'warn' : 'ok'}">${st.cloud.needsReconnect ? 'Cần kết nối lại' : 'Đã đăng nhập'}</span> ${esc(account.email)} <a class="btn small" href="#account">Quản lý</a>`}</dd>
           <dt>Chờ đồng bộ</dt><dd class="num">${st.pending} thay đổi · lần cuối ${fmtAgo(st.lastSync)}</dd>
@@ -65,8 +70,8 @@ async function render() {
         <p class="hint">My Hub không tự đặt giới hạn số bài, số tệp hay kích thước tệp. Giới hạn duy nhất là hạn mức của trình duyệt trên máy này ; ứng dụng không thể nới các hạn mức đó, nhưng sẽ cảnh báo khi sắp đầy. Muốn không tốn chỗ: dùng “Liên kết thư mục (không sao chép)” trong Nhạc (máy tính).</p>
         ${st.mode !== 'local' ? `<div class="row-actions">
           <button class="btn" data-act="sync" ${conn ? '' : 'disabled'}>${icon('refresh')}Đồng bộ ngay</button>
-          <button class="btn" data-act="unlink">Ngừng dùng GitHub (về Local)</button>
-          <button class="btn danger-ghost" data-act="cloudwipe" ${conn ? '' : 'disabled'}>${icon('trash')}Xoá dữ liệu trên GitHub</button></div>` : ''}
+          <button class="btn" data-act="unlink">Ngừng dùng ${esc(st.cloud.label)} (về Local)</button>
+          <button class="btn danger-ghost" data-act="cloudwipe" ${conn ? '' : 'disabled'}>${icon('trash')}Xoá dữ liệu trên ${esc(st.cloud.label)}</button></div>` : ''}
       </div>
     </section>
 
@@ -122,6 +127,11 @@ async function render() {
   const on = (act, fn) => root.querySelector(`[data-act="${act}"]`)?.addEventListener('click', fn);
 
   root.querySelectorAll('input[name="storage-mode"]').forEach(r => r.onchange = async () => {
+    if (isDrive(r.value)) {   // Dropbox / WebDAV / FileJump: connect, then asks what to do with this device's data
+      const { useDrive } = await import('../../core/storage/cloud-ui.js');
+      await useDrive(r.value); render();
+      return;
+    }
     if (r.value !== 'local') {   // needs the matching account; asks what to do with this device's data
       if (!account.signedIn) { ctx.toast('Đăng nhập GitHub để bật chế độ này', 'warn'); render(); ctx.go('account'); return; }
       await afterSignIn(); render();
@@ -131,6 +141,7 @@ async function render() {
     ctx.toast('Chế độ lưu trữ: ' + MODES[r.value].label);
     render();
   });
+  on('reconnect', async () => { const { useDrive } = await import('../../core/storage/cloud-ui.js'); await useDrive(st.mode, { reconnect: true }); render(); });
   on('persist', async () => { const ok = await ctx.storage.adapters.local.persist(); ctx.toast(ok ? 'Đã bật lưu trữ bền vững' : 'Trình duyệt chưa cho phép', ok ? 'info' : 'warn'); render(); });
   on('rename', async () => {
     const name = await modal({ title: 'Tên thiết bị', body: h(`<label>Tên hiển thị trên các máy khác<input id="dev-name" value="${esc(me.name)}"></label>`),
@@ -142,20 +153,20 @@ async function render() {
     const b = e.currentTarget; b.disabled = true;
     try {
       const r = await ctx.storage.sync();
-      if (r?.skipped) ctx.toast(r.skipped === 'offline' ? 'Đang offline, sẽ đồng bộ khi có mạng' : r.skipped === 'signed-out' ? 'Chưa đăng nhập' : 'Chưa kết nối được GitHub', 'warn');
+      if (r?.skipped) ctx.toast(r.skipped === 'offline' ? 'Đang offline, sẽ đồng bộ khi có mạng' : r.skipped === 'signed-out' ? 'Chưa đăng nhập' : 'Chưa kết nối được ' + st.cloud.label, 'warn');
       else if (r && !r.cancelled && !r.pulled && !r.uploaded) ctx.toast('Đã đồng bộ, không có thay đổi mới');
     } catch (err) { ctx.toast(err.message, 'error'); }
     finally { b.disabled = false; }
   });
   // Drop the cloud side: Local only again (the cloud copy stays), or also erase what My Hub stored there.
   on('unlink', async () => {
-    if (!(await confirmBox('Ngừng dùng GitHub?', 'App chuyển về chế độ Local, dữ liệu trên máy giữ nguyên và bản trên đám mây không bị xoá. Bật lại bất cứ lúc nào.', 'Chuyển về Local'))) return;
+    if (!(await confirmBox('Ngừng dùng ' + st.cloud.label + '?', 'App chuyển về chế độ Local, dữ liệu trên máy giữ nguyên và bản trên đám mây không bị xoá. Bật lại bất cứ lúc nào.', 'Chuyển về Local'))) return;
     await ctx.storage.setMode('local');
     ctx.toast('Chế độ lưu trữ: ' + MODES.local.label);
     render();
   });
   on('cloudwipe', async () => {
-    if (!(await confirmBox('Xoá dữ liệu trên GitHub?', 'Mọi thứ My Hub đã lưu trong kho my-hub-data sẽ bị xoá. Dữ liệu trên máy này giữ nguyên và app chuyển về Local.', 'Xoá'))) return;
+    if (!(await confirmBox('Xoá dữ liệu trên ' + st.cloud.label + '?', st.cloud.drive ? 'Thư viện và tiến độ My Hub đã lưu trên ' + st.cloud.label + ' sẽ bị xoá (tệp nhạc/sách đã tải lên thì giữ nguyên). Dữ liệu trên máy này giữ nguyên và app chuyển về Local.' : 'Mọi thứ My Hub đã lưu trong kho my-hub-data sẽ bị xoá. Dữ liệu trên máy này giữ nguyên và app chuyển về Local.', 'Xoá'))) return;
     try { await ctx.storage.deleteCloudData(); await ctx.storage.setMode('local'); ctx.toast('Đã xoá dữ liệu trên đám mây'); }
     catch (err) { ctx.toast(err.message, 'error'); }
     render();
