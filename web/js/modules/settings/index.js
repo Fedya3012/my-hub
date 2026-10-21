@@ -49,7 +49,10 @@ async function renderFolders() {
   const m = await import('../../core/storage/folder-ui.js');
   const pick = root.querySelector('#folder-picker');
   if (isDrive(st.mode)) await m.folderPicker(pick, st.mode, ctx.toast);
-  else pick.innerHTML = '<p class="hint">Hãy kết nối Dropbox hoặc OneDrive trong Cài đặt trước.</p>';
+  else if (st.mode === 'local') {
+    root.querySelector('.hint').textContent = 'Chọn các thư mục trong máy. App chỉ đọc đúng những thư mục này: nhạc và sách bên trong được quét và thêm vào thư viện. Trên Windows và máy tính, tệp được đọc trực tiếp, không sao chép; trên Android, mỗi tệp mới được sao chép vào app một lần.';
+    await (await import('../../core/storage/local-folders.js')).localFolderPicker(pick, ctx.toast);
+  } else pick.innerHTML = '<p class="hint">Hãy kết nối Dropbox hoặc OneDrive trong Cài đặt trước.</p>';
 
   // Live progress card: the scan / import task of the folder sync (also visible in the task tray).
   const prog = root.querySelector('#fold-progress');
@@ -69,6 +72,7 @@ async function renderFolders() {
   root.querySelectorAll('[data-act="sync-now"]').forEach(b => b.onclick = () => run(b, async () => {
     const fr = await (await import('../../core/storage/folders.js')).syncFolders();
     if (fr?.added) ctx.toast(`Đã nhập ${fr.added} tệp từ thư mục đã chọn`);
+    if (fr?.failed?.length) ctx.toast(`${fr.failed.length} tệp lỗi: ${fr.failed[0]}`, 'warn');
     if (fr?.missing?.length) ctx.toast(`Thư mục không còn trên ổ: ${fr.missing.join(', ')}. Hãy bỏ chọn hoặc chọn lại thư mục.`, 'warn');
     if (fr?.removed) ctx.toast(`Đã xoá ${fr.removed} mục có tệp gốc không còn`);
     if (fr && !fr.added && !fr.removed && !fr.skipped) ctx.toast('Đã đồng bộ, không có tệp mới');
@@ -109,7 +113,7 @@ async function render() {
 
       <p class="hint">Chọn một ô ở trên để kết nối: <b>Dropbox</b> và <b>OneDrive</b> sẽ mở hộp đăng nhập. Đang dùng chế độ này rồi thì bấm “Đổi tài khoản” ở dưới.</p>
       <div class="row-actions" style="flex-wrap:wrap">${['dropbox', 'onedrive'].map(k => `<button class="btn ${st.mode === k ? 'primary' : ''}" data-connect="${k}">${icon('cloud')}${st.mode === k ? MODES[k].label + ' · đổi tài khoản' : 'Kết nối ' + MODES[k].label}</button>`).join('')}</div>
-      ${isDrive(st.mode) ? `<a class="panel" href="#settings/folders" style="display:flex;flex-direction:row;align-items:center;gap:10px;text-decoration:none;color:inherit"><span style="flex:1"><strong style="display:block">Thư mục đồng bộ</strong><span class="hint">Chọn thư mục trên ${esc(MODES[st.mode].label)} để nhập nhạc và sách</span></span><span aria-hidden="true">›</span></a>` : ''}
+      ${isDrive(st.mode) || st.mode === 'local' ? `<a class="panel" href="#settings/folders" style="display:flex;flex-direction:row;align-items:center;gap:10px;text-decoration:none;color:inherit"><span style="flex:1"><strong style="display:block">Thư mục đồng bộ</strong><span class="hint">${st.mode === 'local' ? 'Chọn thư mục trong máy để nhập nhạc và sách' : 'Chọn thư mục trên ' + esc(MODES[st.mode].label) + ' để nhập nhạc và sách'}</span></span><span aria-hidden="true">›</span></a>` : ''}
       <div class="panel">
         <dl class="kv">
           <dt>Lưu tệp trên máy bằng</dt><dd>${st.backend === 'opfs' ? 'Hệ thống tệp riêng của ứng dụng (OPFS)' : 'IndexedDB'}</dd>

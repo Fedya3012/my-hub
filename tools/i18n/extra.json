@@ -706,7 +706,7 @@
  "và cho phép. 3) Trình duyệt chuyển sang một trang trắng:": "and allow. 3) The browser goes to a blank page:",
  "Chọn một hoặc nhiều thư mục trên ổ. Mọi tệp nhạc và sách trong đó (kể cả thư mục con) được nhập vào thư viện khi đồng bộ. Trên Android, chọn thư mục chưa được hỗ trợ.": "Pick one or more folders on the drive. Every music and book file inside them (including subfolders) is added to the library on sync. On Android, folder picking is not supported yet.",
  "Chọn thư mục trong": "Pick a folder in",
- "Chưa chọn thư mục nào.": "No folder picked yet.",
+ "Chưa chọn thư mục nào.": "No folders selected yet.",
  "Đã bỏ thư mục khỏi đồng bộ": "Folder removed from sync",
  "Đã thêm thư mục đồng bộ": "Folder added to sync",
  "Đang đồng bộ:": "Syncing:",
@@ -835,5 +835,15 @@
  "Tự ẩn thanh tab dưới khi cuộn": "Auto-hide the bottom tab bar when scrolling",
  "Mọi app: thanh tab dưới ẩn khi cuộn xuống, hiện lại khi kéo lên.": "Every app: the bottom tab bar hides when you scroll down and returns when you scroll up.",
  "Tự ẩn thanh tab · Nhạc": "Auto-hide tab bar · Music",
- "Tự ẩn thanh tab · Sách": "Auto-hide tab bar · Books"
+ "Tự ẩn thanh tab · Sách": "Auto-hide tab bar · Books",
+ "Chọn thư mục trong máy để nhập nhạc và sách": "Choose folders on this device to import music and books",
+ "Chọn các thư mục trong máy. App chỉ đọc đúng những thư mục này: nhạc và sách bên trong được quét và thêm vào thư viện. Trên Windows và máy tính, tệp được đọc trực tiếp, không sao chép; trên Android, mỗi tệp mới được sao chép vào app một lần.": "Choose folders on this device. The app reads only these folders: music and books inside are scanned and added to the library. On Windows and desktops files are read in place, not copied; on Android each new file is copied into the app once.",
+ "Thêm thư mục trong máy…": "Add a folder on this device…",
+ "Thiết bị này không hỗ trợ chọn thư mục": "This device cannot pick folders",
+ "Sao chép vào app": "Copied into the app",
+ "Đọc trực tiếp": "Read in place",
+ "Đang quét thư mục trên máy": "Scanning folders on this device",
+ "mất liên kết thư mục, hãy thêm lại": "folder link lost, add it again",
+ "chưa cấp quyền đọc": "read permission not granted",
+ "Bỏ": "Remove"
 }
