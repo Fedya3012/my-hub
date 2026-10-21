@@ -845,5 +845,8 @@
  "Đang quét thư mục trên máy": "Scanning folders on this device",
  "mất liên kết thư mục, hãy thêm lại": "folder link lost, add it again",
  "chưa cấp quyền đọc": "read permission not granted",
- "Bỏ": "Remove"
+ "Bỏ": "Remove",
+ "Dọn dữ liệu Trình phát nhạc": "Clean Music Player data",
+ "Tự ẩn thanh tab · Trình phát nhạc": "Auto-hide tab bar · Music Player",
+ "Trình phát nhạc": "Music Player"
 }

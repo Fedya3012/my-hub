@@ -42,7 +42,7 @@ export async function initCoreParams() {
       density: { type: 'enum', default: 'comfortable', options: { comfortable: 'Thoải mái', compact: 'Gọn' }, label: 'Mật độ', ui: false },
       motion: { type: 'enum', default: 'auto', options: { auto: 'Theo hệ thống', full: 'Đầy đủ', reduced: 'Giảm chuyển động' }, label: 'Chuyển động', hint: 'Mọi module giảm hiệu ứng khi chọn "Giảm chuyển động".' },
       tabsAutoHide: { type: 'bool', default: 0, label: 'Tự ẩn thanh tab dưới khi cuộn', hint: 'Mọi app: thanh tab dưới ẩn khi cuộn xuống, hiện lại khi kéo lên.' },
-      hide_music: { type: 'bool', default: 1, label: 'Tự ẩn thanh tab · Nhạc', ui: true },
+      hide_music: { type: 'bool', default: 1, label: 'Tự ẩn thanh tab · Trình phát nhạc', ui: true },
       hide_books: { type: 'bool', default: 1, label: 'Tự ẩn thanh tab · Sách', ui: true },
       mode: { type: 'enum', default: 'light', options: { light: 'Sáng', dark: 'Tối' }, label: 'Sáng / tối hiện tại', readonly: true, ui: false },
     },

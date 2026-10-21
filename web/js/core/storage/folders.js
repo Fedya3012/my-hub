@@ -11,7 +11,7 @@ export const MUSIC = /\.(mp3|flac|m4a|m4b|mp4|aac|alac|ogg|oga|opus|wav|wave|aif
 export const folderList = async () => (await getSetting('sync.folders', [])) || [];
 export async function setFolders(list) { await setSetting('sync.folders', [...new Set(list)]); }
 // Which apps each chosen folder feeds: any of 'music' / 'books' (default: both). path → ['music', ...].
-export const APPS = [['music', 'Nhạc'], ['books', 'Sách']];
+export const APPS = [['music', 'Trình phát nhạc'], ['books', 'Sách']];
 const toApps = (v) => (!v ? APPS.map(a => a[0]) : Array.isArray(v) ? v : v === 'both' ? APPS.map(a => a[0]) : [v]);
 export const folderApps = async () => {
   const raw = (await getSetting('sync.folderApps', {})) || {};

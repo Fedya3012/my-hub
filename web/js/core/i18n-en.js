@@ -2299,4 +2299,6 @@ export default {"(Google cấp quyền theo từng giờ). Bấm một lần đ�
 "Đọc trực tiếp":"Read in place",
 "Đang quét thư mục trên máy":"Scanning folders on this device",
 "mất liên kết thư mục, hãy thêm lại":"folder link lost, add it again",
-"chưa cấp quyền đọc":"read permission not granted"};
+"chưa cấp quyền đọc":"read permission not granted",
+"Dọn dữ liệu Trình phát nhạc":"Clean Music Player data",
+"Tự ẩn thanh tab · Trình phát nhạc":"Auto-hide tab bar · Music Player"};
