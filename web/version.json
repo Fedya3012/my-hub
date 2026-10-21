@@ -1,7 +1,15 @@
 {
-  "app": "0.9.6.2",
+  "app": "0.9.6.3",
   "released": "2026-10-21",
   "changelog": [
+    {
+      "version": "0.9.6.3",
+      "date": "2026-10-21",
+      "notes": [
+        "Dọn dữ liệu: xoá các mục đã đồng bộ từ folder đã bị xoá trên Dropbox/OneDrive (kể cả folder đã bỏ chọn); OneDrive báo 404 cũng được coi là folder mất",
+        "Nhạc: hàng tìm kiếm không còn rộng hơn màn hình điện thoại; khoá zoom để thanh tab không bị trượt"
+      ]
+    },
     {
       "version": "0.9.6.2",
       "date": "2026-10-21",
