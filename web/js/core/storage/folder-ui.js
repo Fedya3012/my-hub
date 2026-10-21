@@ -34,6 +34,39 @@ export async function folderPicker(el, mode, toast) {
     } catch (e) { kids.set(p, { error: e?.code === 'missing' ? 'Thư mục không còn trên ' + d.label : e.message }); }
   };
 
+  // Per-folder numbers (size, files, music, books), counted by walking the folder in the background (2 at a time).
+  const stats = new Map();
+  const queue = [];
+  let running = 0;
+  const walk = async (p, acc) => {
+    for (const e of await d.listDir(p)) {
+      if (e.isDir) await walk(e.path, acc);
+      else { acc.size += e.size || 0; acc.files++; const k = fileKind(e.name); if (k === 'music') acc.music++; else if (k === 'books') acc.books++; }
+    }
+    return acc;
+  };
+  const sumHtml = () => {
+    const done = [...chosen].map(c => stats.get(c)).filter(t => t && t !== 'loading' && !t.error);
+    if (!chosen.size) return 'Chưa chọn thư mục nào';
+    const t = done.reduce((a, x) => ({ size: a.size + x.size, files: a.files + x.files }), { size: 0, files: 0 });
+    return `Đã chọn ${chosen.size} thư mục` + (done.length === chosen.size ? ` · ${fmtBytes(t.size)} · ${t.files.toLocaleString('vi')} tệp` : ' · đang tính dung lượng…');
+  };
+  const showStat = (p) => { const m = el.querySelector('[data-sum]'); if (m) m.textContent = sumHtml(); const n = [...el.querySelectorAll('[data-stat]')].find(x => x.dataset.stat === p); if (n) n.innerHTML = statHtml(p); };
+  const pump = () => {
+    while (running < 2 && queue.length) {
+      const p = queue.shift(); running++;
+      walk(p, { size: 0, files: 0, music: 0, books: 0 }).then(r => stats.set(p, r), () => stats.set(p, { error: 1 })).finally(() => { running--; showStat(p); pump(); });
+    }
+  };
+  const ensureStats = (p) => { if (stats.has(p)) return; stats.set(p, 'loading'); queue.push(p); pump(); };
+  const statHtml = (p) => {
+    const t = stats.get(p);
+    if (!t || t === 'loading') return 'Đang tính…';
+    if (t.error) return '';
+    const parts = [t.files ? `${fmtBytes(t.size)} · ${t.files.toLocaleString('vi')} tệp` : 'Trống'];
+    if (t.music || t.books) parts.push([t.music ? `${t.music.toLocaleString('vi')} nhạc` : '', t.books ? `${t.books.toLocaleString('vi')} sách` : ''].filter(Boolean).join(' · '));
+    return esc(parts.join(' — '));
+  };
   const covered = (p) => [...chosen].some(c => c !== p && under(p, c));
   const fileRow = (f) => { const k = fileKind(f.name); return `<div style="display:flex;flex-direction:row;align-items:center;gap:8px;min-height:34px;padding:0 8px 0 38px;font-size:13px;color:#34464b" title="${esc(appName(k))}"><span style="flex:none;display:flex;color:${k === 'music' ? '#0f7f88' : '#9a6a12'}">${appIcon(k).replace('class="ic "', 'class="ic" width="18" height="18"')}</span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(f.name)}</span>${f.size ? `<span style="flex:none;font-size:11px;color:#5b6b70">${esc(fmtBytes(f.size))}</span>` : ''}</div>`; };
   const rowHtml = (e, depth) => {
@@ -48,7 +81,7 @@ export async function folderPicker(el, mode, toast) {
         <button type="button" data-open="${esc(e.path)}" aria-expanded="${isOpen}" aria-label="${isOpen ? 'Thu gọn' : 'Mở'} ${esc(e.name)}" style="flex:none;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:0;background:none;cursor:pointer;padding:0">${ARROW(isOpen)}</button>
         <input type="checkbox" data-pick="${esc(e.path)}" aria-label="Đồng bộ ${esc(e.name)}" ${on || inherited ? 'checked' : ''} ${inherited ? 'disabled' : ''} style="width:20px;height:20px;accent-color:#0f7f88;flex:none">
         ${FOLDER}
-        <span style="flex:1;min-width:0;font-size:15px;font-weight:${on ? 700 : 600};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(e.name)}</span>
+        <span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-size:15px;font-weight:${on ? 700 : 600};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(e.name)}</span><span data-stat="${esc(e.path)}" style="font-size:12px;color:#5b6b70;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${statHtml(e.path)}</span></span>
         ${on ? `<span style="display:flex;flex-wrap:wrap;gap:6px;flex:1 0 100%;padding:0 0 8px 48px">${APPS.map(([k]) => `<label title="${esc(appName(k))}" style="display:flex;flex-direction:row;align-items:center;gap:5px;min-height:30px;padding:0 10px;white-space:nowrap;border-radius:999px;font-size:12px;cursor:pointer;background:#fff;border:1px solid #cfd8dc"><input type="checkbox" data-app="${esc(e.path)}" value="${k}" ${mine.includes(k) ? 'checked' : ''} style="width:14px;height:14px;accent-color:#0f7f88"><span style="display:flex;width:16px;height:16px">${appIcon(k)}</span>${esc(appName(k))}</label>`).join('')}</span>` : ''}
       </div>
       ${isOpen ? `<div style="margin-left:23px;padding-left:10px;border-left:1px solid #dde6e8">${sub}</div>` : ''}
@@ -60,7 +93,7 @@ export async function folderPicker(el, mode, toast) {
     const root = kids.get('');
     if (root.error) { el.innerHTML = `<p class="hint">Không mở được thư mục: ${esc(root.error)}</p>`; kids.delete(''); return; }
     el.innerHTML = `
-      <p class="hint" style="margin:0 0 8px">${chosen.size ? 'Đã chọn ' + chosen.size + ' thư mục' : 'Chưa chọn thư mục nào'} · tích thư mục cha là gồm cả thư mục con</p>
+      <p class="hint" style="margin:0 0 8px"><span data-sum>${sumHtml()}</span> · tích thư mục cha là gồm cả thư mục con</p>
       <div style="background:#fff;border:1px solid #e3e8ea;border-radius:14px;overflow:hidden">
         <div style="display:flex;flex-direction:row;align-items:center;gap:8px;padding:10px 14px;font-size:13px;color:#34464b;background:#f4f7f8"><strong>${esc(d.label)}</strong><span style="flex:1"></span>${root.dirs.length ? `<label style="display:flex;flex-direction:row;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" data-all ${root.dirs.every(c => chosen.has(c.path)) ? 'checked' : ''} style="width:18px;height:18px;accent-color:#0f7f88">Chọn tất cả</label>` : ''}</div>
         <div style="padding:6px">
@@ -68,6 +101,8 @@ export async function folderPicker(el, mode, toast) {
         </div>
       </div>
       ${chosen.size ? `<label style="display:flex;flex-direction:row;align-items:center;gap:8px;min-height:44px;margin-top:8px"><input type="checkbox" data-auto ${auto ? 'checked' : ''} style="width:20px;height:20px;flex:none;accent-color:#0f7f88"><span>Tự xoá khỏi thư viện những tệp đã bị xoá trên ${esc(d.label)} (khi đồng bộ)</span></label>` : ''}`;
+    el.querySelectorAll('[data-stat]').forEach(n => ensureStats(n.dataset.stat));
+    chosen.forEach(ensureStats);
     el.querySelector('[data-all]')?.addEventListener('change', async (e) => {
       for (const c of root.dirs) { if (e.target.checked) chosen.add(c.path); else chosen.delete(c.path); }
       if (e.target.checked) for (const x of [...chosen]) if (root.dirs.some(c => c.path !== x && under(x, c.path))) chosen.delete(x);
