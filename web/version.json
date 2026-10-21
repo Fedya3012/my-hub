@@ -1,7 +1,17 @@
 {
-  "app": "0.9.0.0",
+  "app": "0.9.1.0",
   "released": "2026-10-21",
   "changelog": [
+    {
+      "version": "0.9.1.0",
+      "date": "2026-10-21",
+      "notes": [
+        "Đồng bộ thêm qua Dropbox, WebDAV (Nextcloud, Synology, Koofr, pCloud…) và FileJump: thư viện, tiến độ và cả tệp nhạc/sách",
+        "Tệp tự tải lên sau khi thêm (có thanh tiến trình); máy khác tải về khi mở lần đầu rồi giữ trên máy",
+        "Dropbox đăng nhập bằng mã (không cần trang chuyển hướng); app Windows và Android gọi WebDAV không bị giới hạn CORS",
+        "Sửa lỗi cập nhật lõi: danh sách tệp của lõi còn trỏ tới gdrive.js đã xoá nên bản cài mới không lưu được vào bộ nhớ đệm"
+      ]
+    },
     {
       "version": "0.9.0.0",
       "date": "2026-10-21",
@@ -216,7 +226,12 @@
       "js/core/updater.js",
       "js/core/storage/index.js",
       "js/core/storage/local.js",
-      "js/core/storage/gdrive.js",
+      "js/core/storage/github.js",
+      "js/core/storage/http.js",
+      "js/core/storage/clouds.js",
+      "js/core/storage/webdav.js",
+      "js/core/storage/dropbox.js",
+      "js/core/storage/cloud-ui.js",
       "js/modules/library/manifest.js",
       "js/modules/app-manager/manifest.js",
       "js/modules/settings/manifest.js",

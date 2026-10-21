@@ -3,7 +3,11 @@
 //   mode 'local'  : DB + files on this device only.
 //   mode 'github' : "Tài khoản GitHub": the library and progress sync through a private repo
 //                   (storage/github.js); files (music, books) always stay on the device.
-// Syncing needs the GitHub account (js/core/account.js); signing out goes back to 'local'.
+//   mode 'dropbox' | 'webdav' | 'filejump': the same data goes to a cloud drive (storage/dropbox.js,
+//                   webdav.js), and music / book files are uploaded there too (syncFiles) and fetched
+//                   on demand by a device that does not have them yet.
+// github needs the GitHub account (js/core/account.js; signing out goes back to 'local'); the drives keep
+// their own connection (storage/clouds.js).
 //
 // Modules never talk to an adapter directly: they call storage.addFile / storage.open.
 import { db, uid, now, getSetting, setSetting, withoutSyncHooks, SYNCED_TABLES, LIVE_TABLES } from '../db.js';
@@ -14,14 +18,25 @@ import { bus } from '../bus.js';
 import { tasks, abortError } from '../tasks.js';
 import { local } from './local.js';
 import { github } from './github.js';
+import { dropbox } from './dropbox.js';
+import { webdavAdapter } from './webdav.js';
 
-// Where the library snapshot and progress live: the signed-in account's own cloud.
-const cloud = () => github;
+// Cloud drives that also hold the files. The adapter in use follows the storage mode.
+export const drives = { dropbox, webdav: webdavAdapter('webdav'), filejump: webdavAdapter('filejump') };
+let activeMode = 'local';
+// Where the library snapshot and progress live: the signed-in GitHub account, or the chosen drive.
+const cloud = () => drives[activeMode] || github;
+const cloudReady = () => activeMode === 'github' ? account.signedIn : !!drives[activeMode]?.connected();
+const cloudTokenOk = () => activeMode === 'github' ? account.tokenValid() : !!drives[activeMode]?.connected();
 
 export const MODES = {
   local:  { label: 'Chỉ trên máy', hint: 'Dữ liệu và tệp nằm trên thiết bị này. Không cần mạng, không cần tài khoản.' },
   github: { label: 'Tài khoản GitHub', hint: 'Đăng nhập GitHub (dán token): thư viện và tiến độ đồng bộ qua một kho riêng tư của bạn. Tệp nhạc/sách ở lại trên từng máy.' },
+  dropbox: { label: 'Dropbox', hint: 'Đăng nhập Dropbox một lần: thư viện, tiến độ và cả tệp nhạc/sách đồng bộ qua thư mục riêng của app. Máy khác tải tệp về khi cần.' },
+  webdav: { label: 'WebDAV', hint: 'Nextcloud, Synology, Koofr, pCloud… Nhập địa chỉ thư mục, tên và mật khẩu: dữ liệu và tệp nhạc/sách đồng bộ qua máy chủ của bạn.' },
+  filejump: { label: 'FileJump', hint: 'Dùng dung lượng FileJump (qua WebDAV): dữ liệu và tệp nhạc/sách đồng bộ giữa các máy.' },
 };
+export const isDrive = (m) => m in drives;
 
 const TOMB_TTL = 120 * 864e5;   // deletions are remembered this long in the snapshot
 const tkey = (t, id) => t + '\u0000' + String(id);
@@ -51,10 +66,13 @@ async function mergeTable(name, remoteRows = [], tomb = {}) {
   const key = table.schema.primKey.keyPath;
   const map = new Map((await table.toArray()).map(r => [r[key], r]));
   const changed = [], removed = [];
-  for (const r of remoteRows) {
+  for (const r0 of remoteRows) {
+    let r = r0;
     if (tomb[String(r[key])] >= (r.updatedAt || 0)) continue;
     const mine = map.get(r[key]);
     if (!mine || (r.updatedAt || 0) > (mine.updatedAt || 0) || (r.updatedAt === mine.updatedAt && (r.rev || 0) > (mine.rev || 0))) {
+      // A file row from another device must not wipe this device's own copy of the bytes.
+      if (name === 'files' && mine?.locations?.local) r = { ...r, locations: { ...r.locations, local: mine.locations.local } };
       map.set(r[key], r); changed.push(r);
     }
   }
@@ -113,16 +131,18 @@ export const storage = {
 
   async mode() {
     const m = await getSetting('storage.mode', 'local');
-    if (MODES[m]) return m;
+    if (MODES[m]) { activeMode = m; return m; }
     // Older modes (Google Drive / hybrid / Supabase): GitHub when signed in with it, otherwise Local.
-    return account.signedIn && account.provider === 'github' ? 'github' : 'local';
+    activeMode = account.signedIn && account.provider === 'github' ? 'github' : 'local';
+    return activeMode;
   },
 
   async setMode(mode) {
     if (!MODES[mode]) throw new Error('Chế độ không hợp lệ: ' + mode);
     const prev = await this.mode();
     await setSetting('storage.mode', mode);
-    if (prev === 'local' && mode !== 'local') await setSetting('sync.fullPushNeeded', true);
+    activeMode = mode;
+    if (prev !== mode && mode !== 'local') await setSetting('sync.fullPushNeeded', true);
     bus.emit('storage:mode', { mode, prev });
   },
 
@@ -144,7 +164,7 @@ export const storage = {
     ]);
     return {
       mode, backend, usage, pending, lastSync,
-      cloud: { connected: cloud().connected(), signedIn: account.signedIn, needsReconnect: account.needsReconnect },
+      cloud: { connected: cloud().connected(), signedIn: cloudReady(), needsReconnect: activeMode === 'github' ? account.needsReconnect : false, label: cloud().label, drive: isDrive(activeMode) },
     };
   },
 
@@ -181,10 +201,25 @@ export const storage = {
     } catch (e) { r.fail(e); throw e; }
   },
 
-  // Get the bytes of a file (files live on this device only).
-  async open(fileRow) {
+  // Get the bytes of a file: from this device, else (cloud drive modes) downloaded from the drive
+  // and kept on this device from then on.
+  async open(fileRow, { onProgress, signal } = {}) {
     const blob = await local.get(fileRow.locations?.local);
     if (blob) return blob;
+    for (const [id, d] of Object.entries(drives)) {
+      const key = fileRow.locations?.[id]?.key;
+      if (!key || !d.connected() || !navigator.onLine) continue;
+      const r = reporter({ onProgress, signal, quiet: false, big: fileRow.size >= 512 * 1024, label: 'Đang tải tệp từ ' + d.label, detail: fileRow.name, total: fileRow.size });
+      try {
+        const got = await d.getFile(key, { signal: r.signal, onProgress: (done, total) => r.report(done) });
+        const loc = await local.put(fileRow.id, got);
+        await withoutSyncHooks(() => db.files.update(fileRow.id, { 'locations.local': loc }));
+        fileRow.locations = { ...fileRow.locations, local: loc };
+        r.finish(fileRow.name);
+        return got;
+      } catch (e) { r.fail(e); throw e; }
+    }
+    if (Object.keys(fileRow.locations || {}).some(k => k in drives)) throw new Error('Tệp này nằm trên ' + MODES[Object.keys(fileRow.locations).find(k => k in drives)].label + ' nhưng chưa kết nối được (kiểm tra mạng, hoặc kết nối lại trong Cài đặt).');
     throw new Error(fileRow.locations?.gdrive ? 'Tệp này chỉ còn trên Google Drive cũ (đã bỏ hỗ trợ Drive). Thêm lại tệp vào app.' : 'Không tìm thấy tệp trên máy này.');
   },
 
@@ -192,6 +227,10 @@ export const storage = {
 
   async removeFile(fileRow) {
     await local.remove(fileRow.locations?.local);
+    for (const [id, d] of Object.entries(drives)) {
+      const key = fileRow.locations?.[id]?.key;
+      if (key && d.connected() && navigator.onLine) await d.removeFile(key).catch(() => {});
+    }
     await db.files.delete(fileRow.id);
   },
 
@@ -214,9 +253,10 @@ export const storage = {
   async _sync({ quiet = false } = {}) {
     const mode = await this.mode();
     if (mode === 'local') return { skipped: 'local' };
-    if (!account.signedIn) return { skipped: 'signed-out' };
+    if (!cloudReady()) return { skipped: 'signed-out' };
     if (!navigator.onLine) return { skipped: 'offline' };
     if (!cloud().connected()) {
+      if (activeMode !== 'github') return { skipped: 'not-connected' };
       try { await account.accessToken(); } catch { return { skipped: 'not-connected' }; }
     }
     bus.emit('sync:start');
@@ -248,7 +288,7 @@ export const storage = {
           if (removedAll[t].length) await db.table(t).bulkDelete(removedAll[t]);
         }
       }));
-      task.update({ done: 50, detail: pulled ? `Đã nhận ${pulled} thay đổi · đang đẩy dữ liệu lên GitHub…` : 'Đang đẩy dữ liệu lên GitHub…' });
+      task.update({ done: 50, detail: pulled ? `Đã nhận ${pulled} thay đổi · đang đẩy dữ liệu lên ${cloud().label}…` : `Đang đẩy dữ liệu lên ${cloud().label}…` });
       await cloud().writeSnapshot(remote.id, { format: 'my-hub-snapshot', schema: db.verno, at: new Date().toISOString(), tables: merged, tombstones: tombs }, 'hub-db.json', { signal, onProgress: part(50, 40) });
       await db.syncQueue.where('seq').belowOrEqual(lastQ).delete();   // changes made during the sync go next time
       await setSetting('sync.fullPushNeeded', false);
@@ -260,6 +300,7 @@ export const storage = {
       const result = { pulled: pulled + (live.pulled || 0), uploaded: 0 };
       task.finish(`Nhận ${result.pulled} thay đổi`);
       bus.emit('sync:done', result);
+      if (cloud().files) this.syncFiles().catch(e => bus.emit('sync:error', e));
       return result;
     } catch (e) {
       if (task.cancelled || e?.name === 'AbortError') { bus.emit('sync:cancelled'); return { cancelled: true }; }
@@ -267,6 +308,40 @@ export const storage = {
       task.fail(e);
       throw e;
     } finally { this.taskId = null; }
+  },
+
+  // Upload the files that are on this device but not on the drive yet (music, books). One task with a
+  // byte counter for the whole batch; each file's row is then marked so other devices can fetch it.
+  _filesRunning: null,
+  syncFiles() {
+    if (!this._filesRunning) this._filesRunning = this._syncFiles().finally(() => { this._filesRunning = null; });
+    return this._filesRunning;
+  },
+  async _syncFiles() {
+    const mode = activeMode, d = drives[mode];
+    if (!d?.files || !d.connected() || !navigator.onLine) return { skipped: true };
+    const todo = (await db.files.toArray()).filter(f => f.locations?.local && !f.locations[mode] && !f.deleted && f.size >= 0);
+    if (!todo.length) return { uploaded: 0 };
+    const total = todo.reduce((a, f) => a + (f.size || 0), 0);
+    const task = tasks.start({ label: 'Tải tệp lên ' + d.label, detail: `${todo.length} tệp`, total: Math.max(1, total), unit: 'bytes', cancellable: true, delay: 600 });
+    let done = 0, n = 0;
+    try {
+      for (const f of todo) {
+        task.check();
+        const blob = await local.get(f.locations.local);
+        if (!blob) continue;   // linked folder not readable right now: try again next time
+        const key = d.fileKey(f);
+        await d.putFile(key, blob, { signal: task.signal, onProgress: (x) => task.update({ done: done + Math.min(x, f.size || x), detail: `${f.name} · ${n + 1}/${todo.length}` }) });
+        done += f.size || blob.size; n++;
+        await db.files.update(f.id, { [`locations.${mode}`]: { key } });
+      }
+      task.finish(`Đã tải lên ${n} tệp`);
+      return { uploaded: n };
+    } catch (e) {
+      if (task.cancelled || e?.name === 'AbortError') return { cancelled: true };
+      if (!navigator.onLine) { task.finish('Mất mạng, sẽ tải lên tiếp khi có mạng'); return { skipped: 'offline' }; }
+      task.fail(e); throw e;
+    }
   },
 
   // ── Account: first sign-in, devices, deleting the cloud copy ──
@@ -278,8 +353,8 @@ export const storage = {
     return false;
   },
   // Does the account already hold a library? (hub-db.json in the repo)
-  async remoteHasData() {
-    const r = await cloud().readSnapshot('hub-db.json');
+  async remoteHasData(mode = activeMode) {
+    const r = await (drives[mode] || github).readSnapshot('hub-db.json');
     return !!r.data && Object.values(r.data.tables || {}).some(rows => rows?.length);
   },
   // "Gộp": the next sync merges everything (newer wins) and uploads this device's files.
@@ -351,8 +426,8 @@ export const storage = {
   // Delete everything My Hub stored in the GitHub repo (library, progress, devices).
   // Local copies stay on this device.
   async deleteCloudData() {
-    const task = tasks.start({ label: 'Đang xoá dữ liệu trên GitHub', detail: 'Đang xoá…', unit: 'items' });
-    try { const n = await github.deleteAll(); await db.syncQueue.clear(); task.finish(`Đã xoá ${n} tệp dữ liệu`); return n; }
+    const task = tasks.start({ label: 'Đang xoá dữ liệu trên ' + cloud().label, detail: 'Đang xoá…', unit: 'items' });
+    try { const n = await cloud().deleteAll(); await db.syncQueue.clear(); task.finish(`Đã xoá ${n} tệp dữ liệu`); return n; }
     catch (e) { task.fail(e); throw e; }
   },
 };
@@ -362,8 +437,8 @@ export const storage = {
 // follows the user between Windows, Android and the APK within seconds.
 let liveTimer = null, liveBusy = null, leavingAll = false;
 storage.syncLive = async function ({ quiet = false } = {}) {
-  if ((await this.mode()) === 'local' || !account.signedIn || !navigator.onLine) return { skipped: true };
-  if (!cloud().connected()) { try { await account.accessToken(); } catch { return { skipped: 'not-connected' }; } }
+  if ((await this.mode()) === 'local' || !cloudReady() || !navigator.onLine) return { skipped: true };
+  if (!cloud().connected()) { if (activeMode !== 'github') return { skipped: 'not-connected' }; try { await account.accessToken(); } catch { return { skipped: 'not-connected' }; } }
   if (liveBusy) return liveBusy;
   liveBusy = (async () => {
     await touchDevice();
@@ -399,12 +474,12 @@ onProgressSaved(({ flush }) => storage.syncLiveSoon(flush ? 0 : 8000));
 // Signed out (here, from another device, or everywhere): back to Local, data stays on the device.
 bus.on('account:changed', async ({ signedIn, reason }) => {
   if (signedIn) return;
-  if ((await storage.mode()) !== 'local') await storage.setMode('local');
+  if ((await storage.mode()) === 'github') await storage.setMode('local');
   if (reason === 'remote') bus.emit('account:notice', { kind: 'warn', message: 'Thiết bị này đã được đăng xuất từ một máy khác. Dữ liệu vẫn còn trên máy.' });
 });
 
 // A change → sync about 8 s later; every 2 min while the app is visible.
-const autoOk = async () => (await storage.mode()) !== 'local' && account.signedIn && account.tokenValid() && navigator.onLine;
+const autoOk = async () => (await storage.mode()) !== 'local' && cloudReady() && cloudTokenOk() && navigator.onLine;
 let qSoon = 0;   // one check per burst, however many rows a bulk write queued
 db.syncQueue.hook('creating', () => { if (qSoon) return; qSoon = setTimeout(async () => { qSoon = 0; if (await autoOk()) storage.syncSoon(8000); }, 0); });
 setInterval(async () => { if (document.visibilityState === 'visible' && await autoOk()) storage.sync({ quiet: true }).catch(() => {}); }, 120_000);

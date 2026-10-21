@@ -31,10 +31,14 @@ export function avatar(u = account.user, cls = '') {
   return `<span class="acct-avatar ${cls}" aria-hidden="true">${esc(ch)}${img}</span>`;
 }
 
-const MODE_LABEL = { local: 'Trên máy', github: 'Tài khoản GitHub' };
+const MODE_LABEL = { local: 'Trên máy', github: 'Tài khoản GitHub', dropbox: 'Dropbox', webdav: 'WebDAV', filejump: 'FileJump' };
 
 // Sidebar footer badge. s = storage.status(). Always links to the account page.
 export function badge(s) {
+  if (s.cloud?.drive) {   // Dropbox / WebDAV / FileJump
+    const state = !s.cloud.connected ? 'Bấm để kết nối lại' : !navigator.onLine ? 'Offline · đồng bộ khi có mạng' : s.pending ? `${s.pending} chờ đồng bộ` : 'Đã đồng bộ';
+    return { href: '#settings', title: `${MODE_LABEL[s.mode]} · ${state}`, html: `${icon('cloud')}<span class="acct-badge-t"><b>${esc(MODE_LABEL[s.mode])}</b><small>${esc(state)}</small></span>` };
+  }
   if (account.signedIn) {
     const state = s.mode === 'local' ? 'Chưa bật đồng bộ'
       : !navigator.onLine ? 'Offline · đồng bộ khi có mạng'
@@ -70,7 +74,7 @@ export function accountSummary() {
 
 // Dialog with a real <form>: stays open and shows the error when onSubmit throws.
 // fields: [{ name, label, type, value, autocomplete, placeholder, hint }]
-export function formDialog({ title, intro = '', fields = [], extra = '', submit = 'Lưu', kind = 'primary', onSubmit }) {
+export function formDialog({ title, intro = '', fields = [], extra = '', submit = 'Lưu', kind = 'primary', onSubmit, onRender }) {
   return new Promise((resolve) => {
     const el = h(`<div class="modal-wrap" role="dialog" aria-modal="true" aria-label="${esc(title)}">
       <form class="modal acct-dialog" novalidate>
@@ -102,6 +106,7 @@ export function formDialog({ title, intro = '', fields = [], extra = '', submit 
     };
     document.addEventListener('keydown', onKey);
     document.body.appendChild(el);
+    onRender?.(form);
     (form.querySelector('input') || btn).focus();
   });
 }

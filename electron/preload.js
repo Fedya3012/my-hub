@@ -2,4 +2,5 @@
 const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('hubDesktop', {
   installUpdate: () => ipcRenderer.invoke('hub:update-install'),
+  http: (req) => ipcRenderer.invoke('hub:http', req),
 });
