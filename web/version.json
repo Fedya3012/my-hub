@@ -1,7 +1,17 @@
 {
-  "app": "0.9.7.2",
+  "app": "0.9.8.0",
   "released": "2026-10-21",
   "changelog": [
+    {
+      "version": "0.9.8.0",
+      "date": "2026-10-21",
+      "notes": [
+        "Trình phát nhạc: mỗi chế độ lặp và trộn có icon riêng; nút lặp/trộn ngoài màn hình đổi icon theo chế độ đang dùng",
+        "Trình phát nhạc: menu Lặp lại và Trộn bài xếp lại gọn hơn (tên, mô tả, dấu tích thẳng hàng)",
+        "Trình phát nhạc: vuốt trái/phải trên trang để đổi tab, vuốt phải để quay lại từ album/nghệ sĩ/danh sách phát (điện thoại)",
+        "Trình phát nhạc: phím tắt ở màn Đang phát (Space phát/tạm dừng, ←/→ tua 5 giây, Shift+←/→ bài trước/sau)"
+      ]
+    },
     {
       "version": "0.9.7.2",
       "date": "2026-10-21",
@@ -542,7 +552,7 @@
     },
     "music": {
       "name": "Trình phát nhạc",
-      "version": "0.5.1",
+      "version": "0.6.0",
       "minApp": "0.3.0",
       "files": [
         "js/modules/music/index.js",
