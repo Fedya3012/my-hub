@@ -34,17 +34,16 @@ export async function folderPicker(el, mode, toast) {
     const node = kids.get(e.path);
     const sub = !isOpen ? '' : node === 'loading' || !node ? '<div class="hint" style="margin:4px 0 4px 0;padding-left:8px">Đang mở…</div>'
       : node.error ? `<div class="hint" style="padding-left:8px;color:#b3261e">${esc(node.error)}</div>`
-      : `${node.dirs.map(c => rowHtml(c, depth + 1)).join('')}${!node.dirs.length ? `<div class="hint" style="padding:4px 8px">Không có thư mục con${node.files ? ` · ${node.files} tệp` : ''}</div>` : node.files ? `<div class="hint" style="padding:2px 8px">+ ${node.files} tệp ngay trong thư mục này</div>` : ''}`;
+      : node.dirs.map(c => rowHtml(c, depth + 1)).join('');
     return `<div>
-      <div style="display:flex;flex-direction:row;align-items:center;gap:6px;min-height:44px;padding:0 8px;background:${on ? '#e8f5f5' : inherited ? '#f3fafa' : '#fff'};border-radius:10px">
+      <div style="display:flex;flex-direction:row;align-items:center;gap:6px;min-height:44px;padding:0 8px;background:${on ? '#eef7f7' : 'transparent'};border-radius:10px;opacity:${inherited ? .6 : 1}">
         <button type="button" data-open="${esc(e.path)}" aria-expanded="${isOpen}" aria-label="${isOpen ? 'Thu gọn' : 'Mở'} ${esc(e.name)}" style="flex:none;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:0;background:none;cursor:pointer;padding:0">${ARROW(isOpen)}</button>
         <input type="checkbox" data-pick="${esc(e.path)}" aria-label="Đồng bộ ${esc(e.name)}" ${on || inherited ? 'checked' : ''} ${inherited ? 'disabled' : ''} style="width:20px;height:20px;accent-color:#0f7f88;flex:none">
         ${FOLDER}
         <span style="flex:1;min-width:0;font-size:15px;font-weight:${on ? 700 : 600};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(e.name)}</span>
-        ${inherited ? '<span style="font-size:11px;color:#5b6b70;flex:none">gồm trong thư mục cha</span>' : ''}
+        ${on ? `<span style="display:flex;gap:4px;flex:none">${APPS.map(([k, l]) => `<label title="${l}" style="display:flex;flex-direction:row;align-items:center;gap:3px;min-height:28px;padding:0 8px;border-radius:999px;font-size:12px;cursor:pointer;background:#fff;border:1px solid #cfd8dc"><input type="checkbox" data-app="${esc(e.path)}" value="${k}" ${mine.includes(k) ? 'checked' : ''} style="width:14px;height:14px;accent-color:#0f7f88">${l}</label>`).join('')}</span>` : ''}
       </div>
-      ${on ? `<div style="display:flex;flex-wrap:wrap;gap:8px;padding:2px 8px 8px 72px">${APPS.map(([k, l]) => `<label style="display:flex;flex-direction:row;align-items:center;gap:4px;min-height:34px;padding:0 10px;border-radius:999px;border:1px solid #cfd8dc;cursor:pointer;font-size:13px;background:#fff"><input type="checkbox" data-app="${esc(e.path)}" value="${k}" ${mine.includes(k) ? 'checked' : ''} style="width:16px;height:16px;accent-color:#0f7f88">${l}</label>`).join('')}</div>` : ''}
-      ${isOpen ? `<div style="margin-left:23px;padding-left:10px;border-left:2px solid #cfe3e5">${sub}</div>` : ''}
+      ${isOpen ? `<div style="margin-left:23px;padding-left:10px;border-left:1px solid #dde6e8">${sub}</div>` : ''}
     </div>`;
   };
 
@@ -53,11 +52,7 @@ export async function folderPicker(el, mode, toast) {
     const root = kids.get('');
     if (root.error) { el.innerHTML = `<p class="hint">Không mở được thư mục: ${esc(root.error)}</p>`; kids.delete(''); return; }
     el.innerHTML = `
-      <div style="background:#fff;border:1px solid #e3e8ea;border-radius:14px;padding:12px 14px;margin-bottom:10px">
-        <span style="display:block;font-size:15px;font-weight:600">${esc(d.label)}</span>
-        <span style="display:block;font-size:12px;color:#2e7d32">Đã kết nối · ${chosen.size ? 'đã chọn ' + chosen.size + ' thư mục' : 'chưa chọn thư mục nào'}</span>
-      </div>
-      <p class="hint" style="margin:0 0 10px">Bấm mũi tên để mở thư mục con. Tích một thư mục là đồng bộ cả các thư mục con bên trong. Mỗi thư mục chọn được app nhận tệp.</p>
+      <p class="hint" style="margin:0 0 8px">${chosen.size ? 'Đã chọn ' + chosen.size + ' thư mục' : 'Chưa chọn thư mục nào'} · tích thư mục cha là gồm cả thư mục con</p>
       <div style="background:#fff;border:1px solid #e3e8ea;border-radius:14px;padding:6px">
         ${root.dirs.length ? root.dirs.map(c => rowHtml(c, 0)).join('') : `<p class="hint" style="margin:10px 12px">Chưa có thư mục nào trong thư mục ứng dụng của ${esc(d.label)}. Thêm thư mục trên ${esc(d.label)} (trong thư mục Apps của app), rồi mở lại đây.</p>`}
       </div>

@@ -59,7 +59,7 @@ async function pruneMissing(mode, folders, found) {
 }
 
 // Imports the new music and book files of the chosen folders. → { added, failed, skipped? }
-export async function syncFolders({ signal } = {}) {
+export async function syncFolders({ signal, pruneOnly = false } = {}) {
   const mode = await storage.mode();
   const d = drives[mode];
   if (!d || !d.listDir) return { skipped: 'no-folders' };
@@ -90,6 +90,7 @@ export async function syncFolders({ signal } = {}) {
   scan.finish(`Quét xong: ${dirs} thư mục, ${found.length} tệp`);
 
   const removed = await pruneMissing(mode, folders.filter(f => !missing.includes(f)), found);
+  if (pruneOnly) return { added: 0, failed: [], removed, missing };
 
   const { isBookFile } = await import('../../modules/books/lib/formats.js');
   const done = (await getSetting('sync.folderDone', {})) || {};
