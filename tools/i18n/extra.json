@@ -738,5 +738,10 @@
 "Chọn một tài khoản để đồng bộ thư viện và tiến độ. Dropbox, OneDrive, WebDAV và pCloud còn đồng bộ được cả tệp nhạc/sách. Chỉ dùng một tài khoản đồng bộ tại một thời điểm.": "Pick one account to sync your library and progress. Dropbox and OneDrive also sync music and book files. Only one sync account is used at a time.",
 "Đăng nhập bằng": "Sign in with",
 "Tài khoản đồng bộ": "Sync account",
-"Thư viện, tiến độ và tệp nhạc/sách đang đồng bộ qua": "Library, progress and music/book files are syncing through"
+"Thư viện, tiến độ và tệp nhạc/sách đang đồng bộ qua": "Library, progress and music/book files are syncing through",
+"Quét xong:": "Scan done:",
+"Đang nhập": "Importing",
+"tệp từ": "files from",
+"thư mục": "folders",
+"tệp": "files"
 }
