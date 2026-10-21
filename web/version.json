@@ -1,7 +1,15 @@
 {
-  "app": "0.9.5.2",
+  "app": "0.9.5.3",
   "released": "2026-10-21",
   "changelog": [
+    {
+      "version": "0.9.5.3",
+      "date": "2026-10-21",
+      "notes": [
+        "Đồng bộ thư mục: thanh tiến độ hiện phần trăm và số thư mục, số tệp đã quét/nhập",
+        "Sách: thêm tab \"Thịnh hành\" (xu hướng hôm nay, tuần, tháng, năm); bấm \"Muốn đọc\" để thêm vào kệ"
+      ]
+    },
     {
       "version": "0.9.5.2",
       "date": "2026-10-21",
