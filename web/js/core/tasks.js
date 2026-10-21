@@ -77,10 +77,8 @@ export const tasks = {
       finish(msg) {
         if (t.state !== 'running') return;
         t.state = 'done'; t.detail = msg || t.detail; if (t.total) t.done = t.total; if (t.unit === 'percent') t.done = 100;
-        // Never on screen (ended inside its delay, or quiet): drop it now instead of flashing "done".
-        if (!t.shown) { list.delete(t.id); notify(); return; }
-        notify();
-        setTimeout(() => { list.delete(t.id); notify(); }, 2600);
+        // A finished task leaves the tray at once (a failed one stays until dismissed).
+        list.delete(t.id); notify();
       },
       fail(err) {
         if (t.state !== 'running') return;
