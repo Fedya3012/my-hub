@@ -561,9 +561,9 @@ function plCard(L, p) {
 }
 
 // ── Detail pages ────────────────────────────────────────────────
-async function hero(c, { cover, fullCover, colors, kicker, title, sub, meta, round, actions }) {
+async function hero(c, { cover, fullCover, colors, kicker, title, sub, meta, round, actions, cls = '' }) {
   const bg = await fileUrl(fullCover || cover);
-  c.innerHTML = `<section class="mhero" style="${colors ? `--h-bg:${colors.bg};--h-acc:${colors.light};` : ''}">
+  c.innerHTML = `<section class="mhero ${cls}" style="${colors ? `--h-bg:${colors.bg};--h-acc:${colors.light};` : ''}">
     <div class="mhero-bg" aria-hidden="true" style="${bg ? `background-image:url('${bg}')` : ''}"></div>
     <button class="icon-btn mhero-back" data-back aria-label="Quay lại">${icon('chev-left')}</button>
     ${artHtml(cover, title, { cls: 'hero' + (round ? ' round' : '') })}
@@ -574,7 +574,7 @@ async function hero(c, { cover, fullCover, colors, kicker, title, sub, meta, rou
   return c.querySelector('[data-body]');
 }
 const artItem = (kind, id) => ({ icon: 'image', label: 'Đổi ảnh…', act: () => changeArt(kind, id) });
-const heroActs = (extra = '') => `<button class="btn primary" data-pl>${icon('play-fill')}Phát</button><button class="btn" data-sh>${icon('shuffle')}Ngẫu nhiên</button>${extra}<button class="icon-btn" data-mo aria-label="Thêm">${icon('more')}</button>`;
+const heroActs = (extra = '', fav = '') => `<button class="btn primary" data-pl aria-label="Phát">${icon('play-fill')}<span class="lbl">Phát</span></button><button class="btn" data-sh aria-label="Ngẫu nhiên">${icon('shuffle')}<span class="lbl">Ngẫu nhiên</span></button>${fav}${extra}<button class="icon-btn" data-mo aria-label="Thêm">${icon('more')}</button>`;
 function bindHero(c, list, source, more) {
   c.querySelector('[data-pl]').onclick = () => player.play(list, { source, shuffle: false });
   c.querySelector('[data-sh]').onclick = () => player.play(list, { source, shuffle: true, start: Math.floor(Math.random() * list.length) });
@@ -598,7 +598,8 @@ async function albumPage(c, L, id) {
   const body = await hero(c, { cover: a.cover, fullCover: a.coverFileId, colors: prefs().np.albumTheme && a.colors, kicker: store.KIND_LABEL[a.kind] || 'Album', title: a.title,
     sub: `<a href="#music/albumartist/${a.artistId}">${esc(a.artist)}</a>${a.year ? ` · <a href="#music/year/${a.year}">${a.year}</a>` : ''}${credits.length ? ' · ' + credits.join(' · ') : ''}`,
     meta: `${a.tracks.length} bài · ${fmtTotal(a.duration)} · ${a.hiRes && prefs().showHiRes ? '<span class="hires sm">Hi-Res</span> ' : ''}${esc(formats.slice(0, 2).join(' / '))}${a.rg?.gain != null ? ` · ReplayGain album ${a.rg.gain > 0 ? '+' : ''}${a.rg.gain.toFixed(2)} dB` : ''}`,
-    actions: heroActs(`<button class="btn" data-link>${icon('link')}Gắn vào…</button>`) });
+    cls: 'is-album',
+    actions: heroActs(`<button class="btn" data-link aria-label="Gắn vào">${icon('link')}<span class="lbl">Gắn vào…</span></button>`, `<button class="btn mfavall" data-favall aria-label="Yêu thích album" aria-pressed="${a.tracks.every(t => t.favorite)}">${icon('heart')}</button>`) });
   const targets = await store.targetsOf(a.id);
   const AS = { trackNo: 'Thứ tự trong album', title: 'Tên', duration: 'Thời lượng', plays: 'Nghe nhiều', rating: 'Đánh giá', quality: 'Chất lượng' };
   const key = sortKey('albumTracks', AS, 'trackNo');
@@ -624,6 +625,7 @@ async function albumPage(c, L, id) {
     { icon: 'image', label: 'Đổi ảnh bìa…', act: () => changeArt('album', a.id) },
   ]);
   c.querySelector('[data-link]').onclick = () => linkPicker({ sourceId: a.id, source: 'album', name: a.title });
+  c.querySelector('[data-favall]').onclick = async (e) => { const on = !a.tracks.every(t => t.favorite); for (const t of a.tracks) { await store.setFavorite(t.id, on); t.favorite = on ? 1 : 0; } e.currentTarget.setAttribute('aria-pressed', on); toast(on ? 'Đã thêm album vào yêu thích' : 'Đã bỏ yêu thích album'); };
   body.querySelectorAll('[data-unlink]').forEach(b => b.onclick = async () => { await store.unlinkMusic(b.dataset.unlink); render(); });
 }
 
