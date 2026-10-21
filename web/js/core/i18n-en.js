@@ -2301,4 +2301,5 @@ export default {"(Google cấp quyền theo từng giờ). Bấm một lần đ�
 "mất liên kết thư mục, hãy thêm lại":"folder link lost, add it again",
 "chưa cấp quyền đọc":"read permission not granted",
 "Dọn dữ liệu Trình phát nhạc":"Clean Music Player data",
-"Tự ẩn thanh tab · Trình phát nhạc":"Auto-hide tab bar · Music Player"};
+"Tự ẩn thanh tab · Trình phát nhạc":"Auto-hide tab bar · Music Player",
+"Chỉ lưu trên máy này":"Kept on this device only"};
