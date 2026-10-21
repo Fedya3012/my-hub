@@ -1,7 +1,14 @@
 {
-  "app": "0.9.1.0",
+  "app": "0.9.2.0",
   "released": "2026-10-21",
   "changelog": [
+    {
+      "version": "0.9.2.0",
+      "date": "2026-10-21",
+      "notes": [
+        "Trang Tài khoản và Cài đặt có nút Kết nối Dropbox, WebDAV, FileJump (trước đây chỉ chọn được bằng ô chế độ lưu trữ)"
+      ]
+    },
     {
       "version": "0.9.1.0",
       "date": "2026-10-21",

@@ -2142,4 +2142,14 @@ export default {"(Google cấp quyền theo từng giờ). Bấm một lần đ�
 "trên máy chủ (ví dụ":"on the server (for example",
 "Trình duyệt không cho gọi máy chủ này (thiếu CORS). Dùng app Windows hoặc Android, hoặc bật CORS cho máy chủ WebDAV.":"The browser cannot call this server (CORS missing). Use the Windows or Android app, or enable CORS on the WebDAV server.",
 "Tự tải lên":"Automatically uploads to",
-"xoá tệp":"deleting the file"};
+"xoá tệp":"deleting the file",
+"· đang dùng (đổi tài khoản)":"· in use (switch account)",
+"· đổi tài khoản":"· switch account",
+"Bằng GitHub (dán token), hoặc kết nối Dropbox, WebDAV, FileJump (đồng bộ cả tệp nhạc/sách).":"With GitHub (paste a token), or connect Dropbox, WebDAV or FileJump (they sync music/book files too).",
+"Chọn một ô ở trên để kết nối:":"Pick a card above to connect:",
+"Dùng dung lượng FileJump qua WebDAV.":"Use your FileJump storage over WebDAV.",
+"Đăng nhập bằng mã, cần App key của một app Dropbox miễn phí.":"Sign in with a code; needs the App key of a free Dropbox app.",
+"Đồng bộ qua ổ đám mây (cả tệp nhạc/sách)":"Sync through a cloud drive (music/book files too)",
+"Nextcloud, Synology, Koofr, pCloud… nhập địa chỉ thư mục, tên, mật khẩu.":"Nextcloud, Synology, Koofr, pCloud… enter the folder address, username, password.",
+"Ngoài GitHub, bạn có thể đồng bộ thư viện, tiến độ và cả tệp nhạc/sách qua Dropbox, WebDAV hoặc FileJump.":"Besides GitHub, you can sync the library, progress and music/book files through Dropbox, WebDAV or FileJump.",
+"sẽ mở hộp đăng nhập. Đang dùng chế độ này rồi thì bấm “Đổi tài khoản” ở dưới.":"open a sign-in box. If you already use this mode, click “Switch account” below."};

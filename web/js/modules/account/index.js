@@ -44,8 +44,27 @@ function noticeHtml() {
 
 async function render() {
   if (!root) return;
-  if (account.signedIn) return renderSignedIn();
-  return renderSignedOut();
+  if (account.signedIn) await renderSignedIn(); else renderSignedOut();
+  await addDriveCard();
+}
+
+// Dropbox / WebDAV / FileJump: sign-in buttons on this page too (same flow as Settings → Lưu trữ).
+const DRIVES = [['dropbox', 'Dropbox', 'Đăng nhập bằng mã, cần App key của một app Dropbox miễn phí.'], ['webdav', 'WebDAV', 'Nextcloud, Synology, Koofr, pCloud… nhập địa chỉ thư mục, tên, mật khẩu.'], ['filejump', 'FileJump', 'Dùng dung lượng FileJump qua WebDAV.']];
+async function addDriveCard() {
+  const sec = root?.querySelector('.page');
+  if (!sec) return;
+  const cur = await ctx.storage.mode();
+  sec.querySelector('.acct-drives')?.remove();
+  sec.insertAdjacentHTML('beforeend', `<section class="panel acct-drives" style="margin-top:20px">
+    <h2 class="section-title">${icon('cloud')}Đồng bộ qua ổ đám mây (cả tệp nhạc/sách)</h2>
+    <p class="muted">Ngoài GitHub, bạn có thể đồng bộ thư viện, tiến độ và cả tệp nhạc/sách qua Dropbox, WebDAV hoặc FileJump.</p>
+    <div class="row-actions" style="flex-wrap:wrap">${DRIVES.map(([id, label, tip]) => `<button class="btn ${cur === id ? 'primary' : ''}" data-drive="${id}" title="${esc(tip)}">${icon('cloud')}${cur === id ? label + ' · đang dùng (đổi tài khoản)' : 'Kết nối ' + label}</button>`).join('')}</div>
+    <p class="hint">${DRIVES.map(([, l, tip]) => `<b>${l}</b>: ${esc(tip)}`).join(' · ')}</p></section>`);
+  sec.querySelectorAll('[data-drive]').forEach(b => b.onclick = async () => {
+    const { useDrive } = await import('../../core/storage/cloud-ui.js');
+    await useDrive(b.dataset.drive, { reconnect: true });
+    render();
+  });
 }
 
 const page = (eyebrow, title, body) => `<section class="page acct">
