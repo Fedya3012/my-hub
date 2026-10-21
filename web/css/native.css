@@ -23,3 +23,9 @@ pre, code { overflow-wrap: anywhere; white-space: pre-wrap; }
 @media (hover: none) {
   button:active, .btn:active, .tabbar a:active { transform: scale(.97); opacity: .85; }
 }
+
+/* Phones: the body is the scroller (html does not scroll), so rubber-band / overscroll can never drag the fixed bars. */
+@media (max-width: 860px) {
+  html { overflow: hidden; height: 100%; }
+  body { height: 100%; min-height: 0; overflow-x: clip; overflow-y: auto; overscroll-behavior: none; -webkit-overflow-scrolling: touch; }
+}
