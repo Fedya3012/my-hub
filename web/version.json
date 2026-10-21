@@ -1,7 +1,19 @@
 {
-  "app": "0.9.6.3",
+  "app": "0.9.6.4",
   "released": "2026-10-21",
   "changelog": [
+    {
+      "version": "0.9.6.4",
+      "date": "2026-10-21",
+      "notes": [
+        "Thư mục đồng bộ: chế độ Chỉ trên máy này có trang chọn thư mục trong máy, chỉ đọc đúng các thư mục đã chọn (Windows/web đọc trực tiếp; Android dùng plugin đọc thư mục gốc, sao chép mỗi tệp một lần)",
+        "Nút Thư mục đồng bộ ở Cài đặt mở đúng trang (sửa lỗi mở nhầm Thư viện)",
+        "Tự ẩn thanh tab dưới khi cuộn: cài đặt theo từng app (Trình phát nhạc, Sách)",
+        "Trang Album, Playlist, Nghệ sĩ và các trang nhóm dùng giao diện sáng; nút yêu thích cả danh sách",
+        "Trang chủ Nhạc không tràn màn hình; trang kéo quá cuối không kéo theo thanh tab",
+        "Tên app hiển thị theo tên chính thức (Trình phát nhạc)"
+      ]
+    },
     {
       "version": "0.9.6.3",
       "date": "2026-10-21",
