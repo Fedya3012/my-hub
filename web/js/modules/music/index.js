@@ -53,7 +53,7 @@ export async function navigate(sub) {
   route = sub || '';
   await render();
   root.scrollIntoView?.({ block: 'start' });
-  window.scrollTo({ top: 0 });
+  window.scrollTo({ top: 0 }); document.body.scrollTop = 0;
 }
 
 export async function migrate() { /* 0.1.0: nothing to migrate yet */ }
@@ -574,8 +574,13 @@ async function hero(c, { cover, fullCover, colors, kicker, title, sub, meta, rou
   return c.querySelector('[data-body]');
 }
 const artItem = (kind, id) => ({ icon: 'image', label: 'Đổi ảnh…', act: () => changeArt(kind, id) });
-const heroActs = (extra = '', fav = '') => `<button class="btn primary" data-pl aria-label="Phát">${icon('play-fill')}<span class="lbl">Phát</span></button><button class="btn" data-sh aria-label="Ngẫu nhiên">${icon('shuffle')}<span class="lbl">Ngẫu nhiên</span></button>${fav}${extra}<button class="icon-btn" data-mo aria-label="Thêm">${icon('more')}</button>`;
+const heroActs = (extra = '', fav = '') => `<button class="btn primary" data-pl aria-label="Phát">${icon('play-fill')}<span class="lbl">Phát</span></button><button class="btn" data-sh aria-label="Ngẫu nhiên">${icon('shuffle')}<span class="lbl">Ngẫu nhiên</span></button><button class="btn mfavall" data-favall aria-label="Yêu thích tất cả">${icon('heart')}</button>${extra}<button class="icon-btn" data-mo aria-label="Thêm">${icon('more')}</button>`;
 function bindHero(c, list, source, more) {
+  const fav = c.querySelector('[data-favall]');
+  if (fav) {
+    fav.setAttribute('aria-pressed', !!list.length && list.every(t => t.favorite));
+    fav.onclick = async () => { const on = !list.every(t => t.favorite); for (const t of list) { await store.setFavorite(t.id, on); t.favorite = on ? 1 : 0; } fav.setAttribute('aria-pressed', on); toast(on ? 'Đã thêm vào yêu thích' : 'Đã bỏ yêu thích'); };
+  }
   c.querySelector('[data-pl]').onclick = () => player.play(list, { source, shuffle: false });
   c.querySelector('[data-sh]').onclick = () => player.play(list, { source, shuffle: true, start: Math.floor(Math.random() * list.length) });
   c.querySelector('[data-mo]').onclick = (e) => menu(e.currentTarget, [
@@ -599,7 +604,8 @@ async function albumPage(c, L, id) {
     sub: `<a href="#music/albumartist/${a.artistId}">${esc(a.artist)}</a>${a.year ? ` · <a href="#music/year/${a.year}">${a.year}</a>` : ''}${credits.length ? ' · ' + credits.join(' · ') : ''}`,
     meta: `${a.tracks.length} bài · ${fmtTotal(a.duration)} · ${a.hiRes && prefs().showHiRes ? '<span class="hires sm">Hi-Res</span> ' : ''}${esc(formats.slice(0, 2).join(' / '))}${a.rg?.gain != null ? ` · ReplayGain album ${a.rg.gain > 0 ? '+' : ''}${a.rg.gain.toFixed(2)} dB` : ''}`,
     cls: 'is-album',
-    actions: heroActs(`<button class="btn" data-link aria-label="Gắn vào">${icon('link')}<span class="lbl">Gắn vào…</span></button>`, `<button class="btn mfavall" data-favall aria-label="Yêu thích album" aria-pressed="${a.tracks.every(t => t.favorite)}">${icon('heart')}</button>`) });
+    actions: heroActs(`<button class="btn" data-link aria-label="Gắn vào">${icon('link')}<span class="lbl">Gắn vào…</span></button>`
+    ) });
   const targets = await store.targetsOf(a.id);
   const AS = { trackNo: 'Thứ tự trong album', title: 'Tên', duration: 'Thời lượng', plays: 'Nghe nhiều', rating: 'Đánh giá', quality: 'Chất lượng' };
   const key = sortKey('albumTracks', AS, 'trackNo');
@@ -625,7 +631,6 @@ async function albumPage(c, L, id) {
     { icon: 'image', label: 'Đổi ảnh bìa…', act: () => changeArt('album', a.id) },
   ]);
   c.querySelector('[data-link]').onclick = () => linkPicker({ sourceId: a.id, source: 'album', name: a.title });
-  c.querySelector('[data-favall]').onclick = async (e) => { const on = !a.tracks.every(t => t.favorite); for (const t of a.tracks) { await store.setFavorite(t.id, on); t.favorite = on ? 1 : 0; } e.currentTarget.setAttribute('aria-pressed', on); toast(on ? 'Đã thêm album vào yêu thích' : 'Đã bỏ yêu thích album'); };
   body.querySelectorAll('[data-unlink]').forEach(b => b.onclick = async () => { await store.unlinkMusic(b.dataset.unlink); render(); });
 }
 
@@ -635,7 +640,7 @@ async function artistPage(c, L, id) {
   const src = { kind: 'artist', id: a.id, name: a.name };
   const songs = withCovers(L, sortList(a.tracks, 'artistSongs', sortKey('artistSongs', SONG_SORTS, 'plays')));
   const meta = [`${a.tracks.length} bài`, a.fullAlbums.length ? `${a.fullAlbums.length} album` : '', a.singles.length ? `${a.singles.length} single & EP` : '', a.appearsOn.length ? `xuất hiện trong ${a.appearsOn.length} album` : ''].filter(Boolean).join(' · ');
-  const body = await hero(c, { cover: a.cover, round: true, kicker: 'Nghệ sĩ', title: a.name, sub: meta, meta: fmtTotal(a.duration), actions: heroActs() });
+  const body = await hero(c, { cover: a.cover, round: true, kicker: 'Nghệ sĩ', title: a.name, sub: meta, meta: fmtTotal(a.duration), cls: 'is-album is-list', actions: heroActs() });
   const albums = albumsHtml(a.fullAlbums, 'artistAlbums');
   const singles = albumsHtml(a.singles, 'artistAlbums');
   const appears = albumsHtml(a.appearsOn, 'artistAlbums');
@@ -658,7 +663,7 @@ async function groupPage(c, L, kind, id) {
   const full = g.albums.filter(al => !['single', 'ep'].includes(al.kind)), small = g.albums.filter(al => ['single', 'ep'].includes(al.kind));
   const body = await hero(c, { cover: g.cover, round: G.round, kicker: G.kicker, title: g.name,
     sub: [`${g.count} bài`, full.length ? `${full.length} album` : '', small.length ? `${small.length} single & EP` : ''].filter(Boolean).join(' · '),
-    meta: fmtTotal(g.duration), actions: heroActs() });
+    meta: fmtTotal(g.duration), cls: 'is-album is-list', actions: heroActs() });
   const A1 = albumsHtml(full, 'groupAlbums'), A2 = albumsHtml(small, 'groupAlbums');
   body.innerHTML = `<div class="mtool2 end">${xallBtn()}</div>
     ${full.length ? section('albums', 'Album', { ic: 'album', count: full.length, body: A1.html }) : ''}
