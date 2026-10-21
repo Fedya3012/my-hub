@@ -1,7 +1,16 @@
 {
-  "app": "0.9.6.5",
+  "app": "0.9.6.6",
   "released": "2026-10-21",
   "changelog": [
+    {
+      "version": "0.9.6.6",
+      "date": "2026-10-21",
+      "notes": [
+        "Nhạc: trang album, nghệ sĩ, danh sách phát ẩn phần đầu thư viện trên màn hình rộng (không còn bị đè)",
+        "Dọn dữ liệu: xin lại quyền đọc thư mục khi trình duyệt quên; báo số tệp chưa kiểm tra được (sửa tệp đã chuyển đi trên Windows chưa xoá)",
+        "Ảnh bìa và ảnh thu nhỏ chỉ lưu trên máy; mỗi máy tự tạo lại ảnh bìa từ thẻ tệp nhạc"
+      ]
+    },
     {
       "version": "0.9.6.5",
       "date": "2026-10-21",
