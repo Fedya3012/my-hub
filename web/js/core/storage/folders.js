@@ -87,6 +87,7 @@ export async function pruneOrphans() {
 // Imports the new music and book files of the chosen folders. → { added, failed, skipped? }
 export async function syncFolders({ signal, pruneOnly = false } = {}) {
   const mode = await storage.mode();
+  if (mode === 'local') return pruneOnly ? { added: 0, failed: [], removed: 0, missing: [] } : (await import('./local-folders.js')).scanLocal();
   const d = drives[mode];
   if (!d || !d.listDir) return { skipped: 'no-folders' };
   if (!d.connected() || !navigator.onLine) return { skipped: 'offline' };
