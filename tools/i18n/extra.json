@@ -720,5 +720,22 @@
 "Ngoài GitHub, bạn có thể đồng bộ thư viện, tiến độ và cả tệp nhạc/sách qua Dropbox, OneDrive, WebDAV hoặc pCloud.": "Besides GitHub, you can sync your library, progress and music/book files through Dropbox, OneDrive, WebDAV or pCloud.",
 "Đăng nhập bằng email và mật khẩu pCloud (qua WebDAV của pCloud), cần tạo sẵn một thư mục.": "Sign in with your pCloud email and password (through pCloud's WebDAV); create a folder first.",
 "Dùng dung lượng pCloud (qua WebDAV): dữ liệu và tệp nhạc/sách đồng bộ giữa các máy.": "Use your pCloud space (through WebDAV): data and music/book files sync between devices.",
-"pCloud hỗ trợ WebDAV: đăng nhập bằng email và mật khẩu pCloud. Tài khoản châu Âu dùng ewebdav.pcloud.com, tài khoản Mỹ dùng webdav.pcloud.com. Nếu bật xác thực hai bước, WebDAV có thể không đăng nhập được.": "pCloud supports WebDAV: sign in with your pCloud email and password. European accounts use ewebdav.pcloud.com, US accounts use webdav.pcloud.com. If two-step verification is on, WebDAV sign-in may not work."
+"pCloud hỗ trợ WebDAV: đăng nhập bằng email và mật khẩu pCloud. Tài khoản châu Âu dùng ewebdav.pcloud.com, tài khoản Mỹ dùng webdav.pcloud.com. Nếu bật xác thực hai bước, WebDAV có thể không đăng nhập được.": "pCloud supports WebDAV: sign in with your pCloud email and password. European accounts use ewebdav.pcloud.com, US accounts use webdav.pcloud.com. If two-step verification is on, WebDAV sign-in may not work.",
+"Chọn một hoặc nhiều thư mục trên ổ. Mọi tệp nhạc và sách trong đó (kể cả thư mục con) được nhập vào thư viện khi đồng bộ. Trên Android, chọn thư mục chưa được hỗ trợ.": "Pick one or more folders on the drive. Every music and book file inside them (including subfolders) is added to the library on sync. On Android, folder picking is not supported yet.",
+"Chọn thư mục trong": "Pick a folder in",
+"Chưa chọn thư mục nào.": "No folder picked yet.",
+"Đã bỏ thư mục khỏi đồng bộ": "Folder removed from sync",
+"Đã thêm thư mục đồng bộ": "Folder added to sync",
+"Đang đồng bộ:": "Syncing:",
+"Đang mở thư mục…": "Opening folder…",
+"Đang nhập tệp từ": "Importing files from",
+"Đang quét thư mục trên": "Scanning folders on",
+"Đồng bộ cả thư mục này": "Sync this whole folder",
+"Không có thư mục con.": "No subfolders.",
+"Máy chủ từ chối tên đăng nhập hoặc mật khẩu.": "The server rejected the username or password.",
+"mở thư mục": "open folder",
+"tệp từ thư mục đã chọn": "files from the selected folders",
+"Thư mục đồng bộ": "Sync folders",
+"(bấm vào tên để mở)": "(tap a name to open)",
+"ký tự, gọi từ": "characters, called from"
 }
