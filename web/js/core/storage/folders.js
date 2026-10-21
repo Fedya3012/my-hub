@@ -6,7 +6,7 @@ import { drives, storage } from './index.js';
 import { db, getSetting, setSetting } from '../db.js';
 import { tasks } from '../tasks.js';
 
-const MUSIC = /\.(mp3|flac|m4a|m4b|mp4|aac|alac|ogg|oga|opus|wav|wave|aif|aiff|aifc|wv|ape|dsf|dff|wma)$/i;
+export const MUSIC = /\.(mp3|flac|m4a|m4b|mp4|aac|alac|ogg|oga|opus|wav|wave|aif|aiff|aifc|wv|ape|dsf|dff|wma)$/i;
 
 export const folderList = async () => (await getSetting('sync.folders', [])) || [];
 export async function setFolders(list) { await setSetting('sync.folders', [...new Set(list)]); }

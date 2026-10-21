@@ -2,11 +2,18 @@
 // Sub-folders sit indented under their parent with an expand arrow and a guide line; tick folders to sync.
 // Saved at once; "Đồng bộ ngay" then imports their music and books. A ticked folder covers everything below it.
 import { drives } from './index.js';
-import { folderList, setFolders, canPickFolders, folderApps, setFolderApps, APPS, autoRemove, setAutoRemove } from './folders.js';
-import { esc } from '../ui.js';
+import { folderList, setFolders, canPickFolders, folderApps, setFolderApps, APPS, MUSIC, autoRemove, setAutoRemove } from './folders.js';
+import { esc, fmtBytes } from '../ui.js';
+import { icon } from '../icons.js';
+import { byId } from '../registry.js';
+import { isBookFile } from '../../modules/books/lib/formats.js';
 
 const FOLDER = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5b6b70" stroke-width="1.8" aria-hidden="true" style="flex:none"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>';
 const ARROW = (open) => `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34464b" stroke-width="2.2" aria-hidden="true" style="transition:transform .15s;transform:rotate(${open ? 90 : 0}deg)"><path d="M9 6l6 6-6 6"/></svg>`;
+// Apps keep their own system name and icon.
+const appName = (k) => byId(k)?.name || APPS.find(a => a[0] === k)?.[1] || k;
+const appIcon = (k) => icon(byId(k)?.icon || 'note');
+const fileKind = (name) => MUSIC.test(name) ? 'music' : isBookFile({ name }) ? 'books' : null;
 const under = (p, parent) => p.startsWith(parent.replace(/\/$/, '') + '/');
 
 export async function folderPicker(el, mode, toast) {
@@ -23,25 +30,26 @@ export async function folderPicker(el, mode, toast) {
     kids.set(p, 'loading');
     try {
       const all = await d.listDir(p);
-      kids.set(p, { dirs: all.filter(e => e.isDir), files: all.filter(e => !e.isDir).length });
+      kids.set(p, { dirs: all.filter(e => e.isDir), files: all.filter(e => !e.isDir && fileKind(e.name)) });
     } catch (e) { kids.set(p, { error: e?.code === 'missing' ? 'Thư mục không còn trên ' + d.label : e.message }); }
   };
 
   const covered = (p) => [...chosen].some(c => c !== p && under(p, c));
+  const fileRow = (f) => { const k = fileKind(f.name); return `<div style="display:flex;flex-direction:row;align-items:center;gap:8px;min-height:34px;padding:0 8px 0 38px;font-size:13px;color:#34464b" title="${esc(appName(k))}"><span style="flex:none;display:flex;color:${k === 'music' ? '#0f7f88' : '#9a6a12'}">${appIcon(k).replace('class="ic "', 'class="ic" width="18" height="18"')}</span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(f.name)}</span>${f.size ? `<span style="flex:none;font-size:11px;color:#5b6b70">${esc(fmtBytes(f.size))}</span>` : ''}</div>`; };
   const rowHtml = (e, depth) => {
     const on = chosen.has(e.path), inherited = !on && covered(e.path), isOpen = open.has(e.path);
     const mine = apps[e.path] || APPS.map(a => a[0]);
     const node = kids.get(e.path);
     const sub = !isOpen ? '' : node === 'loading' || !node ? '<div class="hint" style="margin:4px 0 4px 0;padding-left:8px">Đang mở…</div>'
       : node.error ? `<div class="hint" style="padding-left:8px;color:#b3261e">${esc(node.error)}</div>`
-      : node.dirs.map(c => rowHtml(c, depth + 1)).join('');
+      : node.dirs.map(c => rowHtml(c, depth + 1)).join('') + node.files.slice(0, 60).map(fileRow).join('') + (node.files.length > 60 ? `<div class="hint" style="padding:4px 8px">+ ${node.files.length - 60} tệp khác</div>` : '');
     return `<div>
       <div style="display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px;min-height:44px;padding:0 8px;background:${on ? '#eef7f7' : 'transparent'};border-radius:10px;opacity:${inherited ? .6 : 1}">
         <button type="button" data-open="${esc(e.path)}" aria-expanded="${isOpen}" aria-label="${isOpen ? 'Thu gọn' : 'Mở'} ${esc(e.name)}" style="flex:none;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:0;background:none;cursor:pointer;padding:0">${ARROW(isOpen)}</button>
         <input type="checkbox" data-pick="${esc(e.path)}" aria-label="Đồng bộ ${esc(e.name)}" ${on || inherited ? 'checked' : ''} ${inherited ? 'disabled' : ''} style="width:20px;height:20px;accent-color:#0f7f88;flex:none">
         ${FOLDER}
         <span style="flex:1;min-width:0;font-size:15px;font-weight:${on ? 700 : 600};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(e.name)}</span>
-        ${on ? `<span style="display:flex;gap:6px;flex:1 0 100%;padding:0 0 8px 66px">${APPS.map(([k, l]) => `<label title="${l}" style="display:flex;flex-direction:row;align-items:center;gap:3px;min-height:28px;padding:0 8px;border-radius:999px;font-size:12px;cursor:pointer;background:#fff;border:1px solid #cfd8dc"><input type="checkbox" data-app="${esc(e.path)}" value="${k}" ${mine.includes(k) ? 'checked' : ''} style="width:14px;height:14px;accent-color:#0f7f88">${l}</label>`).join('')}</span>` : ''}
+        ${on ? `<span style="display:flex;gap:6px;flex:1 0 100%;padding:0 0 8px 66px">${APPS.map(([k]) => `<label title="${esc(appName(k))}" style="display:flex;flex-direction:row;align-items:center;gap:5px;min-height:30px;padding:0 10px;white-space:nowrap;border-radius:999px;font-size:12px;cursor:pointer;background:#fff;border:1px solid #cfd8dc"><input type="checkbox" data-app="${esc(e.path)}" value="${k}" ${mine.includes(k) ? 'checked' : ''} style="width:14px;height:14px;accent-color:#0f7f88"><span style="display:flex;width:16px;height:16px">${appIcon(k)}</span>${esc(appName(k))}</label>`).join('')}</span>` : ''}
       </div>
       ${isOpen ? `<div style="margin-left:23px;padding-left:10px;border-left:1px solid #dde6e8">${sub}</div>` : ''}
     </div>`;
