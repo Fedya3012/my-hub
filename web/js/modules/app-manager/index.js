@@ -108,7 +108,7 @@ function modRow(m, i, n, counts) {
       <div class="seg small" role="group" aria-label="Thứ tự">
         <button data-move="${m.id}" data-dir="-1" ${i === 0 ? 'disabled' : ''} aria-label="Lên">↑</button><button data-move="${m.id}" data-dir="1" ${i === n - 1 ? 'disabled' : ''} aria-label="Xuống">↓</button>
       </div>
-      ${!m.core && m.status !== 'planned' && s.enabled ? `<button class="btn small" data-clean="${m.id}" title="Xoá các mục đã mất tệp gốc">Dọn dữ liệu</button>` : ''}
+      ${!m.core && m.status !== 'planned' && s.enabled ? `<button class="btn small" data-clean="${m.id}" title="Xoá các mục đã mất tệp gốc">Dọn dữ liệu ${esc(m.name)}</button>` : ''}
       <button class="switch" role="switch" aria-checked="${m.core || !!s.enabled}" data-toggle="${m.id}" ${m.core || m.status === 'planned' ? 'disabled' : ''} aria-label="Bật/tắt ${esc(m.name)}"><i></i></button>
     </div></li>`;
 }

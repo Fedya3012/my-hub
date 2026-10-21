@@ -15,8 +15,9 @@ import { LANGS, lang, setLang } from '../../core/i18n.js';
 
 let root, ctx, offs = [];
 
-export async function mount(el, context) {
-  root = el; ctx = context;
+let sub = '';
+export async function mount(el, context, rest = '') {
+  root = el; ctx = context; sub = rest;
   await render();
   offs.push(ctx.bus.on('sync:done', render));
   offs.push(ctx.bus.on('account:changed', (e) => { if (e.reason !== 'refresh') render(); }));
@@ -24,7 +25,33 @@ export async function mount(el, context) {
 export function unmount() { offs.forEach(f => f()); offs = []; paramsOff?.(); paramsOff = null; }
 let paramsOff = null;
 
+// Sub page: Settings → Thư mục đồng bộ (its own page with a back link).
+async function renderFolders() {
+  const st = await ctx.storage.status();
+  root.innerHTML = `<section class="page" style="max-width:720px;margin:0 auto">
+    <div class="row-actions" style="margin-bottom:6px"><a class="btn small" href="#/settings" aria-label="Quay lại Cài đặt">‹ Cài đặt</a></div>
+    <h2 class="section-title">Thư mục đồng bộ</h2>
+    <p class="hint">Chọn một hoặc nhiều thư mục trên ổ. Nhạc và sách trong đó (kể cả thư mục con) hiện trong thư viện và phát trực tiếp từ ổ, không sao chép vào app.</p>
+    <div id="folder-picker"></div>
+    <div class="row-actions" style="margin-top:12px"><button class="btn primary" data-act="sync-now">Đồng bộ ngay</button></div>
+  </section>`;
+  const m = await import('../../core/storage/folder-ui.js');
+  if (isDrive(st.mode)) await m.folderPicker(root.querySelector('#folder-picker'), st.mode, ctx.toast);
+  else root.querySelector('#folder-picker').innerHTML = '<p class="hint">Hãy kết nối Dropbox hoặc OneDrive trong Cài đặt trước.</p>';
+  root.querySelector('[data-act="sync-now"]').onclick = async (e) => {
+    const b = e.currentTarget; b.disabled = true;
+    try {
+      const fr = await (await import('../../core/storage/folders.js')).syncFolders();
+      if (fr?.added) ctx.toast(`Đã nhập ${fr.added} tệp từ thư mục đã chọn`);
+      if (fr?.missing?.length) ctx.toast(`Thư mục không còn trên ổ: ${fr.missing.join(', ')}. Hãy bỏ chọn hoặc chọn lại thư mục.`, 'warn');
+      if (fr?.removed) ctx.toast(`Đã xoá ${fr.removed} mục có tệp gốc không còn`);
+    } catch (err) { ctx.toast(err.message, 'error'); }
+    finally { b.disabled = false; }
+  };
+}
+
 async function render() {
+  if (sub === 'folders') return renderFolders();
   const st = await ctx.storage.status();
   const themes = await allThemes();
   const cur = await currentTheme();
@@ -52,11 +79,7 @@ async function render() {
 
       <p class="hint">Chọn một ô ở trên để kết nối: <b>Dropbox</b> và <b>OneDrive</b> sẽ mở hộp đăng nhập. Đang dùng chế độ này rồi thì bấm “Đổi tài khoản” ở dưới.</p>
       <div class="row-actions" style="flex-wrap:wrap">${['dropbox', 'onedrive'].map(k => `<button class="btn ${st.mode === k ? 'primary' : ''}" data-connect="${k}">${icon('cloud')}${st.mode === k ? MODES[k].label + ' · đổi tài khoản' : 'Kết nối ' + MODES[k].label}</button>`).join('')}</div>
-      ${isDrive(st.mode) ? `<div class="panel" id="folder-block">
-        <h3 class="section-title">Thư mục đồng bộ</h3>
-        <p class="hint">Chọn một hoặc nhiều thư mục trên ổ. Nhạc và sách trong đó (kể cả thư mục con) hiện trong thư viện và phát trực tiếp từ ổ, không sao chép vào app.</p>
-        <div id="folder-picker"></div>
-      </div>` : ''}
+      ${isDrive(st.mode) ? `<a class="panel" href="#/settings/folders" style="display:flex;flex-direction:row;align-items:center;gap:10px;text-decoration:none;color:inherit"><span style="flex:1"><strong style="display:block">Thư mục đồng bộ</strong><span class="hint">Chọn thư mục trên ${esc(MODES[st.mode].label)} để nhập nhạc và sách</span></span><span aria-hidden="true">›</span></a>` : ''}
       <div class="panel">
         <dl class="kv">
           <dt>Lưu tệp trên máy bằng</dt><dd>${st.backend === 'opfs' ? 'Hệ thống tệp riêng của ứng dụng (OPFS)' : 'IndexedDB'}</dd>
@@ -133,9 +156,6 @@ async function render() {
   paramsOff?.(); paramsOff = bindParams(root, ctx.toast);
   const on = (act, fn) => root.querySelector(`[data-act="${act}"]`)?.addEventListener('click', fn);
 
-  if (isDrive(st.mode) && root.querySelector('#folder-picker')) {
-    import('../../core/storage/folder-ui.js').then(m => m.folderPicker(root.querySelector('#folder-picker'), st.mode, ctx.toast)).catch(() => {});
-  }
   root.querySelectorAll('input[name="storage-mode"]').forEach(r => r.onchange = async () => {
     if (isDrive(r.value)) {   // Dropbox / OneDrive: connect, then asks what to do with this device's data
       const { useDrive } = await import('../../core/storage/cloud-ui.js');
