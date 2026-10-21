@@ -2182,4 +2182,17 @@ export default {"(Google cấp quyền theo từng giờ). Bấm một lần đ�
 "Chọn một hoặc nhiều thư mục trên ổ. Nhạc và sách trong đó (kể cả thư mục con) hiện trong thư viện và phát trực tiếp từ ổ, không sao chép vào app.":"Pick one or more folders on the drive. Music and books inside them (including subfolders) show in the library and play straight from the drive, without being copied into the app.",
 "lấy đường dẫn phát":"get a playback link",
 "Ngoài GitHub, bạn có thể đồng bộ thư viện, tiến độ và cả tệp nhạc/sách qua Dropbox hoặc OneDrive.":"Besides GitHub, you can sync your library, progress and music/book files through Dropbox or OneDrive.",
-"Trình duyệt không cho gọi máy chủ này (thiếu CORS). Dùng app Windows hoặc Android.":"The browser does not let this page call the server (missing CORS). Use the Windows or Android app."};
+"Trình duyệt không cho gọi máy chủ này (thiếu CORS). Dùng app Windows hoặc Android.":"The browser does not let this page call the server (missing CORS). Use the Windows or Android app.",
+"Chưa có thư mục nào trong thư mục ứng dụng của ":"No folder yet in the app folder of ",
+". Thêm thư mục trên ":". Add a folder on ",
+" (trong thư mục Apps của app), rồi mở lại đây.":" (inside the Apps folder of the app), then reopen this page.",
+"Thư mục này không có thư mục con.":"This folder has no subfolders.",
+"· đang đồng bộ":"· syncing",
+"Thư viện, tiến độ và tệp nhạc/sách đang đồng bộ qua ":"Library, progress and music/book files are syncing through ",
+"Chưa có thư mục nào trong thư mục ứng dụng của":"No folder yet in the app folder of",
+"Thêm thư mục trên":"Add a folder on",
+"(trong thư mục Apps của app), rồi mở lại đây.":"(inside the Apps folder of the app), then reopen this page.",
+"Chọn một tài khoản để đồng bộ thư viện và tiến độ. Dropbox, OneDrive, WebDAV và pCloud còn đồng bộ được cả tệp nhạc/sách. Chỉ dùng một tài khoản đồng bộ tại một thời điểm.":"Pick one account to sync your library and progress. Dropbox and OneDrive also sync music and book files. Only one sync account is used at a time.",
+"Đăng nhập bằng":"Sign in with",
+"Tài khoản đồng bộ":"Sync account",
+"Thư viện, tiến độ và tệp nhạc/sách đang đồng bộ qua":"Library, progress and music/book files are syncing through"};
