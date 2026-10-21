@@ -42,13 +42,23 @@ export async function initCoreParams() {
       density: { type: 'enum', default: 'comfortable', options: { comfortable: 'Thoải mái', compact: 'Gọn' }, label: 'Mật độ', ui: false },
       motion: { type: 'enum', default: 'auto', options: { auto: 'Theo hệ thống', full: 'Đầy đủ', reduced: 'Giảm chuyển động' }, label: 'Chuyển động', hint: 'Mọi module giảm hiệu ứng khi chọn "Giảm chuyển động".' },
       tabsAutoHide: { type: 'bool', default: 0, label: 'Tự ẩn thanh tab dưới khi cuộn', hint: 'Mọi app: thanh tab dưới ẩn khi cuộn xuống, hiện lại khi kéo lên.' },
+      hide_music_home: { type: 'bool', default: 1, label: 'Tự ẩn · Nhạc · Trang chủ', ui: true },
+      hide_music_songs: { type: 'bool', default: 1, label: 'Tự ẩn · Nhạc · Âm nhạc', ui: true },
+      hide_music_new: { type: 'bool', default: 1, label: 'Tự ẩn · Nhạc · Mới', ui: true },
+      hide_music_stats: { type: 'bool', default: 1, label: 'Tự ẩn · Nhạc · Thống kê', ui: true },
+      hide_books_home: { type: 'bool', default: 1, label: 'Tự ẩn · Sách · Trang chủ', ui: true },
+      hide_books_library: { type: 'bool', default: 1, label: 'Tự ẩn · Sách · Thư viện', ui: true },
+      hide_books_trending: { type: 'bool', default: 1, label: 'Tự ẩn · Sách · Thịnh hành', ui: true },
+      hide_books_shelves: { type: 'bool', default: 1, label: 'Tự ẩn · Sách · Kệ sách', ui: true },
+      hide_books_tools: { type: 'bool', default: 1, label: 'Tự ẩn · Sách · Thêm & nhập', ui: true },
       mode: { type: 'enum', default: 'light', options: { light: 'Sáng', dark: 'Tối' }, label: 'Sáng / tối hiện tại', readonly: true, ui: false },
     },
     adapter: {
-      get: (k) => (k === 'motion' || k === 'tabsAutoHide' ? undefined : themeState[k]),
+      get: (k) => (k === 'motion' || k === 'tabsAutoHide' || k.startsWith('hide_') ? undefined : themeState[k]),
       async set(k, v) {
         if (k === 'motion') { applyMotion(v); return false; }
         if (k === 'tabsAutoHide') { setTabsAutoHide(v); return false; }
+        if (k.startsWith('hide_')) return false;
         if (k === 'skin') return setSkin(v);
         if (k === 'theme') return applyTheme(v);
         if (k === 'mode') return;
