@@ -16,6 +16,8 @@ import { artHtml, hydrate, fileUrl } from './lib/art.js';
 import { badges, fmtTime, fmtTotal, techLine } from './lib/format.js';
 import { sheet, menu, trackMenu, pickPlaylist, linkPicker, ask, dragSort } from './ui/sheets.js';
 import { coverFlow } from './ui/coverflow.js';
+import { isSelecting, hold, tap, markRows, setRefresh, exit as exitSelect } from './ui/select.js';
+setRefresh(() => render());
 import { tasks } from '../../core/tasks.js';
 import { incremental, cmpVi, cmpViNum } from '../../core/perf.js';
 
@@ -64,7 +66,11 @@ const go = (r) => { location.hash = 'music' + (r ? '/' + r : ''); };
 const BOTTOM_ICONS = { home: 'home', songs: 'music', new: 'star', stats: 'list', albums: 'album', artists: 'user', albumArtists: 'user', playlists: 'queue', genres: 'tag', folders: 'folder', years: 'calendar' };
 
 // ── Shell ───────────────────────────────────────────────────────
+let lastRoute = null;
 async function render() {
+  // Leaving a list ends multi-select: picks belong to the list they were made in.
+  if (isSelecting() && lastRoute !== null && lastRoute !== route) exitSelect();
+  lastRoute = route;
   cleanups.forEach(f => f()); cleanups = [];
   const L = await store.library();
   const [head, ...rest] = route.split('/');
@@ -133,6 +139,7 @@ function trackRows(list, { num = false, art = true, album = true, source, playli
   const P = prefs();
   const html = list.map((t, i) => `<div class="mrow" role="row" data-id="${t.id}" data-i="${i}" tabindex="0" draggable="true">
       ${sortable ? `<span class="mrow-drag" data-drag aria-label="Kéo để sắp xếp">${icon('drag')}</span>` : ''}
+      <span class="mrow-chk" aria-hidden="true"></span>
       ${num ? `<span class="mrow-n num">${t.trackNo || i + 1}</span>` : ''}${art ? artHtml(t._cover, t.album || t.title, { cls: 'xs', label: t.album || t.title }) : ''}
       <span class="mrow-main"><span class="mrow-t">${esc(t.title)}${t.favorite ? `<i class="mrow-fav">${icon('heart')}</i>` : ''}</span>
         <span class="mrow-s">${esc(t.artist || '')}${album && t.album ? ' · ' + esc(t.album) : ''}</span></span>
@@ -145,11 +152,28 @@ function trackRows(list, { num = false, art = true, album = true, source, playli
 function bindRows(box, list, { source, playlist } = {}, onChange) {
     box.querySelectorAll('.mrow').forEach(r => {
       const t = list[+r.dataset.i];
-      r.onclick = (e) => { if (e.target.closest('[data-more],[data-drag]')) return; player.play(list, { start: +r.dataset.i, source }); };
+      // Press and hold (touch or mouse) picks the song and starts multi-select; while selecting, a tap toggles it.
+      let timer = null, start = null, held = false;
+      const cancel = () => { clearTimeout(timer); timer = null; };
+      r.addEventListener('pointerdown', (e) => {
+        if (e.target.closest('[data-more],[data-drag]')) return;
+        held = false; start = [e.clientX, e.clientY];
+        cancel();
+        timer = setTimeout(() => { held = true; timer = null; navigator.vibrate?.(15); hold(t, list); }, 500);
+      });
+      r.addEventListener('pointermove', (e) => { if (timer && start && Math.hypot(e.clientX - start[0], e.clientY - start[1]) > 10) cancel(); });
+      ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => r.addEventListener(ev, cancel));
+      r.onclick = (e) => {
+        if (e.target.closest('[data-more],[data-drag]')) return;
+        if (held) { held = false; e.preventDefault(); return; }   // the press already picked it
+        if (isSelecting()) { tap(t, list); return; }
+        player.play(list, { start: +r.dataset.i, source });
+      };
       r.onkeydown = (e) => { if (e.key === 'Enter') r.click(); };
       r.oncontextmenu = (e) => { e.preventDefault(); trackMenu(r.querySelector('[data-more]'), t, { playlist, linkId: t.linkId, onChange }); };
       r.querySelector('[data-more]').onclick = (e) => trackMenu(e.currentTarget, t, { playlist, linkId: t.linkId, onChange });
     });
+    markRows(box);
     hydrate(box);
 }
 

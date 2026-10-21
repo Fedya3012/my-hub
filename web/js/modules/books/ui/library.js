@@ -100,11 +100,18 @@ export async function render(el, { ctx, snap, arg, go }) {
   };
   const cancelPress = () => { clearTimeout(pressTimer); pressTimer = null; };
   box.addEventListener('contextmenu', (e) => { const c = e.target.closest('[data-id]'); if (!c || st.select) return; e.preventDefault(); quickMenu(c); });
+  // Press and hold a book (touch or mouse) to start multi-select with that book picked.
   box.addEventListener('pointerdown', (e) => {
     const c = e.target.closest('[data-id]');
-    if (!c || st.select || e.pointerType === 'mouse') return;
+    if (!c) return;
     pressAt = [e.clientX, e.clientY];
-    pressTimer = setTimeout(() => quickMenu(c), 500);
+    const id = c.dataset.id;
+    pressTimer = setTimeout(() => {
+      suppressClick = true; navigator.vibrate?.(15);
+      if (!st.select) { st.select = true; $('[data-sel]').setAttribute('aria-pressed', 'true'); }
+      if (st.sel.has(id)) st.sel.delete(id); else st.sel.add(id);
+      draw();
+    }, 500);
   });
   box.addEventListener('pointermove', (e) => { if (pressTimer && pressAt && Math.hypot(e.clientX - pressAt[0], e.clientY - pressAt[1]) > 10) cancelPress(); });
   ['pointerup', 'pointercancel', 'pointerleave'].forEach(t => box.addEventListener(t, cancelPress));
@@ -133,7 +140,9 @@ export async function render(el, { ctx, snap, arg, go }) {
       <select data-b="status" ${ids.length ? '' : 'disabled'} aria-label="Đổi trạng thái"><option value="">Trạng thái…</option>${statusOptions('')}</select>
       <button class="btn small" data-b="edit" ${ids.length ? '' : 'disabled'}>${icon('b-edit')}Sửa hàng loạt</button>
       <button class="btn small" data-b="meta" ${ids.length ? '' : 'disabled'}>${icon('b-globe')}Lấy thông tin</button>
-      <button class="btn small danger-ghost" data-b="del" ${ids.length ? '' : 'disabled'}>${icon('trash')}Xoá</button>`;
+      <button class="btn small danger-ghost" data-b="del" ${ids.length ? '' : 'disabled'}>${icon('trash')}Xoá</button>
+      <button class="btn small" data-b="none">Bỏ chọn</button>`;
+    bar.querySelector('[data-b="none"]').onclick = () => { st.sel.clear(); draw(); };
     bar.querySelector('[data-b="all"]').onclick = () => { if (st.sel.size === current.length) st.sel.clear(); else current.forEach(b => st.sel.add(b.id)); draw(); };
     bar.querySelector('[data-b="status"]').onchange = async (e) => { if (!e.target.value) return; for (const id of ids) await store.setStatus(id, e.target.value); toast(`Đã đổi trạng thái ${ids.length} cuốn`); };
     bar.querySelector('[data-b="edit"]').onclick = async () => (await import('./editor.js')).bulkEdit(ids, snap);
