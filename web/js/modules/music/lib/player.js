@@ -20,6 +20,8 @@ import { fmtTime } from './format.js';
 const SESSION = 'music:session';
 const canPlay = (mime) => { const a = document.createElement('audio'); return a.canPlayType(mime) !== ''; };
 
+const CATEGORY_KINDS = ['album', 'artist', 'playlist'];
+
 class Player extends EventTarget {
   constructor() {
     super();
@@ -27,7 +29,8 @@ class Player extends EventTarget {
     this.queue = [];          // track ids in play order
     this.order = null;        // original order while shuffled
     this.index = -1;
-    this.repeat = 'off';      // off | all | one | stop1 (play the current song, then stop)
+    this.repeat = 'off';      // off | all | one | stop1 (play the current song, then stop) | allcats | repeatcats (every category of the source's kind, once / forever)
+    this.catShuffle = false;  // pick the next category at random (songs inside keep the Shuffle setting)
     this.shuffle = false;
     this.source = null;       // { kind, id, name, forItem }
     this.listened = 0;        // seconds of the current track actually heard
@@ -58,6 +61,7 @@ class Player extends EventTarget {
       this.engine.bitPerfect = !!p.audio?.bitPerfect;
       this.engine.outCfg = p.audio?.out || null;
       this.repeat = (await getSetting('music.repeat', 'off'));
+      this.catShuffle = !!(await getSetting('music.catShuffle', false));
       this._mediaSession();
       await this._restore();
     })();
@@ -82,6 +86,7 @@ class Player extends EventTarget {
     const first = ids[Math.min(start, ids.length - 1)];
     this.shuffle = shuffle ?? this.shuffle;
     this.order = null;
+    this._seen = null;
     if (this.shuffle) { this.order = ids; ids = [first, ...shuffled(ids.filter(x => x !== first))]; }
     this.queue = ids;
     this.index = ids.indexOf(first);
@@ -106,7 +111,10 @@ class Player extends EventTarget {
 
   async next({ user = true } = {}) {
     const i = this._nextIndex(user);
-    if (i == null) { this.engine.pause(); this.engine.seek(0); return; }
+    if (i == null) {
+      if ((this.repeat === 'allcats' || this.repeat === 'repeatcats') && await this._nextCategory()) return;
+      this.engine.pause(); this.engine.seek(0); return;
+    }
     await this._commitPlay();
     this.index = i;
     await this._load({ quick: user });
@@ -126,6 +134,7 @@ class Player extends EventTarget {
     if (this.repeat === 'one' && !user) return this.index;
     if (this.repeat === 'stop1' && !user) return null;   // play this song, then stop
     if (this.index + 1 < this.queue.length) return this.index + 1;
+    if (this.repeat === 'repeatcats' && !CATEGORY_KINDS.includes(this.source?.kind)) return 0;   // no categories here: repeat the queue
     return this.repeat === 'all' || (this.repeat === 'one' && user) ? 0 : null;
   }
 
@@ -168,6 +177,59 @@ class Player extends EventTarget {
     else if (this.order) { this.queue = this.order; this.index = Math.max(0, this.queue.indexOf(cur)); this.order = null; }
     this._afterQueueEdit();
   }
+  async setCatShuffle(on) { this.catShuffle = !!on; await setSetting('music.catShuffle', this.catShuffle); this._emit('state'); }
+  async shuffleAll() {
+    await this.init();
+    const L = await this.lib();
+    return this.play([...L.tracks.values()], { shuffle: true, source: { kind: 'all', name: 'Tất cả bài hát' } });
+  }
+
+  // The categories of the source's kind (every album, every artist or every playlist), in library order.
+  async _categories(kind) {
+    const L = await this.lib();
+    const byName = (k) => (a, b) => String(a[k] || '').localeCompare(String(b[k] || ''), 'vi');
+    if (kind === 'album') return [...L.albums.values()].sort(byName('title')).map(x => x.id);
+    if (kind === 'artist') return [...L.artists.values()].sort(byName('name')).map(x => x.id);
+    if (kind === 'playlist') return [...L.playlists].sort(byName('name')).map(x => x.id);
+    return [];
+  }
+  async _categoryHasTracks(kind, id) {
+    const L = await this.lib();
+    if (kind === 'playlist') { const p = L.playlists.find(x => x.id === id); return !!p && (await playlistTracks(p)).length > 0; }
+    return true;
+  }
+  // The queue ran out in 'play / repeat all categories': move on to the next album / artist / playlist.
+  // → false when there is none left (or the source has no categories), so playback stops.
+  async _nextCategory() {
+    const s = this.source, kind = s?.kind;
+    if (!CATEGORY_KINDS.includes(kind)) return false;
+    const ids = await this._categories(kind);
+    if (!ids.length) return false;
+    if (this._catKind !== kind || !this._seen) { this._catKind = kind; this._seen = new Set(); }
+    const seen = this._seen;
+    seen.add(s.id);
+    const wrap = this.repeat === 'repeatcats';
+    let pool = [];
+    if (this.catShuffle) {
+      pool = ids.filter(id => !seen.has(id));
+      if (!pool.length && wrap) { seen.clear(); seen.add(s.id); pool = ids.filter(id => id !== s.id); }
+    } else {
+      const at = ids.indexOf(s.id);
+      pool = ids.slice(at + 1);
+      if (wrap) pool = pool.concat(ids.slice(0, Math.max(at, 0)));
+    }
+    if (this.catShuffle) pool = shuffled(pool);
+    for (const id of pool) {
+      if (!(await this._categoryHasTracks(kind, id))) { seen.add(id); continue; }
+      await this._commitPlay();
+      await this.playSource(kind, id, { shuffle: this.shuffle });
+      this._seen = seen; this._catKind = kind;
+      return true;
+    }
+    this._seen = null;
+    return false;
+  }
+
   async setRepeat(r) { this.repeat = r; await setSetting('music.repeat', r); this.engine.clearNext(); this._preloadSoon(); this._emit('state'); }
   cycleRepeat() { return this.setRepeat({ off: 'all', all: 'one', one: 'off' }[this.repeat]); }
 

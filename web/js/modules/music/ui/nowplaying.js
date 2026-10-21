@@ -132,16 +132,25 @@ function holdMenu(btn, open, tap) {
 function repeatMenu(anchor) {
   const r = player.repeat;
   menu(anchor, [
-    { icon: 'repeat-one', label: 'Phát một bài rồi dừng', on: r === 'stop1', act: () => player.setRepeat('stop1') },
-    { icon: 'queue', label: 'Phát hàng chờ rồi dừng', on: r === 'off', act: () => player.setRepeat('off') },
-    { icon: 'repeat-one', label: 'Lặp lại một bài', on: r === 'one', act: () => player.setRepeat('one') },
-    { icon: 'repeat', label: 'Lặp lại hàng chờ', on: r === 'all', act: () => player.setRepeat('all') },
+    { icon: 'repeat-one', label: 'Phát một bài hát', hint: 'Phát bài hiện tại rồi dừng', on: r === 'stop1', act: () => player.setRepeat('stop1') },
+    { icon: 'queue', label: 'Phát danh mục', hint: 'Phát danh mục hiện tại rồi dừng', on: r === 'off', act: () => player.setRepeat('off') },
+    { icon: 'list', label: 'Phát tất cả danh mục', hint: 'Phát lần lượt tất cả danh mục rồi dừng', on: r === 'allcats', act: () => player.setRepeat('allcats') },
+    { icon: 'repeat-one', label: 'Lặp lại bài hát', hint: 'Phát bài hiện tại và lặp lại', on: r === 'one', act: () => player.setRepeat('one') },
+    { icon: 'repeat', label: 'Lặp lại danh mục', hint: 'Phát danh mục hiện tại và lặp lại', on: r === 'all', act: () => player.setRepeat('all') },
+    { icon: 'list', label: 'Lặp lại tất cả danh mục', hint: 'Phát lần lượt tất cả danh mục và lặp lại', on: r === 'repeatcats', act: () => player.setRepeat('repeatcats') },
   ], { title: 'Lặp lại' });
 }
 function shuffleMenu(anchor) {
+  const sg = player.shuffle, cg = player.catShuffle;
+  const set = (songs, cats) => async () => { if (player.shuffle !== songs) player.setShuffle(songs); await player.setCatShuffle(cats); };
   menu(anchor, [
-    { icon: 'shuffle', label: 'Tắt trộn bài', on: !player.shuffle, act: () => player.setShuffle(false) },
-    { icon: 'shuffle', label: 'Trộn tất cả bài trong hàng chờ', on: player.shuffle, act: () => player.setShuffle(true) },
+    { icon: 'shuffle', label: 'Tắt ngẫu nhiên', on: !sg && !cg, act: set(false, false) },
+    { icon: 'shuffle', label: 'Xáo trộn tất cả', hint: 'Trộn tất cả các bài hát có sẵn', act: () => player.shuffleAll() },
+    { icon: 'shuffle', label: 'Trộn bài hát', hint: 'Danh mục vẫn theo thứ tự', on: sg && !cg, act: set(true, false) },
+    { icon: 'shuffle', label: 'Danh mục ngẫu nhiên', hint: 'Bài hát vẫn theo thứ tự', on: !sg && cg, act: set(false, true) },
+    { icon: 'shuffle', label: 'Ngẫu nhiên bài hát/danh mục', on: sg && cg, act: set(true, true) },
+    '-',
+    { icon: 'settings', label: 'Cài đặt', act: () => import('./customize.js').then(m => m.customizeSheet(() => {})) },
   ], { title: 'Trộn bài' });
 }
 
