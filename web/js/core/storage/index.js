@@ -124,6 +124,8 @@ function anySignal(list) {
   return c.signal;
 }
 
+// Roles that are never uploaded to a cloud drive (see _syncFiles).
+const DEVICE_ONLY_ROLES = new Set(['cover', 'thumb']);
 export const storage = {
   adapters: { local },
   taskId: null,          // id of the running sync task (the account page mirrors its progress)
@@ -339,7 +341,8 @@ export const storage = {
   async _syncFiles() {
     const mode = activeMode, d = drives[mode];
     if (!d?.files || !d.connected() || !navigator.onLine) return { skipped: true };
-    const todo = (await db.files.toArray()).filter(f => f.locations?.local && !f.locations[mode] && !f.deleted && f.size >= 0);
+    // Derived images (album cover, thumbnail) stay on this device: they are not uploaded to the drive's app folder.
+    const todo = (await db.files.toArray()).filter(f => f.locations?.local && !f.locations[mode] && !f.deleted && f.size >= 0 && !DEVICE_ONLY_ROLES.has(f.role));
     if (!todo.length) return { uploaded: 0 };
     const total = todo.reduce((a, f) => a + (f.size || 0), 0);
     const task = tasks.start({ label: 'Tải tệp lên ' + d.label, detail: `${todo.length} tệp`, total: Math.max(1, total), unit: 'bytes', cancellable: true, delay: 600 });
