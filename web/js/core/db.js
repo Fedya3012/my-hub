@@ -83,6 +83,29 @@ db.version(3).stores({
   lyrics: 'itemId, updatedAt',
 });
 
+// Version 4: Books module (docs/BOOKS.md). Books stay in `items` (type 'book', moduleId 'books') so
+// the Library lists, filters and counts them; the book-specific detail lives here.
+//   books:       one row per book item (key = itemId): authors, series + index, ISBN, format, pages,
+//                language, reading status (want|reading|finished|dnf|onhold), half-star rating,
+//                review, moods/pace/content warnings, shelf ids, dates, DNF reason, physical (paper) flag.
+//   authors / series: ids derived from the normalised name, so two devices importing the same
+//                book produce one row (same idea as music albums/artists).
+//   annotations: highlights, underlines, notes and bookmarks (kind), with the reader location
+//                (EPUB CFI / PDF page) and colour; synced, soft-deleted.
+//   readingSessions: one row per reading session (start, end, active seconds, pages / percent read,
+//                words, device) -> timer, WPM, heatmap, streaks and every statistic.
+//   readingGoals: yearly / monthly goals and challenges (books, pages, hours, optionally a saved search).
+// Shelves, smart shelves (saved searches) and virtual libraries reuse `collections`
+// (kind 'book-shelf' | 'book-smart' | 'book-library'); a book lists its shelves in books.shelfIds.
+db.version(4).stores({
+  books: 'itemId, *authorIds, seriesId, status, rating, format, isbn, language, physical, *shelfIds, *genres, addedAt, startedAt, finishedAt, updatedAt, deleted',
+  authors: 'id, name, updatedAt, deleted',
+  series: 'id, name, updatedAt, deleted',
+  annotations: 'id, itemId, kind, color, createdAt, updatedAt, deleted',
+  readingSessions: 'id, itemId, start, deviceId, updatedAt',
+  readingGoals: 'id, year, updatedAt',
+});
+
 export const uid = () =>
   (crypto.randomUUID ? crypto.randomUUID() : 'id-' + Date.now().toString(36) + Math.random().toString(36).slice(2));
 
@@ -90,7 +113,8 @@ export const now = () => Date.now();
 
 // Tables whose changes are synced to GitHub. activity (high volume) and modules
 // (installed code versions differ per device) stay local.
-export const SYNCED_TABLES = ['items', 'files', 'links', 'collections', 'themes', 'tracks', 'albums', 'artists', 'plays', 'eqPresets', 'lyrics'];
+export const SYNCED_TABLES = ['items', 'files', 'links', 'collections', 'themes', 'tracks', 'albums', 'artists', 'plays', 'eqPresets', 'lyrics',
+  'books', 'authors', 'series', 'annotations', 'readingSessions', 'readingGoals'];
 // Small, frequently changing tables synced on the fast "live" channel (hub-live.json).
 // They stamp their own updatedAt/deviceId, so they skip the hooks below.
 export const LIVE_TABLES = ['progress', 'devices'];
@@ -175,7 +199,8 @@ export async function relatedItems(itemId) {
 // Full backup as plain JSON (blobs excluded — they are files, not data).
 export async function exportAll({ includeActivity = true } = {}) {
   const tables = ['items', 'files', 'links', 'collections', 'modules', 'settings', 'themes', 'progress', 'devices',
-    'tracks', 'albums', 'artists', 'plays', 'eqPresets', 'lyrics'];
+    'tracks', 'albums', 'artists', 'plays', 'eqPresets', 'lyrics',
+    'books', 'authors', 'series', 'annotations', 'readingSessions', 'readingGoals'];
   if (includeActivity) tables.push('activity');
   const data = {};
   for (const t of tables) data[t] = await db.table(t).toArray();

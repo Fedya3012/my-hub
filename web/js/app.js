@@ -186,7 +186,8 @@ async function boot() {
   bus.on('item:open', async ({ item, unhandled }) => {
     if (unhandled) return;
     const ownerId = item.moduleId;
-    if (await isEnabled(ownerId)) go(byId(ownerId).route);
+    // manifest.openRoute(item) lets a module open the item itself (Books: '#books/read/<id>').
+    if (await isEnabled(ownerId)) go(byId(ownerId).openRoute?.(item) || byId(ownerId).route);
     else toast('Chưa có module để mở loại nội dung này. Xem Quản lý ứng dụng.', 'warn');
   });
 
