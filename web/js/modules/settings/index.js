@@ -28,26 +28,56 @@ let paramsOff = null;
 // Sub page: Settings → Thư mục đồng bộ (its own page with a back link).
 async function renderFolders() {
   const st = await ctx.storage.status();
-  root.innerHTML = `<section class="page" style="max-width:720px;margin:0 auto">
-    <div class="row-actions" style="margin-bottom:6px"><a class="btn small" href="#/settings" aria-label="Quay lại Cài đặt">‹ Cài đặt</a></div>
-    <h2 class="section-title">Thư mục đồng bộ</h2>
-    <p class="hint">Chọn một hoặc nhiều thư mục trên ổ. Nhạc và sách trong đó (kể cả thư mục con) hiện trong thư viện và phát trực tiếp từ ổ, không sao chép vào app.</p>
+  const card = 'background:#fff;border:1px solid #e3e8ea;border-radius:14px';
+  const btn = 'min-height:44px;padding:0 18px;border-radius:12px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer';
+  const label = isDrive(st.mode) ? MODES[st.mode].label : '';
+  root.innerHTML = `<section class="page" style="max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:14px">
+    <div><a class="btn small" href="#settings" aria-label="Quay lại Cài đặt">‹ Cài đặt</a></div>
+    <h2 class="section-title" style="margin:0">Thư mục đồng bộ</h2>
+    ${isDrive(st.mode) ? `<div style="${card};display:flex;flex-direction:row;align-items:center;gap:12px;padding:14px">
+      <span style="width:40px;height:40px;border-radius:10px;background:#e3f1f2;display:flex;align-items:center;justify-content:center;flex:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0f5f66" stroke-width="1.8" aria-hidden="true"><path d="M7 18a4 4 0 0 1-.6-7.96A5.5 5.5 0 0 1 17 9a4.5 4.5 0 0 1 .5 9z"/></svg></span>
+      <span style="flex:1 1 140px;min-width:0"><span style="display:block;font-size:15px;font-weight:600">${esc(label)}</span><span style="display:block;font-size:12px;color:#2e7d32">${st.cloud.connected ? 'Đã kết nối' : 'Chưa kết nối'}${st.lastSync ? ' · đồng bộ lần cuối ' + esc(fmtAgo(st.lastSync)) : ''}</span></span>
+      <button type="button" data-act="sync-now" style="${btn};padding:0 14px;flex:none;border:0;background:#0f7f88;color:#fff">Đồng bộ ngay</button></div>` : ''}
+    <p class="hint" style="margin:0">Tích chọn một hoặc nhiều thư mục trên ổ. Nhạc và sách bên trong được quét, nhập vào thư viện và phát trực tiếp từ ổ, không sao chép vào app. Tệp mới tự cập nhật mỗi lần đồng bộ.</p>
     <div id="folder-picker"></div>
-    <div class="row-actions" style="margin-top:12px"><button class="btn primary" data-act="sync-now">Đồng bộ ngay</button></div>
+    <div id="fold-progress" style="${card};padding:14px;display:flex;flex-direction:column;gap:10px"></div>
+    <div style="display:flex;flex-direction:row;flex-wrap:wrap;gap:10px">
+      <button type="button" data-act="clean" style="flex:1 1 160px;${btn};border:1px solid #cdd7da;background:#fff;color:inherit">Dọn mục đã mất tệp</button>
+      <button type="button" data-act="sync-now" style="flex:1 1 160px;${btn};border:0;background:#0f7f88;color:#fff">Đồng bộ ngay</button>
+    </div>
   </section>`;
   const m = await import('../../core/storage/folder-ui.js');
-  if (isDrive(st.mode)) await m.folderPicker(root.querySelector('#folder-picker'), st.mode, ctx.toast);
-  else root.querySelector('#folder-picker').innerHTML = '<p class="hint">Hãy kết nối Dropbox hoặc OneDrive trong Cài đặt trước.</p>';
-  root.querySelector('[data-act="sync-now"]').onclick = async (e) => {
-    const b = e.currentTarget; b.disabled = true;
-    try {
-      const fr = await (await import('../../core/storage/folders.js')).syncFolders();
-      if (fr?.added) ctx.toast(`Đã nhập ${fr.added} tệp từ thư mục đã chọn`);
-      if (fr?.missing?.length) ctx.toast(`Thư mục không còn trên ổ: ${fr.missing.join(', ')}. Hãy bỏ chọn hoặc chọn lại thư mục.`, 'warn');
-      if (fr?.removed) ctx.toast(`Đã xoá ${fr.removed} mục có tệp gốc không còn`);
-    } catch (err) { ctx.toast(err.message, 'error'); }
-    finally { b.disabled = false; }
+  const pick = root.querySelector('#folder-picker');
+  if (isDrive(st.mode)) await m.folderPicker(pick, st.mode, ctx.toast);
+  else pick.innerHTML = '<p class="hint">Hãy kết nối Dropbox hoặc OneDrive trong Cài đặt trước.</p>';
+
+  // Live progress card: the scan / import task of the folder sync (also visible in the task tray).
+  const prog = root.querySelector('#fold-progress');
+  const idle = async () => { const n = (await (await import('../../core/storage/folders.js')).folderList()).length; prog.innerHTML = `<div style="font-size:13px;color:#5b6b70">${n ? 'Đã chọn ' + n + ' thư mục. Bấm “Đồng bộ ngay” để quét và nhập tệp mới.' : 'Chưa chọn thư mục nào.'}</div>`; };
+  const show = (list) => {
+    const t = (list || []).find(x => x.state === 'running' && /^Đang (quét|nhập|dọn)/.test(x.label));
+    if (!t) { idle(); return; }
+    const pct = t.total ? Math.min(100, Math.round(t.done / t.total * 100)) : null;
+    prog.innerHTML = `<div style="display:flex;justify-content:space-between;font-size:14px"><span style="font-weight:600">${esc(t.label)}</span><span style="color:#5b6b70">${t.total ? t.done + ' / ' + t.total : ''}</span></div>
+      <div style="height:8px;border-radius:99px;background:#e3e8ea;overflow:hidden"><div style="width:${pct == null ? 40 : pct}%;height:100%;background:#0f7f88"></div></div>
+      <div style="font-size:12px;color:#5b6b70">${esc(t.detail || '')}${pct != null ? ' · ' + pct + '%' : ''}</div>`;
   };
+  idle();
+  offs.push(ctx.bus.on('tasks:changed', show));
+
+  const run = async (b, fn) => { b.disabled = true; try { await fn(); } catch (err) { ctx.toast(err.message, 'error'); } finally { b.disabled = false; } };
+  root.querySelectorAll('[data-act="sync-now"]').forEach(b => b.onclick = () => run(b, async () => {
+    const fr = await (await import('../../core/storage/folders.js')).syncFolders();
+    if (fr?.added) ctx.toast(`Đã nhập ${fr.added} tệp từ thư mục đã chọn`);
+    if (fr?.missing?.length) ctx.toast(`Thư mục không còn trên ổ: ${fr.missing.join(', ')}. Hãy bỏ chọn hoặc chọn lại thư mục.`, 'warn');
+    if (fr?.removed) ctx.toast(`Đã xoá ${fr.removed} mục có tệp gốc không còn`);
+    if (fr && !fr.added && !fr.removed && !fr.skipped) ctx.toast('Đã đồng bộ, không có tệp mới');
+  }));
+  root.querySelector('[data-act="clean"]').onclick = (e) => run(e.currentTarget, async () => {
+    if (!(await confirmBox('Dọn mục đã mất tệp?', 'Xoá khỏi thư viện những mục mà tệp gốc đã bị xoá (trong thư mục đồng bộ hoặc trong máy). Tệp còn tồn tại không bị đụng tới.', 'Dọn'))) return;
+    const r = await (await import('../../core/storage/cleanup.js')).cleanMissing('library');
+    ctx.toast(r.removed ? `Đã xoá ${r.removed} mục mất tệp` : 'Không có mục nào mất tệp');
+  });
 }
 
 async function render() {
