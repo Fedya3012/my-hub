@@ -62,7 +62,7 @@ function createWindow() {
   win.loadURL(`http://localhost:${PORT}/#library`);
 }
 
-// Cloud drives (WebDAV, FileJump): WebDAV servers rarely send CORS headers, so the page asks the main
+// Cloud drives (WebDAV, Filen, OneDrive token): WebDAV servers rarely send CORS headers, so the page asks the main
 // process to make the request (no CORS there). Only http(s) and only the methods the app uses.
 function setupHttp() {
   ipcMain.handle('hub:http', async (_e, { url, method = 'GET', headers = {}, body = null }) => {

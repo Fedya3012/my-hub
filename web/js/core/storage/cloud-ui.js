@@ -1,11 +1,12 @@
-// Connecting a cloud drive (Dropbox, WebDAV, FileJump): the sign-in dialogs and what happens to this
+// Connecting a cloud drive (Dropbox, OneDrive, WebDAV, Filen): the sign-in dialogs and what happens to this
 // device's library (merge / use the drive's copy), then the first sync. Used by Settings.
 import { storage, drives } from './index.js';
 import { PRESETS, normUrl } from './webdav.js';
 import { startAuth, finishAuth } from './dropbox.js';
+import * as od from './onedrive.js';
 import { getCloud, clouds } from './clouds.js';
 import { nativeShell } from './http.js';
-import { DROPBOX_APP_KEY } from '../../config.js';
+import { DROPBOX_APP_KEY, ONEDRIVE_CLIENT_ID } from '../../config.js';
 import { formDialog } from '../account-ui.js';
 import { setSetting } from '../db.js';
 import { esc, modal, confirmBox, toast } from '../ui.js';
@@ -16,7 +17,7 @@ async function webdavDialog(id) {
     title: 'Kết nối ' + p.label,
     intro: `${esc(p.hint)} Tạo sẵn một <b>thư mục</b> trên máy chủ (ví dụ <code>MyHub</code>) rồi dán địa chỉ của thư mục đó. Nhiều dịch vụ yêu cầu <b>mật khẩu ứng dụng</b> thay vì mật khẩu thường. Mật khẩu chỉ lưu trên máy này.${p.help ? ` <a href="${p.help}" target="_blank" rel="noopener">Hướng dẫn WebDAV của ${esc(p.label)}</a>.` : ''}${nativeShell() ? '' : '<br><b>Trình duyệt</b> chỉ kết nối được nếu máy chủ bật CORS; app Windows và Android thì không bị giới hạn này.'}`,
     fields: [
-      { name: 'url', label: 'Địa chỉ thư mục (https://…)', value: cur.url || '', placeholder: p.urlHint, autocomplete: 'off' },
+      { name: 'url', label: 'Địa chỉ thư mục (https://…)', value: cur.url || p.defaultUrl || '', placeholder: p.urlHint, autocomplete: 'off' },
       { name: 'user', label: 'Tên đăng nhập', value: cur.user || '', autocomplete: 'username' },
       { name: 'pass', label: 'Mật khẩu', type: 'password', autocomplete: 'current-password' },
     ],
@@ -61,7 +62,37 @@ async function dropboxDialog() {
   });
 }
 
-export const connectForm = (mode) => mode === 'dropbox' ? dropboxDialog() : webdavDialog(mode);
+async function onedriveDialog() {
+  const cur = getCloud('onedrive') || {};
+  let auth = null;
+  return formDialog({
+    title: 'Kết nối OneDrive',
+    intro: `1) Nhập <b>Client ID</b> của app Microsoft (cách tạo trong docs/STORAGE.md: khoảng 5 phút, miễn phí). 2) Bấm <b>Mở Microsoft để cấp quyền</b> và cho phép. 3) Trình duyệt chuyển sang một trang trắng: <b>sao chép toàn bộ địa chỉ</b> của trang đó (có đoạn <code>?code=…</code>) và dán vào ô bên dưới. App chỉ thấy thư mục riêng <code>Apps/…</code> của nó.${nativeShell() ? '' : '<br><b>Trình duyệt</b> có thể bị Microsoft chặn bước đổi mã (CORS); app Windows và Android thì không.'}`,
+    fields: [
+      { name: 'clientId', label: 'Client ID', value: cur.clientId || ONEDRIVE_CLIENT_ID, autocomplete: 'off' },
+      { name: 'code', label: 'Địa chỉ trang trắng (hoặc mã)', autocomplete: 'off', placeholder: 'https://login.microsoftonline.com/common/oauth2/nativeclient?code=…' },
+    ],
+    extra: '<button type="button" class="btn" data-open>Mở Microsoft để cấp quyền</button>',
+    submit: 'Kết nối',
+    onRender: (form) => {
+      form.querySelector('[data-open]').onclick = async () => {
+        const key = form.elements.clientId.value.trim();
+        if (!key) { toast('Nhập Client ID trước', 'warn'); return; }
+        auth = await od.startAuth(key);
+        window.open(auth.url, '_blank', 'noopener');
+      };
+    },
+    onSubmit: async (v) => {
+      if (!navigator.onLine) throw new Error('Đang offline: cần có mạng để kết nối.');
+      if (!auth) throw new Error('Bấm “Mở Microsoft để cấp quyền” trước, rồi dán địa chỉ trang trắng vào đây.');
+      if (!v.code.trim()) throw new Error('Dán địa chỉ trang trắng vào ô bên trên.');
+      await od.finishAuth(v.clientId.trim(), v.code, auth.verifier);
+      await drives.onedrive.readSnapshot('hub-live.json');   // proves the token and the app folder work
+    },
+  });
+}
+
+export const connectForm = (mode) => mode === 'dropbox' ? dropboxDialog() : mode === 'onedrive' ? onedriveDialog() : webdavDialog(mode);
 
 // Turn a drive on: connect if needed, ask what to do with this device's library when the drive already
 // holds one, switch the mode and run the first sync (progress in the task tray, then the file upload).

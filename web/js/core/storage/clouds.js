@@ -1,7 +1,8 @@
-// Connection settings of the cloud drives (WebDAV / FileJump, Dropbox): kept in localStorage on this
+// Connection settings of the cloud drives (WebDAV / Filen, Dropbox, OneDrive): kept in localStorage on this
 // device only, never in the JSON backup (they hold passwords and tokens). Shape per provider:
-//   webdav / filejump : { url, user, pass }
+//   webdav / filen    : { url, user, pass }
 //   dropbox           : { appKey, access, refresh, expires }
+//   onedrive          : { clientId, access, refresh, expires }
 const KEY = 'myhub.clouds';
 const read = () => { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch { return {}; } };
 export const clouds = {

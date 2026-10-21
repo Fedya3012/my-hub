@@ -50,8 +50,8 @@ async function render() {
             <strong>${m.label}</strong><span>${m.hint}</span></label>`).join('')}
       </div>
 
-      <p class="hint">Chọn một ô ở trên để kết nối: <b>Dropbox</b>, <b>WebDAV</b> và <b>FileJump</b> sẽ mở hộp đăng nhập. Đang dùng chế độ này rồi thì bấm “Đổi tài khoản” ở dưới.</p>
-      <div class="row-actions" style="flex-wrap:wrap">${['dropbox', 'webdav', 'filejump'].map(k => `<button class="btn ${st.mode === k ? 'primary' : ''}" data-connect="${k}">${icon('cloud')}${st.mode === k ? MODES[k].label + ' · đổi tài khoản' : 'Kết nối ' + MODES[k].label}</button>`).join('')}</div>
+      <p class="hint">Chọn một ô ở trên để kết nối: <b>Dropbox</b>, <b>OneDrive</b>, <b>WebDAV</b> và <b>Filen</b> sẽ mở hộp đăng nhập. Đang dùng chế độ này rồi thì bấm “Đổi tài khoản” ở dưới.</p>
+      <div class="row-actions" style="flex-wrap:wrap">${['dropbox', 'onedrive', 'webdav', 'filen'].map(k => `<button class="btn ${st.mode === k ? 'primary' : ''}" data-connect="${k}">${icon('cloud')}${st.mode === k ? MODES[k].label + ' · đổi tài khoản' : 'Kết nối ' + MODES[k].label}</button>`).join('')}</div>
       <div class="panel">
         <dl class="kv">
           <dt>Lưu tệp trên máy bằng</dt><dd>${st.backend === 'opfs' ? 'Hệ thống tệp riêng của ứng dụng (OPFS)' : 'IndexedDB'}</dd>
@@ -129,7 +129,7 @@ async function render() {
   const on = (act, fn) => root.querySelector(`[data-act="${act}"]`)?.addEventListener('click', fn);
 
   root.querySelectorAll('input[name="storage-mode"]').forEach(r => r.onchange = async () => {
-    if (isDrive(r.value)) {   // Dropbox / WebDAV / FileJump: connect, then asks what to do with this device's data
+    if (isDrive(r.value)) {   // Dropbox / OneDrive / WebDAV / Filen: connect, then asks what to do with this device's data
       const { useDrive } = await import('../../core/storage/cloud-ui.js');
       await useDrive(r.value); render();
       return;

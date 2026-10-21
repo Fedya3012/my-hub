@@ -31,11 +31,11 @@ export function avatar(u = account.user, cls = '') {
   return `<span class="acct-avatar ${cls}" aria-hidden="true">${esc(ch)}${img}</span>`;
 }
 
-const MODE_LABEL = { local: 'Trên máy', github: 'Tài khoản GitHub', dropbox: 'Dropbox', webdav: 'WebDAV', filejump: 'FileJump' };
+const MODE_LABEL = { local: 'Trên máy', github: 'Tài khoản GitHub', dropbox: 'Dropbox', webdav: 'WebDAV', onedrive: 'OneDrive', filen: 'Filen' };
 
 // Sidebar footer badge. s = storage.status(). Always links to the account page.
 export function badge(s) {
-  if (s.cloud?.drive) {   // Dropbox / WebDAV / FileJump
+  if (s.cloud?.drive) {   // Dropbox / OneDrive / WebDAV / Filen
     const state = !s.cloud.connected ? 'Bấm để kết nối lại' : !navigator.onLine ? 'Offline · đồng bộ khi có mạng' : s.pending ? `${s.pending} chờ đồng bộ` : 'Đã đồng bộ';
     return { href: '#settings', title: `${MODE_LABEL[s.mode]} · ${state}`, html: `${icon('cloud')}<span class="acct-badge-t"><b>${esc(MODE_LABEL[s.mode])}</b><small>${esc(state)}</small></span>` };
   }
@@ -64,7 +64,7 @@ export function accountSummary() {
   if (account.signedIn) {
     body = `${avatar(account.user, 'md')}<span class="acct-sum-t"><strong>${esc(account.displayName())}</strong><span class="muted">${esc(account.email)}${account.needsReconnect ? ' · cần kết nối lại' : ''}</span></span>`;
   } else {
-    body = `<span class="mod-icon">${icon('user')}</span><span class="acct-sum-t"><strong>Đăng nhập để đồng bộ</strong><span class="muted">Bằng GitHub (dán token), hoặc kết nối Dropbox, WebDAV, FileJump (đồng bộ cả tệp nhạc/sách).</span></span>`;
+    body = `<span class="mod-icon">${icon('user')}</span><span class="acct-sum-t"><strong>Đăng nhập để đồng bộ</strong><span class="muted">Bằng GitHub (dán token), hoặc kết nối Dropbox, OneDrive, WebDAV, Filen (đồng bộ cả tệp nhạc/sách).</span></span>`;
   }
   return `<section class="set-block" id="set-account">
       <h2 class="section-title">${icon('user')}${account.signedIn ? 'Tài khoản GitHub' : 'Tài khoản'}</h2>
