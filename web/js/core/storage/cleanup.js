@@ -50,3 +50,14 @@ export async function cleanMissing(moduleId) {
   } catch (e) { t.fail(e); throw e; }
   return { removed };
 }
+
+// The button action shared by every app: confirm, clean, report. moduleId 'library' = everything.
+export async function cleanDataAction(moduleId, appName) {
+  const { confirmBox, toast } = await import('../ui.js');
+  if (!(await confirmBox(`Dọn dữ liệu ${appName}?`, 'Xoá khỏi thư viện những mục đã mất tệp gốc (tệp trong máy hoặc thư mục đồng bộ đã bị xoá). Tệp còn tồn tại không bị đụng tới.', 'Dọn'))) return null;
+  try {
+    const r = await cleanMissing(moduleId);
+    toast(r.removed ? `Đã xoá ${r.removed} mục mất tệp` : 'Không có mục nào mất tệp');
+    return r;
+  } catch (e) { toast(e.message, 'error'); return null; }
+}

@@ -80,6 +80,7 @@ async function render() {
       <div class="mlib-actions">
         <label class="search mlib-search">${icon('search')}<input type="search" placeholder="Tìm bài, album, nghệ sĩ…" value="${esc(search)}" aria-label="Tìm trong nhạc"></label>
         <button class="btn primary" data-act="add">${icon('plus')}<span>Thêm nhạc</span></button>
+        <button class="icon-btn" data-act="clean" aria-label="Dọn dữ liệu Nhạc" title="Dọn dữ liệu Nhạc: xoá bài đã mất tệp gốc">${icon('refresh')}</button>
         <button class="icon-btn" data-act="custom" aria-label="Tuỳ chỉnh">${icon('settings')}</button>
       </div>
     </header>
@@ -89,6 +90,7 @@ async function render() {
   document.body.classList.add('m-has-bottom');
   const c = root.querySelector('.mcontent');
   root.querySelector('[data-act="add"]').onclick = (e) => addMenu(e.currentTarget);
+  root.querySelector('[data-act="clean"]').onclick = async () => { const m = await import('../../core/storage/cleanup.js'); if ((await m.cleanDataAction('music', 'Nhạc'))?.removed) render(); };
   root.querySelector('[data-act="custom"]').onclick = () => import('./ui/customize.js').then(m => m.customizeSheet(() => render()));
   const si = root.querySelector('.mlib-search input');
   si.oninput = debounce(() => { search = si.value.trim(); cleanups.forEach(f => f()); cleanups = []; renderBody(c, L, tab, head, arg); }, 180);

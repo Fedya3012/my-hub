@@ -33,10 +33,14 @@ export async function render(el, { ctx, snap }) {
     <section class="bk-panel"><h2 class="section-title">${icon('b-folder')}Sắp xếp tên tệp theo thông tin</h2>
       <p class="muted">Xem trước rồi đổi tên tệp thành “Tác giả/Bộ sách/Tập - Tên.đuôi” (dùng khi tải tệp về máy).</p>
       <button class="btn" data-a="organize">${icon('list')}Xem trước</button></section>
+    <section class="bk-panel"><h2 class="section-title">${icon('refresh')}Dọn dữ liệu Sách</h2>
+      <p class="muted">Xoá khỏi thư viện những sách đã mất tệp gốc (tệp trong máy hoặc thư mục đồng bộ đã bị xoá). Sách giấy và sách còn tệp không bị đụng tới.</p>
+      <button class="btn" data-a="clean">${icon('refresh')}Dọn dữ liệu Sách</button></section>
     <section class="bk-panel"><h2 class="section-title">${icon('cloud')}Đồng bộ</h2>
       <p class="muted">Thông tin sách, trạng thái, đánh giá, nhận xét, đánh dấu, ghi chú, phiên đọc, mục tiêu và tiến độ đọc đồng bộ giữa các máy qua GitHub (Cài đặt → Lưu trữ). Tệp sách ở lại trên từng máy: thêm tệp trên máy kia, app tự ghép với sách đã có nếu cùng tên và dung lượng.</p>
       <p class="hint">Google Drive đã được gỡ khỏi app ở bản 0.8.0.0. Đồng bộ cả tệp sách qua mây (Google Drive, Dropbox, OneDrive, WebDAV) là việc của giai đoạn 2.</p></section>
   </div>`;
+  el.querySelector('[data-a="clean"]')?.addEventListener('click', async () => (await import('../../../core/storage/cleanup.js')).cleanDataAction('books', 'Sách'));
   const on = (a, fn) => el.querySelector(`[data-a="${a}"]`)?.addEventListener('click', fn);
   on('files', async () => imp.importFiles(await imp.pickFiles()));
   on('folder', async () => imp.importFiles(await imp.pickFiles({ folder: true })));

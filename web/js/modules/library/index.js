@@ -51,6 +51,7 @@ export async function mount(el, context) {
         <div class="head-actions">
           <label class="btn" title="Nhập tệp nhạc, sách, video, ảnh…">${icon('upload')}<span>Nhập tệp</span>
             <input type="file" id="lib-import" multiple hidden></label>
+          <button class="btn" data-act="clean" title="Xoá các mục đã mất tệp gốc">${icon('refresh')}<span>Dọn dữ liệu Thư viện</span></button>
           <button class="btn primary" data-act="add">${icon('plus')}<span>Thêm mục</span></button>
         </div>
       </header>
@@ -86,6 +87,7 @@ export async function mount(el, context) {
   root.querySelectorAll('[data-layout]').forEach(b => b.onclick = () => { state.layout = b.dataset.layout; savePrefs(state); renderResults(); });
   $('#lib-import').onchange = (e) => importFiles([...e.target.files]);
   root.querySelector('[data-act="add"]').onclick = addManual;
+  root.querySelector('[data-act="clean"]').onclick = async () => (await import('../../core/storage/cleanup.js')).cleanDataAction('library', 'Thư viện');
 
   const onKey = (e) => {
     if (e.key === '/' && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) { e.preventDefault(); $('#lib-q').focus(); }
