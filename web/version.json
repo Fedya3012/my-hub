@@ -1,7 +1,17 @@
 {
-  "app": "0.9.6.4",
+  "app": "0.9.6.5",
   "released": "2026-10-21",
   "changelog": [
+    {
+      "version": "0.9.6.5",
+      "date": "2026-10-21",
+      "notes": [
+        "Ảnh bìa và ảnh thu nhỏ do app tạo chỉ lưu trên máy, không còn tải lên Dropbox/OneDrive; các file đã tải lên trước đó được xoá khi đồng bộ",
+        "Mỗi máy tự tạo lại ảnh bìa album từ thẻ của tệp nhạc khi thiếu",
+        "Tự ẩn thanh tab: cài đặt theo từng app; chọn tệp trong máy cho chế độ Chỉ trên máy này (Windows/web đọc trực tiếp; Android dùng plugin đọc thư mục gốc)",
+        "Đồng bộ thư mục: bỏ qua tệp đã nhập theo đường dẫn và dung lượng"
+      ]
+    },
     {
       "version": "0.9.6.4",
       "date": "2026-10-21",
