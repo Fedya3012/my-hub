@@ -681,8 +681,8 @@ async function playlistPage(c, L, id) {
   const dur = list.reduce((s, t) => s + (t.duration || 0), 0);
   const cover = builtin ? L.smartCover(builtin) : pl.cover;
   const body = await hero(c, { cover, kicker: pl.kind === 'smart' ? 'Danh sách thông minh' : 'Danh sách phát', title: pl.name,
-    sub: esc(pl.description || (pl.kind === 'smart' ? describeRules(pl.rules) : '')), meta: `${list.length} bài · ${fmtTotal(dur)}`,
-    actions: heroActs(builtin ? '' : `<button class="btn" data-link>${icon('link')}Gắn vào…</button>`) });
+    sub: esc(pl.description || (pl.kind === 'smart' ? describeRules(pl.rules) : '')), meta: `${list.length} bài · ${fmtTotal(dur)}`, cls: 'is-album is-list',
+    actions: heroActs(builtin ? '' : `<button class="btn" data-link aria-label="Gắn vào">${icon('link')}<span class="lbl">Gắn vào…</span></button>`) });
   const targets = builtin ? [] : await store.targetsOf(pl.id);
   const sortable = pl.kind === 'playlist' && key === 'order' && !prefs().desc.playlistTracks;
   body.innerHTML = `${linkedTo(targets)}

@@ -861,3 +861,12 @@ body.mnp-open { overflow: hidden; }
 /* Keep the fixed bars pinned to the compositor and stop rubber-band stretching of the page. */
 html, body { overscroll-behavior: none; }
 @media (max-width: 860px) { .mbottom, .mdock { will-change: transform; backface-visibility: hidden; } }
+
+/* Phone: playlist page = same light layout, cover centred, text centred. */
+@media (max-width: 640px) {
+  .mhero.is-list { align-items: center; text-align: center; padding-top: 56px; }
+  .mhero.is-list .mart.hero { width: min(60vw, 240px); margin: 0; border-radius: 16px; }
+  .mhero.is-list .mhero-act, .mhero.is-list .mhero-meta { justify-content: center; }
+  .mhero.is-list .mhero-act .icon-btn { margin-left: 0; }
+  .mhero.is-list .mhero-back { top: calc(10px + var(--sai-top, 0px)); left: 10px; background: none; color: var(--fg); }
+}
