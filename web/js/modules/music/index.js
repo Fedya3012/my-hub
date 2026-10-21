@@ -373,21 +373,37 @@ function albumsHtml(list, key, def = 'year') {
   const sorted = sortList(list, key, sortKey(key, ALBUM_SORTS, def));
   return { sorted, html: toolbar(key, { sorts: ALBUM_SORTS, filters: false, def }) + `<div class="mgrid">${sorted.map(a => card('album', a, `${a.year || ''}${a.year && a.artist ? ' · ' : ''}${esc(a.artist || '')}`)).join('')}</div>` };
 }
+const homeStatsMemo = new WeakMap();
+function homeStats(L) {
+  let r = homeStatsMemo.get(L);
+  if (r) return r;
+  const tracks = [...L.tracks.values()];
+  let dur = 0, hires = 0;
+  const fmt = new Map(), fav = [];
+  for (const t of tracks) {
+    dur += t.duration || 0;
+    if (t.hiResNow) hires++;
+    if (t.favorite && fav.length < 12) fav.push(t);
+    const k = t.tech?.codecLabel?.replace(/DSD\d+/, 'DSD') || 'Không tệp';
+    fmt.set(k, (fmt.get(k) || 0) + 1);
+  }
+  r = { tracks, dur, hires, fav, fmts: [...fmt].sort((a, b) => b[1] - a[1]), albums: [...L.albums.values()].sort((a, b) => b.addedAt - a.addedAt) };
+  homeStatsMemo.set(L, r);
+  return r;
+}
 // ── Tabs ────────────────────────────────────────────────────────
 const VIEWS = {
   async new(c, L) { return newPage(c, L); },
   async home(c, L) {
-    const tracks = [...L.tracks.values()];
-    const albums = [...L.albums.values()].sort((a, b) => b.addedAt - a.addedAt);
-    const recent = withCovers(L, await store.recentPlays(12));
-    const fav = withCovers(L, tracks.filter(t => t.favorite).slice(0, 12));
-    const dur = tracks.reduce((s, t) => s + (t.duration || 0), 0);
-    const hires = tracks.filter(t => t.hiResNow).length;
-    const fmt = new Map();
-    for (const t of tracks) { const k = t.tech?.codecLabel?.replace(/DSD\d+/, 'DSD') || 'Không tệp'; fmt.set(k, (fmt.get(k) || 0) + 1); }
-    const fmts = [...fmt].sort((a, b) => b[1] - a[1]);
-    const session = await player.session();
-    const linkedTargets = (await db.links.where('relation').equals('soundtrack-of').toArray());
+    // The library-wide numbers (one pass over every track) are computed once per library snapshot, not on every redraw.
+    const stats = homeStats(L);
+    const { tracks, dur, hires, fmts, fav: favRaw } = stats;
+    const albums = stats.albums;
+    const [recentRaw, session, linkedTargets] = await Promise.all([
+      store.recentPlays(12), player.session(), db.links.where('relation').equals('soundtrack-of').toArray(),
+    ]);
+    const recent = withCovers(L, recentRaw);
+    const fav = withCovers(L, favRaw);
     const tItems = (await db.items.bulkGet([...new Set(linkedTargets.map(l => l.toId))])).filter(i => i && !i.deleted);
     c.innerHTML = `
       ${session && !session.mine && !player.playing ? `<button class="mresume" data-resume>${icon('device')}<span><b>Nghe tiếp</b><small>${esc(session.label || '')}</small></span>${icon('play-fill')}</button>` : ''}
@@ -409,7 +425,8 @@ const VIEWS = {
       ${L.playlists.length ? section('pls', 'Danh sách phát', { ic: 'list', count: L.playlists.length, tools: '<a class="see" href="#music/playlists">Tất cả</a>', body: `<div class="mrail">${L.playlists.slice(0, 12).map(p => plCard(L, p)).join('')}</div>` }) : ''}`;
     c.querySelector('[data-resume]')?.addEventListener('click', () => player.takeOver(session));
     const cf = c.querySelector('[data-cf]');
-    if (cf) cleanups.push(coverFlow(cf, albums.slice(0, 40), { onOpen: (a) => go('album/' + a.id), onPlay: (a) => player.playSource('album', a.id) }));
+    // The cover flow is the heaviest block: it starts only after the rest of the page has been painted.
+    if (cf) { const t = setTimeout(() => cleanups.push(coverFlow(cf, albums.slice(0, 24), { onOpen: (a) => go('album/' + a.id), onPlay: (a) => player.playSource('album', a.id) })), 60); cleanups.push(() => clearTimeout(t)); }
     c.querySelectorAll('[data-tid]').forEach(b => b.onclick = () => player.play(recent, { start: recent.findIndex(t => t.id === b.dataset.tid), source: { kind: 'recent', name: 'Nghe gần đây' } }));
     const fb = c.querySelector('[data-fav]');
     if (fb) { const r = trackRows(fav, { source: { kind: 'smart', id: 'smart:fav', name: 'Yêu thích' } }); fb.innerHTML = r.html; r.bind(fb, () => render()); }
