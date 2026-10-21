@@ -1,7 +1,7 @@
 // Chosen folders on a folder-capable drive (WebDAV, pCloud): the user ticks one or more folders on the drive
 // and every music / book file inside them (any depth) is imported into the library. Files already imported are
 // remembered by path + size (sync.folderDone), so a second sync only fetches what is new.
-// Imported files then follow the normal rules: they are uploaded to the drive like any other file.
+// The files are NOT copied into the app: they stay on the drive and are fetched only when played or opened.
 import { drives, storage } from './index.js';
 import { getSetting, setSetting } from '../db.js';
 import { tasks } from '../tasks.js';
@@ -56,8 +56,10 @@ export async function syncFolders({ signal } = {}) {
     try {
       const blob = await d.getPath(e.path, { signal: task.signal });
       const file = new File([blob], e.name, { type: blob.type || '' });
-      if (MUSIC.test(e.name)) await music.importFiles([file], { kind: 'music' });
-      else await books.importFiles([file]);
+      // Stays on the drive: nothing is copied to this device or uploaded (see storage.addFile remote).
+      const remote = () => e.path;
+      if (MUSIC.test(e.name)) await music.importFiles([file], { kind: 'music', remote });
+      else await books.importFiles([file], { remote });
       done[e.path] = e.size;
       await setSetting('sync.folderDone', done);
       res.added++;

@@ -6,7 +6,7 @@
       "version": "0.9.5.0",
       "date": "2026-10-21",
       "notes": [
-        "Thư mục đồng bộ: trên pCloud và WebDAV, chọn một hoặc nhiều thư mục trong ổ; mọi tệp nhạc và sách trong đó (kể cả thư mục con) được nhập vào thư viện khi đồng bộ",
+        "Thư mục đồng bộ: trên pCloud và WebDAV, chọn một hoặc nhiều thư mục trong ổ; nhạc và sách trong đó (kể cả thư mục con) hiện trong thư viện, không sao chép vào app mà tải về khi phát hoặc mở",
         "Trên Android chưa mở được danh sách thư mục (cần API pCloud, sẽ làm ở bản sau)",
         "Android: thêm quyền camera để quét mã vạch sách"
       ]

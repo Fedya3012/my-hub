@@ -174,10 +174,18 @@ export const storage = {
   // Progress: onProgress({ done, total, phase }) in bytes (hashing + writing / uploading), or,
   // without onProgress, files of 4 MB and more get their own task in the tray (unless quiet).
   // signal (AbortSignal) stops between chunks; nothing is saved then.
-  async addFile(itemId, source, { role = 'main', name, mime, onProgress, signal, quiet = false } = {}) {
+  // remote: { key } registers a file that stays on the drive (a chosen folder): no copy on this device, no upload,
+  // no cache when played (open() fetches it each time), and removing it never deletes the drive's file.
+  async addFile(itemId, source, { role = 'main', name, mime, onProgress, signal, quiet = false, remote = null } = {}) {
     const id = uid();
     const blob = source.handle ? await source.handle.getFile() : source;
     const fileName = name || blob.name || 'file';
+    if (remote) {
+      const row = { id, itemId, role, name: fileName, mime: mime || blob.type || 'application/octet-stream', size: blob.size,
+        hash: null, locations: { [activeMode]: { key: remote.key } }, linked: true, syncStatus: 'remote-only', createdAt: now() };
+      await db.files.put(row);
+      return row;
+    }
     const hashW = canHash(blob) ? blob.size : 0;
     const storeW = source.handle ? 0 : blob.size;
     const r = reporter({ onProgress, signal, quiet, big: blob.size >= BIG_FILE,
@@ -214,6 +222,7 @@ export const storage = {
       const r = reporter({ onProgress, signal, quiet: false, big: fileRow.size >= 512 * 1024, label: 'Đang tải tệp từ ' + d.label, detail: fileRow.name, total: fileRow.size });
       try {
         const got = await d.getFile(key, { signal: r.signal, onProgress: (done, total) => r.report(done) });
+        if (fileRow.linked) { r.finish(fileRow.name); return got; }   // a chosen-folder file: never kept on this device
         const loc = await local.put(fileRow.id, got);
         await withoutSyncHooks(() => db.files.update(fileRow.id, { 'locations.local': loc }));
         fileRow.locations = { ...fileRow.locations, local: loc };
@@ -231,7 +240,7 @@ export const storage = {
     await local.remove(fileRow.locations?.local);
     for (const [id, d] of Object.entries(drives)) {
       const key = fileRow.locations?.[id]?.key;
-      if (key && d.connected() && navigator.onLine) await d.removeFile(key).catch(() => {});
+      if (key && !fileRow.linked && d.connected() && navigator.onLine) await d.removeFile(key).catch(() => {});
     }
     await db.files.delete(fileRow.id);
   },

@@ -14,7 +14,7 @@ import { setCover, sheet } from './common.js';
 
 // ── Files ────────────────────────────────────────────────────────
 // files: File[] (relPath kept for folders) or [{ handle, name, size, relPath }] for linked files.
-export async function importFiles(files) {
+export async function importFiles(files, { remote = null } = {}) {
   const list = files.filter(f => isBookFile(f));
   const skipped = files.length - list.length;
   if (!list.length) { toast(files.length ? 'Không có tệp sách nào (EPUB, PDF, MOBI, AZW3, FB2, CBZ, TXT…)' : 'Chưa chọn tệp', 'warn'); return []; }
@@ -50,7 +50,7 @@ export async function importFiles(files) {
       const folder = f.relPath?.includes('/') ? f.relPath.split('/').slice(0, -1) : [];
       const { coverBlob, ...data } = meta;
       id = await store.createBook({ ...data, tags: folder.length ? [folder[folder.length - 1]] : [], relPath: f.relPath || '' }, { file: true, quiet: true });
-      await storage.addFile(id, f.handle ? { handle: f.handle } : file, { role: 'main', name: f.name, signal: task.signal,
+      await storage.addFile(id, f.handle ? { handle: f.handle } : file, { role: 'main', name: f.name, signal: task.signal, ...(remote ? { remote: { key: remote(f) } } : {}),
         onProgress: ({ done, total: n }) => task.update({ done: base + (n ? done / n : 1) * (f.size || 0) }) });
       if (coverBlob) await setCover(id, coverBlob);
       added.push(id);
