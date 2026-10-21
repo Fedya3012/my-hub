@@ -1,7 +1,14 @@
 {
-  "app": "0.9.4.2",
+  "app": "0.9.4.3",
   "released": "2026-10-21",
   "changelog": [
+    {
+      "version": "0.9.4.3",
+      "date": "2026-10-21",
+      "notes": [
+        "Sửa lỗi Android khi kết nối pCloud/WebDAV: phản hồi lỗi (ví dụ 404 khi chưa có dữ liệu) bị đọc nhầm là base64 nên báo “Không kết nối được máy chủ”"
+      ]
+    },
     {
       "version": "0.9.4.2",
       "date": "2026-10-21",
