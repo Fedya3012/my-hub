@@ -1,7 +1,16 @@
 {
-  "app": "0.9.5.7",
+  "app": "0.9.5.8",
   "released": "2026-10-21",
   "changelog": [
+    {
+      "version": "0.9.5.8",
+      "date": "2026-10-21",
+      "notes": [
+        "Thư mục đồng bộ: tự xoá khỏi thư viện những nhạc/sách có tệp gốc đã bị xoá trên Dropbox hoặc OneDrive (có ô bật/tắt, mặc định bật)",
+        "Thư mục đồng bộ: giao diện mới dạng thẻ, có Chọn tất cả",
+        "Sửa lỗi Dropbox 409 khi đồng bộ: thư mục đã chọn không còn trên ổ được bỏ qua kèm cảnh báo"
+      ]
+    },
     {
       "version": "0.9.5.7",
       "date": "2026-10-21",
