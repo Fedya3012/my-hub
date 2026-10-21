@@ -6,6 +6,7 @@ import { db, getSetting, setSetting } from '../../../core/db.js';
 import { bus } from '../../../core/bus.js';
 import { progress } from '../../../core/progress.js';
 import { storage } from '../../../core/storage/index.js';
+import { detectOutput } from './listening.js';
 import { thisDevice, deviceName } from '../../../core/device.js';
 import { toast } from '../../../core/ui.js';
 import { tasks } from '../../../core/tasks.js';
@@ -399,7 +400,7 @@ class Player extends EventTarget {
     await progress.save({ id: SESSION, moduleId: 'music' }, {
       position: pos, total: dur, state: this.playing ? 'playing' : 'paused', flush,
       label: `${t.title} · ${fmtTime(pos)} / ${fmtTime(dur)}`,
-      extra: { virtual: 1, trackId: t.id, queue: this.queue, index: this.index, shuffle: this.shuffle ? 1 : 0, source: this.source },
+      extra: { virtual: 1, output: await detectOutput(), trackId: t.id, queue: this.queue, index: this.index, shuffle: this.shuffle ? 1 : 0, source: this.source },
     });
     if (t.type === 'podcast' || (t.duration || 0) > 600) await progress.save(t.item, { position: pos, total: dur, state: this.playing ? 'playing' : 'paused', flush });
   }

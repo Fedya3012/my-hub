@@ -4,7 +4,7 @@ import { getSetting, setSetting } from '../../../core/db.js';
 import { bus } from '../../../core/bus.js';
 
 export const TABS = {
-  home: 'Trang chủ', songs: 'Bài hát', albums: 'Album', artists: 'Nghệ sĩ', albumArtists: 'Nghệ sĩ album',
+  home: 'Trang chủ', songs: 'Âm nhạc', new: 'Mới', albums: 'Album', artists: 'Nghệ sĩ', albumArtists: 'Nghệ sĩ album',
   composers: 'Nhạc sĩ', years: 'Năm', labels: 'Hãng đĩa',
   genres: 'Thể loại', folders: 'Thư mục', playlists: 'Danh sách phát', stats: 'Thống kê',
 };

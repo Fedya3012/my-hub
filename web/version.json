@@ -1,7 +1,19 @@
 {
-  "app": "0.9.5.9",
+  "app": "0.9.6.0",
   "released": "2026-10-21",
   "changelog": [
+    {
+      "version": "0.9.6.0",
+      "date": "2026-10-21",
+      "notes": [
+        "Nhạc: thanh tab ngang đổi thành menu thả xuống \"Âm nhạc\" (Bài hát, Album, Nghệ sĩ, Danh sách phát…), chỉ hiện trong các mục thư viện",
+        "Nhạc: thanh dưới gồm Trang chủ, Âm nhạc, Mới, Thống kê, Cài đặt (cài đặt riêng của Nhạc)",
+        "Nhạc: trang Mới gợi ý theo tâm trạng, danh sách phát, thể loại và album mới thêm",
+        "Nhạc: hiện đang nghe trên máy nào và bằng tai nghe/loa nào, kể cả khi đang nghe ở thiết bị khác",
+        "Sách: trang chủ và mục tiêu làm lại (lời chào, thẻ đang đọc lớn, thanh mục tiêu, 7 ngày gần nhất, ô số liệu)",
+        "Dọn dữ liệu: có nút ngay trong Nhạc, Sách và Thư viện"
+      ]
+    },
     {
       "version": "0.9.5.9",
       "date": "2026-10-21",
