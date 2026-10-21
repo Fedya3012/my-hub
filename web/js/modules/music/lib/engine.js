@@ -214,7 +214,11 @@ export class Engine extends EventTarget {
     if (fade) {
       const tok = this._pauseTok = (this._pauseTok || 0) + 1;
       this._fadeTo(d, 0, fade);
-      setTimeout(() => { if (this.deck === d && this._pauseTok === tok) { d.el.pause(); this._setFade(d, 1, 0); } }, fade * 1000 + 30);
+      // Pause only once the ramp has reached the speakers (output latency: Android buffers ~100+ ms), and
+      // keep the fader at 0 while paused: resetting it to 1 let the buffered tail through at full level,
+      // which was the click. play() already restarts from 0 and fades in.
+      const lat = Math.min(0.5, (this.ctx?.outputLatency || 0) + (this.ctx?.baseLatency || 0));
+      setTimeout(() => { if (this.deck === d && this._pauseTok === tok) d.el.pause(); }, (fade + lat) * 1000 + 40);
     } else d.el.pause();
   }
 
