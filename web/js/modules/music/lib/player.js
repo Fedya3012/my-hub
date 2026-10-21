@@ -28,7 +28,7 @@ class Player extends EventTarget {
     this.queue = [];          // track ids in play order
     this.order = null;        // original order while shuffled
     this.index = -1;
-    this.repeat = 'off';      // off | all | one
+    this.repeat = 'off';      // off | all | one | stop1 (play the current song, then stop)
     this.shuffle = false;
     this.source = null;       // { kind, id, name, forItem }
     this.listened = 0;        // seconds of the current track actually heard
@@ -125,6 +125,7 @@ class Player extends EventTarget {
   _nextIndex(user = false) {
     if (!this.queue.length) return null;
     if (this.repeat === 'one' && !user) return this.index;
+    if (this.repeat === 'stop1' && !user) return null;   // play this song, then stop
     if (this.index + 1 < this.queue.length) return this.index + 1;
     return this.repeat === 'all' || (this.repeat === 'one' && user) ? 0 : null;
   }

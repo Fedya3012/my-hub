@@ -120,6 +120,74 @@ export function closeNowPlaying({ fromPop = false } = {}) {
 }
 window.addEventListener('popstate', () => { if (np) closeNowPlaying({ fromPop: true }); });
 
+// Press and hold (Android) or right-click (Windows) on shuffle / repeat opens its full list of modes.
+function holdMenu(btn, open, tap) {
+  if (!btn) return;
+  let timer = null, fired = false;
+  btn.addEventListener('pointerdown', () => { fired = false; clearTimeout(timer); timer = setTimeout(() => { fired = true; navigator.vibrate?.(15); open(btn); }, 500); });
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => btn.addEventListener(ev, () => clearTimeout(timer)));
+  btn.addEventListener('contextmenu', (e) => { e.preventDefault(); clearTimeout(timer); open(btn); });
+  btn.onclick = () => { if (fired) { fired = false; return; } tap(); };
+}
+const mark = (on) => (on ? '✓' : '');
+function repeatMenu(anchor) {
+  const r = player.repeat;
+  menu(anchor, [
+    { icon: 'repeat-one', label: 'Phát một bài rồi dừng', hint: mark(r === 'stop1'), act: () => player.setRepeat('stop1') },
+    { icon: 'queue', label: 'Phát hàng chờ rồi dừng', hint: mark(r === 'off'), act: () => player.setRepeat('off') },
+    { icon: 'repeat-one', label: 'Lặp lại một bài', hint: mark(r === 'one'), act: () => player.setRepeat('one') },
+    { icon: 'repeat', label: 'Lặp lại hàng chờ', hint: mark(r === 'all'), act: () => player.setRepeat('all') },
+  ], { title: 'Lặp lại' });
+}
+function shuffleMenu(anchor) {
+  menu(anchor, [
+    { icon: 'shuffle', label: 'Tắt trộn bài', hint: mark(!player.shuffle), act: () => player.setShuffle(false) },
+    { icon: 'shuffle', label: 'Trộn tất cả bài trong hàng chờ', hint: mark(player.shuffle), act: () => player.setShuffle(true) },
+  ], { title: 'Trộn bài' });
+}
+
+async function toggleFavNow() { const t = player.track; await store.setFavorite(t.id, !t.favorite); t.favorite = t.favorite ? 0 : 1; renderFav(); }
+function playMenu(anchor) {
+  menu(anchor, [
+    { icon: 'play', label: 'Phát / Tạm dừng', act: () => player.toggle() },
+    { icon: 'pause-fill', label: 'Tạm dừng', act: () => player.pause() },
+    { icon: 'prev', label: 'Phát lại từ đầu bài', act: () => player.seek(0) },
+  ]);
+}
+function prevMenu(anchor) {
+  menu(anchor, [
+    { icon: 'prev', label: 'Bài trước', act: () => player.prev() },
+    { icon: 'prev', label: 'Về đầu bài hiện tại', act: () => player.seek(0) },
+  ]);
+}
+function nextMenu(anchor) {
+  menu(anchor, [
+    { icon: 'next', label: 'Bài tiếp theo', act: () => player.next() },
+    { icon: 'queue', label: 'Xóa các bài sau khỏi hàng chờ', danger: true, act: () => player.clearUpcoming() },
+  ]);
+}
+function favMenu(anchor) {
+  const t = player.track;
+  menu(anchor, [
+    { icon: 'heart', label: t.favorite ? 'Bỏ yêu thích' : 'Yêu thích', act: () => toggleFavNow() },
+    { icon: 'list', label: 'Thêm vào danh sách phát…', act: () => import('./sheets.js').then(m => m.pickPlaylist([t.id])) },
+  ]);
+}
+function infoMenu(anchor) {
+  const t = player.track;
+  menu(anchor, [
+    { icon: 'info', label: 'Thông tin tệp & đường tín hiệu', act: () => infoSheet(t) },
+    { icon: 'edit', label: 'Sửa thẻ (tag editor)…', act: () => import('./editor.js').then(m => m.editTracks([t])) },
+    { icon: 'lyrics', label: 'Lời bài hát…', act: () => import('./editor.js').then(m => m.editLyrics(t)) },
+  ]);
+}
+function panelMenu(anchor) {
+  menu(anchor, [
+    { icon: 'queue', label: 'Mở hàng chờ', act: () => setPanel('queue') },
+    { icon: 'lyrics', label: 'Mở lời bài hát', act: () => setPanel('lyrics') },
+  ]);
+}
+
 function wire() {
   const el = np.el;
   const on = (t, f) => { player.addEventListener(t, f); np.offs.push(() => player.removeEventListener(t, f)); };
@@ -130,12 +198,17 @@ function wire() {
   document.addEventListener('visibilitychange', vis); np.offs.push(() => document.removeEventListener('visibilitychange', vis));
   const A = (k, f) => el.querySelectorAll(`[data-act="${k}"]`).forEach(b => b.onclick = f);
   A('close', () => closeNowPlaying());
-  A('play', () => player.toggle()); A('next', () => player.next()); A('prev', () => player.prev());
-  A('shuffle', () => player.setShuffle(!player.shuffle)); A('repeat', () => player.cycleRepeat());
-  A('fav', async () => { const t = player.track; await store.setFavorite(t.id, !t.favorite); t.favorite = t.favorite ? 0 : 1; renderFav(); });
-  A('info', () => infoSheet(player.track));
-  A('eq', () => import('./eq-panel.js').then(m => m.eqSheet()));
-  A('sleep', () => sleepSheet());
+  holdMenu(el.querySelector('[data-act="play"]'), playMenu, () => player.toggle());
+  holdMenu(el.querySelector('[data-act="next"]'), nextMenu, () => player.next());
+  holdMenu(el.querySelector('[data-act="prev"]'), prevMenu, () => player.prev());
+  el.querySelectorAll('[data-panel]').forEach(b => holdMenu(b, (x) => panelMenu(x), () => {}));
+  holdMenu(el.querySelector('[data-act="shuffle"]'), shuffleMenu, () => player.setShuffle(!player.shuffle));
+  holdMenu(el.querySelector('[data-act="repeat"]'), repeatMenu, () => player.cycleRepeat());
+  const toggleFav = toggleFavNow;
+  holdMenu(el.querySelector('[data-act="fav"]'), favMenu, toggleFav);
+  holdMenu(el.querySelector('[data-act="info"]'), infoMenu, () => infoSheet(player.track));
+  holdMenu(el.querySelector('[data-act="eq"]'), (b) => menu(b, [{ icon: 'sliders', label: 'Mở bộ chỉnh âm', act: () => import('./eq-panel.js').then(m => m.eqSheet()) }]), () => import('./eq-panel.js').then(m => m.eqSheet()));
+  holdMenu(el.querySelector('[data-act="sleep"]'), (b) => menu(b, [{ icon: 'timer', label: 'Mở hẹn giờ tắt', act: () => sleepSheet() }]), () => sleepSheet());
   A('panel-close', () => setPanel(null));
   A('video', (e) => videoMenu(e.currentTarget));
   A('art', (e) => menu(e.currentTarget, Object.entries(ART).map(([k, [ic, label]]) => ({ icon: ic, label: label + (prefs().np.art === k ? ' ✓' : ''), act: async () => { await setPref('np.art', k); renderStage(); } })), { title: 'Kiểu hiển thị bìa' }));
