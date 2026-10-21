@@ -296,7 +296,7 @@
 @media (min-width: 861px) { .mhero { margin-inline: -36px; padding-inline: 36px; } }
 /* Phone: a detail page (album/artist/playlist/folder) has its own hero with a back button; the library header above it
    (search, add) was overlapped by the hero's pull-up margin. */
-@media (max-width: 860px) { .mlib[data-detail] .mlib-head { display: none; } .mlib[data-detail] .mhero { margin-top: -8px; } }
+@media (max-width: 860px) { .mlib[data-detail] .mlib-head { display: none; } .mlib[data-detail] { padding-top: 0; } .mlib[data-detail] .mhero { margin-top: 0; } }
 .mhero-bg { position: absolute; inset: -40px; z-index: -1; background-size: cover; background-position: center; filter: blur(48px) saturate(1.5) brightness(.6); transform: scale(1.1); }
 .mhero::after { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, transparent 30%, color-mix(in srgb, var(--h-bg, #000) 70%, transparent)); }
 .mhero-back { position: absolute; top: 14px; left: 14px; color: #fff; background: rgb(0 0 0 / .25); }
@@ -838,3 +838,26 @@ body.mnp-open { overflow: hidden; }
 .mmood-play { position: absolute; right: 10px; top: 10px; width: 32px; height: 32px; border-radius: 50%; background: rgb(255 255 255 / .22); display: grid; place-items: center; }
 .mmood-play .ic { width: 16px; height: 16px; }
 .mchips { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* Phone: album page = full-width cover, light header, icon action row (no blurred band). */
+.mfavall[aria-pressed="true"] { color: #e5484d; }
+.mfavall[aria-pressed="true"] svg { fill: currentColor; }
+@media (max-width: 640px) {
+  .mhero.is-album { background: var(--bg); color: var(--fg); padding: 0 16px 6px; gap: 12px; align-items: stretch; text-align: left; overflow: visible; isolation: auto; }
+  .mhero.is-album .mhero-bg, .mhero.is-album::after { display: none; }
+  .mhero.is-album .mart.hero { width: calc(100% + 32px); margin: 0 -16px; border-radius: 0; box-shadow: none; aspect-ratio: 1; height: auto; }
+  .mhero.is-album .mhero-back { top: calc(10px + var(--sai-top, 0px)); z-index: 2; }
+  .mhero.is-album .mhero-txt p, .mhero.is-album .mhero-txt a { color: var(--muted); }
+  .mhero.is-album .mhero-txt h1 { color: var(--fg); font-size: 1.5rem; }
+  .mhero.is-album .mhero-txt .eyebrow { color: var(--muted); }
+  .mhero.is-album .mhero-txt a { color: var(--accent); }
+  .mhero.is-album .mhero-act, .mhero.is-album .mhero-meta { justify-content: flex-start; }
+  .mhero.is-album .mhero-act { gap: 10px; flex-wrap: nowrap; }
+  .mhero.is-album .mhero-act .btn { background: var(--surface-2); border: 0; color: var(--fg); width: 44px; height: 44px; min-height: 0; padding: 0; border-radius: 50%; justify-content: center; }
+  .mhero.is-album .mhero-act .btn.primary { background: var(--accent); color: #fff; }
+  .mhero.is-album .mhero-act .lbl { display: none; }
+  .mhero.is-album .mhero-act .icon-btn { color: var(--fg); margin-left: auto; }
+}
+/* Keep the fixed bars pinned to the compositor and stop rubber-band stretching of the page. */
+html, body { overscroll-behavior: none; }
+@media (max-width: 860px) { .mbottom, .mdock { will-change: transform; backface-visibility: hidden; } }
