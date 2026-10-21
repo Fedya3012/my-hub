@@ -29,30 +29,35 @@ export async function syncFolders({ signal } = {}) {
   const folders = await folderList();
   if (!folders.length) return { skipped: 'none' };
 
+  // Progress: folders scanned (one step per folder listed) and files found; then files imported (x / y, %).
   const scan = tasks.start({ label: 'Đang quét thư mục trên ' + d.label, unit: 'items', cancellable: true, delay: 300 });
   const found = [];
+  let dirs = 0;
+  const count = (e) => { if (e.isDir) dirs++; };
+  const visit = async (sub) => {
+    scan.check();
+    const list = await d.listDir(sub);
+    for (const e of list) { count(e); if (e.isDir) await visit(e.path); else found.push(e); }
+    scan.update({ detail: `${dirs} thư mục · ${found.length} tệp` });
+  };
   try {
-    for (const f of folders) {
-      scan.check();
-      found.push(...await walk(d, f, []));
-      scan.update({ detail: f });
-    }
+    for (const f of folders) await visit(f);
   } catch (e) { scan.fail(e); throw e; }
-  scan.finish(`Tìm thấy ${found.length} tệp`);
+  scan.finish(`Quét xong: ${dirs} thư mục, ${found.length} tệp`);
 
   const { isBookFile } = await import('../../modules/books/lib/formats.js');
   const done = (await getSetting('sync.folderDone', {})) || {};
   const todo = found.filter(e => (MUSIC.test(e.name) || isBookFile({ name: e.name })) && done[e.path] !== e.size);
   if (!todo.length) return { added: 0, failed: [] };
 
-  const task = tasks.start({ label: 'Đang nhập tệp từ ' + d.label, total: todo.length, unit: 'items', cancellable: true });
+  const task = tasks.start({ label: `Đang nhập ${todo.length} tệp từ ${d.label}`, total: todo.length, unit: 'items', cancellable: true });
   const music = await import('../../modules/music/lib/store.js');
   const books = await import('../../modules/books/ui/importer.js');
   const res = { added: 0, failed: [] };
   for (let i = 0; i < todo.length; i++) {
     task.check();
     const e = todo[i];
-    task.update({ done: i, detail: e.name });
+    task.update({ done: i, detail: `${e.name} · ${Math.round(i / todo.length * 100)}%` });
     try {
       const blob = await d.getPath(e.path, { signal: task.signal });
       const file = new File([blob], e.name, { type: blob.type || '' });
