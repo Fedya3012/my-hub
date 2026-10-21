@@ -9,7 +9,6 @@ import { icon } from '../../core/icons.js';
 import { esc, h, toast, confirmBox } from '../../core/ui.js';
 import { player } from './lib/player.js';
 import * as store from './lib/store.js';
-import { detectOutput, watchOutput, OUT_NAMES } from './lib/listening.js';
 import { thisDevice } from '../../core/device.js';
 import { loadPrefs, prefs, setPref, TABS } from './lib/prefs.js';
 import { artHtml, hydrate, fileUrl } from './lib/art.js';
@@ -96,7 +95,6 @@ async function render() {
     </header>
     ${SECTION_TABS.includes(tab) || head === 'browse' ? `<details class="msections"><summary>${icon('list')}<span>${esc(tab === 'songs' ? 'Âm nhạc · Bài hát' : 'Âm nhạc · ' + (NAMES[tab] || NAMES.browse))}</span><i aria-hidden="true">▾</i></summary>
       <div class="msections-menu" role="menu">${SECTION_TABS.map(t => `<a role="menuitem" href="#music/${t}" class="${t === tab ? 'on' : ''}">${esc(SONG_NAMES[t])}</a>`).join('')}</div></details>` : ''}
-    <div class="mon" data-on aria-live="polite"></div>
     <div class="mcontent"></div></div>
     <nav class="mbottom" aria-label="Mục chính của Nhạc">${bottomTabs.map(t => { const on = (t === tab || (t === 'songs' && SECTION_TABS.includes(tab))) && !search; return `<a href="#music/${t}" class="${on ? 'on' : ''}" ${on ? 'aria-current="page"' : ''}>${icon(BOTTOM_ICONS[t] || 'disc')}<span>${NAMES[t]}</span></a>`; }).join('')}<button type="button" data-act="settings">${icon('settings')}<span>Cài đặt</span></button></nav>`;
   document.body.classList.add('m-has-bottom');
@@ -104,7 +102,6 @@ async function render() {
   root.querySelector('[data-act="add"]').onclick = (e) => addMenu(e.currentTarget);
   root.querySelector('[data-act="clean"]').onclick = async () => { const m = await import('../../core/storage/cleanup.js'); if ((await m.cleanDataAction('music', 'Trình phát nhạc'))?.removed) render(); };
   root.querySelector('[data-act="settings"]').onclick = () => import('./ui/customize.js').then(m => m.customizeSheet(() => render()));
-  bindListening(root.querySelector('[data-on]'));
   const si = root.querySelector('.mlib-search input');
   si.oninput = debounce(() => { search = si.value.trim(); cleanups.forEach(f => f()); cleanups = []; renderBody(c, L, tab, head, arg); }, 180);
   si.onkeydown = (e) => { if (e.key === 'Escape') { si.value = ''; search = ''; render(); } };
@@ -393,7 +390,7 @@ const VIEWS = {
     const linkedTargets = (await db.links.where('relation').equals('soundtrack-of').toArray());
     const tItems = (await db.items.bulkGet([...new Set(linkedTargets.map(l => l.toId))])).filter(i => i && !i.deleted);
     c.innerHTML = `
-      ${session && !session.mine && !player.playing ? `<button class="mresume" data-resume>${icon('device')}<span><b>Nghe tiếp từ ${esc(session.where || 'thiết bị khác')}</b><small>${esc(session.label || '')}</small></span>${icon('play-fill')}</button>` : ''}
+      ${session && !session.mine && !player.playing ? `<button class="mresume" data-resume>${icon('device')}<span><b>Nghe tiếp</b><small>${esc(session.label || '')}</small></span>${icon('play-fill')}</button>` : ''}
       ${prefs().homeCoverFlow && albums.length > 2 ? '<section class="mhome-cf" data-cf></section>' : ''}
       <section class="mstats">
         <div><b class="num">${tracks.length}</b><span>bài</span></div><div><b class="num">${L.albums.size}</b><span>album</span></div>
@@ -921,27 +918,6 @@ function pickImage(fn) {
 
 function debounce(f, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => f(...a), ms); }; }
 
-// ── "Đang nghe trên…": this device / another device, and the headphones or speaker in use ──
-function bindListening(el) {
-  if (!el) return;
-  let out = null;
-  const draw = async () => {
-    out = out || await detectOutput();
-    const me = await thisDevice();
-    const s = await player.session().catch(() => null);
-    const row = (ic, where, o, live) => `<span class="mon-i">${icon(ic)}</span><span class="mon-t"><b>${live ? 'Đang nghe trên ' : 'Lần nghe gần nhất trên '}${esc(where)}</b><small>${esc(OUT_NAMES[o?.kind] || 'Loa')}${o?.label && o.label !== 'Loa mặc định' ? ' · ' + esc(o.label) : ''}</small></span>`;
-    if (player.playing) el.innerHTML = row('music', me.name || 'máy này', out, true);
-    else if (s && !s.mine && s.state === 'playing' && Date.now() - (s.updatedAt || 0) < 90000) el.innerHTML = row('device', s.where || 'thiết bị khác', s.output, true);
-    else el.innerHTML = '';
-    el.hidden = !el.innerHTML;
-  };
-  const stop = watchOutput((o) => { out = o; draw(); });
-  const t = setInterval(draw, 15000);
-  const on = () => draw();
-  for (const ev of ['state', 'track']) player.addEventListener(ev, on);
-  cleanups.push(() => { stop(); clearInterval(t); for (const ev of ['state', 'track']) player.removeEventListener(ev, on); });
-  draw();
-}
 
 // ── Mới: suggestions by mood, your playlists, genres and recent additions ──
 const MOODS = [

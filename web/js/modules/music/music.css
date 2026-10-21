@@ -820,13 +820,6 @@ body.mnp-open { overflow: hidden; }
 .msections-menu a { padding: 11px 14px; border-radius: 10px; color: var(--fg); text-decoration: none; font-size: .95rem; }
 .msections-menu a:hover { background: var(--surface-2); }
 .msections-menu a.on { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); font-weight: 600; }
-.mon { display: flex; align-items: center; gap: 10px; margin: 0 0 10px; padding: 8px 14px; border-radius: 14px; background: color-mix(in srgb, var(--accent) 10%, var(--surface)); border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--line)); }
-.mon[hidden] { display: none; }
-.mon-i { display: flex; color: var(--accent); }
-.mon-i .ic { width: 22px; height: 22px; }
-.mon-t { display: flex; flex-direction: column; min-width: 0; }
-.mon-t b { font-size: .9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.mon-t small { color: var(--muted); font-size: .78rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mbottom button { display: grid; justify-items: center; align-content: center; gap: 2px; padding: 6px 4px; color: var(--muted); font-size: .68rem; border-radius: 12px; white-space: nowrap; background: none; border: 0; font-family: inherit; cursor: pointer; }
 .mbottom button .ic { width: 22px; height: 22px; }
 .mbottom button:hover { color: var(--fg); background: var(--surface-2); }

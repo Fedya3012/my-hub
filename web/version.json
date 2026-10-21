@@ -1,7 +1,16 @@
 {
-  "app": "0.9.6.7",
+  "app": "0.9.7.0",
   "released": "2026-10-21",
   "changelog": [
+    {
+      "version": "0.9.7.0",
+      "date": "2026-10-21",
+      "notes": [
+        "Trình phát nhạc: giữ (Android) hoặc chuột phải (Windows) trên bài, nút lặp, trộn và các nút điều khiển để mở menu; có 'Chọn nhiều' để chọn nhiều bài/sách rồi thêm, xoá, lưu hàng loạt",
+        "Trình phát nhạc: lặp lại có thêm 'Phát một bài rồi dừng'",
+        "Trình phát nhạc: bỏ tính năng nhận biết thiết bị và tai nghe đang nghe (dòng 'Đang nghe trên…', tên máy trong 'Nghe tiếp')"
+      ]
+    },
     {
       "version": "0.9.6.7",
       "date": "2026-10-21",
@@ -523,7 +532,7 @@
     },
     "music": {
       "name": "Trình phát nhạc",
-      "version": "0.4.1",
+      "version": "0.5.0",
       "minApp": "0.3.0",
       "files": [
         "js/modules/music/index.js",
@@ -575,7 +584,7 @@
       ],
       "changelog": [
         {
-          "version": "0.4.1",
+          "version": "0.5.0",
           "date": "2026-10-21",
           "notes": [
             "Trình phát nhạc: hết tiếng \"tạch\" khi tạm dừng trên Android (giữ âm lượng về 0 đến khi phát lại)"

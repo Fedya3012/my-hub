@@ -110,7 +110,7 @@ export function showRemote(s) { if (el) renderRemote(s); }
 
 function renderRemote(s) {
   el.hidden = false;
-  el.innerHTML = `<div class="mdock-remote">${icon('device')}<span>Đang nghe dở trên <b>${esc(s.where || 'thiết bị khác')}</b>: ${esc(s.label || '')}</span>
+  el.innerHTML = `<div class="mdock-remote">${icon('device')}<span>Đang nghe dở: <b>${esc(s.label || '')}</b></span>
     <button class="btn small primary" data-go>${icon('play')}Nghe tiếp ở đây</button><button class="icon-btn" data-x aria-label="Ẩn">${icon('x')}</button></div>`;
   el.querySelector('[data-go]').onclick = () => player.takeOver(s);
   el.querySelector('[data-x]').onclick = () => { if (player.track) render(); else { el.hidden = true; sizeVar(); } };
