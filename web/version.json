@@ -1,7 +1,14 @@
 {
-  "app": "0.9.4.0",
+  "app": "0.9.4.1",
   "released": "2026-10-21",
   "changelog": [
+    {
+      "version": "0.9.4.1",
+      "date": "2026-10-21",
+      "notes": [
+        "Sửa lỗi “Failed to execute 'atob'” sau khi đăng nhập ổ đám mây: atob nay chấp nhận chuỗi base64 có khoảng trắng, ký tự URL hoặc thiếu đệm; nếu vẫn lỗi, thông báo ghi rõ nơi gọi để dò nguyên nhân"
+      ]
+    },
     {
       "version": "0.9.4.0",
       "date": "2026-10-21",
@@ -251,6 +258,7 @@
       "js/core/storage/http.js",
       "js/core/storage/clouds.js",
       "js/core/storage/webdav.js",
+      "js/core/atob-guard.js",
       "js/core/storage/dropbox.js",
       "js/core/storage/onedrive.js",
       "js/core/storage/cloud-ui.js",

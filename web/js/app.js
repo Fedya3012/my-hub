@@ -1,4 +1,5 @@
 // App bootstrap: database, theme, modules, navigation, updates.
+import './core/atob-guard.js';   // tolerant atob with a traceable error
 import './core/i18n.js';   // interface language: must run before anything renders
 import { APP_NAME, APP_VERSION } from './config.js';
 import { tasks } from './core/tasks.js';   // progress tray: loaded first so any task shows at once
