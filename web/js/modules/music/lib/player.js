@@ -231,7 +231,7 @@ class Player extends EventTarget {
   }
 
   async setRepeat(r) { this.repeat = r; await setSetting('music.repeat', r); this.engine.clearNext(); this._preloadSoon(); this._emit('state'); }
-  cycleRepeat() { return this.setRepeat({ off: 'all', all: 'one', one: 'off' }[this.repeat]); }
+  cycleRepeat() { return this.setRepeat({ off: 'all', all: 'one' }[this.repeat] || 'off'); }   // the other modes come from the long-press menu
 
   // ── Resolving audio ───────────────────────────────────────────
   // One resolve per track at a time: playing a track that is still being preloaded joins that

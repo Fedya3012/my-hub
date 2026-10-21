@@ -2,6 +2,7 @@
 // transport bar along the bottom on desktop (seek, volume, lyrics/queue/EQ). Tapping it (or
 // swiping up) opens Now Playing; swiping sideways skips.
 import { icon } from '../../../core/icons.js';
+import { repeatMode, shuffleMode } from '../lib/modes.js';
 import { esc } from '../../../core/ui.js';
 import { player } from '../lib/player.js';
 import { library } from '../lib/store.js';
@@ -126,9 +127,10 @@ function state() {
   p.setAttribute('aria-label', player.playing ? 'Tạm dừng' : 'Phát');
   el.classList.toggle('playing', player.playing);
   el.querySelector('[data-act="hires"]')?.setAttribute('aria-pressed', !!prefs().audio?.bitPerfect);
-  el.querySelector('[data-act="shuffle"]')?.setAttribute('aria-pressed', player.shuffle);
-  const r = el.querySelector('[data-act="repeat"]');
-  if (r) { r.innerHTML = icon(player.repeat === 'one' ? 'repeat-one' : 'repeat'); r.setAttribute('aria-pressed', player.repeat !== 'off'); }
+  const sm = shuffleMode(player.shuffle, player.catShuffle), rm = repeatMode(player.repeat);
+  const sb = el.querySelector('[data-act="shuffle"]'), rb = el.querySelector('[data-act="repeat"]');
+  if (sb) { sb.innerHTML = icon(sm.icon); sb.setAttribute('aria-pressed', sm.id !== 'off'); sb.title = 'Trộn bài: ' + sm.label; }
+  if (rb) { rb.innerHTML = icon(rm.icon); rb.setAttribute('aria-pressed', rm.id !== 'off'); rb.title = 'Lặp lại: ' + rm.label; }
 }
 
 function time() {

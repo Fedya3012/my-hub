@@ -102,6 +102,7 @@ async function render() {
   root.querySelector('[data-act="add"]').onclick = (e) => addMenu(e.currentTarget);
   root.querySelector('[data-act="clean"]').onclick = async () => { const m = await import('../../core/storage/cleanup.js'); if ((await m.cleanDataAction('music', 'Trình phát nhạc'))?.removed) render(); };
   root.querySelector('[data-act="settings"]').onclick = () => import('./ui/customize.js').then(m => m.customizeSheet(() => render()));
+  swipePages(root.querySelector('.mcontent'), { tab, tabs: SECTION_TABS.includes(tab) ? SECTION_TABS : bottomTabs, detail: !tab && !search, go });
   const si = root.querySelector('.mlib-search input');
   si.oninput = debounce(() => { search = si.value.trim(); cleanups.forEach(f => f()); cleanups = []; renderBody(c, L, tab, head, arg); }, 180);
   si.onkeydown = (e) => { if (e.key === 'Escape') { si.value = ''; search = ''; render(); } };
@@ -931,6 +932,27 @@ function pickImage(fn) {
   const inp = Object.assign(document.createElement('input'), { type: 'file', accept: 'image/*' });
   inp.onchange = () => inp.files[0] && fn(inp.files[0]);
   inp.click();
+}
+
+// Swipe sideways on a page: between the tabs of the library, and back out of an album / artist / playlist.
+// Ignored where a swipe means something else (rails, sliders, inputs, anything that scrolls sideways).
+function swipePages(box, { tab, tabs, detail, go }) {
+  if (!box || !matchMedia('(pointer: coarse)').matches) return;
+  let x0 = 0, y0 = 0, ok = false;
+  const sideways = (n) => { for (; n && n !== box; n = n.parentElement) if (n.scrollWidth > n.clientWidth + 4 && /auto|scroll/.test(getComputedStyle(n).overflowX)) return true; return false; };
+  box.addEventListener('touchstart', (e) => {
+    const t = e.target;
+    ok = e.touches.length === 1 && !t.closest('input,textarea,select,[data-seek],.mhome-cf,.mrail,[draggable="true"]') && !sideways(t);
+    x0 = e.touches[0].clientX; y0 = e.touches[0].clientY;
+  }, { passive: true });
+  box.addEventListener('touchend', (e) => {
+    if (!ok) return; ok = false;
+    const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
+    if (Math.abs(dx) < 80 || Math.abs(dx) < Math.abs(dy) * 2 || isSelecting()) return;
+    if (detail) { if (dx > 0) history.length > 1 ? history.back() : go(''); return; }
+    const i = tabs.indexOf(tab), n = tabs[i + (dx < 0 ? 1 : -1)];
+    if (i >= 0 && n) go(n);
+  }, { passive: true });
 }
 
 function debounce(f, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => f(...a), ms); }; }

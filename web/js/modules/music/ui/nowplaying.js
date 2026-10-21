@@ -3,6 +3,7 @@
 // the progress. Karaoke lyrics, queue and album beside it on desktop, swapped in on phones.
 // A looping video can play behind the lyrics (per track, per album or a default), as in Noctis.
 import { icon } from '../../../core/icons.js';
+import { REPEAT_MODES, repeatMode, SHUFFLE_MODES, shuffleId, shuffleMode } from '../lib/modes.js';
 import { esc, toast } from '../../../core/ui.js';
 import { player } from '../lib/player.js';
 import * as store from '../lib/store.js';
@@ -130,25 +131,16 @@ function holdMenu(btn, open, tap) {
   btn.onclick = () => { if (fired) { fired = false; return; } tap(); };
 }
 function repeatMenu(anchor) {
-  const r = player.repeat;
-  menu(anchor, [
-    { icon: 'repeat-one', label: 'Phát một bài hát', hint: 'Phát bài hiện tại rồi dừng', on: r === 'stop1', act: () => player.setRepeat('stop1') },
-    { icon: 'queue', label: 'Phát danh mục', hint: 'Phát danh mục hiện tại rồi dừng', on: r === 'off', act: () => player.setRepeat('off') },
-    { icon: 'list', label: 'Phát tất cả danh mục', hint: 'Phát lần lượt tất cả danh mục rồi dừng', on: r === 'allcats', act: () => player.setRepeat('allcats') },
-    { icon: 'repeat-one', label: 'Lặp lại bài hát', hint: 'Phát bài hiện tại và lặp lại', on: r === 'one', act: () => player.setRepeat('one') },
-    { icon: 'repeat', label: 'Lặp lại danh mục', hint: 'Phát danh mục hiện tại và lặp lại', on: r === 'all', act: () => player.setRepeat('all') },
-    { icon: 'list', label: 'Lặp lại tất cả danh mục', hint: 'Phát lần lượt tất cả danh mục và lặp lại', on: r === 'repeatcats', act: () => player.setRepeat('repeatcats') },
-  ], { title: 'Lặp lại' });
+  menu(anchor, REPEAT_MODES.map(m => ({ icon: m.icon, label: m.label, desc: m.desc, on: player.repeat === m.id, act: () => player.setRepeat(m.id) })), { title: 'Lặp lại' });
 }
 function shuffleMenu(anchor) {
-  const sg = player.shuffle, cg = player.catShuffle;
   const set = (songs, cats) => async () => { if (player.shuffle !== songs) player.setShuffle(songs); await player.setCatShuffle(cats); };
+  const cur = shuffleId(player.shuffle, player.catShuffle);
+  const items = SHUFFLE_MODES.map(m => ({ icon: m.icon, label: m.label, desc: m.desc, on: m.id === cur, act: set(m.songs, m.cats) }));
   menu(anchor, [
-    { icon: 'shuffle', label: 'Tắt ngẫu nhiên', on: !sg && !cg, act: set(false, false) },
-    { icon: 'shuffle', label: 'Xáo trộn tất cả', hint: 'Trộn tất cả các bài hát có sẵn', act: () => player.shuffleAll() },
-    { icon: 'shuffle', label: 'Trộn bài hát', hint: 'Danh mục vẫn theo thứ tự', on: sg && !cg, act: set(true, false) },
-    { icon: 'shuffle', label: 'Danh mục ngẫu nhiên', hint: 'Bài hát vẫn theo thứ tự', on: !sg && cg, act: set(false, true) },
-    { icon: 'shuffle', label: 'Ngẫu nhiên bài hát/danh mục', on: sg && cg, act: set(true, true) },
+    items[0],
+    { icon: 'shuffle', label: 'Xáo trộn tất cả', desc: 'Trộn tất cả các bài hát có sẵn', act: () => player.shuffleAll() },
+    ...items.slice(1),
     '-',
     { icon: 'settings', label: 'Cài đặt', act: () => import('./customize.js').then(m => m.customizeSheet(() => {})) },
   ], { title: 'Trộn bài' });
@@ -200,7 +192,14 @@ function wire() {
   const el = np.el;
   const on = (t, f) => { player.addEventListener(t, f); np.offs.push(() => player.removeEventListener(t, f)); };
   on('track', renderTrack); on('state', renderState); on('queue', renderState); on('status', renderStatus); on('volume', renderVol);
-  const key = (e) => { if (e.key === 'Escape' && !document.querySelector('.msheet-wrap,.mpop')) closeNowPlaying(); };
+  const key = (e) => {
+    if (e.key === 'Escape' && !document.querySelector('.msheet-wrap,.mpop')) { closeNowPlaying(); return; }
+    // Keyboard: space = play / pause, ← → = seek 5 s, Shift + ← → = previous / next song.
+    if (e.target.closest?.('input,textarea,select,button,[contenteditable]') || document.querySelector('.msheet-wrap,.mpop')) return;
+    if (e.key === ' ') { e.preventDefault(); player.toggle(); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); e.shiftKey ? player.next() : player.seekBy(5); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); e.shiftKey ? player.prev() : player.seekBy(-5); }
+  };
   document.addEventListener('keydown', key); np.offs.push(() => document.removeEventListener('keydown', key));
   const vis = () => syncVideo();
   document.addEventListener('visibilitychange', vis); np.offs.push(() => document.removeEventListener('visibilitychange', vis));
@@ -404,12 +403,18 @@ function renderState() {
   const p = el.querySelector('[data-act="play"]');
   p.innerHTML = icon(player.playing ? 'pause-fill' : 'play-fill');
   p.setAttribute('aria-label', player.playing ? 'Tạm dừng' : 'Phát');
-  el.querySelector('[data-act="shuffle"]').setAttribute('aria-pressed', player.shuffle);
-  const r = el.querySelector('[data-act="repeat"]');
-  r.innerHTML = icon(player.repeat === 'one' ? 'repeat-one' : 'repeat');
-  r.setAttribute('aria-pressed', player.repeat !== 'off');
+  paintModes(el);
   el.querySelector('[data-act="sleep"]').setAttribute('aria-pressed', !!player.sleep);
 }
+
+// The shuffle and repeat buttons show the mode they are in (icon, label and highlight).
+function paintModes(el) {
+  const sm = shuffleMode(player.shuffle, player.catShuffle), rm = repeatMode(player.repeat);
+  const sb = el.querySelector('[data-act="shuffle"]'), rb = el.querySelector('[data-act="repeat"]');
+  if (sb) { sb.innerHTML = icon(sm.icon); sb.setAttribute('aria-pressed', sm.id !== 'off'); sb.title = sb.ariaLabel = 'Trộn bài: ' + sm.label; }
+  if (rb) { rb.innerHTML = icon(rm.icon); rb.setAttribute('aria-pressed', rm.id !== 'off'); rb.title = rb.ariaLabel = 'Lặp lại: ' + rm.label; }
+}
+export { paintModes };
 
 function renderStatus() { const s = np?.el.querySelector('[data-status]'); if (s) s.textContent = player.status || ''; }
 function renderVol() {

@@ -873,3 +873,9 @@ body.m-has-bottom.has-dock main#view { padding-bottom: calc(var(--dock-h, 0px) +
 @media (max-width: 640px) { .mhero.is-list .mart.hero.round { border-radius: 50%; } }
 .mmenu-on { margin-left: auto; display: flex; color: var(--accent); }
 .mmenu-on .ic { width: 18px; height: 18px; }
+.mmenu .mm-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.mmenu .mm-t b { font-weight: 600; }
+.mmenu .mm-t small { color: var(--muted); font-size: .8rem; }
+.mmenu button .ic { flex: none; width: 22px; height: 22px; }
+.mmenu button { min-height: 48px; }
+.mmenu button span.mmenu-on { flex: none; }
