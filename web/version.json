@@ -1,7 +1,15 @@
 {
-  "app": "0.9.5.5",
+  "app": "0.9.5.6",
   "released": "2026-10-21",
   "changelog": [
+    {
+      "version": "0.9.5.6",
+      "date": "2026-10-21",
+      "notes": [
+        "Sách: thanh nhạc nổi nằm ngay trên thanh tab dưới, không còn che nhau",
+        "Sách: giữ lâu (hoặc bấm chuột phải) một cuốn để mở menu: mở, sửa thông tin, đổi trạng thái, chọn nhiều cuốn, xoá"
+      ]
+    },
     {
       "version": "0.9.5.5",
       "date": "2026-10-21",
