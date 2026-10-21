@@ -136,7 +136,11 @@ export const dropbox = {
     const out = [];
     let r = await rpc('/files/list_folder', { path: sub ? '/' + sub : '', recursive: false, include_deleted: false });
     for (;;) {
-      if (!r.ok) throw await bad(r, 'mở thư mục');
+      if (!r.ok) {
+        const body = await r.text().catch(() => '');
+        if (r.status === 409 && /not_found/.test(body)) throw err('Thư mục không còn trên Dropbox: ' + (sub || '/'), 'missing');
+        throw err(`Dropbox lỗi ${r.status} khi mở thư mục: ${body.slice(0, 200)}`, 'dropbox');
+      }
       const j = JSON.parse(await r.text());
       for (const e of j.entries) {
         if (e['.tag'] !== 'folder' && e['.tag'] !== 'file') continue;
