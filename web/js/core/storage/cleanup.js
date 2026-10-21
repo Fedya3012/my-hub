@@ -3,7 +3,7 @@
 // device (linked handle, OPFS, IndexedDB copy) that cannot be found any more. Cloud-only copies are kept.
 import { db } from '../db.js';
 import { local } from './local.js';
-import { syncFolders } from './folders.js';
+import { syncFolders, pruneOrphans } from './folders.js';
 import { tasks } from '../tasks.js';
 
 async function localMissing(f) {
@@ -31,6 +31,7 @@ export async function cleanMissing(moduleId) {
   try {
     const r = await syncFolders({ pruneOnly: true }).catch(() => null);
     removed += r?.removed || 0;
+    removed += await pruneOrphans().catch(() => 0);
     const items = (await db.items.filter(i => !i.deleted && (moduleId === 'library' || i.moduleId === moduleId)).toArray());
     const gone = { music: [], books: [], other: [] };
     for (let n = 0; n < items.length; n++) {

@@ -139,6 +139,7 @@ export const onedrive = {
     let url = (sub ? item(sub) + ':' : ROOT) + '/children?$select=name,folder,size&$top=200';
     while (url) {
       const r = await api(url);
+      if (r.status === 404) throw err('Thư mục không còn trên OneDrive: ' + (sub || '/'), 'missing');
       if (!r.ok) throw await bad(r, 'mở thư mục');
       const j = JSON.parse(await r.text());
       for (const e of j.value || []) out.push({ name: e.name, path: (sub ? sub + '/' : '') + e.name, isDir: !!e.folder, size: e.size || 0 });
