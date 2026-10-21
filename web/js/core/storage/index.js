@@ -3,7 +3,7 @@
 //   mode 'local'  : DB + files on this device only.
 //   mode 'github' : "Tài khoản GitHub": the library and progress sync through a private repo
 //                   (storage/github.js); files (music, books) always stay on the device.
-//   mode 'dropbox' | 'webdav' | 'filejump': the same data goes to a cloud drive (storage/dropbox.js,
+//   mode 'dropbox' | 'onedrive' | 'webdav' | 'filen': the same data goes to a cloud drive (storage/dropbox.js,
 //                   webdav.js), and music / book files are uploaded there too (syncFiles) and fetched
 //                   on demand by a device that does not have them yet.
 // github needs the GitHub account (js/core/account.js; signing out goes back to 'local'); the drives keep
@@ -19,10 +19,11 @@ import { tasks, abortError } from '../tasks.js';
 import { local } from './local.js';
 import { github } from './github.js';
 import { dropbox } from './dropbox.js';
+import { onedrive } from './onedrive.js';
 import { webdavAdapter } from './webdav.js';
 
 // Cloud drives that also hold the files. The adapter in use follows the storage mode.
-export const drives = { dropbox, webdav: webdavAdapter('webdav'), filejump: webdavAdapter('filejump') };
+export const drives = { dropbox, onedrive, webdav: webdavAdapter('webdav'), filen: webdavAdapter('filen') };
 let activeMode = 'local';
 // Where the library snapshot and progress live: the signed-in GitHub account, or the chosen drive.
 const cloud = () => drives[activeMode] || github;
@@ -34,7 +35,8 @@ export const MODES = {
   github: { label: 'Tài khoản GitHub', hint: 'Đăng nhập GitHub (dán token): thư viện và tiến độ đồng bộ qua một kho riêng tư của bạn. Tệp nhạc/sách ở lại trên từng máy.' },
   dropbox: { label: 'Dropbox', hint: 'Đăng nhập Dropbox một lần: thư viện, tiến độ và cả tệp nhạc/sách đồng bộ qua thư mục riêng của app. Máy khác tải tệp về khi cần.' },
   webdav: { label: 'WebDAV', hint: 'Nextcloud, Synology, Koofr, pCloud… Nhập địa chỉ thư mục, tên và mật khẩu: dữ liệu và tệp nhạc/sách đồng bộ qua máy chủ của bạn.' },
-  filejump: { label: 'FileJump', hint: 'Dùng dung lượng FileJump (qua WebDAV): dữ liệu và tệp nhạc/sách đồng bộ giữa các máy.' },
+  onedrive: { label: 'OneDrive', hint: 'Đăng nhập OneDrive: thư viện, tiến độ và cả tệp nhạc/sách đồng bộ qua thư mục riêng của app (Apps/…). Máy khác tải tệp về khi cần.' },
+  filen: { label: 'Filen', hint: 'Dùng Filen (mã hoá đầu cuối) qua máy chủ WebDAV cục bộ của Filen Desktop/CLI: dữ liệu và tệp nhạc/sách đồng bộ giữa các máy.' },
 };
 export const isDrive = (m) => m in drives;
 

@@ -1,7 +1,14 @@
 {
-  "app": "0.9.2.0",
+  "app": "0.9.3.0",
   "released": "2026-10-21",
   "changelog": [
+    {
+      "version": "0.9.3.0",
+      "date": "2026-10-21",
+      "notes": [
+        "Bỏ FileJump. Thêm đồng bộ qua OneDrive (đăng nhập bằng mã, thư mục riêng của app, tệp lớn tải lên theo phần) và Filen (qua máy chủ WebDAV cục bộ của Filen Desktop/CLI)"
+      ]
+    },
     {
       "version": "0.9.2.0",
       "date": "2026-10-21",
@@ -238,6 +245,7 @@
       "js/core/storage/clouds.js",
       "js/core/storage/webdav.js",
       "js/core/storage/dropbox.js",
+      "js/core/storage/onedrive.js",
       "js/core/storage/cloud-ui.js",
       "js/modules/library/manifest.js",
       "js/modules/app-manager/manifest.js",

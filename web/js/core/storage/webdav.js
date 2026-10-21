@@ -1,4 +1,4 @@
-// WebDAV adapter (also FileJump, Nextcloud, Synology, Koofr, pCloud…). Only GET / PUT / DELETE are used,
+// WebDAV adapter (also Filen via its local WebDAV server, Nextcloud, Synology, Koofr, pCloud…). Only GET / PUT / DELETE are used,
 // in ONE folder that must already exist (no PROPFIND / MKCOL: the Android HTTP plugin cannot send them).
 //   hub-db.json, hub-live.json  : library snapshot and progress channel (If-Match on the ETag = no lost updates)
 //   f-<fileId>-<name>           : music / book files, uploaded after they are added, fetched when missing
@@ -11,7 +11,7 @@ const norm = (d) => JSON.stringify({ ...d, at: undefined });
 
 export const PRESETS = {
   webdav: { label: 'WebDAV', hint: 'Nextcloud, Synology, Koofr, pCloud, Box… hoặc máy chủ WebDAV của bạn.', urlHint: 'https://máy-chủ/remote.php/dav/files/ten/MyHub/' },
-  filejump: { label: 'FileJump', hint: 'FileJump hỗ trợ WebDAV. Lấy địa chỉ máy chủ WebDAV trong trang hướng dẫn của FileJump và đăng nhập bằng tài khoản FileJump.', urlHint: 'Dán địa chỉ WebDAV của FileJump', help: 'https://filejump.com/kb/webdav-setup' },
+  filen: { label: 'Filen', hint: 'Filen mã hoá đầu cuối nên không có kết nối trực tiếp: dùng Filen Desktop hoặc Filen CLI (lệnh “filen webdav”) trên máy tính để mở máy chủ WebDAV cục bộ, rồi nhập địa chỉ và tài khoản WebDAV đã đặt ở đó. Chạy được trong app Windows khi Filen đang mở.', urlHint: 'http://127.0.0.1:1900/MyHub/', defaultUrl: 'http://127.0.0.1:1900/MyHub/', help: 'https://docs.filen.io/docs/cli/' },
 };
 
 export const normUrl = (u) => { u = String(u || '').trim(); if (!/^https?:\/\//i.test(u)) throw err('Địa chỉ phải bắt đầu bằng https:// (hoặc http://).', 'bad_config'); return u.endsWith('/') ? u : u + '/'; };
