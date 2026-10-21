@@ -79,11 +79,11 @@ async function render() {
   if (tab) sessionStorage.setItem('music.tab', tab);
   root.innerHTML = `<div class="mlib page" data-grid="${prefs().gridSize}"${!tab && !search && ['album', 'artist', 'playlist', 'folder', ...Object.keys(GROUPS)].includes(head) ? ' data-detail="1"' : ''}>
     <header class="mlib-head">
-      <div class="mlib-title"><span class="eyebrow">Âm nhạc</span><h1>Nhạc</h1></div>
+      <div class="mlib-title"><span class="eyebrow">Âm nhạc</span><h1>Trình phát nhạc</h1></div>
       <div class="mlib-actions">
         <label class="search mlib-search">${icon('search')}<input type="search" placeholder="Tìm bài, album, nghệ sĩ…" value="${esc(search)}" aria-label="Tìm trong nhạc"></label>
         <button class="btn primary" data-act="add">${icon('plus')}<span>Thêm nhạc</span></button>
-        <button class="icon-btn" data-act="clean" aria-label="Dọn dữ liệu Nhạc" title="Dọn dữ liệu Nhạc: xoá bài đã mất tệp gốc">${icon('refresh')}</button>
+        <button class="icon-btn" data-act="clean" aria-label="Dọn dữ liệu Trình phát nhạc" title="Dọn dữ liệu Trình phát nhạc: xoá bài đã mất tệp gốc">${icon('refresh')}</button>
       </div>
     </header>
     ${SECTION_TABS.includes(tab) || head === 'browse' ? `<details class="msections"><summary>${icon('list')}<span>${esc(tab === 'songs' ? 'Âm nhạc · Bài hát' : 'Âm nhạc · ' + (NAMES[tab] || NAMES.browse))}</span><i aria-hidden="true">▾</i></summary>
@@ -94,7 +94,7 @@ async function render() {
   document.body.classList.add('m-has-bottom');
   const c = root.querySelector('.mcontent');
   root.querySelector('[data-act="add"]').onclick = (e) => addMenu(e.currentTarget);
-  root.querySelector('[data-act="clean"]').onclick = async () => { const m = await import('../../core/storage/cleanup.js'); if ((await m.cleanDataAction('music', 'Nhạc'))?.removed) render(); };
+  root.querySelector('[data-act="clean"]').onclick = async () => { const m = await import('../../core/storage/cleanup.js'); if ((await m.cleanDataAction('music', 'Trình phát nhạc'))?.removed) render(); };
   root.querySelector('[data-act="settings"]').onclick = () => import('./ui/customize.js').then(m => m.customizeSheet(() => render()));
   bindListening(root.querySelector('[data-on]'));
   const si = root.querySelector('.mlib-search input');
