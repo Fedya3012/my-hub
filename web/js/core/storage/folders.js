@@ -10,6 +10,15 @@ const MUSIC = /\.(mp3|flac|m4a|m4b|mp4|aac|alac|ogg|oga|opus|wav|wave|aif|aiff|a
 
 export const folderList = async () => (await getSetting('sync.folders', [])) || [];
 export async function setFolders(list) { await setSetting('sync.folders', [...new Set(list)]); }
+// Which app each chosen folder feeds: 'music' | 'books' | 'both' (default). path → value.
+export const APP_CHOICES = [['both', 'Nhạc và sách'], ['music', 'Chỉ nhạc'], ['books', 'Chỉ sách']];
+export const folderApps = async () => (await getSetting('sync.folderApps', {})) || {};
+export async function setFolderApp(path, app) {
+  const map = await folderApps();
+  if (app === 'both') delete map[path]; else map[path] = app;
+  await setSetting('sync.folderApps', map);
+}
+const inFolder = (file, folder) => file === folder || file.startsWith(folder.replace(/\/$/, '') + '/');
 export const canPickFolders = (mode) => typeof drives[mode]?.listDir === 'function';
 
 async function walk(d, sub, out) {
@@ -28,6 +37,8 @@ export async function syncFolders({ signal } = {}) {
   if (!d.connected() || !navigator.onLine) return { skipped: 'offline' };
   const folders = await folderList();
   if (!folders.length) return { skipped: 'none' };
+  const appMap = await folderApps();
+  const allows = (path, app) => folders.some(f => inFolder(path, f) && ((appMap[f] || 'both') === 'both' || appMap[f] === app));
 
   // Progress: folders scanned (one step per folder listed) and files found; then files imported (x / y, %).
   const scan = tasks.start({ label: 'Đang quét thư mục trên ' + d.label, unit: 'items', cancellable: true, delay: 300 });
@@ -47,7 +58,8 @@ export async function syncFolders({ signal } = {}) {
 
   const { isBookFile } = await import('../../modules/books/lib/formats.js');
   const done = (await getSetting('sync.folderDone', {})) || {};
-  const todo = found.filter(e => (MUSIC.test(e.name) || isBookFile({ name: e.name })) && done[e.path] !== e.size);
+  // A music file is imported only when a chosen folder above it feeds music; a book only when one feeds books.
+  const todo = found.filter(e => ((MUSIC.test(e.name) && allows(e.path, 'music')) || (!MUSIC.test(e.name) && isBookFile({ name: e.name }) && allows(e.path, 'books'))) && done[e.path] !== e.size);
   if (!todo.length) return { added: 0, failed: [] };
 
   const task = tasks.start({ label: `Đang nhập ${todo.length} tệp từ ${d.label}`, total: todo.length, unit: 'items', cancellable: true });

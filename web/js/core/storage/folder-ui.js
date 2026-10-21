@@ -1,7 +1,7 @@
 // The folder picker in Settings → Lưu trữ (drive modes that can list folders): browse the drive, tick the
 // folders to sync. Saved at once; "Đồng bộ ngay" then imports their music and books.
 import { drives } from './index.js';
-import { folderList, setFolders, canPickFolders } from './folders.js';
+import { folderList, setFolders, canPickFolders, folderApps, setFolderApp, APP_CHOICES } from './folders.js';
 import { esc } from '../ui.js';
 
 export async function folderPicker(el, mode, toast) {
@@ -9,6 +9,7 @@ export async function folderPicker(el, mode, toast) {
   const d = drives[mode];
   let cur = '';
   let chosen = new Set(await folderList());
+  let apps = await folderApps();
 
   const crumbs = () => {
     const parts = cur.split('/').filter(Boolean);
@@ -34,8 +35,17 @@ export async function folderPicker(el, mode, toast) {
           <input type="checkbox" data-pick="${esc(e.path)}" aria-label="Đồng bộ ${esc(e.name)}" ${chosen.has(e.path) ? 'checked' : ''} style="width:20px;height:20px;flex:none">
           <button type="button" class="btn small" data-go="${esc(e.path)}" style="flex:1;min-width:0;justify-content:flex-start;text-align:left">${esc(e.name)}</button>
         </div>`).join('') : `<p class="hint" style="margin:8px 0">${cur ? 'Thư mục này không có thư mục con.' : 'Chưa có thư mục nào trong thư mục ứng dụng của ' + esc(d.label) + '. Thêm thư mục trên ' + esc(d.label) + ' (trong thư mục Apps của app), rồi mở lại đây.'}</p>`}
-      ${chosen.size ? `<p class="hint" style="margin-top:8px">Đang đồng bộ: ${[...chosen].map(esc).join(', ')}</p>` : '<p class="hint" style="margin-top:8px">Chưa chọn thư mục nào.</p>'}`;
+      ${chosen.size ? `<p class="hint" style="margin:12px 0 4px">Thư mục đang đồng bộ và app nhận tệp:</p>
+        ${[...chosen].map(p => `<div style="${row}">
+          <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(p)}">${esc(p)}</span>
+          <select data-app="${esc(p)}" aria-label="App nhận tệp từ ${esc(p)}" style="flex:none;min-height:36px">${APP_CHOICES.map(([k, l]) => `<option value="${k}" ${(apps[p] || 'both') === k ? 'selected' : ''}>${l}</option>`).join('')}</select>
+        </div>`).join('')}` : '<p class="hint" style="margin-top:8px">Chưa chọn thư mục nào.</p>'}`;
     el.querySelectorAll('[data-go]').forEach(b => b.onclick = () => { cur = b.dataset.go; draw(); });
+    el.querySelectorAll('[data-app]').forEach(sel => sel.onchange = async () => {
+      await setFolderApp(sel.dataset.app, sel.value);
+      apps = await folderApps();
+      toast?.('Đã đổi app nhận tệp của thư mục');
+    });
     el.querySelectorAll('[data-pick]').forEach(c => c.onchange = async () => {
       const p = c.dataset.pick;
       if (c.checked) chosen.add(p); else chosen.delete(p);
