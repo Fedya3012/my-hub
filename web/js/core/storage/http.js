@@ -33,7 +33,9 @@ export async function http(url, { method = 'GET', headers = {}, body, signal, on
       });
       onProgress?.(1, 1);
       const raw = r.data;
-      const buf = method !== 'GET' || raw == null ? new TextEncoder().encode(typeof raw === 'string' ? raw : '').buffer : unb64(raw);
+      // Only a successful GET comes back as base64 (responseType 'blob'); error bodies such as a 404 are plain text or JSON.
+      const asText = () => new TextEncoder().encode(typeof raw === 'string' ? raw : raw == null ? '' : JSON.stringify(raw)).buffer;
+      const buf = method !== 'GET' || raw == null || r.status < 200 || r.status >= 300 ? asText() : (() => { try { return unb64(raw); } catch { return asText(); } })();
       return wrap(r.status, r.headers, buf);
     }
     const res = await fetch(url, { method, headers, body, signal, cache: 'no-store' });
