@@ -6,6 +6,7 @@ import { local } from './local.js';
 import { syncFolders, pruneOrphans } from './folders.js';
 import { tasks } from '../tasks.js';
 
+let unknown = 0; // files that could not be checked (no permission) in the last clean
 async function localMissing(f) {
   const loc = f.locations?.local;
   if (!loc) return false;
@@ -14,7 +15,11 @@ async function localMissing(f) {
       const row = await db.handles.get(loc.ref);
       if (!row) return true;
       const h = row.handle;
-      if (h.queryPermission && (await h.queryPermission({ mode: 'read' })) !== 'granted') return false; // cannot tell
+      // After a restart the browser reports the folder permission as "prompt". The button is a click, so ask once here;
+      // if still refused, the file cannot be checked and is kept.
+      if (h.queryPermission && (await h.queryPermission({ mode: 'read' })) !== 'granted') {
+        if ((await h.requestPermission?.({ mode: 'read' }).catch(() => 'denied')) !== 'granted') { unknown++; return false; }
+      }
       await h.getFile();
       return false;
     }
@@ -28,6 +33,7 @@ async function localMissing(f) {
 export async function cleanMissing(moduleId) {
   const t = tasks.start({ label: 'Đang dọn dữ liệu', unit: 'items', delay: 0 });
   let removed = 0;
+  unknown = 0;
   try {
     const r = await syncFolders({ pruneOnly: true }).catch(() => null);
     removed += r?.removed || 0;
@@ -49,7 +55,7 @@ export async function cleanMissing(moduleId) {
     removed += gone.music.length + gone.books.length + gone.other.length;
     t.finish(removed ? `Đã xoá ${removed} mục mất tệp` : 'Không có mục nào mất tệp');
   } catch (e) { t.fail(e); throw e; }
-  return { removed };
+  return { removed, unknown };
 }
 
 // The button action shared by every app: confirm, clean, report. moduleId 'library' = everything.
@@ -59,6 +65,7 @@ export async function cleanDataAction(moduleId, appName) {
   try {
     const r = await cleanMissing(moduleId);
     toast(r.removed ? `Đã xoá ${r.removed} mục mất tệp` : 'Không có mục nào mất tệp');
+    if (r.unknown) toast(`${r.unknown} tệp chưa kiểm tra được: app chưa được cấp quyền đọc thư mục. Bấm Dọn lại và cho phép.`, 'warn');
     return r;
   } catch (e) { toast(e.message, 'error'); return null; }
 }
