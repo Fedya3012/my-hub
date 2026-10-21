@@ -1,7 +1,14 @@
 {
-  "app": "0.9.4.1",
+  "app": "0.9.4.2",
   "released": "2026-10-21",
   "changelog": [
+    {
+      "version": "0.9.4.2",
+      "date": "2026-10-21",
+      "notes": [
+        "Lỗi “Không kết nối được máy chủ” khi đăng nhập ổ đám mây nay kèm lý do cụ thể để dò nguyên nhân"
+      ]
+    },
     {
       "version": "0.9.4.1",
       "date": "2026-10-21",

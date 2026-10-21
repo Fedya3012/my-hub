@@ -52,8 +52,9 @@ export async function http(url, { method = 'GET', headers = {}, body, signal, on
   } catch (e) {
     if (e?.name === 'AbortError') throw e;
     if (e?.code) throw e;
+    const why = String(e?.message || e).replace(/^Error invoking remote method '[^']*': (Error: )?/, '').slice(0, 160);
     throw err(viaShell && !nativeShell()
       ? 'Trình duyệt không cho gọi máy chủ này (thiếu CORS). Dùng app Windows hoặc Android, hoặc bật CORS cho máy chủ WebDAV.'
-      : 'Không kết nối được máy chủ. Kiểm tra mạng và địa chỉ.', 'offline');
+      : `Không kết nối được máy chủ. Kiểm tra mạng và địa chỉ. (${why})`, 'offline');
   }
 }
