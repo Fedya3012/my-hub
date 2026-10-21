@@ -1,7 +1,18 @@
 {
-  "app": "0.9.5.8",
+  "app": "0.9.5.9",
   "released": "2026-10-21",
   "changelog": [
+    {
+      "version": "0.9.5.9",
+      "date": "2026-10-21",
+      "notes": [
+        "Thư mục đồng bộ: mở thành trang riêng (Cài đặt › Thư mục đồng bộ) với thẻ trạng thái ổ, cây thư mục, thẻ tiến độ và nút Đồng bộ ngay",
+        "Cây thư mục: thư mục con thụt vào dưới thư mục cha có mũi tên mở/đóng; tệp nhạc/sách có biểu tượng riêng; chọn app dùng đúng tên và biểu tượng của app",
+        "Mỗi thư mục hiện dung lượng, số tệp, số nhạc/sách; có dòng tổng cho các thư mục đã chọn",
+        "Quản lý app: nút Dọn dữ liệu của từng app xoá các mục đã mất tệp gốc (trong máy hoặc thư mục đồng bộ)",
+        "Ẩn toàn bộ thanh cuộn, chặn tràn ngang màn hình"
+      ]
+    },
     {
       "version": "0.9.5.8",
       "date": "2026-10-21",
