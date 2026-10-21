@@ -1,9 +1,9 @@
 {
-  "app": "0.9.5.1.1",
+  "app": "0.9.5.2",
   "released": "2026-10-21",
   "changelog": [
     {
-      "version": "0.9.5.1.1",
+      "version": "0.9.5.2",
       "date": "2026-10-21",
       "notes": [
         "Sửa: chọn thư mục đồng bộ hiện đúng (trước đây bố cục lỗi và không rõ vì sao trống)",
