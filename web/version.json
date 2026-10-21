@@ -1,7 +1,17 @@
 {
-  "app": "0.9.7.0",
+  "app": "0.9.7.2",
   "released": "2026-10-21",
   "changelog": [
+    {
+      "version": "0.9.7.2",
+      "date": "2026-10-21",
+      "notes": [
+        "Trình phát nhạc: menu Lặp lại có thêm 'Phát tất cả danh mục' và 'Lặp lại tất cả danh mục' (lần lượt từng album, nghệ sĩ hoặc danh sách phát); menu Trộn có 'Danh mục ngẫu nhiên', 'Ngẫu nhiên bài hát/danh mục', 'Xáo trộn tất cả'",
+        "Trình phát nhạc: dấu tích trong menu dùng icon thật",
+        "Trình phát nhạc: Trang chủ mượt hơn (tính số liệu thư viện một lần, tải song song, cover flow nạp sau cùng)",
+        "Sửa lệch số phiên bản giữa app và danh sách cập nhật của bản 0.9.7.1"
+      ]
+    },
     {
       "version": "0.9.7.0",
       "date": "2026-10-21",
@@ -393,7 +403,7 @@
       ]
     },
     {
-      "version": "0.5.0",
+      "version": "0.5.1",
       "date": "2026-10-20",
       "notes": [
         "Tài khoản Google thay Supabase",
@@ -532,7 +542,7 @@
     },
     "music": {
       "name": "Trình phát nhạc",
-      "version": "0.5.0",
+      "version": "0.5.1",
       "minApp": "0.3.0",
       "files": [
         "js/modules/music/index.js",
@@ -584,7 +594,7 @@
       ],
       "changelog": [
         {
-          "version": "0.5.0",
+          "version": "0.5.1",
           "date": "2026-10-21",
           "notes": [
             "Trình phát nhạc: hết tiếng \"tạch\" khi tạm dừng trên Android (giữ âm lượng về 0 đến khi phát lại)"
