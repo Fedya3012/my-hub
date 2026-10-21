@@ -276,3 +276,6 @@ main#view > section.bk { animation: none; }
 .bk-drawer { display: grid; gap: 8px; }
 @keyframes bk-fade { from { opacity: 0; } }
 @keyframes bk-up { from { transform: translateY(24px); opacity: 0; } }
+
+/* Books reader: keep the app's music dock above the reader's bottom bar instead of under it. */
+body.bk-reader-open #dock .mdock { z-index: 850; bottom: calc(64px + var(--sai-bottom, 0px)); }

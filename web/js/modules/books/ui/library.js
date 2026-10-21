@@ -34,6 +34,7 @@ export async function render(el, { ctx, snap, arg, go }) {
       <div class="bk-tools">
         <select id="bk-sort" aria-label="Sắp xếp">${Object.entries(SORTS).map(([k, [l]]) => `<option value="${k}" ${k === sort ? 'selected' : ''}>${l}</option>`).join('')}</select>
         <div class="seg" role="group" aria-label="Kiểu hiển thị"><button data-view="grid" aria-pressed="${view === 'grid'}" aria-label="Lưới">${icon('grid')}</button><button data-view="list" aria-pressed="${view === 'list'}" aria-label="Danh sách">${icon('list')}</button></div>
+        <button class="btn primary" data-add aria-label="Thêm sách">${icon('plus')}<span>Thêm</span></button>
         <button class="btn" data-sel aria-pressed="${st.select}">${icon('b-check-all')}<span>Chọn</span></button>
         <button class="icon-btn" data-more aria-label="Thêm">${icon('b-more')}</button>
       </div>
@@ -66,6 +67,11 @@ export async function render(el, { ctx, snap, arg, go }) {
   el.querySelectorAll('[data-st]').forEach(b => b.onclick = () => { st.status = b.dataset.st; el.querySelectorAll('[data-st]').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', x === b); }); draw(); });
   $('[data-sel]').onclick = (e) => { st.select = !st.select; if (!st.select) st.sel.clear(); e.currentTarget.setAttribute('aria-pressed', st.select); draw(); };
   $('[data-help]').onclick = () => sheet('Cú pháp tìm kiếm', `<table class="bk-help">${QUERY_HELP.map(([q, d]) => `<tr><td><code>${esc(q)}</code></td><td>${esc(d)}</td></tr>`).join('')}</table><p class="muted">Kết hợp nhiều điều kiện bằng dấu cách (tất cả phải đúng). Không phân biệt dấu tiếng Việt.</p>`);
+  $('[data-add]').onclick = (e) => menu(e.currentTarget, [
+    { label: 'Thêm tệp sách', icon: 'upload', run: async () => { const m = await import('./importer.js'); m.importFiles(await m.pickFiles()); } },
+    { label: 'Thêm cả thư mục', icon: 'b-folder', run: async () => { const m = await import('./importer.js'); m.importFiles(await m.pickFiles({ folder: true })); } },
+    { label: 'Sách giấy (ISBN / quét mã)', icon: 'b-scan', run: async () => (await import('./importer.js')).addPaperBook(ctx) },
+  ]);
   $('[data-more]').onclick = (e) => menu(e.currentTarget, [
     { label: 'Lưu tìm kiếm thành kệ thông minh', icon: 'b-sparkle', run: () => saveSearch(st.q, 'book-smart') },
     { label: 'Lưu thành thư viện ảo', icon: 'library', run: () => saveSearch(st.q, 'book-library') },

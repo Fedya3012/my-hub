@@ -1,7 +1,15 @@
 {
-  "app": "0.9.5.4",
+  "app": "0.9.5.5",
   "released": "2026-10-21",
   "changelog": [
+    {
+      "version": "0.9.5.5",
+      "date": "2026-10-21",
+      "notes": [
+        "Đọc sách + nghe nhạc: thanh nhạc nổi phía trên thanh điều khiển của trình đọc, không che và không bị che",
+        "Thư viện Sách: nút Thêm (tệp, thư mục, sách giấy); sửa và xoá sách từ trang sách hoặc chọn nhiều cuốn"
+      ]
+    },
     {
       "version": "0.9.5.4",
       "date": "2026-10-21",
