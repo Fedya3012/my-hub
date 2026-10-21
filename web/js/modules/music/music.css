@@ -196,7 +196,7 @@
 .mlib-title { flex: 1 1 auto; }
 .mlib-actions { display: flex; align-items: center; gap: 8px; flex: 1 1 380px; justify-content: flex-end; }
 .mlib-search { flex: 1; max-width: 420px; flex-direction: row; margin: 0; }
-@media (max-width: 600px) { .mlib-actions .btn span { display: none; } .mlib-search { max-width: none; } }
+@media (max-width: 600px) { .mlib-actions .btn span { display: none; } .mlib-search { max-width: none; } .mlib-actions { flex-basis: 100%; min-width: 0; } .mlib-search { min-width: 0; } .mlib-search input { min-width: 0; width: 100%; } .mlib-actions > * { flex-shrink: 0; } .mlib-actions > .mlib-search { flex-shrink: 1; } }
 .mtabs { display: flex; gap: 4px; overflow-x: auto; border-bottom: 1px solid var(--line); scrollbar-width: none; margin-top: -6px; }
 .mtabs a { padding: 10px 14px; color: var(--muted); text-decoration: none; font-weight: 600; font-size: .92rem; white-space: nowrap; border-bottom: 2px solid transparent; margin-bottom: -1px; }
 .mtabs a[aria-selected="true"] { color: var(--fg); border-color: var(--accent); }
