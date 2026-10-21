@@ -50,6 +50,8 @@ async function render() {
             <strong>${m.label}</strong><span>${m.hint}</span></label>`).join('')}
       </div>
 
+      <p class="hint">Chọn một ô ở trên để kết nối: <b>Dropbox</b>, <b>WebDAV</b> và <b>FileJump</b> sẽ mở hộp đăng nhập. Đang dùng chế độ này rồi thì bấm “Đổi tài khoản” ở dưới.</p>
+      <div class="row-actions" style="flex-wrap:wrap">${['dropbox', 'webdav', 'filejump'].map(k => `<button class="btn ${st.mode === k ? 'primary' : ''}" data-connect="${k}">${icon('cloud')}${st.mode === k ? MODES[k].label + ' · đổi tài khoản' : 'Kết nối ' + MODES[k].label}</button>`).join('')}</div>
       <div class="panel">
         <dl class="kv">
           <dt>Lưu tệp trên máy bằng</dt><dd>${st.backend === 'opfs' ? 'Hệ thống tệp riêng của ứng dụng (OPFS)' : 'IndexedDB'}</dd>
@@ -141,6 +143,7 @@ async function render() {
     ctx.toast('Chế độ lưu trữ: ' + MODES[r.value].label);
     render();
   });
+  root.querySelectorAll('[data-connect]').forEach(b => b.onclick = async () => { const { useDrive } = await import('../../core/storage/cloud-ui.js'); await useDrive(b.dataset.connect, { reconnect: true }); render(); });
   on('reconnect', async () => { const { useDrive } = await import('../../core/storage/cloud-ui.js'); await useDrive(st.mode, { reconnect: true }); render(); });
   on('persist', async () => { const ok = await ctx.storage.adapters.local.persist(); ctx.toast(ok ? 'Đã bật lưu trữ bền vững' : 'Trình duyệt chưa cho phép', ok ? 'info' : 'warn'); render(); });
   on('rename', async () => {
