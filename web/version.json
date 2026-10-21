@@ -1,7 +1,15 @@
 {
-  "app": "0.9.5.3",
+  "app": "0.9.5.4",
   "released": "2026-10-21",
   "changelog": [
+    {
+      "version": "0.9.5.4",
+      "date": "2026-10-21",
+      "notes": [
+        "Sách: trên điện thoại có thanh tab dưới (Trang chủ, Thư viện, Thịnh hành, Kệ sách, Thêm); lưới bìa gọn 3 cột",
+        "Sách: trang chủ và mục tiêu sẽ chỉnh giao diện ở bản sau"
+      ]
+    },
     {
       "version": "0.9.5.3",
       "date": "2026-10-21",

@@ -20,6 +20,11 @@ const TABS = [
   ['authors', 'b-author', 'Tác giả'], ['series', 'b-series', 'Bộ sách'], ['stats', 'b-chart', 'Thống kê'],
   ['goals', 'b-target', 'Mục tiêu'], ['tools', 'upload', 'Thêm & nhập'],
 ];
+// Phone bottom bar: the five main sections (the top tab row shows all of them on wide screens).
+const BOTTOM = [
+  ['', 'b-home', 'Trang chủ'], ['library', 'library', 'Thư viện'], ['trending', 'b-sparkle', 'Thịnh hành'],
+  ['shelves', 'b-shelf', 'Kệ sách'], ['tools', 'b-more', 'Thêm'],
+];
 const PAGES = {
   '': () => import('./ui/home.js'), library: () => import('./ui/library.js'), trending: () => import('./ui/trending.js'), book: () => import('./ui/detail.js'),
   shelves: () => import('./ui/shelves.js'), shelf: () => import('./ui/shelves.js'), authors: () => import('./ui/shelves.js'),
@@ -71,7 +76,8 @@ async function render() {
         ${libs.length ? `<select class="bk-vlib" aria-label="Thư viện ảo"><option value="">Tất cả sách</option>${libs.map(l => `<option value="${l.id}" ${l.id === pref('library') ? 'selected' : ''}>${esc(l.name)}</option>`).join('')}</select>` : ''}</div>
       <nav class="bk-tabs" aria-label="Mục của Sách">${TABS.map(([r, ic, l]) => `<a href="#books${r ? '/' + r : ''}" class="${tab === r ? 'on' : ''}" ${tab === r ? 'aria-current="page"' : ''}>${icon(ic)}<span>${l}</span></a>`).join('')}</nav>
     </header>
-    <div class="bk-page" id="bk-page"></div></section>`;
+    <div class="bk-page" id="bk-page"></div>
+    <nav class="bk-bottom" aria-label="Mục chính của Sách">${BOTTOM.map(([r, ic, l]) => `<a href="#books${r ? '/' + r : ''}" class="${tab === r ? 'on' : ''}" ${tab === r ? 'aria-current="page"' : ''}>${icon(ic)}<span>${l}</span></a>`).join('')}</nav></section>`;
   root.querySelector('.bk-vlib')?.addEventListener('change', async (e) => { await (await import('./lib/prefs.js')).set('library', e.target.value); render(); });
   root.querySelector('.bk-tabs a.on')?.scrollIntoView?.({ inline: 'center', block: 'nearest' });
   const page = await (PAGES[head] || PAGES[''])();
