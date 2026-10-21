@@ -66,7 +66,7 @@ function createWindow() {
 // process to make the request (no CORS there). Only http(s) and only the methods the app uses.
 function setupHttp() {
   ipcMain.handle('hub:http', async (_e, { url, method = 'GET', headers = {}, body = null }) => {
-    if (!/^https?:\/\//i.test(url) || !['GET', 'PUT', 'DELETE', 'POST', 'HEAD'].includes(method)) throw new Error('Yêu cầu không hợp lệ');
+    if (!/^https?:\/\//i.test(url) || !['GET', 'PUT', 'DELETE', 'POST', 'HEAD', 'PROPFIND'].includes(method)) throw new Error('Yêu cầu không hợp lệ');
     const res = await net.fetch(url, { method, headers, body: body == null ? undefined : (typeof body === 'string' ? body : Buffer.from(body)), bypassCustomProtocolHandlers: true });
     const buf = method === 'HEAD' ? new ArrayBuffer(0) : await res.arrayBuffer();
     return { status: res.status, headers: Object.fromEntries(res.headers.entries()), body: buf };

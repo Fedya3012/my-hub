@@ -19,6 +19,28 @@ const auth = (c) => 'Basic ' + btoa(String.fromCharCode(...new TextEncoder().enc
 const safe = (s) => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[đĐ]/g, 'd').replace(/[^\w.\-]+/g, '_').slice(0, 80);
 export const fileKey = (row) => `f-${row.id}-${safe(row.name || 'file')}`;
 
+// 'a b/c.mp3' → 'a%20b/c.mp3' (slashes kept). Keys without '/' encode the same way as encodeURIComponent.
+const encodePath = (p) => String(p).split('/').filter(Boolean).map(encodeURIComponent).join('/');
+// Reads a WebDAV multistatus answer: the folder itself is dropped, names are decoded.
+function parseListing(xml, basePath, sub) {
+  const doc = new DOMParser().parseFromString(xml, 'application/xml');
+  const base = decodeURIComponent(basePath).replace(/\/+$/, '');
+  const out = [];
+  for (const resp of doc.getElementsByTagNameNS('DAV:', 'response')) {
+    const href = resp.getElementsByTagNameNS('DAV:', 'href')[0]?.textContent || '';
+    const p = decodeURIComponent(new URL(href, 'http://x').pathname).replace(/\/+$/, '');
+    if (!p || p === base) continue;
+    const name = p.split('/').pop();
+    if (!name) continue;
+    out.push({
+      name, path: (sub ? sub + '/' : '') + name,
+      isDir: resp.getElementsByTagNameNS('DAV:', 'collection').length > 0,
+      size: +(resp.getElementsByTagNameNS('DAV:', 'getcontentlength')[0]?.textContent || 0),
+    });
+  }
+  return out.sort((x, y) => (y.isDir - x.isDir) || x.name.localeCompare(y.name, 'vi'));
+}
+
 export function webdavAdapter(id) {
   const cfg = () => getCloud(id);
   const req = async (name, { method = 'GET', headers = {}, body, signal, onProgress } = {}) => {
@@ -94,5 +116,25 @@ export function webdavAdapter(id) {
       return r.blob();
     },
     async removeFile(key) { const r = await req(key, { method: 'DELETE' }); if (!r.ok && r.status !== 404) throw fail(r, 'xoá tệp'); },
+
+    // Folder picking (WebDAV PROPFIND, Depth 1). Not sent by the Android HTTP plugin: the caller shows why.
+    // sub = folder path under the connected folder ('' = that folder itself). → [{ name, path, isDir, size }]
+    async listDir(sub = '') {
+      const c = cfg();
+      if (!c?.url) throw err('Chưa kết nối ' + PRESETS[id].label + '.', 'signed_out');
+      const url = c.url + encodePath(sub) + (sub ? '/' : '');
+      const body = '<?xml version="1.0" encoding="utf-8"?><d:propfind xmlns:d="DAV:"><d:prop><d:resourcetype/><d:getcontentlength/></d:prop></d:propfind>';
+      const r = await http(url, { method: 'PROPFIND', viaShell: true, body, headers: { Authorization: auth(c), Depth: '1', 'Content-Type': 'application/xml' } });
+      if (r.status === 401 || r.status === 403) throw err('Máy chủ từ chối tên đăng nhập hoặc mật khẩu.', 'reconnect');
+      if (!r.ok) throw fail(r, 'mở thư mục');
+      return parseListing(await r.text(), new URL(url).pathname, sub);
+    },
+    async getPath(path, { signal, onProgress } = {}) {
+      const c = cfg();
+      const r = await http(c.url + encodePath(path), { signal, onProgress, viaShell: true, headers: { Authorization: auth(c) } });
+      if (r.status === 404) throw err('Tệp không còn trên ' + PRESETS[id].label + '.', 'missing');
+      if (!r.ok) throw fail(r, 'tải tệp về');
+      return r.blob();
+    },
   };
 }

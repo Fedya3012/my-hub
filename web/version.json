@@ -1,7 +1,16 @@
 {
-  "app": "0.9.4.3",
+  "app": "0.9.5.0",
   "released": "2026-10-21",
   "changelog": [
+    {
+      "version": "0.9.5.0",
+      "date": "2026-10-21",
+      "notes": [
+        "Thư mục đồng bộ: trên pCloud và WebDAV, chọn một hoặc nhiều thư mục trong ổ; nhạc và sách trong đó (kể cả thư mục con) hiện trong thư viện, không sao chép vào app mà tải về khi phát hoặc mở",
+        "Trên Android chưa mở được danh sách thư mục (cần API pCloud, sẽ làm ở bản sau)",
+        "Android: thêm quyền camera để quét mã vạch sách"
+      ]
+    },
     {
       "version": "0.9.4.3",
       "date": "2026-10-21",
@@ -273,6 +282,8 @@
       "js/core/storage/clouds.js",
       "js/core/storage/webdav.js",
       "js/core/atob-guard.js",
+      "js/core/storage/folders.js",
+      "js/core/storage/folder-ui.js",
       "js/core/storage/dropbox.js",
       "js/core/storage/onedrive.js",
       "js/core/storage/cloud-ui.js",
