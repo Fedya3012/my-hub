@@ -1,7 +1,15 @@
 {
-  "app": "0.9.6.1",
+  "app": "0.9.6.2",
   "released": "2026-10-21",
   "changelog": [
+    {
+      "version": "0.9.6.2",
+      "date": "2026-10-21",
+      "notes": [
+        "Nhạc: trang Album trên điện thoại thiết kế lại (ảnh bìa full-width, thông tin trên nền sáng, hàng nút phát/ngẫu nhiên/yêu thích/gắn/thêm), bỏ mảng trống phía trên",
+        "Sửa thanh tab dưới và thanh nhạc nổi bị cuộn/kéo giãn theo trang (ghim cố định, tắt overscroll)"
+      ]
+    },
     {
       "version": "0.9.6.1",
       "date": "2026-10-21",
