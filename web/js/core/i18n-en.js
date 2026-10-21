@@ -2188,4 +2188,11 @@ export default {"(Google cấp quyền theo từng giờ). Bấm một lần đ�
 " (trong thư mục Apps của app), rồi mở lại đây.":" (inside the Apps folder of the app), then reopen this page.",
 "Thư mục này không có thư mục con.":"This folder has no subfolders.",
 "· đang đồng bộ":"· syncing",
-"Thư viện, tiến độ và tệp nhạc/sách đang đồng bộ qua ":"Library, progress and music/book files are syncing through "};
+"Thư viện, tiến độ và tệp nhạc/sách đang đồng bộ qua ":"Library, progress and music/book files are syncing through ",
+"Chưa có thư mục nào trong thư mục ứng dụng của":"No folder yet in the app folder of",
+"Thêm thư mục trên":"Add a folder on",
+"(trong thư mục Apps của app), rồi mở lại đây.":"(inside the Apps folder of the app), then reopen this page.",
+"Chọn một tài khoản để đồng bộ thư viện và tiến độ. Dropbox, OneDrive, WebDAV và pCloud còn đồng bộ được cả tệp nhạc/sách. Chỉ dùng một tài khoản đồng bộ tại một thời điểm.":"Pick one account to sync your library and progress. Dropbox and OneDrive also sync music and book files. Only one sync account is used at a time.",
+"Đăng nhập bằng":"Sign in with",
+"Tài khoản đồng bộ":"Sync account",
+"Thư viện, tiến độ và tệp nhạc/sách đang đồng bộ qua":"Library, progress and music/book files are syncing through"};
