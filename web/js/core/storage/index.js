@@ -3,8 +3,8 @@
 //   mode 'local'  : DB + files on this device only.
 //   mode 'github' : "Tài khoản GitHub": the library and progress sync through a private repo
 //                   (storage/github.js); files (music, books) always stay on the device.
-//   mode 'dropbox' | 'onedrive' | 'webdav' | 'pcloud': the same data goes to a cloud drive (storage/dropbox.js,
-//                   webdav.js), and music / book files are uploaded there too (syncFiles) and fetched
+//   mode 'dropbox' | 'onedrive': the same data goes to a cloud drive (storage/dropbox.js, onedrive.js),
+//                   and music / book files are uploaded there too (syncFiles) and fetched
 //                   on demand by a device that does not have them yet.
 // github needs the GitHub account (js/core/account.js; signing out goes back to 'local'); the drives keep
 // their own connection (storage/clouds.js).
@@ -20,10 +20,9 @@ import { local } from './local.js';
 import { github } from './github.js';
 import { dropbox } from './dropbox.js';
 import { onedrive } from './onedrive.js';
-import { webdavAdapter } from './webdav.js';
 
 // Cloud drives that also hold the files. The adapter in use follows the storage mode.
-export const drives = { dropbox, onedrive, webdav: webdavAdapter('webdav'), pcloud: webdavAdapter('pcloud') };
+export const drives = { dropbox, onedrive };
 let activeMode = 'local';
 // Where the library snapshot and progress live: the signed-in GitHub account, or the chosen drive.
 const cloud = () => drives[activeMode] || github;
@@ -34,9 +33,7 @@ export const MODES = {
   local:  { label: 'Chỉ trên máy', hint: 'Dữ liệu và tệp nằm trên thiết bị này. Không cần mạng, không cần tài khoản.' },
   github: { label: 'Tài khoản GitHub', hint: 'Đăng nhập GitHub (dán token): thư viện và tiến độ đồng bộ qua một kho riêng tư của bạn. Tệp nhạc/sách ở lại trên từng máy.' },
   dropbox: { label: 'Dropbox', hint: 'Đăng nhập Dropbox một lần: thư viện, tiến độ và cả tệp nhạc/sách đồng bộ qua thư mục riêng của app. Máy khác tải tệp về khi cần.' },
-  webdav: { label: 'WebDAV', hint: 'Nextcloud, Synology, Koofr, pCloud… Nhập địa chỉ thư mục, tên và mật khẩu: dữ liệu và tệp nhạc/sách đồng bộ qua máy chủ của bạn.' },
   onedrive: { label: 'OneDrive', hint: 'Đăng nhập OneDrive: thư viện, tiến độ và cả tệp nhạc/sách đồng bộ qua thư mục riêng của app (Apps/…). Máy khác tải tệp về khi cần.' },
-  pcloud: { label: 'pCloud', hint: 'Dùng dung lượng pCloud (qua WebDAV): dữ liệu và tệp nhạc/sách đồng bộ giữa các máy.' },
 };
 export const isDrive = (m) => m in drives;
 
@@ -235,6 +232,17 @@ export const storage = {
   },
 
   async objectUrl(fileRow, opts) { return URL.createObjectURL(await this.open(fileRow, opts)); },
+
+  // A short-lived address the browser can stream from, for a file that stays on its drive. null if the drive
+  // cannot give one (or is offline): the caller then uses open().
+  async streamUrl(fileRow) {
+    if (!fileRow?.linked || !navigator.onLine) return null;
+    for (const [id, d] of Object.entries(drives)) {
+      const key = fileRow.locations?.[id]?.key;
+      if (key && d.streamUrl && d.connected()) return d.streamUrl(key);
+    }
+    return null;
+  },
 
   async removeFile(fileRow) {
     await local.remove(fileRow.locations?.local);

@@ -1,7 +1,6 @@
-// Connecting a cloud drive (Dropbox, OneDrive, WebDAV, pCloud): the sign-in dialogs and what happens to this
+// Connecting a cloud drive (Dropbox, OneDrive): the sign-in dialogs and what happens to this
 // device's library (merge / use the drive's copy), then the first sync. Used by Settings.
 import { storage, drives } from './index.js';
-import { PRESETS, normUrl } from './webdav.js';
 import { startAuth, finishAuth } from './dropbox.js';
 import * as od from './onedrive.js';
 import { getCloud, clouds } from './clouds.js';
@@ -10,27 +9,6 @@ import { DROPBOX_APP_KEY, ONEDRIVE_CLIENT_ID } from '../../config.js';
 import { formDialog } from '../account-ui.js';
 import { setSetting } from '../db.js';
 import { esc, modal, confirmBox, toast } from '../ui.js';
-
-async function webdavDialog(id) {
-  const p = PRESETS[id], cur = getCloud(id) || {};
-  return formDialog({
-    title: 'Kết nối ' + p.label,
-    intro: `${esc(p.hint)} Tạo sẵn một <b>thư mục</b> trên máy chủ (ví dụ <code>MyHub</code>) rồi dán địa chỉ của thư mục đó. Nhiều dịch vụ yêu cầu <b>mật khẩu ứng dụng</b> thay vì mật khẩu thường. Mật khẩu chỉ lưu trên máy này.${p.help ? ` <a href="${p.help}" target="_blank" rel="noopener">Hướng dẫn WebDAV của ${esc(p.label)}</a>.` : ''}${nativeShell() ? '' : '<br><b>Trình duyệt</b> chỉ kết nối được nếu máy chủ bật CORS; app Windows và Android thì không bị giới hạn này.'}`,
-    fields: [
-      { name: 'url', label: 'Địa chỉ thư mục (https://…)', value: cur.url || p.defaultUrl || '', placeholder: p.urlHint, autocomplete: 'off' },
-      { name: 'user', label: 'Tên đăng nhập', value: cur.user || '', autocomplete: 'username' },
-      { name: 'pass', label: 'Mật khẩu', type: 'password', autocomplete: 'current-password' },
-    ],
-    submit: 'Kết nối',
-    onSubmit: async (v) => {
-      if (!navigator.onLine) throw new Error('Đang offline: cần có mạng để kết nối.');
-      const c = { url: normUrl(v.url), user: v.user.trim(), pass: v.pass };
-      if (!c.user || !c.pass) throw new Error('Nhập tên đăng nhập và mật khẩu.');
-      await drives[id].test(c);
-      clouds.set(id, c);
-    },
-  });
-}
 
 async function dropboxDialog() {
   const cur = getCloud('dropbox') || {};
@@ -92,7 +70,7 @@ async function onedriveDialog() {
   });
 }
 
-export const connectForm = (mode) => mode === 'dropbox' ? dropboxDialog() : mode === 'onedrive' ? onedriveDialog() : webdavDialog(mode);
+export const connectForm = (mode) => mode === 'dropbox' ? dropboxDialog() : onedriveDialog();
 
 // Turn a drive on: connect if needed, ask what to do with this device's library when the drive already
 // holds one, switch the mode and run the first sync (progress in the task tray, then the file upload).

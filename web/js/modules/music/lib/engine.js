@@ -183,6 +183,7 @@ export class Engine extends EventTarget {
     d.track = track; d.url = url; d.gainDb = gainDb;
     this._setGain(d, gainDb);
     this._setFade(d, 1, 0);
+    d.el.crossOrigin = /^https?:/i.test(url) ? 'anonymous' : null;   // streamed from a drive: CORS for Web Audio
     d.el.src = url;
     d.el.playbackRate = this.rate;
     if (startAt > 0) {
@@ -244,6 +245,7 @@ export class Engine extends EventTarget {
     d.track = track; d.url = url; d.gainDb = gainDb;
     this._setGain(d, gainDb);
     this._setFade(d, plan.crossfade ? 0 : 1, 0);
+    d.el.crossOrigin = /^https?:/i.test(url) ? 'anonymous' : null;   // streamed from a drive: CORS for Web Audio
     d.el.src = url;
     d.el.playbackRate = this.rate;
     d.el.load();

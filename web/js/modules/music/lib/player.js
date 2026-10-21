@@ -195,6 +195,15 @@ class Player extends EventTarget {
     const kind = decoderFor(track.tech, canPlay);
     const unsupported = track.tech && UNSUPPORTED[track.tech.codec];
     if (unsupported && !kind) throw Object.assign(new Error(unsupported), { unsupported: true });
+    // A file still on the drive it was picked from plays straight from there (no copy into memory).
+    if (!kind && file.linked) {
+      const direct = await storage.streamUrl(file).catch(() => null);
+      if (direct) {
+        const r = { url: direct, decoded: null, file, rate: track.tech?.sampleRate || 0, bytes: file.size || 0 };
+        this.urls.set(track.id, r);
+        return r;
+      }
+    }
     let blob = kind ? await cachedDecode(file.id) : null;
     const decoded = kind || null;
     const needDecode = !!kind && !blob;

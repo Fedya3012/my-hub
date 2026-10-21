@@ -18,7 +18,8 @@ const seen = new Map();
 const norm = (d) => JSON.stringify({ ...d, at: undefined });
 const safe = (s) => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[đĐ]/g, 'd').replace(/[^\w.\-]+/g, '_').slice(0, 80);
 export const fileKey = (row) => `f-${row.id}-${safe(row.name || 'file')}`;
-const item = (name) => `${ROOT}:/${encodeURIComponent(name)}`;
+const encodePath = (p) => String(p).split('/').filter(Boolean).map(encodeURIComponent).join('/');
+const item = (name) => `${ROOT}:/${encodePath(name)}`;
 
 const b64url = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 export async function startAuth(clientId) {
@@ -131,4 +132,25 @@ export const onedrive = {
     return r.blob();
   },
   async removeFile(key) { const r = await api(item(key), { method: 'DELETE' }); if (!r.ok && r.status !== 404) throw await bad(r, 'xoá tệp'); },
+
+  // Folder picking: the app folder's own folders and files. sub = path under it ('' = the top).
+  async listDir(sub = '') {
+    const out = [];
+    let url = (sub ? item(sub) + ':' : ROOT) + '/children?$select=name,folder,size&$top=200';
+    while (url) {
+      const r = await api(url);
+      if (!r.ok) throw await bad(r, 'mở thư mục');
+      const j = JSON.parse(await r.text());
+      for (const e of j.value || []) out.push({ name: e.name, path: (sub ? sub + '/' : '') + e.name, isDir: !!e.folder, size: e.size || 0 });
+      url = j['@odata.nextLink'] || null;
+    }
+    return out.sort((a, b) => (b.isDir - a.isDir) || a.name.localeCompare(b.name, 'vi'));
+  },
+  getPath(path, opts) { return this.getFile(path, opts); },
+  // Microsoft's pre-authorised download address (about an hour): the player streams from it.
+  async streamUrl(path) {
+    const m = await meta(path);
+    if (!m) throw err('Tệp không còn trên OneDrive.', 'missing');
+    return m['@microsoft.graph.downloadUrl'];
+  },
 };

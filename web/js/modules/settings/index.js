@@ -50,11 +50,11 @@ async function render() {
             <strong>${m.label}</strong><span>${m.hint}</span></label>`).join('')}
       </div>
 
-      <p class="hint">Chọn một ô ở trên để kết nối: <b>Dropbox</b>, <b>OneDrive</b>, <b>WebDAV</b> và <b>pCloud</b> sẽ mở hộp đăng nhập. Đang dùng chế độ này rồi thì bấm “Đổi tài khoản” ở dưới.</p>
-      <div class="row-actions" style="flex-wrap:wrap">${['dropbox', 'onedrive', 'webdav', 'pcloud'].map(k => `<button class="btn ${st.mode === k ? 'primary' : ''}" data-connect="${k}">${icon('cloud')}${st.mode === k ? MODES[k].label + ' · đổi tài khoản' : 'Kết nối ' + MODES[k].label}</button>`).join('')}</div>
+      <p class="hint">Chọn một ô ở trên để kết nối: <b>Dropbox</b> và <b>OneDrive</b> sẽ mở hộp đăng nhập. Đang dùng chế độ này rồi thì bấm “Đổi tài khoản” ở dưới.</p>
+      <div class="row-actions" style="flex-wrap:wrap">${['dropbox', 'onedrive'].map(k => `<button class="btn ${st.mode === k ? 'primary' : ''}" data-connect="${k}">${icon('cloud')}${st.mode === k ? MODES[k].label + ' · đổi tài khoản' : 'Kết nối ' + MODES[k].label}</button>`).join('')}</div>
       ${isDrive(st.mode) ? `<div class="panel" id="folder-block">
         <h3 class="section-title">Thư mục đồng bộ</h3>
-        <p class="hint">Chọn một hoặc nhiều thư mục trên ổ. Mọi tệp nhạc và sách trong đó (kể cả thư mục con) được nhập vào thư viện khi đồng bộ. Trên Android, chọn thư mục chưa được hỗ trợ.</p>
+        <p class="hint">Chọn một hoặc nhiều thư mục trên ổ. Nhạc và sách trong đó (kể cả thư mục con) hiện trong thư viện và phát trực tiếp từ ổ, không sao chép vào app.</p>
         <div id="folder-picker"></div>
       </div>` : ''}
       <div class="panel">
@@ -137,7 +137,7 @@ async function render() {
     import('../../core/storage/folder-ui.js').then(m => m.folderPicker(root.querySelector('#folder-picker'), st.mode, ctx.toast)).catch(() => {});
   }
   root.querySelectorAll('input[name="storage-mode"]').forEach(r => r.onchange = async () => {
-    if (isDrive(r.value)) {   // Dropbox / OneDrive / WebDAV / pCloud: connect, then asks what to do with this device's data
+    if (isDrive(r.value)) {   // Dropbox / OneDrive: connect, then asks what to do with this device's data
       const { useDrive } = await import('../../core/storage/cloud-ui.js');
       await useDrive(r.value); render();
       return;
