@@ -784,3 +784,23 @@ body.mnp-open { overflow: hidden; }
 .mau-tabs::-webkit-scrollbar,
 .mtabs::-webkit-scrollbar,
 .mtool-filters::-webkit-scrollbar { display: none; }
+
+/* Bottom tab bar: fixed to the screen on phones; a floating pill above the transport bar on Windows. */
+.mbottom { position: fixed; z-index: 20; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; background: var(--surface); border: 1px solid var(--line); }
+.mbottom a { display: grid; justify-items: center; align-content: center; gap: 2px; padding: 6px 4px; color: var(--muted); text-decoration: none; font-size: .68rem; border-radius: 12px; white-space: nowrap; }
+.mbottom a .ic { width: 22px; height: 22px; }
+.mbottom a:hover { color: var(--fg); background: var(--surface-2); }
+.mbottom a.on { color: var(--accent); }
+.mbottom a.on .ic { stroke-width: 2.4; }
+@media (max-width: 860px) {
+  .mbottom { left: 0; right: 0; bottom: 0; padding: 6px 6px calc(6px + var(--sai-bottom, 0px)); border-width: 1px 0 0; }
+  body.m-has-bottom .mdock { bottom: calc(68px + var(--sai-bottom, 0px)); }
+  .mlib.page { padding-bottom: calc(76px + var(--dock-h, 0px) + var(--sai-bottom, 0px)); }
+}
+@media (min-width: 861px) {
+  .mbottom { bottom: calc(var(--dock-h, 0px) + 14px); left: calc(var(--sidebar) + (100vw - var(--sidebar)) / 2); transform: translateX(-50%);
+    min-width: 360px; max-width: min(560px, calc(100vw - var(--sidebar) - 32px)); padding: 6px 8px; border-radius: 999px; box-shadow: 0 8px 30px rgb(0 0 0 / .18);
+    background: color-mix(in srgb, var(--surface) 88%, transparent); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
+  .mbottom a { flex-direction: row; display: inline-flex; justify-content: center; gap: 6px; font-size: .8rem; padding: 8px 12px; }
+  .mlib.page { padding-bottom: calc(var(--dock-h, 0px) + 84px); }
+}

@@ -45,7 +45,7 @@ export async function mount(el, context, sub = '') {
   await navigate(sub);
 }
 
-export function unmount() { offs.forEach(f => f()); offs = []; cleanups.forEach(f => f()); cleanups = []; }
+export function unmount() { offs.forEach(f => f()); offs = []; cleanups.forEach(f => f()); cleanups = []; document.body.classList.remove('m-has-bottom'); }
 
 export async function navigate(sub) {
   route = sub || '';
@@ -57,6 +57,7 @@ export async function navigate(sub) {
 export async function migrate() { /* 0.1.0: nothing to migrate yet */ }
 
 const go = (r) => { location.hash = 'music' + (r ? '/' + r : ''); };
+const BOTTOM_ICONS = { home: 'home', songs: 'music', albums: 'album', artists: 'user', albumArtists: 'user', playlists: 'queue', genres: 'tag', folders: 'folder', years: 'calendar' };
 
 // ── Shell ───────────────────────────────────────────────────────
 async function render() {
@@ -67,6 +68,9 @@ async function render() {
   const folderMode = !!prefs().folderMode;
   const tabs = [...(folderMode ? ['browse'] : []), ...prefs().tabs.filter(t => t[1]).map(t => t[0])];
   const NAMES = { ...TABS, browse: 'Duyệt thư mục', stats: TABS.stats || 'Thống kê' };
+  // Bottom bar: the five main tabs (those switched on), in the user's tab order.
+  const MAIN = ['home', 'songs', 'albums', 'artists', 'playlists'];
+  const bottomTabs = (MAIN.filter(t => tabs.includes(t)).length >= 3 ? MAIN.filter(t => tabs.includes(t)) : tabs).slice(0, 5);
   const remembered = sessionStorage.getItem('music.tab');
   const tab = (NAMES[head] && (head !== 'browse' || !rest.length)) ? head : !head ? (folderMode ? 'browse' : tabs.includes(remembered) ? remembered : tabs[0]) : null;
   if (tab) sessionStorage.setItem('music.tab', tab);
@@ -80,7 +84,9 @@ async function render() {
       </div>
     </header>
     ${tab || search || head === 'browse' ? `<nav class="mtabs" role="tablist">${tabs.map(t => `<a role="tab" href="#music/${t}" aria-selected="${!search && (t === tab || (t === 'browse' && head === 'browse'))}">${NAMES[t]}</a>`).join('')}</nav>` : ''}
-    <div class="mcontent"></div></div>`;
+    <div class="mcontent"></div></div>
+    <nav class="mbottom" aria-label="Mục chính của Nhạc">${bottomTabs.map(t => `<a href="#music/${t}" class="${t === tab && !search ? 'on' : ''}" ${t === tab && !search ? 'aria-current="page"' : ''}>${icon(BOTTOM_ICONS[t] || 'disc')}<span>${NAMES[t]}</span></a>`).join('')}</nav>`;
+  document.body.classList.add('m-has-bottom');
   const c = root.querySelector('.mcontent');
   root.querySelector('[data-act="add"]').onclick = (e) => addMenu(e.currentTarget);
   root.querySelector('[data-act="custom"]').onclick = () => import('./ui/customize.js').then(m => m.customizeSheet(() => render()));
