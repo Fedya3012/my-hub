@@ -1,7 +1,7 @@
 // The folder picker in Settings → Lưu trữ (drive modes that can list folders): browse the drive, tick the
 // folders to sync. Saved at once; "Đồng bộ ngay" then imports their music and books.
 import { drives } from './index.js';
-import { folderList, setFolders, canPickFolders, folderApps, setFolderApps, APPS } from './folders.js';
+import { folderList, setFolders, canPickFolders, folderApps, setFolderApps, APPS, autoRemove, setAutoRemove } from './folders.js';
 import { esc } from '../ui.js';
 
 export async function folderPicker(el, mode, toast) {
@@ -10,6 +10,7 @@ export async function folderPicker(el, mode, toast) {
   let cur = '';
   let chosen = new Set(await folderList());
   let apps = await folderApps();
+  let auto = await autoRemove();
 
   const crumbs = () => {
     const parts = cur.split('/').filter(Boolean);
@@ -39,8 +40,10 @@ export async function folderPicker(el, mode, toast) {
         ${[...chosen].map(p => `<div style="${row}">
           <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(p)}">${esc(p)}</span>
           <span style="display:flex;gap:6px;flex:none">${APPS.map(([k, l]) => `<label style="display:flex;flex-direction:row;align-items:center;gap:4px;min-height:36px;padding:0 10px;border-radius:999px;border:1px solid #cfd8dc;cursor:pointer"><input type="checkbox" data-app="${esc(p)}" value="${k}" ${(apps[p] || APPS.map(a => a[0])).includes(k) ? 'checked' : ''} style="width:16px;height:16px">${l}</label>`).join('')}</span>
-        </div>`).join('')}` : '<p class="hint" style="margin-top:8px">Chưa chọn thư mục nào.</p>'}`;
+        </div>`).join('')}
+        <label style="display:flex;flex-direction:row;align-items:center;gap:8px;min-height:44px;margin-top:6px"><input type="checkbox" data-auto ${auto ? 'checked' : ''} style="width:20px;height:20px;flex:none"><span>Tự xoá khỏi thư viện những tệp đã bị xoá trên ${esc(d.label)} (khi đồng bộ)</span></label>` : '<p class="hint" style="margin-top:8px">Chưa chọn thư mục nào.</p>'}`;
     el.querySelectorAll('[data-go]').forEach(b => b.onclick = () => { cur = b.dataset.go; draw(); });
+    el.querySelector('[data-auto]')?.addEventListener('change', async (e) => { auto = e.target.checked; await setAutoRemove(auto); toast?.(auto ? 'Đã bật tự xoá tệp đã mất' : 'Đã tắt tự xoá tệp đã mất'); });
     el.querySelectorAll('[data-app]').forEach(cb => cb.onchange = async () => {
       const path = cb.dataset.app;
       const list = [...el.querySelectorAll('[data-app]')].filter(x => x.dataset.app === path && x.checked).map(x => x.value);
