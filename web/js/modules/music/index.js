@@ -170,8 +170,8 @@ function bindRows(box, list, { source, playlist } = {}, onChange) {
         player.play(list, { start: +r.dataset.i, source });
       };
       r.onkeydown = (e) => { if (e.key === 'Enter') r.click(); };
-      r.oncontextmenu = (e) => { e.preventDefault(); trackMenu(r.querySelector('[data-more]'), t, { playlist, linkId: t.linkId, onChange }); };
-      r.querySelector('[data-more]').onclick = (e) => trackMenu(e.currentTarget, t, { playlist, linkId: t.linkId, onChange });
+      r.oncontextmenu = (e) => { e.preventDefault(); if (isSelecting()) return; trackMenu(r.querySelector('[data-more]'), t, { playlist, linkId: t.linkId, onChange, select: () => hold(t, list) }); };
+      r.querySelector('[data-more]').onclick = (e) => trackMenu(e.currentTarget, t, { playlist, linkId: t.linkId, onChange, select: () => hold(t, list) });
     });
     markRows(box);
     hydrate(box);

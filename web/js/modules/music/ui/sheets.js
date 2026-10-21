@@ -75,9 +75,11 @@ export function menu(anchor, items, { title } = {}) {
 }
 
 // ── Track actions ───────────────────────────────────────────────
-export function trackMenu(anchor, t, { playlist, linkId, onChange } = {}) {
+export function trackMenu(anchor, t, { playlist, linkId, onChange, select } = {}) {
   const go = (r) => { location.hash = 'music/' + r; };
   menu(anchor, [
+    select ? { icon: 'check', label: 'Chọn nhiều…', act: () => select() } : null,
+    select ? '-' : null,
     { icon: 'play', label: 'Phát ngay', act: () => player.play([t], { source: { kind: 'track', id: t.id, name: t.title } }) },
     { icon: 'queue', label: 'Phát tiếp theo', act: () => player.playNext([t.id]) },
     { icon: 'plus', label: 'Thêm vào hàng chờ', act: () => player.addToQueue([t.id]) },
