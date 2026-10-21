@@ -1,7 +1,15 @@
 {
-  "app": "0.9.6.0",
+  "app": "0.9.6.1",
   "released": "2026-10-21",
   "changelog": [
+    {
+      "version": "0.9.6.1",
+      "date": "2026-10-21",
+      "notes": [
+        "Sửa lỗi trang không cuộn được trên điện thoại (bỏ ẩn cuộn ngang đặt trên cả html và body)",
+        "Nhạc: trang Nghệ sĩ album, Thể loại, Năm, Hãng đĩa, Nhạc sĩ ẩn phần đầu trang Nhạc như trang Album, không còn bị ảnh bìa đè lên"
+      ]
+    },
     {
       "version": "0.9.6.0",
       "date": "2026-10-21",
