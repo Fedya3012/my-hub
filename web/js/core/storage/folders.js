@@ -10,12 +10,16 @@ const MUSIC = /\.(mp3|flac|m4a|m4b|mp4|aac|alac|ogg|oga|opus|wav|wave|aif|aiff|a
 
 export const folderList = async () => (await getSetting('sync.folders', [])) || [];
 export async function setFolders(list) { await setSetting('sync.folders', [...new Set(list)]); }
-// Which app each chosen folder feeds: 'music' | 'books' | 'both' (default). path → value.
-export const APP_CHOICES = [['both', 'Nhạc và sách'], ['music', 'Chỉ nhạc'], ['books', 'Chỉ sách']];
-export const folderApps = async () => (await getSetting('sync.folderApps', {})) || {};
-export async function setFolderApp(path, app) {
-  const map = await folderApps();
-  if (app === 'both') delete map[path]; else map[path] = app;
+// Which apps each chosen folder feeds: any of 'music' / 'books' (default: both). path → ['music', ...].
+export const APPS = [['music', 'Nhạc'], ['books', 'Sách']];
+const toApps = (v) => (!v ? APPS.map(a => a[0]) : Array.isArray(v) ? v : v === 'both' ? APPS.map(a => a[0]) : [v]);
+export const folderApps = async () => {
+  const raw = (await getSetting('sync.folderApps', {})) || {};
+  return Object.fromEntries(Object.entries(raw).map(([k, v]) => [k, toApps(v)]));
+};
+export async function setFolderApps(path, list) {
+  const map = (await getSetting('sync.folderApps', {})) || {};
+  if (list.length >= APPS.length) delete map[path]; else map[path] = list;
   await setSetting('sync.folderApps', map);
 }
 const inFolder = (file, folder) => file === folder || file.startsWith(folder.replace(/\/$/, '') + '/');
@@ -38,7 +42,7 @@ export async function syncFolders({ signal } = {}) {
   const folders = await folderList();
   if (!folders.length) return { skipped: 'none' };
   const appMap = await folderApps();
-  const allows = (path, app) => folders.some(f => inFolder(path, f) && ((appMap[f] || 'both') === 'both' || appMap[f] === app));
+  const allows = (path, app) => folders.some(f => inFolder(path, f) && (appMap[f] || APPS.map(a => a[0])).includes(app));
 
   // Progress: folders scanned (one step per folder listed) and files found; then files imported (x / y, %).
   const scan = tasks.start({ label: 'Đang quét thư mục trên ' + d.label, unit: 'items', cancellable: true, delay: 300 });

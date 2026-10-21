@@ -82,7 +82,14 @@
 .mdock-ctrls { display: flex; align-items: center; gap: 2px; }
 .mdock-remote { display: flex; align-items: center; gap: 10px; width: 100%; font-size: .86rem; padding: 4px; flex-wrap: wrap; }
 .mdock-remote span { flex: 1 1 180px; }
-@media (max-width: 860px) { .mdock .mplay { width: 40px; height: 40px; } }
+@media (max-width: 860px) {
+  .mdock .mplay { width: 40px; height: 40px; }
+  /* Phone dock: a second row with a seekable progress bar and the times. */
+  .mdock { flex-wrap: wrap; row-gap: 0; }
+  .mdock-seek.d-only { display: flex !important; order: 10; flex: 1 1 100%; align-items: center; gap: 8px; font-size: .72rem; color: var(--muted); min-width: 0; }
+  .mdock-seek input { flex: 1; min-width: 0; }
+  .mdock-line { display: none; }
+}
 @media (min-width: 861px) {
   .mdock { left: var(--sidebar); right: 0; bottom: 0; border-radius: 0; border-width: 1px 0 0; padding: 10px 20px; gap: 18px;
     display: grid; grid-template-columns: minmax(120px, 1fr) auto minmax(100px, 1.4fr) auto; }
@@ -741,3 +748,39 @@ body.mnp-open { overflow: hidden; }
 .ly-tools { z-index: 3; padding: 4px 6px; margin-bottom: 4px; border-radius: 14px; background: color-mix(in srgb, var(--np-bg, var(--bg)) 62%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
 .ly-tools .pill { background: rgb(127 127 127 / .24); color: inherit; }
 .ly-off-v { opacity: 1; }
+
+/* Fewer scrollbars: inner scrollers stay scrollable but their bars are hidden. */
+.msheet-body,
+.mpop,
+.mpick,
+.mrail,
+.mly-sync ol,
+.mnp-pbody > div,
+.mdropbar,
+.ltag-prev ol,
+.lst-scroll,
+.mly-sync .mly-lines,
+.mly-trlist,
+.mly-results,
+.mcus-nav,
+.g31,
+.mau-tabs,
+.mtabs,
+.mtool-filters { scrollbar-width: none; }
+.msheet-body::-webkit-scrollbar,
+.mpop::-webkit-scrollbar,
+.mpick::-webkit-scrollbar,
+.mrail::-webkit-scrollbar,
+.mly-sync ol::-webkit-scrollbar,
+.mnp-pbody > div::-webkit-scrollbar,
+.mdropbar::-webkit-scrollbar,
+.ltag-prev ol::-webkit-scrollbar,
+.lst-scroll::-webkit-scrollbar,
+.mly-sync .mly-lines::-webkit-scrollbar,
+.mly-trlist::-webkit-scrollbar,
+.mly-results::-webkit-scrollbar,
+.mcus-nav::-webkit-scrollbar,
+.g31::-webkit-scrollbar,
+.mau-tabs::-webkit-scrollbar,
+.mtabs::-webkit-scrollbar,
+.mtool-filters::-webkit-scrollbar { display: none; }

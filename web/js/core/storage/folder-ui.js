@@ -1,7 +1,7 @@
 // The folder picker in Settings → Lưu trữ (drive modes that can list folders): browse the drive, tick the
 // folders to sync. Saved at once; "Đồng bộ ngay" then imports their music and books.
 import { drives } from './index.js';
-import { folderList, setFolders, canPickFolders, folderApps, setFolderApp, APP_CHOICES } from './folders.js';
+import { folderList, setFolders, canPickFolders, folderApps, setFolderApps, APPS } from './folders.js';
 import { esc } from '../ui.js';
 
 export async function folderPicker(el, mode, toast) {
@@ -38,11 +38,14 @@ export async function folderPicker(el, mode, toast) {
       ${chosen.size ? `<p class="hint" style="margin:12px 0 4px">Thư mục đang đồng bộ và app nhận tệp:</p>
         ${[...chosen].map(p => `<div style="${row}">
           <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(p)}">${esc(p)}</span>
-          <select data-app="${esc(p)}" aria-label="App nhận tệp từ ${esc(p)}" style="flex:none;min-height:36px">${APP_CHOICES.map(([k, l]) => `<option value="${k}" ${(apps[p] || 'both') === k ? 'selected' : ''}>${l}</option>`).join('')}</select>
+          <span style="display:flex;gap:6px;flex:none">${APPS.map(([k, l]) => `<label style="display:flex;flex-direction:row;align-items:center;gap:4px;min-height:36px;padding:0 10px;border-radius:999px;border:1px solid #cfd8dc;cursor:pointer"><input type="checkbox" data-app="${esc(p)}" value="${k}" ${(apps[p] || APPS.map(a => a[0])).includes(k) ? 'checked' : ''} style="width:16px;height:16px">${l}</label>`).join('')}</span>
         </div>`).join('')}` : '<p class="hint" style="margin-top:8px">Chưa chọn thư mục nào.</p>'}`;
     el.querySelectorAll('[data-go]').forEach(b => b.onclick = () => { cur = b.dataset.go; draw(); });
-    el.querySelectorAll('[data-app]').forEach(sel => sel.onchange = async () => {
-      await setFolderApp(sel.dataset.app, sel.value);
+    el.querySelectorAll('[data-app]').forEach(cb => cb.onchange = async () => {
+      const path = cb.dataset.app;
+      const list = [...el.querySelectorAll('[data-app]')].filter(x => x.dataset.app === path && x.checked).map(x => x.value);
+      if (!list.length) { cb.checked = true; toast?.('Chọn ít nhất một app cho thư mục này', 'warn'); return; }
+      await setFolderApps(path, list);
       apps = await folderApps();
       toast?.('Đã đổi app nhận tệp của thư mục');
     });
