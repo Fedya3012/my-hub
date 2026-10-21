@@ -44,7 +44,11 @@ function noticeHtml() {
 
 async function render() {
   if (!root) return;
-  if (account.signedIn) await renderSignedIn(); else renderSignedOut();
+  // One choice decides where the library and progress sync: the storage mode. A drive in use shows as signed in
+  // there, so the page never shows a GitHub account that is not the one syncing.
+  const { isDrive } = await import('../../core/storage/index.js');
+  const mode = await ctx.storage.mode();
+  if (account.signedIn && !isDrive(mode)) await renderSignedIn(); else renderSignedOut();
   await addDriveCard();
 }
 
@@ -59,8 +63,8 @@ async function addDriveCard() {
     slot.innerHTML = DRIVES.map(([id, label, tip]) => `
       <div class="panel acct-card acct-center">
         <span class="acct-big-ic">${icon('cloud')}</span>
-        <h2>${cur === id ? label + ' · đang dùng' : 'Đăng nhập bằng ' + label}</h2>
-        <p class="muted">${esc(tip)}</p>
+        <h2>${cur === id ? label + ' · đang đồng bộ' : 'Đăng nhập bằng ' + label}</h2>
+        <p class="muted">${cur === id ? 'Thư viện, tiến độ và tệp nhạc/sách đang đồng bộ qua ' + label + '.' : esc(tip)}</p>
         <button class="btn ${cur === id ? '' : 'primary'} block" data-drive="${id}">${cur === id ? 'Đổi tài khoản ' + label : 'Kết nối ' + label}</button>
       </div>`).join('');
     bindDriveButtons(sec);

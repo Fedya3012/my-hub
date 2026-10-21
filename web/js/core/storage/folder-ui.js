@@ -25,19 +25,16 @@ export async function folderPicker(el, mode, toast) {
       el.innerHTML = `<p class="hint">Không mở được thư mục: ${esc(e.message)}</p>`;
       return;
     }
+    const row = 'display:flex;align-items:center;gap:10px;min-height:44px;padding:0 4px;border-top:1px solid #e3e8ea';
     el.innerHTML = `
-      <div class="row-actions" style="flex-wrap:wrap;gap:6px;align-items:center">${crumbs()}</div>
-      <label class="row-actions" style="min-height:44px;align-items:center;gap:10px">
-        <input type="checkbox" data-pick="${esc(cur)}" ${cur && chosen.has(cur) ? 'checked' : ''} ${cur ? '' : 'disabled'}>
-        <span>${cur ? 'Đồng bộ cả thư mục này' : 'Chọn thư mục trong ' + esc(d.label) + ' (bấm vào tên để mở)'}</span></label>
-      <ul class="acct-choices" style="list-style:none;padding:0;margin:0">
-        ${items.length ? items.map(e => `
-          <li style="display:flex;align-items:center;gap:8px;min-height:44px;border-top:1px solid var(--line,#e3e8ea)">
-            <input type="checkbox" data-pick="${esc(e.path)}" aria-label="Đồng bộ ${esc(e.name)}" ${chosen.has(e.path) ? 'checked' : ''}>
-            <button type="button" class="btn small" data-go="${esc(e.path)}" style="flex:1;justify-content:flex-start">${esc(e.name)}</button>
-          </li>`).join('') : '<li class="hint">Không có thư mục con.</li>'}
-      </ul>
-      ${chosen.size ? `<p class="hint">Đang đồng bộ: ${[...chosen].map(esc).join(', ')}</p>` : '<p class="hint">Chưa chọn thư mục nào.</p>'}`;
+      <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px">${crumbs()}</div>
+      ${cur ? `<label style="${row}"><input type="checkbox" data-pick="${esc(cur)}" ${chosen.has(cur) ? 'checked' : ''} style="width:20px;height:20px;flex:none"><span>Đồng bộ cả thư mục này</span></label>` : ''}
+      ${items.length ? items.map(e => `
+        <div style="${row}">
+          <input type="checkbox" data-pick="${esc(e.path)}" aria-label="Đồng bộ ${esc(e.name)}" ${chosen.has(e.path) ? 'checked' : ''} style="width:20px;height:20px;flex:none">
+          <button type="button" class="btn small" data-go="${esc(e.path)}" style="flex:1;min-width:0;justify-content:flex-start;text-align:left">${esc(e.name)}</button>
+        </div>`).join('') : `<p class="hint" style="margin:8px 0">${cur ? 'Thư mục này không có thư mục con.' : 'Chưa có thư mục nào trong thư mục ứng dụng của ' + esc(d.label) + '. Thêm thư mục trên ' + esc(d.label) + ' (trong thư mục Apps của app), rồi mở lại đây.'}</p>`}
+      ${chosen.size ? `<p class="hint" style="margin-top:8px">Đang đồng bộ: ${[...chosen].map(esc).join(', ')}</p>` : '<p class="hint" style="margin-top:8px">Chưa chọn thư mục nào.</p>'}`;
     el.querySelectorAll('[data-go]').forEach(b => b.onclick = () => { cur = b.dataset.go; draw(); });
     el.querySelectorAll('[data-pick]').forEach(c => c.onchange = async () => {
       const p = c.dataset.pick;

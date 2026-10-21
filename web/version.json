@@ -1,7 +1,15 @@
 {
-  "app": "0.9.5.1",
+  "app": "0.9.5.1.1",
   "released": "2026-10-21",
   "changelog": [
+    {
+      "version": "0.9.5.1.1",
+      "date": "2026-10-21",
+      "notes": [
+        "Sửa: chọn thư mục đồng bộ hiện đúng (trước đây bố cục lỗi và không rõ vì sao trống)",
+        "Trang Tài khoản và Đồng bộ dùng chung một lựa chọn: khi đang dùng Dropbox hoặc OneDrive thì tiến độ đồng bộ qua ổ đó, không qua GitHub"
+      ]
+    },
     {
       "version": "0.9.5.1",
       "date": "2026-10-21",
