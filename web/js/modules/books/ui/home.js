@@ -25,30 +25,47 @@ export async function render(el, { ctx, snap, go }) {
   const recent = [...list].sort((a, b) => (b.book.addedAt || 0) - (a.book.addedAt || 0)).slice(0, 12);
   const want = list.filter(b => b.status === 'want').slice(0, 12);
   const shelves = snap.all.shelves.filter(s => s.kind !== 'book-library');
+  // Last 7 days: which days had a reading session (dots under the goal).
+  const dayMs = 864e5, today0 = new Date().setHours(0, 0, 0, 0);
+  const active = new Set(sessions.map(s => new Date(s.start).setHours(0, 0, 0, 0)));
+  const week = Array.from({ length: 7 }, (_, i) => { const t = today0 - (6 - i) * dayMs; return { t, on: active.has(t), now: i === 6 }; });
+  const hr = new Date().getHours();
+  const hello = hr < 11 ? 'Chào buổi sáng' : hr < 18 ? 'Chào buổi chiều' : 'Chào buổi tối';
+  const first = reading[0], others = reading.slice(1);
+  const nowBtn = (b) => b.main ? `<button class="btn primary" data-read="${b.id}">${icon('play')}Đọc tiếp</button>` : `<button class="btn" data-prog="${b.id}">${icon('b-edit')}Cập nhật tiến độ</button>`;
   el.innerHTML = `
+    <header class="bk-greet"><div><h1>${hello}</h1><p class="muted">${reading.length ? `Bạn đang đọc ${reading.length} cuốn` : 'Chọn một cuốn để bắt đầu'} · ${list.length} sách trong thư viện</p></div>
+      <a class="btn small" href="#books/trending">${icon('b-sparkle')}Thịnh hành</a></header>
+    ${first ? `<article class="bk-hero-now" data-id="${first.id}">
+      ${coverHtml(first, 'lg')}
+      <div class="bk-hero-now-b"><small class="muted">Đang đọc</small><h2>${esc(first.title)}</h2><p class="muted">${esc(first.authors.join(', '))}</p>
+        <div class="bk-pbar"><i style="width:${first.percent}%"></i></div>
+        <div class="bk-pmeta"><b class="num">${first.percent}%</b><span class="muted">${first.progress?.label ? esc(first.progress.label) : ''}${first.book.startedAt ? ' · bắt đầu ' + fmtDate(first.book.startedAt) : ''}</span></div>
+        <div class="row-actions">${nowBtn(first)}</div></div></article>` : ''}
     <div class="bk-home-top">
       <section class="bk-panel bk-goal">
         <h2 class="section-title">${icon('b-target')}Mục tiêu ${year}</h2>
-        ${gp ? `<div class="bk-ring" style="--p:${gp.percent}"><b class="num">${fmtNum(gp.done)}</b><small>/ ${gp.target} cuốn</small></div>
-          <p class="muted">${gp.ahead >= 0 ? `Vượt kế hoạch ${fmtNum(gp.ahead, 1)} cuốn` : `Chậm ${fmtNum(-gp.ahead, 1)} cuốn so với kế hoạch`}</p>`
+        ${gp ? `<div class="bk-goal-row"><div class="bk-ring" style="--p:${gp.percent}"><b class="num">${fmtNum(gp.done)}</b><small>/ ${gp.target} cuốn</small></div>
+          <div class="bk-goal-info"><div class="bk-pbar"><i style="width:${gp.percent}%"></i></div>
+            <span class="bk-pill ${gp.ahead >= 0 ? 'ok' : 'late'}">${gp.ahead >= 0 ? `Vượt kế hoạch ${fmtNum(gp.ahead, 1)} cuốn` : `Chậm ${fmtNum(-gp.ahead, 1)} cuốn`}</span></div></div>`
           : `<p class="muted">Đặt mục tiêu số sách đọc trong năm.</p><a class="btn small" href="#books/goals">${icon('plus')}Đặt mục tiêu</a>`}
+        <div class="bk-week" aria-label="7 ngày gần nhất">${week.map(d => `<span class="${d.on ? 'on' : ''}${d.now ? ' now' : ''}" title="${new Date(d.t).toLocaleDateString('vi')}"></span>`).join('')}<small class="muted">${icon('b-flame')}${yr.streak} ngày liên tiếp</small></div>
       </section>
-      <section class="bk-panel bk-kpis">
-        <div><span>Đã đọc ${year}</span><b class="num">${fmtNum(yr.booksRead)}</b></div>
-        <div><span>Trang</span><b class="num">${fmtNum(yr.pages)}</b></div>
-        <div><span>Thời gian</span><b class="num">${fmtHours(yr.hours)}</b></div>
-        <div><span>${icon('b-flame')}Chuỗi ngày</span><b class="num">${yr.streak}</b></div>
-        <div><span>Đánh giá TB</span><b class="num">${yr.avgRating ? fmtNum(yr.avgRating, 2) : '—'}</b></div>
-        <div><span>Muốn đọc</span><b class="num">${yr.want}</b></div>
+      <section class="bk-kpis">
+        <div><b class="num">${fmtNum(yr.booksRead)}</b><span>Đã đọc ${year}</span></div>
+        <div><b class="num">${fmtNum(yr.pages)}</b><span>Trang</span></div>
+        <div><b class="num">${fmtHours(yr.hours)}</b><span>Thời gian</span></div>
+        <div><b class="num">${yr.avgRating ? fmtNum(yr.avgRating, 2) : '—'}</b><span>Đánh giá TB</span></div>
+        <div><b class="num">${yr.want}</b><span>Muốn đọc</span></div>
       </section>
     </div>
-    ${reading.length ? `<section class="bk-sec"><h2 class="section-title">${icon('b-scroll')}Đang đọc</h2>
-      <div class="bk-reading">${reading.map(b => `<article class="bk-now" data-id="${b.id}">
+    ${others.length ? `<section class="bk-sec"><h2 class="section-title">${icon('b-scroll')}Cũng đang đọc</h2>
+      <div class="bk-reading">${others.map(b => `<article class="bk-now" data-id="${b.id}">
         ${coverHtml(b, 'md')}
         <div class="bk-now-b"><b>${esc(b.title)}</b><small>${esc(b.authors.join(', '))}</small>
-          <div class="bar"><i style="width:${b.percent}%"></i></div>
-          <small class="muted">${b.percent}%${b.progress?.label ? ' · ' + esc(b.progress.label) : ''}${b.book.startedAt ? ' · bắt đầu ' + fmtDate(b.book.startedAt) : ''}</small>
-          <div class="row-actions">${b.main ? `<button class="btn primary small" data-read="${b.id}">${icon('play')}Đọc tiếp</button>` : `<button class="btn small" data-prog="${b.id}">${icon('b-edit')}Cập nhật tiến độ</button>`}</div></div></article>`).join('')}</div></section>` : ''}
+          <div class="bk-pbar"><i style="width:${b.percent}%"></i></div>
+          <small class="muted">${b.percent}%${b.progress?.label ? ' · ' + esc(b.progress.label) : ''}</small>
+          <div class="row-actions">${nowBtn(b).replace('class="btn primary"', 'class="btn primary small"').replace('class="btn"', 'class="btn small"')}</div></div></article>`).join('')}</div></section>` : ''}
     <section class="bk-sec"><h2 class="section-title">${icon('plus')}Mới thêm <a class="bk-more" href="#books/library">Xem tất cả</a></h2>
       <div class="bk-rail">${recent.map(b => cardHtml(b)).join('')}</div></section>
     ${want.length ? `<section class="bk-sec"><h2 class="section-title">${icon('b-bookmark')}Muốn đọc <a class="bk-more" href="#books/library/${encodeURIComponent('status:want')}">Xem tất cả</a></h2>

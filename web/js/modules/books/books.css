@@ -282,3 +282,44 @@ main#view > section.bk { animation: none; }
 
 /* Books reader: keep the app's music dock above the reader's bottom bar instead of under it. */
 body.bk-reader-open #dock .mdock { z-index: 850; bottom: calc(64px + var(--sai-bottom, 0px)); }
+
+/* ── Home and goals, BookPine style: greeting, big "now reading" card, goal bar, week dots, KPI tiles ── */
+.bk-greet { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.bk-greet h1 { font-family: var(--font-display); font-size: clamp(1.4rem, 5vw, 2rem); line-height: 1.1; margin: 0; }
+.bk-greet p { margin: 4px 0 0; font-size: .9rem; }
+.bk-hero-now { display: flex; gap: 16px; padding: 16px; margin-bottom: 14px; background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 14%, var(--surface)), var(--surface));
+  border: var(--card-border) solid var(--line); border-radius: calc(var(--radius) + 4px); cursor: pointer; align-items: center; }
+.bk-hero-now .bk-cover { flex: none; width: 104px; box-shadow: 0 8px 20px rgba(0, 0, 0, .18); }
+.bk-hero-now-b { display: grid; gap: 6px; min-width: 0; flex: 1; align-content: center; }
+.bk-hero-now-b h2 { font-family: var(--font-display); font-size: 1.2rem; line-height: 1.2; margin: 0; overflow-wrap: anywhere; }
+.bk-hero-now-b p { margin: 0; font-size: .88rem; }
+.bk-pbar { height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.bk-pbar i { display: block; height: 100%; border-radius: inherit; background: var(--accent); transition: width .4s; }
+.bk-pmeta { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; font-size: .82rem; }
+.bk-pmeta b { font-size: 1.1rem; }
+.bk-goal { justify-items: stretch; text-align: left; }
+.bk-goal-row { display: flex; align-items: center; gap: 16px; }
+.bk-goal-row .bk-ring { width: 96px; flex: none; }
+.bk-goal-info { display: grid; gap: 10px; flex: 1; min-width: 0; }
+.bk-pill { justify-self: start; font-size: .78rem; font-weight: 600; padding: 4px 10px; border-radius: 999px; }
+.bk-pill.ok { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
+.bk-pill.late { background: color-mix(in srgb, var(--warn, #c77700) 18%, transparent); color: var(--warn, #c77700); }
+.bk-week { display: flex; align-items: center; gap: 6px; }
+.bk-week span { width: 16px; height: 16px; border-radius: 50%; background: var(--surface-2); border: 2px solid transparent; }
+.bk-week span.on { background: var(--accent); }
+.bk-week span.now { border-color: var(--fg); }
+.bk-week small { margin-left: 8px; display: inline-flex; align-items: center; gap: 4px; }
+.bk-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; align-content: start; }
+@media (min-width: 560px) { .bk-kpis { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+@media (min-width: 760px) { .bk-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.bk-kpis > div { display: grid; gap: 2px; padding: 12px; border-radius: var(--radius); background: var(--surface); border: var(--card-border) solid var(--line); text-align: center; }
+.bk-kpis b { font-size: 1.35rem; font-weight: 700; letter-spacing: -.02em; order: 1; }
+.bk-kpis span { order: 2; color: var(--muted); font-size: .74rem; }
+.bk-now .bk-pbar { height: 6px; }
+.bk-goal-card { align-items: center; }
+.bk-goal-main { display: grid; gap: 6px; min-width: 0; }
+.bk-goal-main .bk-pbar { height: 6px; }
+.bk-greet .btn { white-space: nowrap; flex: none; }
+.bk-badges, .bk-goals + .section-title { margin-top: 8px; }
+.bk-goals { margin-bottom: 22px; }
+.bk-week small { white-space: nowrap; }

@@ -4,7 +4,7 @@ import { listModules } from '../../core/registry.js';
 import { CONTENT_TYPES } from '../../core/content-types.js';
 import { swState, checkForUpdates, applyModuleUpdate, applyShellUpdate, rollbackModule } from '../../core/updater.js';
 import { icon } from '../../core/icons.js';
-import { cleanMissing } from '../../core/storage/cleanup.js';
+import { cleanDataAction } from '../../core/storage/cleanup.js';
 import { esc, fmtAgo, toast, confirmBox } from '../../core/ui.js';
 
 let root, ctx, updates = [], offs = [];
@@ -70,11 +70,8 @@ async function render() {
   root.querySelector('[data-act="check"]').onclick = check;
   root.querySelector('#am-policy').onchange = async (e) => { await setSetting('update.policy', e.target.value); ctx.toast('Đã lưu chính sách cập nhật'); };
   root.querySelectorAll('[data-clean]').forEach(b => b.onclick = async () => {
-    if (!(await confirmBox('Dọn dữ liệu?', 'Xoá khỏi thư viện những mục đã mất tệp gốc (tệp trong máy hoặc thư mục đồng bộ đã bị xoá). Tệp còn tồn tại không bị đụng tới.', 'Dọn'))) return;
     b.disabled = true;
-    try { const r = await cleanMissing(b.dataset.clean); toast(r.removed ? `Đã xoá ${r.removed} mục mất tệp` : 'Không có mục nào mất tệp'); }
-    catch (e) { toast(e.message, 'error'); }
-    b.disabled = false;
+    try { await cleanDataAction(b.dataset.clean, b.dataset.name); } finally { b.disabled = false; }
   });
   root.querySelectorAll('[data-toggle]').forEach(b => b.onclick = () => toggle(b.dataset.toggle));
   root.querySelectorAll('[data-move]').forEach(b => b.onclick = () => move(b.dataset.move, +b.dataset.dir, mods));
@@ -108,7 +105,7 @@ function modRow(m, i, n, counts) {
       <div class="seg small" role="group" aria-label="Thứ tự">
         <button data-move="${m.id}" data-dir="-1" ${i === 0 ? 'disabled' : ''} aria-label="Lên">↑</button><button data-move="${m.id}" data-dir="1" ${i === n - 1 ? 'disabled' : ''} aria-label="Xuống">↓</button>
       </div>
-      ${!m.core && m.status !== 'planned' && s.enabled ? `<button class="btn small" data-clean="${m.id}" title="Xoá các mục đã mất tệp gốc">Dọn dữ liệu ${esc(m.name)}</button>` : ''}
+      ${!m.core && m.status !== 'planned' && s.enabled ? `<button class="btn small" data-clean="${m.id}" data-name="${esc(m.name)}" title="Xoá các mục đã mất tệp gốc">Dọn dữ liệu ${esc(m.name)}</button>` : ''}
       <button class="switch" role="switch" aria-checked="${m.core || !!s.enabled}" data-toggle="${m.id}" ${m.core || m.status === 'planned' ? 'disabled' : ''} aria-label="Bật/tắt ${esc(m.name)}"><i></i></button>
     </div></li>`;
 }

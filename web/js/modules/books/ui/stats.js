@@ -134,8 +134,8 @@ async function goalsPage(el, { snap }) {
   el.innerHTML = `<div class="bk-sec-head"><h2>Mục tiêu & thử thách</h2><button class="btn primary" data-new>${icon('plus')}Mục tiêu mới</button></div>
     <div class="bk-goals">${rows.map(({ g, p }) => `<article class="bk-panel bk-goal-card">
       <div class="bk-ring sm" style="--p:${p.percent}"><b class="num">${Math.round(p.percent)}%</b></div>
-      <div><b>${esc(g.label || `${g.month ? 'Tháng ' + g.month + '/' : 'Năm '}${g.year}: ${g.target} ${unit[g.kind]}`)}</b>
-        <small class="muted">${fmtNum(p.done, 1)} / ${g.target} ${unit[g.kind]}${g.query ? ` · <code>${esc(g.query)}</code>` : ''}${Date.now() < p.to ? ` · ${p.ahead >= 0 ? 'đúng / vượt kế hoạch' : `chậm ${fmtNum(-p.ahead, 1)} ${unit[g.kind]}`}` : p.done >= g.target ? ' · hoàn thành 🎉' : ' · đã kết thúc'}</small></div>
+      <div class="bk-goal-main"><b>${esc(g.label || `${g.month ? 'Tháng ' + g.month + '/' : 'Năm '}${g.year}: ${g.target} ${unit[g.kind]}`)}</b>
+        <div class="bk-pbar"><i style="width:${p.percent}%"></i></div><small class="muted">${fmtNum(p.done, 1)} / ${g.target} ${unit[g.kind]}${g.query ? ` · <code>${esc(g.query)}</code>` : ''}${Date.now() < p.to ? ` · ${p.ahead >= 0 ? 'đúng / vượt kế hoạch' : `chậm ${fmtNum(-p.ahead, 1)} ${unit[g.kind]}`}` : p.done >= g.target ? ' · hoàn thành 🎉' : ' · đã kết thúc'}</small></div>
       <button class="icon-btn sm" data-del="${g.id}" aria-label="Xoá">${icon('x')}</button></article>`).join('') || '<p class="muted">Chưa có mục tiêu. Ví dụ: 24 cuốn trong năm, 30 giờ trong tháng, hoặc thử thách “5 cuốn của tác giả Việt” (điều kiện <code>lang:vi</code>).</p>'}</div>
     <h2 class="section-title">${icon('b-trophy')}Huy hiệu <span class="num muted">${bs.filter(b => b.got).length}/${bs.length}</span></h2>
     <div class="bk-badges">${bs.map(b => `<div class="bk-badge${b.got ? ' got' : ''}" title="${esc(b.desc)}">${icon(b.got ? 'b-trophy' : 'b-target')}<b>${esc(b.name)}</b><small>${esc(b.desc)}</small></div>`).join('')}</div>`;
