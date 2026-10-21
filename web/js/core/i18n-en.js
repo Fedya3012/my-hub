@@ -2288,4 +2288,13 @@ export default {"(Google cấp quyền theo từng giờ). Bấm một lần đ�
 "Xoá khỏi thư viện những mục mà tệp gốc đã bị xoá (trong thư mục đồng bộ hoặc trong máy). Tệp còn tồn tại không bị đụng tới.":"Remove from the library items whose source file was deleted (in a synced folder or on this device). Files that still exist are left alone.",
 "Xoá khỏi thư viện những sách đã mất tệp gốc (tệp trong máy hoặc thư mục đồng bộ đã bị xoá). Sách giấy và sách còn tệp không bị đụng tới.":"Remove from the library books whose source file is gone (deleted on this device or in a synced folder). Paper books and books whose file still exists are left alone.",
 "Tự ẩn thanh tab dưới khi cuộn":"Auto-hide the bottom tab bar when scrolling",
-"Mọi app: thanh tab dưới ẩn khi cuộn xuống, hiện lại khi kéo lên.":"Every app: the bottom tab bar hides when you scroll down and returns when you scroll up."};
+"Mọi app: thanh tab dưới ẩn khi cuộn xuống, hiện lại khi kéo lên.":"Every app: the bottom tab bar hides when you scroll down and returns when you scroll up.",
+"Tự ẩn · Nhạc · Trang chủ":"Auto-hide · Music · Home",
+"Tự ẩn · Nhạc · Âm nhạc":"Auto-hide · Music · Songs",
+"Tự ẩn · Nhạc · Mới":"Auto-hide · Music · New",
+"Tự ẩn · Nhạc · Thống kê":"Auto-hide · Music · Stats",
+"Tự ẩn · Sách · Trang chủ":"Auto-hide · Books · Home",
+"Tự ẩn · Sách · Thư viện":"Auto-hide · Books · Library",
+"Tự ẩn · Sách · Thịnh hành":"Auto-hide · Books · Trending",
+"Tự ẩn · Sách · Kệ sách":"Auto-hide · Books · Shelves",
+"Tự ẩn · Sách · Thêm & nhập":"Auto-hide · Books · Add & import"};
