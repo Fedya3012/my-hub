@@ -109,7 +109,7 @@ async function render() {
 
       <p class="hint">Chọn một ô ở trên để kết nối: <b>Dropbox</b> và <b>OneDrive</b> sẽ mở hộp đăng nhập. Đang dùng chế độ này rồi thì bấm “Đổi tài khoản” ở dưới.</p>
       <div class="row-actions" style="flex-wrap:wrap">${['dropbox', 'onedrive'].map(k => `<button class="btn ${st.mode === k ? 'primary' : ''}" data-connect="${k}">${icon('cloud')}${st.mode === k ? MODES[k].label + ' · đổi tài khoản' : 'Kết nối ' + MODES[k].label}</button>`).join('')}</div>
-      ${isDrive(st.mode) ? `<a class="panel" href="#/settings/folders" style="display:flex;flex-direction:row;align-items:center;gap:10px;text-decoration:none;color:inherit"><span style="flex:1"><strong style="display:block">Thư mục đồng bộ</strong><span class="hint">Chọn thư mục trên ${esc(MODES[st.mode].label)} để nhập nhạc và sách</span></span><span aria-hidden="true">›</span></a>` : ''}
+      ${isDrive(st.mode) ? `<a class="panel" href="#settings/folders" style="display:flex;flex-direction:row;align-items:center;gap:10px;text-decoration:none;color:inherit"><span style="flex:1"><strong style="display:block">Thư mục đồng bộ</strong><span class="hint">Chọn thư mục trên ${esc(MODES[st.mode].label)} để nhập nhạc và sách</span></span><span aria-hidden="true">›</span></a>` : ''}
       <div class="panel">
         <dl class="kv">
           <dt>Lưu tệp trên máy bằng</dt><dd>${st.backend === 'opfs' ? 'Hệ thống tệp riêng của ứng dụng (OPFS)' : 'IndexedDB'}</dd>
