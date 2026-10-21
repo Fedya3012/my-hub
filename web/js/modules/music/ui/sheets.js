@@ -53,7 +53,7 @@ export function sheet({ title = '', body, cls = '', onClose, wide = false, actio
 export function menu(anchor, items, { title } = {}) {
   const list = items.filter(Boolean);
   const html = `<div class="mmenu" role="menu">${list.map((it, i) => it === '-' ? '<hr>' :
-    `<button role="menuitem" data-i="${i}" class="${it.danger ? 'danger' : ''}">${icon(it.icon || 'arrow')}<span>${esc(it.label)}</span>${it.hint ? `<small>${esc(it.hint)}</small>` : ''}</button>`).join('')}</div>`;
+    `<button role="menuitem" data-i="${i}" class="${it.danger ? 'danger' : ''}">${icon(it.icon || 'arrow')}<span>${esc(it.label)}</span>${it.hint ? `<small>${esc(it.hint)}</small>` : ''}${it.on ? `<span class="mmenu-on">${icon('check')}</span>` : ''}</button>`).join('')}</div>`;
   if (narrow() || !anchor) {
     const s = sheet({ title, body: html, cls: 'as-menu' });
     s.el.querySelectorAll('[data-i]').forEach(b => b.onclick = () => { s.close(); list[+b.dataset.i].act(); });

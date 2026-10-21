@@ -129,20 +129,19 @@ function holdMenu(btn, open, tap) {
   btn.addEventListener('contextmenu', (e) => { e.preventDefault(); clearTimeout(timer); open(btn); });
   btn.onclick = () => { if (fired) { fired = false; return; } tap(); };
 }
-const mark = (on) => (on ? '✓' : '');
 function repeatMenu(anchor) {
   const r = player.repeat;
   menu(anchor, [
-    { icon: 'repeat-one', label: 'Phát một bài rồi dừng', hint: mark(r === 'stop1'), act: () => player.setRepeat('stop1') },
-    { icon: 'queue', label: 'Phát hàng chờ rồi dừng', hint: mark(r === 'off'), act: () => player.setRepeat('off') },
-    { icon: 'repeat-one', label: 'Lặp lại một bài', hint: mark(r === 'one'), act: () => player.setRepeat('one') },
-    { icon: 'repeat', label: 'Lặp lại hàng chờ', hint: mark(r === 'all'), act: () => player.setRepeat('all') },
+    { icon: 'repeat-one', label: 'Phát một bài rồi dừng', on: r === 'stop1', act: () => player.setRepeat('stop1') },
+    { icon: 'queue', label: 'Phát hàng chờ rồi dừng', on: r === 'off', act: () => player.setRepeat('off') },
+    { icon: 'repeat-one', label: 'Lặp lại một bài', on: r === 'one', act: () => player.setRepeat('one') },
+    { icon: 'repeat', label: 'Lặp lại hàng chờ', on: r === 'all', act: () => player.setRepeat('all') },
   ], { title: 'Lặp lại' });
 }
 function shuffleMenu(anchor) {
   menu(anchor, [
-    { icon: 'shuffle', label: 'Tắt trộn bài', hint: mark(!player.shuffle), act: () => player.setShuffle(false) },
-    { icon: 'shuffle', label: 'Trộn tất cả bài trong hàng chờ', hint: mark(player.shuffle), act: () => player.setShuffle(true) },
+    { icon: 'shuffle', label: 'Tắt trộn bài', on: !player.shuffle, act: () => player.setShuffle(false) },
+    { icon: 'shuffle', label: 'Trộn tất cả bài trong hàng chờ', on: player.shuffle, act: () => player.setShuffle(true) },
   ], { title: 'Trộn bài' });
 }
 

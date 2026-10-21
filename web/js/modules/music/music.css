@@ -871,3 +871,5 @@ body.m-has-bottom main#view { padding-bottom: calc(84px + var(--sai-bottom, 0px)
 body.m-has-bottom.has-dock main#view { padding-bottom: calc(var(--dock-h, 0px) + 84px + 24px + var(--sai-bottom, 0px)); }
 @media (min-width: 861px) { body.m-has-bottom main#view { padding-bottom: calc(var(--dock-h, 0px) + 84px); } body.m-has-bottom.has-dock main#view { padding-bottom: calc(var(--dock-h, 0px) + 84px); } }
 @media (max-width: 640px) { .mhero.is-list .mart.hero.round { border-radius: 50%; } }
+.mmenu-on { margin-left: auto; display: flex; color: var(--accent); }
+.mmenu-on .ic { width: 18px; height: 18px; }
