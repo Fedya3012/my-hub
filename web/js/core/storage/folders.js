@@ -80,23 +80,27 @@ export async function syncFolders({ signal } = {}) {
     for (const e of list) { count(e); if (e.isDir) await visit(e.path); else found.push(e); }
     scan.update({ detail: `${dirs} thư mục · ${found.length} tệp` });
   };
+  const missing = [];
   try {
-    for (const f of folders) await visit(f);
+    // A chosen folder deleted or renamed on the drive is skipped (and reported), the others still sync.
+    for (const f of folders) {
+      try { await visit(f); } catch (e) { if (e?.code === 'missing') missing.push(f); else throw e; }
+    }
   } catch (e) { scan.fail(e); throw e; }
   scan.finish(`Quét xong: ${dirs} thư mục, ${found.length} tệp`);
 
-  const removed = await pruneMissing(mode, folders, found);
+  const removed = await pruneMissing(mode, folders.filter(f => !missing.includes(f)), found);
 
   const { isBookFile } = await import('../../modules/books/lib/formats.js');
   const done = (await getSetting('sync.folderDone', {})) || {};
   // A music file is imported only when a chosen folder above it feeds music; a book only when one feeds books.
   const todo = found.filter(e => ((MUSIC.test(e.name) && allows(e.path, 'music')) || (!MUSIC.test(e.name) && isBookFile({ name: e.name }) && allows(e.path, 'books'))) && done[e.path] !== e.size);
-  if (!todo.length) return { added: 0, failed: [], removed };
+  if (!todo.length) return { added: 0, failed: [], removed, missing };
 
   const task = tasks.start({ label: `Đang nhập ${todo.length} tệp từ ${d.label}`, total: todo.length, unit: 'items', cancellable: true });
   const music = await import('../../modules/music/lib/store.js');
   const books = await import('../../modules/books/ui/importer.js');
-  const res = { added: 0, failed: [], removed };
+  const res = { added: 0, failed: [], removed, missing };
   for (let i = 0; i < todo.length; i++) {
     task.check();
     const e = todo[i];

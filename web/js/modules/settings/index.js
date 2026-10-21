@@ -166,6 +166,7 @@ async function render() {
       const r = await ctx.storage.sync();
       const fr = await (await import('../../core/storage/folders.js')).syncFolders().catch(err => { ctx.toast(err.message, 'error'); return null; });
       if (fr?.added) ctx.toast(`Đã nhập ${fr.added} tệp từ thư mục đã chọn`);
+      if (fr?.missing?.length) ctx.toast(`Thư mục không còn trên ổ: ${fr.missing.join(', ')}. Hãy bỏ chọn hoặc chọn lại thư mục.`, 'warn');
       if (fr?.removed) ctx.toast(`Đã xoá ${fr.removed} mục có tệp gốc không còn`);
       if (r?.skipped) ctx.toast(r.skipped === 'offline' ? 'Đang offline, sẽ đồng bộ khi có mạng' : r.skipped === 'signed-out' ? 'Chưa đăng nhập' : 'Chưa kết nối được ' + st.cloud.label, 'warn');
       else if (r && !r.cancelled && !r.pulled && !r.uploaded) ctx.toast('Đã đồng bộ, không có thay đổi mới');
