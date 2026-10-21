@@ -1,7 +1,24 @@
 {
-  "app": "0.8.0.2",
-  "released": "2026-10-20",
+  "app": "0.9.0.0",
+  "released": "2026-10-21",
   "changelog": [
+    {
+      "version": "0.9.0.0",
+      "date": "2026-10-21",
+      "notes": [
+        "Module mới: Sách (0.1.0) gồm thư viện sách, trình đọc và theo dõi việc đọc",
+        "Đọc EPUB, MOBI, AZW3, FB2, CBZ (truyện tranh, có chế độ manga phải sang trái), PDF (cuộn, từng trang, dàn lại chữ), TXT, Markdown, HTML",
+        "Trình đọc: phông, cỡ chữ, giãn dòng, lề, 7 nền trang (có tương phản cao, phông cho người khó đọc), lật trang hoặc cuộn, 2 trang trên màn rộng, độ sáng",
+        "Đánh dấu 6 màu, gạch chân, ghi chú, dấu trang, tìm trong sách, mục lục, chú thích dạng popup, tra từ điển, dịch, đọc to",
+        "Tiến độ đọc đồng bộ giữa các máy qua GitHub; tự ghi phiên đọc (thời gian, trang, tốc độ đọc)",
+        "Theo dõi: Muốn đọc, Đang đọc, Đã đọc, Bỏ dở (có lý do), Tạm dừng; đánh giá nửa sao, nhận xét, ghi chú riêng, cảm xúc, nhịp đọc, cảnh báo nội dung",
+        "Kệ sách, kệ thông minh, thư viện ảo, tìm kiếm nâng cao (author: tag: rating:>=4 status:…), sửa hàng loạt, bộ sách theo tập",
+        "Lấy thông tin sách từ Open Library và Google Books; thêm sách giấy theo ISBN hoặc quét mã vạch",
+        "Nhập Goodreads, StoryGraph, CSV, JSON; xuất CSV, CSV kiểu Goodreads, JSON",
+        "Thống kê kiểu StoryGraph: biểu đồ theo tháng, phân bố, bản đồ nhiệt, tổng kết năm, khoảng thời gian tuỳ chọn, xuất CSV và ảnh chia sẻ; mục tiêu, thử thách, huy hiệu",
+        "Sách hiện trong Thư viện chung; gắn danh sách nhạc nền tự phát khi mở sách"
+      ]
+    },
     {
       "version": "0.8.0.2",
       "date": "2026-10-21",
@@ -204,6 +221,7 @@
       "js/modules/app-manager/manifest.js",
       "js/modules/settings/manifest.js",
       "js/modules/music/manifest.js",
+      "js/modules/books/manifest.js",
       "js/core/progress.js",
       "js/core/device.js",
       "js/core/extensions.js",
@@ -342,6 +360,65 @@
         "Bản đầu tiên: thư viện Bài hát/Album/Nghệ sĩ/Thể loại/Thư mục/Danh sách phát, Cover Flow, Now Playing kiểu bìa/CD/vinyl/cassette, nền ambient, lời karaoke từng chữ.",
         "Audiophile: định dạng, bit depth, sample rate, bitrate, kênh, huy hiệu Hi-Res, đường tín hiệu; giải mã DSD (DSF/DFF), ALAC, AIFF ngay trong app.",
         "EQ tham số + đồ hoạ 10 dải, preset AutoEQ, ReplayGain, gapless, crossfade thông minh, hẹn giờ, tốc độ phát, đồng bộ phiên nghe giữa thiết bị."
+      ]
+    },
+    "books": {
+      "name": "Sách",
+      "version": "0.1.0",
+      "minApp": "0.9.0.0",
+      "files": [
+        "js/modules/books/index.js",
+        "js/modules/books/service.js",
+        "js/modules/books/books.css",
+        "js/modules/books/reader.css",
+        "js/modules/books/lib/csv.js",
+        "js/modules/books/lib/formats.js",
+        "js/modules/books/lib/icons.js",
+        "js/modules/books/lib/online.js",
+        "js/modules/books/lib/prefs.js",
+        "js/modules/books/lib/query.js",
+        "js/modules/books/lib/stats.js",
+        "js/modules/books/lib/store.js",
+        "js/modules/books/reader/engine-foliate.js",
+        "js/modules/books/reader/engine-pdf.js",
+        "js/modules/books/reader/reader.js",
+        "js/modules/books/reader/text-book.js",
+        "js/modules/books/ui/common.js",
+        "js/modules/books/ui/detail.js",
+        "js/modules/books/ui/editor.js",
+        "js/modules/books/ui/home.js",
+        "js/modules/books/ui/importer.js",
+        "js/modules/books/ui/library.js",
+        "js/modules/books/ui/shelves.js",
+        "js/modules/books/ui/stats.js",
+        "js/modules/books/ui/tools.js",
+        "vendor/foliate/comic-book.js",
+        "vendor/foliate/epub.js",
+        "vendor/foliate/epubcfi.js",
+        "vendor/foliate/fb2.js",
+        "vendor/foliate/fixed-layout.js",
+        "vendor/foliate/footnotes.js",
+        "vendor/foliate/mobi.js",
+        "vendor/foliate/overlayer.js",
+        "vendor/foliate/paginator.js",
+        "vendor/foliate/progress.js",
+        "vendor/foliate/search.js",
+        "vendor/foliate/text-walker.js",
+        "vendor/foliate/tts.js",
+        "vendor/foliate/vendor/fflate.js",
+        "vendor/foliate/vendor/zip.js",
+        "vendor/foliate/view.js",
+        "vendor/pdfjs/pdf.min.js",
+        "vendor/pdfjs/pdf.worker.min.js"
+      ],
+      "changelog": [
+        {
+          "version": "0.1.0",
+          "date": "2026-10-21",
+          "notes": [
+            "Bản đầu tiên: thư viện, trình đọc, theo dõi, thống kê, mục tiêu, nhập/xuất"
+          ]
+        }
       ]
     },
     "account": {

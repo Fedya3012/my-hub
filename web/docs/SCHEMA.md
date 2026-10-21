@@ -82,4 +82,4 @@ Music Player chỉ cần đọc `links` với `relation = 'soundtrack-of'` để
 
 ## Đổi schema
 
-Hiện tại là `db.version(3)` (v3 thêm bảng nhạc: tracks, albums, artists, plays, eqPresets, lyrics; chi tiết ở [MUSIC.md](MUSIC.md)). Đổi tiếp thì thêm `db.version(4).stores({...}).upgrade(tx => ...)` trong `db.js`. Không sửa version cũ. Module cũng có thể tự migrate dữ liệu riêng qua hàm `migrate({ from, to, db })` khi được cập nhật.
+Hiện tại là `db.version(4)` (v3 thêm bảng nhạc: tracks, albums, artists, plays, eqPresets, lyrics, chi tiết ở [MUSIC.md](MUSIC.md); v4 thêm bảng sách: books, authors, series, annotations, readingSessions, readingGoals, chi tiết ở [BOOKS.md](BOOKS.md)). Đổi tiếp thì thêm `db.version(5).stores({...}).upgrade(tx => ...)` trong `db.js`. Không sửa version cũ. Module cũng có thể tự migrate dữ liệu riêng qua hàm `migrate({ from, to, db })` khi được cập nhật.

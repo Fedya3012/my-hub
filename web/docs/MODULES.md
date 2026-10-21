@@ -1,6 +1,6 @@
 # Thêm module mới
 
-Ví dụ đầy đủ: module `music` (xem [MUSIC.md](MUSIC.md)).
+Ví dụ đầy đủ: module `music` (xem [MUSIC.md](MUSIC.md)) và `books` (xem [BOOKS.md](BOOKS.md)).
 
 1. Tạo `js/modules/music/index.js`:
 
@@ -21,7 +21,9 @@ export async function migrate({ from, to, db }) { /* tuỳ chọn: chạy khi c�
 
 ## Điểm mở rộng
 
-`extend('library.drawer', fn)` (`js/core/extensions.js`): thêm khối vào ngăn chi tiết của Thư viện. `fn({ item, el, ctx, refresh })`. Music dùng để hiện mục "Nhạc nền".
+`extend('library.drawer', fn)` (`js/core/extensions.js`): thêm khối vào ngăn chi tiết của Thư viện. `fn({ item, el, ctx, refresh, from })`. Music dùng để hiện mục "Nhạc nền". `from` cho biết trang nào gọi (Sách truyền `'books'` khi vẽ các khối này trên trang sách của nó).
+
+`openRoute(item)` trong manifest: route mở thẳng một mục khi Thư viện phát `item:open` (Sách: `books/read/<id>`).
 
 ## Liên kết với các module khác
 
