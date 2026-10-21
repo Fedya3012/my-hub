@@ -283,7 +283,7 @@ const dirOf = (f) => (f.webkitRelativePath || f.relPath || '').split('/').slice(
 const base = (n) => n.replace(/\.[^.]+$/, '');
 
 // files: File[] (from <input multiple> or a folder picker), or [{ handle, relPath }] to link without copying.
-export async function importFiles(files, { onProgress, sample = false, kind = 'music', signal, remote = null } = {}) {
+export async function importFiles(files, { onProgress, sample = false, kind = 'music', signal, remote = null, localFolder = null } = {}) {
   const list = [];
   for (const f of files) {
     const file = f.handle ? Object.assign(await f.handle.getFile(), { relPath: f.relPath }) : f;
@@ -324,7 +324,7 @@ export async function importFiles(files, { onProgress, sample = false, kind = 'm
         meta: { originalName: file.name, ...(sample ? { sample: true } : {}) },
       };
       await db.items.add(item);
-      const fileRow = await storage.addFile(item.id, handle ? { handle } : file, { role: 'main', name: file.name, ...(remote ? { remote: { key: remote(file) } } : {}) });
+      const fileRow = await storage.addFile(item.id, handle ? { handle } : file, { role: 'main', name: file.name, ...(remote ? { remote: { key: remote(file) } } : {}), ...(localFolder ? { localFolder } : {}) });
       const lrcFile = lrc.get(dirOf(file) + '/' + base(file.name).toLowerCase());
       const folderImg = imgs.get(dirOf(file));
       const track = await saveTrack(item, meta, { file: fileRow, folder: dirOf(file), lrcText: lrcFile ? await lrcFile.text() : null, folderImg, sample });

@@ -38,6 +38,8 @@ export async function cleanMissing(moduleId) {
     const r = await syncFolders({ pruneOnly: true }).catch(() => null);
     removed += r?.removed || 0;
     removed += await pruneOrphans().catch(() => 0);
+    const live = new Set((await (await import('./local-folders.js')).localFolders()).map(f => f.id));
+    const removedFolder = (f) => !!f.localFolder && !live.has(f.localFolder);
     const items = (await db.items.filter(i => !i.deleted && (moduleId === 'library' || i.moduleId === moduleId)).toArray());
     const gone = { music: [], books: [], other: [] };
     for (let n = 0; n < items.length; n++) {
@@ -46,7 +48,7 @@ export async function cleanMissing(moduleId) {
       const files = (await db.files.where('itemId').equals(i.id).toArray()).filter(f => (f.role || 'main') === 'main');
       if (!files.length) continue;
       let lost = true;
-      for (const f of files) if (!(await localMissing(f))) { lost = false; break; }
+      for (const f of files) if (!removedFolder(f) && !(await localMissing(f))) { lost = false; break; }
       if (lost) (i.type === 'book' ? gone.books : i.moduleId === 'music' ? gone.music : gone.other).push(i.id);
     }
     if (gone.music.length) await (await import('../../modules/music/lib/store.js')).deleteTracks(gone.music);

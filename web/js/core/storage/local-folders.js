@@ -40,6 +40,9 @@ export async function removeLocalFolder(id) {
   if (!rec) return;
   if (rec.kind === 'saf') await nativeRoot()?.releaseRoot?.({ treeUri: rec.treeUri }).catch(() => {});
   else await db.handles.delete('lf:' + id);
+  const done = (await getSetting(DONE, {})) || {};
+  for (const k of Object.keys(done)) if (k.startsWith(id + '/')) delete done[k];
+  await setSetting(DONE, done);
   await save(list.filter(f => f.id !== id));
 }
 
@@ -104,11 +107,11 @@ export async function scanLocal() {
         const { path } = await P.copyToCache({ uri: e.saf.uri, name: e.name });
         const blob = await (await fetch(window.Capacitor.convertFileSrc('file://' + path))).blob();
         const file = Object.assign(new File([blob], e.name, { type: blob.type }), { relPath: e.relPath });
-        await (e.music ? music.importFiles([file], { kind: 'music' }) : books.importFiles([file]));
+        await (e.music ? music.importFiles([file], { kind: 'music', localFolder: f.id }) : books.importFiles([file], { localFolder: f.id }));
         await P.clearCache();
       } else {
         const item = { handle: e.handle, name: e.name, size: e.size, relPath: e.relPath };
-        await (e.music ? music.importFiles([item], { kind: 'music' }) : books.importFiles([item]));
+        await (e.music ? music.importFiles([item], { kind: 'music', localFolder: f.id }) : books.importFiles([item], { localFolder: f.id }));
       }
       done[e.key] = e.size;
       await setSetting(DONE, done);

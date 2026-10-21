@@ -175,7 +175,7 @@ export const storage = {
   // signal (AbortSignal) stops between chunks; nothing is saved then.
   // remote: { key } registers a file that stays on the drive (a chosen folder): no copy on this device, no upload,
   // no cache when played (open() fetches it each time), and removing it never deletes the drive's file.
-  async addFile(itemId, source, { role = 'main', name, mime, onProgress, signal, quiet = false, remote = null } = {}) {
+  async addFile(itemId, source, { role = 'main', name, mime, onProgress, signal, quiet = false, remote = null, localFolder = null } = {}) {
     const id = uid();
     const blob = source.handle ? await source.handle.getFile() : source;
     const fileName = name || blob.name || 'file';
@@ -203,6 +203,7 @@ export const storage = {
       row.locations.local = source.handle ? await local.link(id, source.handle)
         : await local.put(id, blob, { signal: r.signal, onProgress: (d) => r.report(hashW + d, 'ghi vào máy') });
       row.syncStatus = 'local-only';
+      if (localFolder) row.localFolder = localFolder;   // imported from a 'Thư mục đồng bộ' folder: Dọn removes it once that folder is removed
       await db.files.put(row);
       r.report(hashW + storeW);
       r.finish(fileName);
