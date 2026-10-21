@@ -1,7 +1,14 @@
 {
-  "app": "0.9.3.0",
+  "app": "0.9.4.0",
   "released": "2026-10-21",
   "changelog": [
+    {
+      "version": "0.9.4.0",
+      "date": "2026-10-21",
+      "notes": [
+        "Bỏ Filen, thêm đồng bộ qua pCloud (WebDAV chính thức của pCloud, đăng nhập bằng email và mật khẩu)"
+      ]
+    },
     {
       "version": "0.9.3.0",
       "date": "2026-10-21",

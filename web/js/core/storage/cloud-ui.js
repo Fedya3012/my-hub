@@ -1,4 +1,4 @@
-// Connecting a cloud drive (Dropbox, OneDrive, WebDAV, Filen): the sign-in dialogs and what happens to this
+// Connecting a cloud drive (Dropbox, OneDrive, WebDAV, pCloud): the sign-in dialogs and what happens to this
 // device's library (merge / use the drive's copy), then the first sync. Used by Settings.
 import { storage, drives } from './index.js';
 import { PRESETS, normUrl } from './webdav.js';
