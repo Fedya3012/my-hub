@@ -29,3 +29,11 @@ pre, code { overflow-wrap: anywhere; white-space: pre-wrap; }
   html { overflow: hidden; height: 100%; }
   body { height: 100%; min-height: 0; overflow-x: clip; overflow-y: auto; overscroll-behavior: none; -webkit-overflow-scrolling: touch; }
 }
+
+/* Auto-hide tab bars (setting ui.tabsAutoHide): the bar slides down, floating mini players drop to the bottom. */
+@media (max-width: 860px) {
+  .mbottom, .bk-bottom { transition: transform .22s ease; }
+  body.tabs-autohide.tabs-hidden .mbottom, body.tabs-autohide.tabs-hidden .bk-bottom { transform: translateY(calc(100% + 4px)); }
+  .mdock { transition: bottom .22s ease; }
+  body.tabs-autohide.tabs-hidden.m-has-bottom .mdock, body.tabs-autohide.tabs-hidden.bk-has-bottom .mdock { bottom: calc(10px + var(--sai-bottom, 0px)); }
+}

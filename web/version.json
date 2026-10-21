@@ -428,6 +428,7 @@
       "js/core/perf.js",
       "js/core/params.js",
       "js/core/params-core.js",
+      "js/core/tabs-autohide.js",
       "js/core/params-ui.js",
       "js/core/dnd.js"
     ]

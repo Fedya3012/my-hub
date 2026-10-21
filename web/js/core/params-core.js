@@ -8,6 +8,7 @@
 //             attaches an adapter so its engine and these values stay one and the same)
 //   playback  what is playing now: item, title, state, position             (live, read-only, music)
 //   tasks     running tasks, overall percent                                 (live, read-only)
+import { setTabsAutoHide } from './tabs-autohide.js';
 import { params } from './params.js';
 import { bus } from './bus.js';
 import { getSetting, setSetting } from './db.js';
@@ -40,12 +41,14 @@ export async function initCoreParams() {
       scale: { type: 'number', default: 1, min: 0.85, max: 1.3, step: 0.05, label: 'Cỡ chữ', ui: false },
       density: { type: 'enum', default: 'comfortable', options: { comfortable: 'Thoải mái', compact: 'Gọn' }, label: 'Mật độ', ui: false },
       motion: { type: 'enum', default: 'auto', options: { auto: 'Theo hệ thống', full: 'Đầy đủ', reduced: 'Giảm chuyển động' }, label: 'Chuyển động', hint: 'Mọi module giảm hiệu ứng khi chọn "Giảm chuyển động".' },
+      tabsAutoHide: { type: 'bool', default: 0, label: 'Tự ẩn thanh tab dưới khi cuộn', hint: 'Mọi app: thanh tab dưới ẩn khi cuộn xuống, hiện lại khi kéo lên.' },
       mode: { type: 'enum', default: 'light', options: { light: 'Sáng', dark: 'Tối' }, label: 'Sáng / tối hiện tại', readonly: true, ui: false },
     },
     adapter: {
-      get: (k) => (k === 'motion' ? undefined : themeState[k]),
+      get: (k) => (k === 'motion' || k === 'tabsAutoHide' ? undefined : themeState[k]),
       async set(k, v) {
         if (k === 'motion') { applyMotion(v); return false; }
+        if (k === 'tabsAutoHide') { setTabsAutoHide(v); return false; }
         if (k === 'skin') return setSkin(v);
         if (k === 'theme') return applyTheme(v);
         if (k === 'mode') return;
@@ -59,6 +62,7 @@ export async function initCoreParams() {
     for (const [k, v] of Object.entries(next)) if (JSON.stringify(themeState[k]) !== JSON.stringify(v)) { const old = themeState[k]; themeState[k] = v; params.changed('ui.' + k, v, old, 'theme'); }
   });
   applyMotion(params.get('ui.motion'));
+  setTabsAutoHide(params.get('ui.tabsAutoHide'));
 
   // ── locale ──
   params.define('locale', {
