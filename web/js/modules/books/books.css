@@ -30,6 +30,9 @@ main#view > section.bk { animation: none; }
   .bk-bottom a .ic { width: 22px; height: 22px; }
   .bk-bottom a.on { color: var(--bk); }
   .bk-bottom a.on .ic { stroke-width: 2.4; }
+  /* The music dock sits right above the Books bottom bar instead of covering it. */
+  body.bk-has-bottom .mdock { bottom: calc(68px + var(--sai-bottom, 0px)); }
+  .bk-page { padding-bottom: calc(76px + var(--dock-h, 0px) + env(safe-area-inset-bottom, 0px)); }
 }
 
 /* Panels, sections */

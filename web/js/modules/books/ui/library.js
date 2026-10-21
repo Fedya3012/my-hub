@@ -80,9 +80,38 @@ export async function render(el, { ctx, snap, arg, go }) {
   ]);
 
   const box = $('#bk-results');
+  // Long-press (touch) or right-click a book: quick actions menu.
+  let lastMenu = 0, suppressClick = false, pressTimer = null, pressAt = null;
+  const quickMenu = (card) => {
+    if (Date.now() - lastMenu < 800) return;
+    lastMenu = Date.now(); suppressClick = true; setTimeout(() => { suppressClick = false; }, 700);
+    const id = card.dataset.id, b = snap.byId.get(id);
+    if (!b) return;
+    const setSt = (status, label) => ({ label, icon: 'b-bookmark', run: async () => { await store.setStatus(id, status); toast(`Đã đổi trạng thái: ${label}`); } });
+    menu(card, [
+      { label: 'Mở trang sách', icon: 'book', run: () => go('book/' + id) },
+      { label: 'Sửa thông tin', icon: 'b-edit', run: async () => (await import('./editor.js')).editBook(b, snap) },
+      '-',
+      setSt('want', 'Muốn đọc'), setSt('reading', 'Đang đọc'), setSt('finished', 'Đã đọc'),
+      '-',
+      { label: 'Chọn nhiều cuốn', icon: 'b-check-all', run: () => { st.select = true; st.sel.add(id); $('[data-sel]').setAttribute('aria-pressed', 'true'); draw(); } },
+      { label: 'Xoá sách', icon: 'trash', danger: true, run: async () => { if (await confirmBox('Xoá sách này?', `“${b.title}”, tệp, ghi chú và tiến độ sẽ bị xoá khỏi mọi thiết bị đồng bộ.`, 'Xoá')) { await store.removeBooks([id]); toast('Đã xoá'); } } },
+    ]);
+  };
+  const cancelPress = () => { clearTimeout(pressTimer); pressTimer = null; };
+  box.addEventListener('contextmenu', (e) => { const c = e.target.closest('[data-id]'); if (!c || st.select) return; e.preventDefault(); quickMenu(c); });
+  box.addEventListener('pointerdown', (e) => {
+    const c = e.target.closest('[data-id]');
+    if (!c || st.select || e.pointerType === 'mouse') return;
+    pressAt = [e.clientX, e.clientY];
+    pressTimer = setTimeout(() => quickMenu(c), 500);
+  });
+  box.addEventListener('pointermove', (e) => { if (pressTimer && pressAt && Math.hypot(e.clientX - pressAt[0], e.clientY - pressAt[1]) > 10) cancelPress(); });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(t => box.addEventListener(t, cancelPress));
   box.addEventListener('click', (e) => {
     const card = e.target.closest('[data-id]');
     if (!card) return;
+    if (suppressClick) { suppressClick = false; e.preventDefault(); return; }
     if (st.select || e.target.matches('.bk-check')) { toggle(card.dataset.id, card); return; }
     go('book/' + card.dataset.id);
   });
