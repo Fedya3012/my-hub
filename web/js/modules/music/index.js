@@ -77,7 +77,7 @@ async function render() {
   const remembered = sessionStorage.getItem('music.tab');
   const tab = (NAMES[head] && (head !== 'browse' || !rest.length)) ? head : !head ? (folderMode ? 'browse' : tabs.includes(remembered) ? remembered : tabs[0]) : null;
   if (tab) sessionStorage.setItem('music.tab', tab);
-  root.innerHTML = `<div class="mlib page" data-grid="${prefs().gridSize}"${!tab && !search && ['album', 'artist', 'playlist', 'folder'].includes(head) ? ' data-detail="1"' : ''}>
+  root.innerHTML = `<div class="mlib page" data-grid="${prefs().gridSize}"${!tab && !search && ['album', 'artist', 'playlist', 'folder', ...Object.keys(GROUPS)].includes(head) ? ' data-detail="1"' : ''}>
     <header class="mlib-head">
       <div class="mlib-title"><span class="eyebrow">Âm nhạc</span><h1>Nhạc</h1></div>
       <div class="mlib-actions">
