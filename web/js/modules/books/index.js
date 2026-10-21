@@ -37,6 +37,7 @@ let root, ctx, route = '', offs = [], pageOff = null, reader = null, readerCss =
 export async function mount(el, context, sub = '') {
   root = el; ctx = context;
   definePrefs();
+  document.body.classList.add('bk-has-bottom');
   if (!document.querySelector('link[href*="books/books.css"]')) document.head.append(Object.assign(document.createElement('link'), { rel: 'stylesheet', href: new URL('./books.css', import.meta.url).href }));
   await store.ensureRows();
   await store.ensureDefaultShelves();
@@ -47,6 +48,7 @@ export async function mount(el, context, sub = '') {
 }
 
 export function unmount() {
+  document.body.classList.remove('bk-has-bottom');
   offs.forEach(f => f()); offs = [];
   pageOff?.(); pageOff = null;
   closeReader();
