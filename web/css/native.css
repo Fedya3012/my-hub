@@ -15,7 +15,7 @@ button, .btn, a, .nav-link, .tabbar a { touch-action: manipulation; }
 /* No visible scrollbars anywhere (areas stay scrollable by touch, wheel and keys); nothing wider than the screen. */
 * { scrollbar-width: none; }
 *::-webkit-scrollbar { display: none; width: 0; height: 0; }
-html, body { max-width: 100vw; overflow-x: hidden; }
+body { max-width: 100vw; overflow-x: clip; }
 main#view, main#view > * { min-width: 0; max-width: 100%; }
 img, video, canvas, svg, table { max-width: 100%; }
 pre, code { overflow-wrap: anywhere; white-space: pre-wrap; }
