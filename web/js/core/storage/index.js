@@ -350,7 +350,10 @@ export const storage = {
       const { [mode]: _gone, ...rest } = f.locations;
       await db.files.update(f.id, { locations: rest });
     }
-    const todo = (await db.files.toArray()).filter(f => f.locations?.local && !f.locations[mode] && !f.deleted && f.size >= 0 && !DEVICE_ONLY_ROLES.has(f.role));
+    // Files that came from a 'Thư mục đồng bộ' (a device folder: localFolder, or a drive folder: linked) only flow
+    // folder -> app: they are never copied back up to the drive.
+    const todo = (await db.files.toArray()).filter(f => f.locations?.local && !f.locations[mode] && !f.deleted && f.size >= 0 && !DEVICE_ONLY_ROLES.has(f.role)
+      && !f.localFolder && !f.linked);
     if (!todo.length) return { uploaded: 0 };
     const total = todo.reduce((a, f) => a + (f.size || 0), 0);
     const task = tasks.start({ label: 'Tải tệp lên ' + d.label, detail: `${todo.length} tệp`, total: Math.max(1, total), unit: 'bytes', cancellable: true, delay: 600 });
