@@ -277,3 +277,7 @@ body[data-posture="cover"]:not(.cover-full) .pc-mini { display: none !important;
 /* Library drawer block */
 .pc-ext .pc-mini-list { list-style: none; margin: 6px 0; padding: 0; display: grid; gap: 2px; }
 .pc-ext .pc-mini-list .btn { width: 100%; justify-content: flex-start; text-align: left; }
+
+/* Books reader (z-index 800): the mini player sits above it, and hides while another audio source is chosen. */
+body.bk-reader-open .pc-mini { z-index: 850; bottom: calc(64px + var(--sai-bottom, 0px)); }
+body.bk-reader-open[data-audio-source]:not([data-audio-source="podcast"]) .pc-mini { display: none !important; }

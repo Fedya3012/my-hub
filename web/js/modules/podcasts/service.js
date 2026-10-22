@@ -23,6 +23,14 @@ export async function start(context) {
   const B = ctx.bus, cover = () => B.emit('cover:refresh');
   offs.push(
     extend('library.drawer', drawerBlock), extend('cover.cards', coverCard),
+    // Books reader "Nghe khi đọc" switch (books/reader/audio-switch.js).
+    extend('audio.sources', () => ({
+      id: 'podcast', name: NAME, icon: 'podcast',
+      hasMedia: () => !!player.ep, playing: () => player.playing,
+      title: () => player.ep ? `${player.ep.title} · ${player.show?.title || ''}` : '',
+      play: () => player.play(), pause: () => player.pause(),
+      onChange: (cb) => { player.addEventListener('state', cb); player.addEventListener('episode', cb); return () => { player.removeEventListener('state', cb); player.removeEventListener('episode', cb); }; },
+    })),
     B.on('media:play', ({ app }) => { lastApp = app; paintMini(); }),
     // Other apps: bus.emit('podcasts:play', { episodeId }) / ('podcasts:toggle')
     B.on('podcasts:play', async ({ episodeId, at }) => { const e = await store.episode(episodeId); if (e) player.playEpisode(e, { at }); }),
