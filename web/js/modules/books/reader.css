@@ -142,3 +142,24 @@ body[data-posture="cover"]:not(.cover-full) .bk-reader { display: none; }
 .bk-ra-row.on .bk-ra-pick > .ic { color: var(--accent); }
 /* Only the chosen app's player stays on screen while reading. */
 body.bk-reader-open[data-audio-source]:not([data-audio-source="music"]) .mdock { display: none; }
+/* Panels opened from the music dock (lyrics, queue, EQ, timer, volume…), app dialogs and toasts open above the reader. */
+body.bk-reader-open .mnp, body.bk-reader-open .msel-bar { z-index: 860; }
+body.bk-reader-open .msheet-wrap, body.bk-reader-open .modal-wrap { z-index: 870; }
+body.bk-reader-open .mpop, body.bk-reader-open .mdropbar { z-index: 880; }
+body.bk-reader-open #toasts { z-index: 890; }
+/* While reading, the music dock becomes a small floating player centred above the reader's bottom bar:
+   track, play controls and a few side buttons; the progress is the thin line along its bottom edge. */
+@media (min-width: 861px) {
+  body.bk-reader-open .mdock { left: 50%; right: auto; transform: translateX(-50%); width: min(640px, calc(100vw - 32px));
+    bottom: calc(60px + var(--sai-bottom, 0px)); padding: 8px 10px 10px 8px; gap: 12px; border-radius: 16px; border-width: 1px;
+    grid-template-columns: minmax(0, 1fr) auto auto; box-shadow: 0 10px 34px rgb(0 0 0 / .22); }
+  body.bk-reader-open .mdock .mart.sm { width: 42px; }
+  body.bk-reader-open .mdock-line { display: block; left: 14px; right: 14px; bottom: 4px; height: 3px; border-radius: 3px; overflow: hidden; }
+  body.bk-reader-open .mdock-seek, body.bk-reader-open .mdock .mbadges, body.bk-reader-open .mvol,
+  body.bk-reader-open .mdock [data-act="eq"], body.bk-reader-open .mdock [data-act="hires"],
+  body.bk-reader-open .mdock [data-act="shuffle"], body.bk-reader-open .mdock [data-act="repeat"] { display: none !important; }
+  body.bk-reader-open .mdock .mplay { width: 40px; height: 40px; }
+}
+/* Reading with the bars hidden: the player drops to the bottom edge. */
+body.bk-reader-open #dock .mdock { bottom: calc(64px + var(--sai-bottom, 0px)); transition: bottom .2s var(--ease-out, ease); }
+body.bk-reader-open:has(.bk-reader.bare) #dock .mdock { bottom: calc(12px + var(--sai-bottom, 0px)); }

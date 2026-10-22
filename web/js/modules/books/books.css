@@ -281,7 +281,7 @@ main#view > section.bk { animation: none; }
 @keyframes bk-up { from { transform: translateY(24px); opacity: 0; } }
 
 /* Books reader: keep the app's music dock above the reader's bottom bar instead of under it. */
-body.bk-reader-open #dock .mdock { z-index: 850; bottom: calc(64px + var(--sai-bottom, 0px)); }
+body.bk-reader-open #dock .mdock { z-index: 850; }
 
 /* ── Home and goals, BookPine style: greeting, big "now reading" card, goal bar, week dots, KPI tiles ── */
 .bk-greet { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
