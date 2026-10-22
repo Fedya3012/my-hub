@@ -45,13 +45,12 @@ async function renderFolders() {
     <p class="hint" style="margin:0">Tích chọn một hoặc nhiều thư mục trên ổ. Nhạc và sách bên trong được quét, nhập vào thư viện và phát trực tiếp từ ổ, không sao chép vào app. Tệp mới tự cập nhật mỗi lần đồng bộ.</p>
     <div id="folder-picker"></div>
     <div id="fold-progress" style="${card};padding:14px;display:flex;flex-direction:column;gap:10px"></div>
-    <div style="display:flex;flex-direction:row;flex-wrap:wrap;gap:10px">
-      <button type="button" data-act="pause" style="flex:1 1 160px;${btn};border:1px solid var(--line);background:var(--surface);color:inherit">Tạm dừng</button>
-      <button type="button" data-act="cancel-sync" style="flex:1 1 160px;${btn};border:1px solid var(--danger);background:var(--surface);color:var(--danger)">Huỷ đồng bộ</button>
-    </div>
-    <div style="display:flex;flex-direction:row;flex-wrap:wrap;gap:10px">
-      <button type="button" data-act="clean" style="flex:1 1 160px;${btn};border:1px solid var(--line);background:var(--surface);color:inherit">Dọn mục đã mất tệp</button>
-      <button type="button" data-act="sync-now" style="flex:1 1 160px;${btn};border:0;background:var(--accent);color:var(--accent-fg)">Đồng bộ ngay</button>
+    <div class="row-actions" style="display:flex;flex-direction:row;flex-wrap:wrap;gap:4px;align-items:center">
+      <button type="button" class="btn" data-act="pause">Tạm dừng</button>
+      <button type="button" class="btn" data-act="clean">Dọn mục đã mất tệp</button>
+      <button type="button" class="btn danger-ghost" data-act="cancel-sync">Huỷ đồng bộ</button>
+      <span style="flex:1"></span>
+      <button type="button" class="btn primary" data-act="sync-now">Đồng bộ ngay</button>
     </div>
   </section>`;
   const m = await import('../../core/storage/folder-ui.js');

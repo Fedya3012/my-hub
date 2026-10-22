@@ -540,3 +540,13 @@ body.mnp-open .task-tray { bottom: calc(16px + var(--sai-bottom)); }
 /* No glow or lift on filled buttons (skins included); the phone's floating main action keeps its shadow. */
 .btn.primary:not(.page-head .head-actions .btn) { box-shadow: none !important; }
 @media (max-width: 600px) { .mlib-actions .btn.primary { background: none !important; box-shadow: none !important; color: var(--fg) !important; } }
+
+/* Minimal chrome for the system pages (Cài đặt, Quản lý ứng dụng, Thư mục đồng bộ): secondary buttons are plain
+   text with an accent icon; only the one main action per block stays filled; destructive ones keep their colour. */
+:is([data-module="settings"], [data-module="app-manager"]) .btn:not(.primary):not(.danger) { border-color: transparent; background: none; font-weight: 600; }
+:is([data-module="settings"], [data-module="app-manager"]) .btn:not(.primary):not(.danger):hover { background: var(--surface-2); }
+:is([data-module="settings"], [data-module="app-manager"]) .btn:not(.primary):not(.danger) .ic { color: var(--accent); }
+:is([data-module="settings"], [data-module="app-manager"]) .btn.danger-ghost { border-color: transparent; background: none; }
+:is([data-module="settings"], [data-module="app-manager"]) .btn.danger-ghost:hover { background: color-mix(in srgb, var(--danger) 12%, transparent); color: var(--danger); }
+:is([data-module="settings"], [data-module="app-manager"]) select:not(.k) { border-color: transparent; background-color: var(--surface-2); }
+:is([data-module="settings"], [data-module="app-manager"]) .panel { box-shadow: none; }
