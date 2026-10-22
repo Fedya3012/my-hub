@@ -292,10 +292,40 @@ export async function saveNote(note) {
 export async function removeNote(id) { const n = await db.ficNotes.get(id); await db.ficNotes.update(id, { deleted: 1 }); changed([n?.fanficId]); }
 
 // ── Writing log (daily goal, streak) ──
-async function logWords(fanficId, delta) {
+async function logWords(fanficId, delta) { await logWriting(fanficId, { words: delta }); }
+// Active writing time (seconds) and finished sessions, for WPM and "time per page" statistics.
+export async function logWriting(fanficId, { words = 0, seconds = 0, sessions = 0 } = {}) {
   const dev = await thisDevice(), day = today(), id = `${day}|${fanficId}|${dev.id}`;
   const row = await db.ficWriting.get(id);
-  await db.ficWriting.put({ id, fanficId, day, deviceId: dev.id, words: (row?.words || 0) + delta, createdAt: row?.createdAt || now() });
+  await db.ficWriting.put({ id, fanficId, day, deviceId: dev.id, words: (row?.words || 0) + words, seconds: (row?.seconds || 0) + seconds,
+    sessions: (row?.sessions || 0) + sessions, createdAt: row?.createdAt || now() });
+}
+export async function writingRows(days = 365) {
+  const from = today(new Date(Date.now() - days * 864e5));
+  return db.ficWriting.where('day').aboveOrEqual(from).toArray();
+}
+
+// Find & replace across chapters (plain text or whole words, case-sensitive or not). Snapshots every chapter it
+// changes first, so one restore undoes it.
+export function findRegex(q, { cs = false, word = false, regex = false } = {}) {
+  if (!q) return null;
+  const src = regex ? q : q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  try { return new RegExp(word ? `(?<![\\p{L}\\p{N}])(?:${src})(?![\\p{L}\\p{N}])` : src, 'gu' + (cs ? '' : 'i')); } catch { return null; }
+}
+export async function replaceAll(fanficId, q, rep, opts = {}, chapterIds = null) {
+  const re = findRegex(q, opts);
+  if (!re) return 0;
+  let n = 0;
+  for (const c of await chaptersOf(fanficId)) {
+    if (chapterIds && !chapterIds.includes(c.id)) continue;
+    const hits = (c.body.match(re) || []).length + ((c.title || '').match(re) || []).length;
+    if (!hits) continue;
+    await snapshotChapter(c.id, { kind: 'auto', label: `Trước khi thay “${q}”` });
+    await saveChapter(c.id, { body: c.body.replace(re, rep), title: (c.title || '').replace(re, rep) });
+    n += hits;
+  }
+  changed([fanficId]);
+  return n;
 }
 export async function writingDays(days = 60) {
   const from = today(new Date(Date.now() - days * 864e5));

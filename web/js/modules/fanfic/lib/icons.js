@@ -29,6 +29,11 @@ registerIcons({
   'fx-break': '<path d="M6 12h.01M12 12h.01M18 12h.01"/>',
   'fx-quote': '<path d="M5 17c0-4 1-7 5-9M14 17c0-4 1-7 5-9"/>',
   'fx-undo': '<path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/>',
+  'fx-pin': '<path d="M9 4h6l-1 6 3 3v1H7v-1l3-3z"/><path d="M12 14v6"/>',
+  'fx-type': '<path d="M4 19 9.5 5h1L16 19M6.2 14h7.6"/><path d="M17 19v-6.5a2.5 2.5 0 0 1 5 0V19M17 16h5"/>',
+  'fx-lock': '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+  'fx-stats': '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+  'fx-kanban': '<rect x="3" y="4" width="5" height="16" rx="1"/><rect x="10" y="4" width="5" height="10" rx="1"/><rect x="17" y="4" width="4" height="13" rx="1"/>',
   'fx-down': '<path d="m6 9 6 6 6-6"/>',
   'fx-eye': '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>',
 });

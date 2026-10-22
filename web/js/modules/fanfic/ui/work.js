@@ -55,9 +55,9 @@ export async function render(el, { ctx, arg: id, go, rerender }) {
       ${fic.summary || fic.notesStart ? `<section class="fx-panel fx-sumpanel">${fic.summary ? `<h2 class="section-title">Tóm tắt</h2><div class="fx-prose">${mdToHtml(fic.summary)}</div>` : ''}${fic.notesStart ? `<h3>Lời tác giả</h3><div class="fx-prose">${mdToHtml(fic.notesStart)}</div>` : ''}</section>` : ''}
       <section class="fx-panel">
         <div class="fx-sec-h"><h2 class="section-title">${icon('fx-binder')}Chương &amp; cảnh</h2>
-          <div class="seg" role="group" aria-label="Kiểu xem"><button data-view="list" aria-pressed="${chView === 'list'}" aria-label="Danh sách">${icon('list')}</button><button data-view="cork" aria-pressed="${chView === 'cork'}" aria-label="Bảng thẻ (corkboard)">${icon('fx-cork')}</button></div>
+          <div class="seg" role="group" aria-label="Kiểu xem"><button data-view="list" aria-pressed="${chView === 'list'}" aria-label="Danh sách">${icon('list')}</button><button data-view="cork" aria-pressed="${chView === 'cork'}" aria-label="Bảng thẻ (corkboard)">${icon('fx-cork')}</button><button data-view="kanban" aria-pressed="${chView === 'kanban'}" aria-label="Kanban theo trạng thái">${icon('fx-kanban')}</button></div>
           <button class="btn small" data-a="add-ch">${icon('plus')}Chương</button></div>
-        <ol class="fx-binder ${chView === 'cork' ? 'cork' : ''}" data-binder>${v.tops.map(c => chapterLi(c, v)).join('') || '<li class="muted">Chưa có chương nào.</li>'}</ol>
+        ${chView === 'kanban' ? kanbanHtml(v) : `<ol class="fx-binder ${chView === 'cork' ? 'cork' : ''}" data-binder>${v.tops.map(c => chapterLi(c, v)).join('') || '<li class="muted">Chưa có chương nào.</li>'}</ol>`}
         <p class="hint">Kéo tay cầm ⠿ để sắp xếp (hoặc Alt + ↑/↓). Nhấn giữ hoặc chuột phải một chương để xem thêm thao tác.</p>
       </section>
     </div>
@@ -91,6 +91,8 @@ export async function render(el, { ctx, arg: id, go, rerender }) {
     { label: 'Xuất TXT', icon: 'download', run: async () => (await import('../lib/io.js')).exportWork(id, 'txt') },
     { label: 'Xuất HTML', icon: 'download', run: async () => (await import('../lib/io.js')).exportWork(id, 'html') },
     { label: 'Xuất EPUB', icon: 'download', run: async () => (await import('../lib/io.js')).exportWork(id, 'epub') },
+    { label: 'Xuất Word (.docx)', icon: 'download', run: async () => (await import('../lib/io.js')).exportWork(id, 'docx') },
+    { label: 'Xuất cho Amazon KDP (EPUB sạch)', icon: 'download', run: async () => (await import('../lib/io.js')).exportWork(id, 'kdp') },
     { label: 'In / lưu PDF', icon: 'download', run: async () => (await import('../lib/io.js')).exportWork(id, 'pdf') },
     '-',
     { label: 'Nhân bản truyện', icon: 'fx-snapshot', run: async () => { const nid = await store.duplicateFanfic(id); go('work/' + nid); } },
@@ -101,7 +103,13 @@ export async function render(el, { ctx, arg: id, go, rerender }) {
   el.querySelectorAll('[data-view]').forEach(b => b.onclick = () => { lsSet(VIEW_KEY, b.dataset.view); rerender(); });
 
   // ── Binder: open, menu, drag and drop ──
-  const binder = $('[data-binder]');
+  const kb = $('[data-kanban]');
+  if (kb) {
+    kb.addEventListener('click', (e) => { const c = e.target.closest('[data-ch]'); if (c && !e.target.closest('.fx-grip')) go(`write/${id}/${c.dataset.ch}`); });
+    onHold(kb, '[data-ch]', (li, e) => chapterMenu(li.dataset.ch, li, e));
+    kanbanDrag(kb, (chId, status, beforeId) => store.updateChapter(chId, { status }).then(() => beforeId !== undefined && store.moveChapter(chId, { parentId: v.chapters.find(c => c.id === chId)?.parentId || null, beforeId })));
+  }
+  const binder = $('[data-binder]') || document.createElement('ol');
   binder.addEventListener('click', (e) => {
     if (e.target.closest('.fx-grip')) return;
     const li = e.target.closest('[data-ch]');
@@ -128,6 +136,7 @@ export async function render(el, { ctx, arg: id, go, rerender }) {
       { label: 'Viết', icon: 'quill', run: () => go(`write/${id}/${chId}`) },
       { label: 'Đổi tên', icon: 'fx-edit', run: async () => { const t = await ask('Tên', c.title); if (t != null) await store.updateChapter(chId, { title: t }); } },
       { label: 'Tóm tắt (thẻ corkboard)', icon: 'fx-cork', run: async () => { const t = await ask('Tóm tắt', c.synopsis, true); if (t != null) await store.updateChapter(chId, { synopsis: t }); } },
+      { label: 'Gắn thẻ (POV, mạch truyện…)', icon: 'fx-works', run: async () => { const t = await ask('Thẻ, cách nhau bằng dấu phẩy', (c.tags || []).join(', ')); if (t != null) await store.updateChapter(chId, { tags: store.splitList(t) }); } },
       !c.parentId ? { label: 'Thêm cảnh', icon: 'plus', run: async () => { const sid = await store.addChapter(id, {}, { parentId: chId }); go(`write/${id}/${sid}`); } } : null,
       { label: 'Thêm chương sau', icon: 'plus', run: async () => { await store.addChapter(id, {}, { after: c.parentId ? c.parentId : chId }); } },
       '-',
@@ -190,7 +199,7 @@ function chapterLi(c, v) {
   const changedSincePub = v.published && c.pubAt && (c.editedAt || 0) > c.pubAt;
   const row = (x, cls = '') => `<li class="fx-ch ${cls}" data-ch="${x.id}" ${x.parentId ? `data-parent="${x.parentId}"` : ''} tabindex="0" style="${x.label ? `--lab:${CH_LABELS[x.label]}` : ''}">
       <span class="fx-grip" aria-label="Kéo để sắp xếp" title="Kéo để sắp xếp">${icon('fx-grip')}</span>
-      <div class="fx-ch-b"><b>${esc(x.title || 'Không tên')}</b>${x.synopsis ? `<small>${esc(x.synopsis)}</small>` : ''}</div>
+      <div class="fx-ch-b"><b>${esc(x.title || 'Không tên')}</b>${x.synopsis ? `<small>${esc(x.synopsis)}</small>` : ''}${x.tags?.length ? `<span class="fx-tags">${x.tags.map(t => `<span class="fx-tag">${esc(t)}</span>`).join('')}</span>` : ''}</div>
       <span class="fx-ch-m muted"><span class="num">${fmtNum(x.words)}</span> từ · ${esc(CH_STATUS[x.status] || '')}${x.pubAt ? ` · <span title="${changedSincePub && x === c ? 'Đã sửa sau khi xuất bản' : 'Đã xuất bản'}">${icon('book')}${changedSincePub && x === c ? '*' : ''}</span>` : ''}</span>
     </li>`;
   return row(c).replace(/<\/li>$/, scenes.length ? `<ol class="fx-scenes">${scenes.map(s => row(s, 'scene')).join('')}</ol></li>` : '</li>');
@@ -250,4 +259,40 @@ export function sortable(list, onDrop) {
   };
   list.addEventListener('pointerup', end);
   list.addEventListener('pointercancel', end);
+}
+
+// Kanban: chapters and scenes in columns by writing status; drag a card (handle) to another column to change it.
+function kanbanHtml(v) {
+  const card = (c) => `<li class="fx-kcard" data-ch="${c.id}" tabindex="0" style="${c.label ? `--lab:${CH_LABELS[c.label]}` : ''}">
+    <span class="fx-grip" aria-label="Kéo sang cột khác">${icon('fx-grip')}</span>
+    <div><b>${esc(c.title || 'Không tên')}</b>${c.parentId ? `<small class="muted">${esc(v.chapters.find(x => x.id === c.parentId)?.title || '')} › cảnh</small>` : ''}
+    ${c.synopsis ? `<small>${esc(c.synopsis)}</small>` : ''}${c.tags?.length ? `<span class="fx-tags">${c.tags.map(t => `<span class="fx-tag">${esc(t)}</span>`).join('')}</span>` : ''}
+    <small class="muted num">${fmtNum(c.words)} từ</small></div></li>`;
+  return `<div class="fx-kanban" data-kanban>${Object.entries(CH_STATUS).map(([k, l]) => {
+    const list = v.chapters.filter(c => (c.status || 'draft') === k);
+    return `<section class="fx-kcol" data-col="${k}"><h3>${esc(l)} <small class="num">${list.length}</small></h3><ol>${list.map(card).join('')}</ol></section>`;
+  }).join('')}</div>`;
+}
+function kanbanDrag(board, onDrop) {
+  let drag = null;
+  board.addEventListener('pointerdown', (e) => {
+    const grip = e.target.closest('.fx-grip'); if (!grip) return;
+    e.preventDefault(); grip.setPointerCapture(e.pointerId);
+    drag = { card: grip.closest('[data-ch]') }; drag.card.classList.add('dragging'); document.body.classList.add('fx-dragging');
+  });
+  board.addEventListener('pointermove', (e) => {
+    if (!drag) return;
+    board.querySelectorAll('.drop').forEach(x => x.classList.remove('drop'));
+    const col = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-col]');
+    if (col) col.classList.add('drop');
+    drag.col = col;
+  });
+  const end = () => {
+    if (!drag) return;
+    const { card, col } = drag; drag = null;
+    card.classList.remove('dragging'); document.body.classList.remove('fx-dragging');
+    board.querySelectorAll('.drop').forEach(x => x.classList.remove('drop'));
+    if (col) onDrop(card.dataset.ch, col.dataset.col);
+  };
+  board.addEventListener('pointerup', end); board.addEventListener('pointercancel', end);
 }

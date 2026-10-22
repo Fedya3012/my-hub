@@ -4,6 +4,7 @@
 //   work/<id>       Trang tác phẩm: thông tin kiểu AO3, chương & cảnh (kéo thả), ghi chú, mục tiêu, xuất bản, nhạc
 //   write/<id>[/<chapterId>]  Trình viết toàn màn hình (binder, Markdown, tập trung, phiên bản)
 //   fandoms | fandom/<id>     Fandom: nguyên tác bên Sách, nhân vật, cặp đôi, tác phẩm
+//   stats           Thống kê: số từ theo ngày, chuỗi ngày, thời gian viết, WPM, từ dùng nhiều
 //   tools           Thêm & nhập (TXT, Markdown, HTML/AO3), xuất (Markdown, TXT, HTML, EPUB)
 import './lib/icons.js';
 import { icon } from '../../core/icons.js';
@@ -12,10 +13,10 @@ import { dropFiles } from '../../core/dnd.js';
 import { definePrefs } from './lib/prefs.js';
 
 export const NAME = 'Xưởng Viết';
-const TABS = [['', 'fx-desk', 'Bàn viết'], ['works', 'fx-works', 'Tác phẩm'], ['fandoms', 'fx-fandom', 'Fandom'], ['tools', 'upload', 'Thêm & nhập']];
+const TABS = [['', 'fx-desk', 'Bàn viết'], ['works', 'fx-works', 'Tác phẩm'], ['fandoms', 'fx-fandom', 'Fandom'], ['stats', 'fx-stats', 'Thống kê'], ['tools', 'upload', 'Thêm & nhập']];
 const PAGES = {
   '': () => import('./ui/home.js'), works: () => import('./ui/works.js'), work: () => import('./ui/work.js'),
-  fandoms: () => import('./ui/fandoms.js'), fandom: () => import('./ui/fandoms.js'), tools: () => import('./ui/tools.js'),
+  stats: () => import('./ui/stats.js'), fandoms: () => import('./ui/fandoms.js'), fandom: () => import('./ui/fandoms.js'), tools: () => import('./ui/tools.js'),
 };
 
 let root, ctx, route = '', offs = [], pageOff = null, writer = null;
@@ -46,6 +47,8 @@ async function render() {
   const [head, ...rest] = route.split('/');
   const arg = rest.join('/');
   if (head === 'write') return openWriter(rest[0], rest[1]);
+  // A locked writing session (Cold Turkey style) keeps the writer open: go back to it instead of navigating away.
+  if (writer?.locked?.()) { history.replaceState(null, '', `#fanfic/write/${writer.id}`); route = 'write/' + writer.id; writer.nudge?.(); return; }
   closeWriter();
   pageOff?.(); pageOff = null;
   const tab = { work: 'works', fandom: 'fandoms' }[head] ?? head;

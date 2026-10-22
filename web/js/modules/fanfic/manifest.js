@@ -19,6 +19,8 @@ export default {
     'js/modules/fanfic/service.js',
     'js/modules/fanfic/fanfic.css',
     'js/modules/fanfic/lib/icons.js',
+    'js/modules/fanfic/lib/docx.js',
+    'js/modules/fanfic/lib/analyze.js',
     'js/modules/fanfic/lib/io.js',
     'js/modules/fanfic/lib/prefs.js',
     'js/modules/fanfic/lib/store.js',
@@ -32,5 +34,7 @@ export default {
     'js/modules/fanfic/ui/work.js',
     'js/modules/fanfic/ui/works.js',
     'js/modules/fanfic/ui/writer.js',
+    'js/modules/fanfic/ui/writer-tools.js',
+    'js/modules/fanfic/ui/stats.js',
   ],
 };

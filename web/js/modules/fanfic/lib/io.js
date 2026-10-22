@@ -152,7 +152,13 @@ export async function exportWork(id, fmt) {
     setTimeout(() => { f.contentWindow.print(); setTimeout(() => f.remove(), 60000); }, 300);
     return;
   }
-  if (fmt === 'epub') return download(name + '.epub', await epub(v, parts), 'application/epub+zip');
+  if (fmt === 'epub' || fmt === 'kdp') return download(name + (fmt === 'kdp' ? ' (KDP)' : '') + '.epub', await epub(v, parts, { kdp: fmt === 'kdp' }), 'application/epub+zip');
+  if (fmt === 'docx') {
+    const { docx, mdBlocks } = await import('./docx.js');
+    const blocks = [{ kind: 'title', text: v.title }, ...(v.fic.author ? [{ kind: 'center', text: v.fic.author }] : []),
+      ...parts.flatMap(({ c, md: body }) => [{ kind: 'h1', text: c.title, pageBreak: true }, ...mdBlocks(body)])];
+    return download(name + '.docx', docx({ title: v.title, author: v.fic.author, blocks }), 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+  }
 }
 
 export async function exportMany(ids, fmt) {
@@ -160,7 +166,7 @@ export async function exportMany(ids, fmt) {
 }
 
 // EPUB 3: mimetype (stored first), container, OPF, nav, one XHTML per chapter.
-async function epub(v, parts) {
+async function epub(v, parts, { kdp = false } = {}) {
   const id = 'urn:uuid:' + v.id, lang = v.fic.language || 'vi';
   const x = (s) => esc(s).replace(/'/g, '&#39;');
   const xhtml = (title, body) => `<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="${lang}" xml:lang="${lang}"><head><title>${x(title)}</title><link rel="stylesheet" href="style.css"/></head><body>${toXhtml(body)}</body></html>`;
@@ -168,7 +174,7 @@ async function epub(v, parts) {
     ['mimetype', 'application/epub+zip'],
     ['META-INF/container.xml', '<?xml version="1.0"?><container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>'],
     ['OEBPS/style.css', 'body{font-family:serif;line-height:1.6}h1,h2{text-align:center}p{margin:0;text-indent:1.4em}h1+p,h2+p,hr+p{text-indent:0}hr.scene{border:0;margin:1em 0;text-align:center}hr.scene:after{content:"* * *"}.center{text-align:center;text-indent:0}aside{font-size:.9em;color:#555;margin:1em 0}'],
-    ['OEBPS/title.xhtml', xhtml(v.title, mdToHtml(headerMd(v)))],
+    ['OEBPS/title.xhtml', xhtml(v.title, kdp ? `<h1 class="center">${x(v.title)}</h1>${v.fic.author ? `<p class="center">${x(v.fic.author)}</p>` : ''}` : mdToHtml(headerMd(v)))],
     ...parts.map(({ c, md }, i) => [`OEBPS/c${i + 1}.xhtml`, xhtml(c.title, `<h2>${x(c.title)}</h2>${c.notesStart ? `<aside>${mdToHtml(c.notesStart)}</aside>` : ''}${mdToHtml(md)}${c.notesEnd ? `<aside>${mdToHtml(c.notesEnd)}</aside>` : ''}`)]),
   ];
   const nav = xhtml('Mục lục', `<nav epub:type="toc"><h1>Mục lục</h1><ol><li><a href="title.xhtml">${x(v.title)}</a></li>${parts.map(({ c }, i) => `<li><a href="c${i + 1}.xhtml">${x(c.title)}</a></li>`).join('')}</ol></nav>`);
@@ -189,7 +195,7 @@ function toXhtml(html) {
 // Minimal ZIP writer (stored, no compression): enough for EPUB, which requires 'mimetype' stored first anyway.
 const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
 const crc32 = (b) => { let c = 0xffffffff; for (let i = 0; i < b.length; i++) c = CRC[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
-export function zipStore(files) {
+export function zipStore(files, type = 'application/epub+zip') {
   const enc = new TextEncoder(), chunks = [], central = [];
   let off = 0;
   for (const [name, data] of files) {
@@ -207,5 +213,5 @@ export function zipStore(files) {
   const size = central.reduce((a, b) => a + b.length, 0);
   const end = new DataView(new ArrayBuffer(22));
   end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true); end.setUint32(12, size, true); end.setUint32(16, off, true);
-  return new Blob([...chunks, ...central, new Uint8Array(end.buffer)], { type: 'application/epub+zip' });
+  return new Blob([...chunks, ...central, new Uint8Array(end.buffer)], { type });
 }
