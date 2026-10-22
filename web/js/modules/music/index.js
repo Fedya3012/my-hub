@@ -83,9 +83,9 @@ async function render() {
   // Library sections (reached from the "Âm nhạc" menu); the bottom bar has five fixed entries.
   const SECTION_TABS = tabs.filter(t => !['home', 'stats', 'new'].includes(t));
   const bottomTabs = ['home', 'songs', 'new', 'stats'];
-  const remembered = sessionStorage.getItem('music.tab');
+  const remembered = localStorage.getItem('music.tab');
   const tab = (NAMES[head] && (head !== 'browse' || !rest.length)) ? head : !head ? (folderMode ? 'browse' : tabs.includes(remembered) ? remembered : tabs[0]) : null;
-  if (tab) sessionStorage.setItem('music.tab', tab);
+  if (tab) localStorage.setItem('music.tab', tab);
   root.innerHTML = `<div class="mlib page" data-grid="${prefs().gridSize}"${!tab && !search && ['album', 'artist', 'playlist', 'folder', ...Object.keys(GROUPS)].includes(head) ? ' data-detail="1"' : ''}>
     <header class="mlib-head">
       <div class="mlib-title app-title"><span class="eyebrow">Âm nhạc</span><h1>Trình phát nhạc</h1></div>
@@ -369,8 +369,8 @@ const quality = (t) => !t.tech ? 0 : (t.tech.lossless ? 1e6 : 0) + (t.tech.codec
 
 // ── Collapsible sections + "Mở rộng tất cả / Thu gọn tất cả" ─────
 // Open/closed state is kept per page for the session.
-const closed = new Set((() => { try { return JSON.parse(sessionStorage.getItem('music.closed') || '[]'); } catch { return []; } })());
-const saveClosed = () => { try { sessionStorage.setItem('music.closed', JSON.stringify([...closed].slice(-400))); } catch { /* private mode */ } };
+const closed = new Set((() => { try { return JSON.parse(localStorage.getItem('music.closed') || '[]'); } catch { return []; } })());
+const saveClosed = () => { try { localStorage.setItem('music.closed', JSON.stringify([...closed].slice(-400))); } catch { /* private mode */ } };
 function section(id, title, { count, body = '', tools = '', ic, cls = '', defaultOpen = true } = {}) {
   const key = (route || 'home') + '#' + id;
   const open = closed.has(key) ? false : closed.has(key + '!open') ? true : defaultOpen;

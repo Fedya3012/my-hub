@@ -13,8 +13,8 @@ import { player } from '../lib/player.js';
 const RANGES = { 7: '7 ngày', 30: '30 ngày', 90: '3 tháng', 365: '12 tháng', 0: 'Tất cả', custom: 'Tuỳ chọn' };
 const DAY = 864e5;
 let state = { range: '30', from: '', to: '', top: 'plays', group: 'auto' };
-try { state = { ...state, ...JSON.parse(sessionStorage.getItem('music.stats') || '{}') }; } catch { /* ignore */ }
-const save = () => { try { sessionStorage.setItem('music.stats', JSON.stringify(state)); } catch { /* ignore */ } };
+try { state = { ...state, ...JSON.parse(localStorage.getItem('music.stats') || '{}') }; } catch { /* ignore */ }
+const save = () => { try { localStorage.setItem('music.stats', JSON.stringify(state)); } catch { /* ignore */ } };
 
 const hm = (ms) => { const m = Math.round(ms / 60000); return m < 60 ? `${m} phút` : `${Math.floor(m / 60)} giờ ${m % 60 ? (m % 60) + ' phút' : ''}`.trim(); };
 const nf = (n) => n.toLocaleString((globalThis.__LOCALE || 'vi-VN'));

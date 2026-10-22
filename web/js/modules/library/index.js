@@ -36,7 +36,7 @@ function loadPrefs() {
   try { return JSON.parse(localStorage.getItem(PREF_KEY)) || {}; } catch { return {}; }
 }
 function savePrefs(p) {
-  try { localStorage.setItem(PREF_KEY, JSON.stringify({ sort: p.sort, layout: p.layout })); } catch { /* storage unavailable */ }
+  try { localStorage.setItem(PREF_KEY, JSON.stringify({ sort: p.sort, layout: p.layout, type: p.type, status: p.status, fav: p.fav, tag: p.tag })); } catch { /* storage unavailable */ }
 }
 
 let root, ctx, state, data, offs = [];
@@ -83,6 +83,8 @@ export async function mount(el, context) {
   $('#lib-status').onchange = (e) => { state.status = e.target.value; renderResults(); };
   $('#lib-tag').onchange = (e) => { state.tag = e.target.value; renderResults(); };
   $('#lib-sort').value = state.sort;
+  $('#lib-status').value = state.status;
+  $('#lib-fav').setAttribute('aria-pressed', state.fav);
   $('#lib-sort').onchange = (e) => { state.sort = e.target.value; savePrefs(state); renderResults(); };
   $('#lib-fav').onclick = (e) => { state.fav = !state.fav; e.currentTarget.setAttribute('aria-pressed', state.fav); renderResults(); };
   root.querySelectorAll('[data-layout]').forEach(b => b.onclick = () => { state.layout = b.dataset.layout; savePrefs(state); renderResults(); });
@@ -233,6 +235,7 @@ const keyOf = (i) => { let k = keys.get(i); if (k === undefined) keys.set(i, k =
 
 let disposeList = null;
 function renderResults() {
+  savePrefs(state);   // every filter, sort and view choice survives tab switches and restarts
   const list = filtered();
   root.querySelectorAll('[data-layout]').forEach(b => b.setAttribute('aria-pressed', b.dataset.layout === state.layout));
   root.querySelector('#lib-count').textContent = `${list.length} mục`;

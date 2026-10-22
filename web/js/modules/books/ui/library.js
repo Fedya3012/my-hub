@@ -22,7 +22,8 @@ const SORTS = {
 };
 const CHIPS = [['', 'Tất cả'], ['reading', 'Đang đọc'], ['want', 'Muốn đọc'], ['finished', 'Đã đọc'], ['onhold', 'Tạm dừng'], ['dnf', 'Bỏ dở']];
 
-let st = { q: '', status: '', select: false, sel: new Set() };
+const ST_KEY = 'hub.books.libStatus';   // the status chip survives tab switches and restarts
+let st = { q: '', status: (() => { try { return localStorage.getItem(ST_KEY) || ''; } catch { return ''; } })(), select: false, sel: new Set() };
 // Opened from another page's "Chọn nhiều cuốn": the library starts in select mode with that book picked.
 export function startSelect(id) { st.select = true; st.sel = new Set(id ? [id] : []); }
 
@@ -66,7 +67,7 @@ export async function render(el, { ctx, snap, arg, go }) {
   $('#bk-q').oninput = (e) => { st.q = e.target.value; soon(); };
   $('#bk-sort').onchange = async (e) => { await setPref('libSort', e.target.value); draw(); };
   el.querySelectorAll('[data-view]').forEach(b => b.onclick = async () => { await setPref('libView', b.dataset.view); el.querySelectorAll('[data-view]').forEach(x => x.setAttribute('aria-pressed', x === b)); draw(); });
-  el.querySelectorAll('[data-st]').forEach(b => b.onclick = () => { st.status = b.dataset.st; el.querySelectorAll('[data-st]').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', x === b); }); draw(); });
+  el.querySelectorAll('[data-st]').forEach(b => b.onclick = () => { st.status = b.dataset.st; try { localStorage.setItem(ST_KEY, st.status); } catch { /* storage unavailable */ } el.querySelectorAll('[data-st]').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', x === b); }); draw(); });
   $('[data-sel]').onclick = (e) => { st.select = !st.select; if (!st.select) st.sel.clear(); e.currentTarget.setAttribute('aria-pressed', st.select); draw(); };
   $('[data-help]').onclick = () => sheet('Cú pháp tìm kiếm', `<table class="bk-help">${QUERY_HELP.map(([q, d]) => `<tr><td><code>${esc(q)}</code></td><td>${esc(d)}</td></tr>`).join('')}</table><p class="muted">Kết hợp nhiều điều kiện bằng dấu cách (tất cả phải đúng). Không phân biệt dấu tiếng Việt.</p>`);
   $('[data-add]').onclick = (e) => menu(e.currentTarget, [

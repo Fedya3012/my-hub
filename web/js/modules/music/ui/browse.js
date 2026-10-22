@@ -10,8 +10,8 @@ import { player } from '../lib/player.js';
 import { menu } from './sheets.js';
 
 const KIND_IC = { internal: 'device', sd: 'sd', usb: 'usb', network: 'cloud', other: 'folder' };
-let sortBy = sessionStorage.getItem('music.browse.sort') || 'name';
-let desc = sessionStorage.getItem('music.browse.desc') === '1';
+let sortBy = localStorage.getItem('music.browse.sort') || 'name';
+let desc = localStorage.getItem('music.browse.desc') === '1';
 let abort = null;
 
 const href = (root, path = '') => '#music/browse/' + encodeURIComponent(root.id) + (path ? '/' + path.split('/').map(encodeURIComponent).join('/') : '');
@@ -101,8 +101,8 @@ async function folderView(c, root, path, rerender) {
       <span class="grow"></span>${dirs.length ? `<button class="btn small" data-xall="1">${icon('expand-all')}<span>Mở rộng tất cả</span></button>` : ''}</div>
     ${dirs.length ? `<div class="lbr-dirs">${dirs.map(d => dirNode(root, d)).join('')}</div>` : ''}
     <div class="mlist" data-files></div></div>`;
-  c.querySelector('[data-sort]').onchange = (e) => { sortBy = e.target.value; sessionStorage.setItem('music.browse.sort', sortBy); rerender(); };
-  c.querySelector('[data-dir]').onclick = () => { desc = !desc; sessionStorage.setItem('music.browse.desc', desc ? '1' : '0'); rerender(); };
+  c.querySelector('[data-sort]').onchange = (e) => { sortBy = e.target.value; localStorage.setItem('music.browse.sort', sortBy); rerender(); };
+  c.querySelector('[data-dir]').onclick = () => { desc = !desc; localStorage.setItem('music.browse.desc', desc ? '1' : '0'); rerender(); };
   const playAll = async (recursive, shuffle) => {
     const files = recursive ? await F.walk(root, path, { signal }) : sortFiles(res.files);
     if (!files.length) { toast('Không có bài nào', 'warn'); return; }

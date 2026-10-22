@@ -175,6 +175,9 @@ async function boot() {
   document.getElementById('app-name').textContent = APP_NAME;
   document.getElementById('app-version').textContent = 'v' + APP_VERSION;
 
+  // Reopening My Hub returns to the page that was open last.
+  try { if (!location.hash.slice(1)) { const last = localStorage.getItem('hub.lastRoute'); if (last) history.replaceState(null, '', '#' + last); } } catch { /* storage unavailable */ }
+  window.addEventListener('hashchange', () => { try { localStorage.setItem('hub.lastRoute', location.hash.slice(1)); } catch { /* storage unavailable */ } });
   window.addEventListener('hashchange', render);
   bus.on('module:toggled', () => { renderNav(); startServices(); });
   bus.on('module:updated', (u) => {
