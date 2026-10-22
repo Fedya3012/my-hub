@@ -28,15 +28,19 @@ let paramsOff = null;
 // Sub page: Settings → Thư mục đồng bộ (its own page with a back link).
 async function renderFolders() {
   const st = await ctx.storage.status();
+  const F = await import('../../core/storage/folders.js');
+  const { drives } = await import('../../core/storage/index.js');
+  const src = await F.folderSource();
+  const srcOn = src !== 'local' && drives[src].connected();
   const card = 'background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)';
   const btn = 'min-height:44px;padding:0 18px;border-radius:var(--radius);font-size:15px;font-weight:600;font-family:inherit;cursor:pointer';
-  const label = isDrive(st.mode) ? MODES[st.mode].label : '';
+  const label = src !== 'local' ? MODES[src].label : '';
   root.innerHTML = `<section class="page" style="max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:14px">
     <div><a class="btn small" href="#settings" aria-label="Quay lại Cài đặt">‹ Cài đặt</a></div>
     <h2 class="section-title" style="margin:0">Thư mục đồng bộ</h2>
-    ${isDrive(st.mode) ? `<div style="${card};display:flex;flex-direction:row;align-items:center;gap:12px;padding:14px">
+    ${src !== 'local' ? `<div style="${card};display:flex;flex-direction:row;align-items:center;gap:12px;padding:14px">
       <span style="width:40px;height:40px;border-radius:10px;background:color-mix(in srgb, var(--accent) 14%, transparent);display:flex;align-items:center;justify-content:center;flex:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" aria-hidden="true"><path d="M7 18a4 4 0 0 1-.6-7.96A5.5 5.5 0 0 1 17 9a4.5 4.5 0 0 1 .5 9z"/></svg></span>
-      <span style="flex:1 1 140px;min-width:0"><span style="display:block;font-size:15px;font-weight:600">${esc(label)}</span><span style="display:block;font-size:12px;color:var(--${st.cloud.connected ? 'ok' : 'warn'})">${st.cloud.connected ? 'Đã kết nối' : 'Chưa kết nối'}${st.lastSync ? ' · đồng bộ lần cuối ' + esc(fmtAgo(st.lastSync)) : ''}</span></span>
+      <span style="flex:1 1 140px;min-width:0"><span style="display:block;font-size:15px;font-weight:600">${esc(label)}</span><span style="display:block;font-size:12px;color:var(--${srcOn ? 'ok' : 'warn'})">${srcOn ? 'Đã kết nối' : 'Chưa kết nối'}</span></span>
       <button type="button" data-act="sync-now" style="${btn};padding:0 14px;flex:none;border:0;background:var(--accent);color:var(--accent-fg)">Đồng bộ ngay</button></div>` : ''}
     <p class="hint" style="margin:0">Tích chọn một hoặc nhiều thư mục trên ổ. Nhạc và sách bên trong được quét, nhập vào thư viện và phát trực tiếp từ ổ, không sao chép vào app. Tệp mới tự cập nhật mỗi lần đồng bộ.</p>
     <div id="folder-picker"></div>
@@ -52,18 +56,18 @@ async function renderFolders() {
   </section>`;
   const m = await import('../../core/storage/folder-ui.js');
   const pick = root.querySelector('#folder-picker');
-  if (isDrive(st.mode)) await m.folderPicker(pick, st.mode, ctx.toast);
-  else if (st.mode === 'local') {
+  if (src !== 'local' && !srcOn) pick.innerHTML = `<p class="hint">Chưa kết nối ${esc(label)}. Quay lại Cài đặt → Thư mục đồng bộ để kết nối.</p>`;
+  else if (src !== 'local') await m.folderPicker(pick, src, ctx.toast);
+  else {
     root.querySelector('.hint').textContent = 'Chọn các thư mục trong máy. App chỉ đọc đúng những thư mục này: nhạc và sách bên trong được quét và thêm vào thư viện. Trên Windows và máy tính, tệp được đọc trực tiếp, không sao chép; trên Android, mỗi tệp mới được sao chép vào app một lần.';
     await (await import('../../core/storage/local-folders.js')).localFolderPicker(pick, ctx.toast);
-  } else pick.innerHTML = '<p class="hint">Hãy kết nối Dropbox hoặc OneDrive trong Cài đặt trước.</p>';
+  }
 
   // Live progress card: the scan / import task of the folder sync (also visible in the task tray).
   const prog = root.querySelector('#fold-progress');
-  const F = await import('../../core/storage/folders.js');
   const pauseBtn = root.querySelector('[data-act="pause"]');
   const idle = async () => {
-    const n = st.mode === 'local' ? (await (await import('../../core/storage/local-folders.js')).localFolders()).length : (await F.folderList()).length;
+    const n = src === 'local' ? (await (await import('../../core/storage/local-folders.js')).localFolders()).length : (await F.folderList()).length;
     const paused = await F.folderPaused();
     pauseBtn.disabled = paused;
     prog.innerHTML = `<div style="font-size:13px;color:var(--muted)">${paused ? '<b style="color:var(--warn)">Đã tạm dừng.</b> Bấm “Đồng bộ ngay” để tiếp tục từ chỗ đã dừng.' : n ? 'Đã chọn ' + n + ' thư mục. Bấm “Đồng bộ ngay” để quét và nhập tệp mới.' : 'Chưa chọn thư mục nào.'}</div>`;
@@ -116,6 +120,9 @@ async function render() {
   const devices = (await db.devices.orderBy('lastSeenAt').reverse().toArray());
   const liveAt = await getSetting('sync.liveAt', null);
   const conn = st.cloud.signedIn;
+  const F = await import('../../core/storage/folders.js');
+  const { drives } = await import('../../core/storage/index.js');
+  const fsrc = await F.folderSource();
 
   root.innerHTML = `
   <section class="page settings">
@@ -124,8 +131,9 @@ async function render() {
     ${accountSummary()}
 
     <section class="set-block">
-      <h2 class="section-title">${icon('database')}Lưu trữ & đồng bộ</h2>
-      <div class="mode-cards" role="radiogroup" aria-label="Chế độ lưu trữ">
+      <h2 class="section-title">${icon('database')}Tài khoản đồng bộ</h2>
+      <p class="hint">Nơi thư viện, cài đặt và tiến độ nghe/đọc được đồng bộ giữa các máy. Tách riêng với nơi lấy thư mục nhạc và sách (mục Thư mục đồng bộ bên dưới): ví dụ đồng bộ bằng GitHub nhưng lấy nhạc từ Dropbox, hoặc dùng Dropbox cho cả hai.</p>
+      <div class="mode-cards" role="radiogroup" aria-label="Tài khoản đồng bộ">
         ${Object.entries(MODES).map(([k, m]) => `
           <label class="mode-card${st.mode === k ? ' on' : ''}">
             <input type="radio" name="storage-mode" id="mode-${k}" value="${k}" ${st.mode === k ? 'checked' : ''}>
@@ -134,7 +142,6 @@ async function render() {
       </div>
 
       <p class="hint">Chọn một ô ở trên để kết nối: <b>Dropbox</b> và <b>OneDrive</b> sẽ mở hộp đăng nhập. Đang dùng chế độ này rồi thì bấm “Đổi tài khoản” trong bảng bên dưới.</p>
-      ${isDrive(st.mode) || st.mode === 'local' ? `<a class="panel" href="#settings/folders" style="display:flex;flex-direction:row;align-items:center;gap:10px;text-decoration:none;color:inherit"><span style="flex:1"><strong style="display:block">Thư mục đồng bộ</strong><span class="hint">${st.mode === 'local' ? 'Chọn thư mục trong máy để nhập nhạc và sách' : 'Chọn thư mục trên ' + esc(MODES[st.mode].label) + ' để nhập nhạc và sách'}</span></span><span aria-hidden="true">›</span></a>` : ''}
       <div class="panel">
         <dl class="kv">
           <dt>Lưu tệp trên máy bằng</dt><dd>${st.backend === 'opfs' ? 'Hệ thống tệp riêng của ứng dụng (OPFS)' : 'IndexedDB'}</dd>
@@ -158,6 +165,19 @@ async function render() {
           <button class="btn" data-act="unlink">Ngừng dùng ${esc(st.cloud.label)} (về Local)</button>
           <button class="btn danger-ghost" data-act="cloudwipe" ${conn ? '' : 'disabled'}>${icon('trash')}Xoá dữ liệu trên ${esc(st.cloud.label)}</button></div>` : ''}
       </div>
+    </section>
+
+    <section class="set-block">
+      <h2 class="section-title">${icon('library')}Thư mục đồng bộ</h2>
+      <p class="hint">Nơi lấy nhạc và sách: thư mục trong máy, hoặc thư mục trên Dropbox / OneDrive. Không phụ thuộc vào tài khoản đồng bộ ở trên.</p>
+      <div class="mode-cards" role="radiogroup" aria-label="Nơi lấy thư mục đồng bộ">
+        ${[['local', 'Trong máy', 'Thư mục trên thiết bị này.']].concat(Object.keys(drives).filter(F.canPickFolders).map(k => [k, MODES[k].label, drives[k].connected() ? 'Đã kết nối' : 'Chưa kết nối, chọn để đăng nhập'])).map(([k, l, h]) => `
+          <label class="mode-card${fsrc === k ? ' on' : ''}">
+            <input type="radio" name="folder-src" value="${k}" ${fsrc === k ? 'checked' : ''}>
+            <span class="mode-icon">${icon(k === 'local' ? 'device' : 'cloud')}</span>
+            <strong>${esc(l)}</strong><span>${esc(h)}</span></label>`).join('')}
+      </div>
+      <a class="panel" href="#settings/folders" style="display:flex;flex-direction:row;align-items:center;gap:10px;text-decoration:none;color:inherit"><span style="flex:1"><strong style="display:block">Chọn thư mục, đồng bộ, tạm dừng, huỷ</strong><span class="hint">${fsrc === 'local' ? 'Thư mục trong máy' : 'Thư mục trên ' + esc(MODES[fsrc].label)}${fsrc !== 'local' && drives[fsrc].connected() ? ` · <button type="button" class="btn small" data-act="src-reconnect">Đổi tài khoản ${esc(MODES[fsrc].label)}</button>` : ''}</span></span><span aria-hidden="true">›</span></a>
     </section>
 
     <section class="set-block">
@@ -226,6 +246,20 @@ async function render() {
     ctx.toast('Chế độ lưu trữ: ' + MODES[r.value].label);
     render();
   });
+  // Folder source: connecting a drive here only signs in to it, the sync account above stays as it is.
+  root.querySelectorAll('input[name="folder-src"]').forEach(r => r.onchange = async () => {
+    const k = r.value;
+    if (k !== fsrc && fsrc !== 'local' && (await F.folderList()).length
+      && !(await confirmBox('Đổi nơi lấy thư mục?', 'Danh sách thư mục đã chọn trên ' + MODES[fsrc].label + ' sẽ được bỏ chọn. Bài nhạc, sách đã nhập vẫn giữ trong thư viện.', 'Đổi'))) { render(); return; }
+    if (k !== 'local' && !drives[k].connected()) {
+      const { connectForm } = await import('../../core/storage/cloud-ui.js');
+      if (!(await connectForm(k))) { render(); return; }
+    }
+    await F.setFolderSource(k);
+    ctx.toast('Thư mục đồng bộ lấy từ: ' + (k === 'local' ? 'Trong máy' : MODES[k].label));
+    render();
+  });
+  on('src-reconnect', async (e) => { e.preventDefault(); e.stopPropagation(); const { connectForm } = await import('../../core/storage/cloud-ui.js'); if (await connectForm(fsrc)) render(); });
   on('reconnect', async () => { const { useDrive } = await import('../../core/storage/cloud-ui.js'); await useDrive(st.mode, { reconnect: true }); render(); });
   on('persist', async () => { const ok = await ctx.storage.adapters.local.persist(); ctx.toast(ok ? 'Đã bật lưu trữ bền vững' : 'Trình duyệt chưa cho phép', ok ? 'info' : 'warn'); render(); });
   on('rename', async () => {

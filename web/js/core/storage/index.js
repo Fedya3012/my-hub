@@ -181,7 +181,7 @@ export const storage = {
     const fileName = name || blob.name || 'file';
     if (remote) {
       const row = { id, itemId, role, name: fileName, mime: mime || blob.type || 'application/octet-stream', size: blob.size,
-        hash: null, locations: { [activeMode]: { key: remote.key } }, linked: true, syncStatus: 'remote-only', createdAt: now() };
+        hash: null, locations: { [remote.drive || activeMode]: { key: remote.key } }, linked: true, syncStatus: 'remote-only', createdAt: now() };
       await db.files.put(row);
       return row;
     }

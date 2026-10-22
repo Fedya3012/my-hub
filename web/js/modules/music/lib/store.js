@@ -326,7 +326,7 @@ export async function importFiles(files, { onProgress, sample = false, kind = 'm
         meta: { originalName: file.name, ...(sample ? { sample: true } : {}) },
       };
       await db.items.add(item);
-      const fileRow = await storage.addFile(item.id, handle ? { handle } : file, { role: 'main', name: file.name, ...(remote ? { remote: { key: remote(file) } } : {}), ...(localFolder ? { localFolder } : {}) });
+      const fileRow = await storage.addFile(item.id, handle ? { handle } : file, { role: 'main', name: file.name, ...(remote ? { remote: { key: remote(file), drive: remote.drive } } : {}), ...(localFolder ? { localFolder } : {}) });
       const lrcFile = lrc.get(dirOf(file) + '/' + base(file.name).toLowerCase());
       const folderImg = imgs.get(dirOf(file));
       const track = await saveTrack(item, meta, { file: fileRow, folder: dirOf(file), lrcText: lrcFile ? await lrcFile.text() : null, folderImg, sample });

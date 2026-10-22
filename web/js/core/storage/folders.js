@@ -2,11 +2,27 @@
 // and every music / book file inside them (any depth) is imported into the library. Files already imported are
 // remembered by path + size (sync.folderDone), so a second sync only fetches what is new.
 // The files are NOT copied into the app: they stay on the drive and are fetched only when played or opened.
-import { drives, storage } from './index.js';
+import { drives, storage, isDrive } from './index.js';
 import { db, getSetting, setSetting } from '../db.js';
 import { tasks } from '../tasks.js';
 
 export const MUSIC = /\.(mp3|flac|m4a|m4b|mp4|aac|alac|ogg|oga|opus|wav|wave|aif|aiff|aifc|wv|ape|dsf|dff|wma)$/i;
+
+// Where the chosen folders live, separate from the sync account (storage.mode): 'local' (this device) or a drive
+// that can list folders. E.g. signed in with GitHub for the library while the folders come from Dropbox.
+// Unset: follows the sync account when that is a drive, otherwise 'local'.
+export async function folderSource() {
+  const s = await getSetting('sync.folderSource', null);
+  if (s === 'local' || (s && canPickFolders(s))) return s;
+  const m = await storage.mode();
+  return isDrive(m) && canPickFolders(m) ? m : 'local';
+}
+// Leaving a drive drops its folder list (its paths belong to the old drive); imported entries stay.
+export async function setFolderSource(src) {
+  const cur = await folderSource();
+  if (cur !== src && cur !== 'local') { await setSetting('sync.folders', []); await setSetting('sync.folderDone', {}); }
+  await setSetting('sync.folderSource', src);
+}
 
 export const folderList = async () => (await getSetting('sync.folders', [])) || [];
 export async function setFolders(list) { await setSetting('sync.folders', [...new Set(list)]); }
@@ -23,7 +39,7 @@ export async function setFolderApps(path, list) {
   await setSetting('sync.folderApps', map);
 }
 const inFolder = (file, folder) => file === folder || file.startsWith(folder.replace(/\/$/, '') + '/');
-export const canPickFolders = (mode) => typeof drives[mode]?.listDir === 'function';
+export function canPickFolders(mode) { return typeof drives[mode]?.listDir === 'function'; }
 
 async function walk(d, sub, out) {
   for (const e of await d.listDir(sub)) {
@@ -70,7 +86,7 @@ async function removeRows(gone) {
 // Linked files outside every chosen folder (the folder was unticked, or deleted and then dropped from the list):
 // look each one up in its parent folder on the drive and remove those that are gone.
 export async function pruneOrphans() {
-  const mode = await storage.mode();
+  const mode = await folderSource();
   const d = drives[mode];
   if (!d?.listDir || !d.connected() || !navigator.onLine) return 0;
   const folders = await folderList();
@@ -108,7 +124,7 @@ export const resumeFolderSync = () => setSetting('sync.folderPaused', false);
 export async function cancelFolderSync() {
   await pauseFolderSync();
   return tasks.run({ label: 'Đang huỷ đồng bộ thư mục', detail: 'Xoá các mục đã nhập…' }, async () => {
-    const mode = await storage.mode();
+    const mode = await folderSource();
     let rows;
     if (mode === 'local') {
       const ids = new Set((await (await import('./local-folders.js')).localFolders()).map(f => f.id));
@@ -135,7 +151,7 @@ export async function syncFolders(opts = {}) {
 }
 
 async function runSync({ pruneOnly = false } = {}) {
-  const mode = await storage.mode();
+  const mode = await folderSource();
   if (mode === 'local') return pruneOnly ? { added: 0, failed: [], removed: 0, missing: [] } : (await import('./local-folders.js')).scanLocal(track);
   const d = drives[mode];
   if (!d || !d.listDir) return { skipped: 'no-folders' };
@@ -186,7 +202,7 @@ async function runSync({ pruneOnly = false } = {}) {
       const blob = await d.getPath(e.path, { signal: task.signal });
       const file = new File([blob], e.name, { type: blob.type || '' });
       // Stays on the drive: nothing is copied to this device or uploaded (see storage.addFile remote).
-      const remote = () => e.path;
+      const remote = Object.assign(() => e.path, { drive: mode });
       if (MUSIC.test(e.name)) await music.importFiles([file], { kind: 'music', remote });
       else await books.importFiles([file], { remote });
       done[e.path] = e.size;
