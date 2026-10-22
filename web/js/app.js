@@ -17,6 +17,8 @@ import { account } from './core/account.js';
 import { badge as accountBadge } from './core/account-ui.js';
 import { params, services as sharedServices } from './core/params.js';
 import { initCoreParams } from './core/params-core.js';
+import { initPosture } from './core/posture.js';
+import { initCover } from './core/cover.js';
 
 const ctx = { db, bus, storage, tasks, toast, go, params, services: sharedServices, appName: APP_NAME, appVersion: APP_VERSION };
 let current = null; // { id, mod }
@@ -30,13 +32,20 @@ function go(route) {
 const routeHead = () => (location.hash.slice(1) || 'library').split('/')[0];
 const routeRest = () => decodeURIComponent((location.hash.slice(1).split('/').slice(1)).join('/'));
 
+const OWN_TABS = ['music', 'books'];   // apps with their own phone bottom tabs
+
 async function renderNav() {
   const mods = (await listModules()).filter(m => m.route && m.nav !== false && m.status !== 'planned' && (m.core || m.state.enabled));
   const route = routeHead();
   const links = mods.map(m => `<a href="#${m.route}" class="nav-link${m.route === route ? ' active' : ''}" ${m.route === route ? 'aria-current="page"' : ''}>
       ${icon(m.icon)}<span>${esc(m.name)}</span></a>`).join('');
   document.getElementById('nav-links').innerHTML = links;
-  document.getElementById('tabbar').innerHTML = links;
+  // Phone bottom bar (one-handed): the first apps in nav order + "Ứng dụng" for the full drawer. Music and Books keep
+  // their own bottom tabs and add an "Ứng dụng" button there instead (data-open-nav), so the bar hides on them.
+  const tab = (m) => `<a href="#${m.route}" class="${m.route === route ? 'active' : ''}" ${m.route === route ? 'aria-current="page"' : ''}>${icon(m.icon)}<span>${esc(m.name)}</span></a>`;
+  document.getElementById('tabbar').innerHTML = mods.slice(0, 4).map(tab).join('') +
+    `<button type="button" data-open-nav aria-label="Tất cả ứng dụng">${icon('grid')}<span>Ứng dụng</span></button>`;
+  document.body.classList.toggle('own-tabs', OWN_TABS.includes(route));
   const here = mods.find(m => m.route === route);
   const title = document.getElementById('appbar-title');
   if (title && here) title.textContent = here.name;
@@ -47,6 +56,8 @@ function initDrawer() {
   const body = document.body, btn = document.getElementById('nav-toggle'), mq = matchMedia('(max-width: 860px)');
   const set = (open) => { open = open && mq.matches; body.classList.toggle('nav-open', open); btn?.setAttribute('aria-expanded', String(open)); };
   btn?.addEventListener('click', () => set(!body.classList.contains('nav-open')));
+  // "Ứng dụng" buttons in bottom bars (core tab bar, Music, Books) open the drawer within thumb reach.
+  document.addEventListener('click', (e) => { if (e.target.closest('[data-open-nav]')) { e.preventDefault(); set(true); } });
   document.getElementById('nav-scrim')?.addEventListener('click', () => set(false));
   document.getElementById('nav-links')?.addEventListener('click', (e) => { if (e.target.closest('a')) set(false); });
   document.querySelector('.sidebar-foot')?.addEventListener('click', () => set(false));
@@ -159,6 +170,7 @@ async function boot() {
   safe(() => account.init(), 'account');         // restore the cached GitHub session (works offline) before routing
   await safe(() => applyTheme(), 'theme');
   await safe(() => initCoreParams(), 'params');   // shared parameters (ctx.params) before any module starts
+  safe(() => initPosture(), 'posture');           // foldables: <body data-posture>, see docs/FOLDABLE.md
   await safe(() => seedIfEmpty(), 'seed');
   document.getElementById('app-name').textContent = APP_NAME;
   document.getElementById('app-version').textContent = 'v' + APP_VERSION;
@@ -201,6 +213,7 @@ async function boot() {
   window.addEventListener('unhandledrejection', (ev) => { if (isQuota(ev.reason)) { ev.preventDefault(); toast('Bộ nhớ trình duyệt đã đầy, không lưu được. Vào Cài đặt → Lưu trữ để giải phóng chỗ.', 'error'); } });
 
   initDrawer();
+  safe(() => initCover(ctx), 'cover');            // Quick View for the cover screen (core/cover.js)
   await safe(() => registerSW(), 'sw');
   autoCheck();
   setInterval(autoCheck, 3600e3);

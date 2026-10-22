@@ -45,7 +45,7 @@ async function render() {
   const dm = displayMode();
   const active = mods.filter(m => m.status !== 'planned');
   root.innerHTML = `
-  <section class="page am">
+  <section class="page am"><div class="fold-top">
     <header class="page-head">
       <div class="app-title"><p class="eyebrow">Hệ thống</p><h1>Quản lý ứng dụng</h1></div>
       <div class="head-actions"><button class="btn primary" data-act="check">${icon('refresh')}<span>Kiểm tra cập nhật</span></button></div>
@@ -72,10 +72,10 @@ async function render() {
       </div>
     </div>
 
-    <section id="am-updates">${renderUpdates()}</section>
-
+    <section id="am-updates">${renderUpdates()}</section></div>
+    <div class="fold-bottom">
     <h2 class="section-title">${icon('grid')}Module</h2>
-    <ul class="mod-list">${mods.map((m, i) => modRow(m, i, mods.length, counts, !dm.native && swState.active)).join('')}</ul>
+    <ul class="mod-list">${mods.map((m, i) => modRow(m, i, mods.length, counts, !dm.native && swState.active)).join('')}</ul></div>
   </section>`;
 
   root.querySelector('[data-act="check"]').onclick = check;
