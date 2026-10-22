@@ -381,3 +381,29 @@ body.bk-reader-open[data-audio-source]:not([data-audio-source="podcast"]) .pc-mi
 .pc-marks button[data-seek] { width: auto; flex: none; }
 .pc-saved { font-variant-numeric: tabular-nums; opacity: .85; }
 .pc-ask { display: grid; gap: 12px; } .pc-ask input { min-height: 44px; }
+
+/* ── Android fixes (2026-10-22) ─────────────────────────────── */
+/* Large system font sizes made the search field wider than the screen: let grid/flex children shrink. */
+.pc-hero { grid-template-columns: minmax(0, 1fr); }
+.pc-hero > *, .pc-search { min-width: 0; max-width: 100%; }
+.pc-search input { width: 0; }
+.pc-search-go { flex: none; }
+/* Snap rows kept their first card flush with the screen edge: snap inside the side padding. */
+.pc-rail, .pc-chips { scroll-padding-inline: 16px; }
+.pc-rail { align-items: start; }
+.pc-show b { line-height: 1.25; min-height: 2.5em; }   /* one- and two-line titles line up */
+/* Genre tiles: white text on every skin (some skins recolor links). */
+.pc .pc-cat, .pc .pc-cat:hover { color: #fff; text-shadow: 0 1px 2px rgb(0 0 0 / .35); }
+/* Segmented controls scroll inside the page instead of running off the edge. */
+.pc-seg { display: flex; width: fit-content; }
+@media (max-width: 860px) {
+  /* Bottom bar sits on the real safe area (Capacitor fills --sai-bottom; env() can be 0 in the WebView). */
+  .pc-bottom { padding-bottom: calc(6px + var(--sai-bottom, env(safe-area-inset-bottom, 0px))); }
+  .pc-bottom a { font-size: .66rem; line-height: 1.15; }
+  .pc-bottom a .ic { width: 22px; height: 22px; stroke-width: 1.9; }
+  .pc-page { padding-bottom: calc(150px + var(--sai-bottom, env(safe-area-inset-bottom, 0px))); }
+  /* The sync/task card used to cover the bottom bar. */
+  body.pc-has-bottom .task-tray { bottom: calc(76px + var(--dock-h, 0px) + var(--sai-bottom, 0px)); }
+  /* The page title is already in the app bar on phones. */
+  .pc-head .eyebrow { display: none; }
+}
