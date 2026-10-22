@@ -329,3 +329,11 @@ body.bk-reader-open #dock .mdock { z-index: 850; bottom: calc(64px + var(--sai-b
   .bk-head { margin-bottom: 10px; gap: 8px; }
   .bk-head-t:empty, .bk-head-t:not(:has(select)) { display: none; }
 }
+
+/* Nguồn Thịnh hành */
+.bk-src { list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 4px; }
+.bk-src-row { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid var(--line, #0002); border-radius: 10px; }
+.bk-src-row label { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; }
+.bk-src-act { display: flex; gap: 2px; flex: none; }
+.bk-src-act button { width: 32px; height: 32px; padding: 0; display: grid; place-items: center; }
+.bk-src-add { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }

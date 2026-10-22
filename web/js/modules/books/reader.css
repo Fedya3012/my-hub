@@ -25,6 +25,7 @@ body.bk-reader-open { overflow: hidden; }
 .bk-r-host foliate-view { display: block; width: 100%; height: 100%; }
 .bk-r-loading, .bk-r-msg { display: grid; place-content: center; justify-items: center; gap: 14px; height: 100%; padding: 24px; text-align: center; }
 .bk-r-msg { grid-row: 1 / -1; max-width: 520px; margin: auto; }
+.bk-r-warm { position: fixed; inset: 0; background: #ff8a1f; opacity: var(--r-warm, 0); mix-blend-mode: multiply; pointer-events: none; z-index: 2; }
 .bk-r-dim { position: fixed; inset: 0; background: #000; opacity: var(--r-dim); pointer-events: none; z-index: 2; }
 
 /* Selection / annotation popup */

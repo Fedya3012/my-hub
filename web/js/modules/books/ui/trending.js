@@ -1,61 +1,42 @@
-// Trending books: what readers are picking up now (Open Library trending lists, free, CORS-enabled).
-// Tap a book to add it to "Muốn đọc". Books already in the library are marked.
+// Trending books from the sources the user picked (Sách → Cài đặt → Nguồn Thịnh hành, or the "Nguồn" button here).
+// Tap "Muốn đọc" to add a book. Books already in the library are marked.
 import { icon } from '../../../core/icons.js';
 import { esc, toast } from '../../../core/ui.js';
 import * as store from '../lib/store.js';
+import { sources, labelOf, fetchSource } from '../lib/trend-sources.js';
 
-const PERIODS = [['daily', 'Hôm nay'], ['weekly', 'Tuần này'], ['monthly', 'Tháng này'], ['yearly', 'Năm nay']];
-const OL = 'https://openlibrary.org/trending';
-const cache = new Map();
-
-async function fetchTrending(period, signal) {
-  if (cache.has(period)) return cache.get(period);
-  const r = await fetch(`${OL}/${period}.json?limit=30`, { signal });
-  if (!r.ok) throw new Error(`openlibrary: ${r.status}`);
-  const j = await r.json();
-  const list = (j.works || []).map(w => ({
-    title: w.title || '',
-    authors: (w.author_name || []).slice(0, 3),
-    year: w.first_publish_year || '',
-    coverId: w.cover_i || null,
-    key: w.key || '',
-  })).filter(w => w.title);
-  cache.set(period, list);
-  return list;
-}
-
-export async function render(el, { ctx, snap, rerender }) {
-  let period = 'weekly';
+export async function render(el, { snap, rerender }) {
+  const list = (await sources()).filter(s => s.on);
+  let cur = list[0]?.id;
   let ctrl = null;
   el.innerHTML = `
     <div class="bk-toolbar">
       <h2 class="section-title">${icon('b-sparkle')}Sách thịnh hành</h2>
+      <a class="btn small" href="#books/settings/sources">${icon('settings')}Nguồn</a>
     </div>
-    <div class="chips bk-chips" role="group" aria-label="Khoảng thời gian">${PERIODS.map(([k, l]) => `<button class="chip${k === period ? ' on' : ''}" data-p="${k}" aria-pressed="${k === period}">${l}</button>`).join('')}</div>
+    ${list.length ? `<div class="chips bk-chips" role="group" aria-label="Nguồn">${list.map(s => `<button class="chip${s.id === cur ? ' on' : ''}" data-s="${esc(s.id)}" aria-pressed="${s.id === cur}">${esc(labelOf(s))}</button>`).join('')}</div>` : ''}
     <div id="bk-trend-box"></div>`;
   const box = el.querySelector('#bk-trend-box');
+  if (!list.length) { box.innerHTML = `<div class="empty">${icon('b-sparkle')}<p>Chưa bật nguồn nào. Bấm “Nguồn” để chọn.</p></div>`; return; }
 
-  const inLibrary = (title) => {
-    const t = store.fold(title);
-    return snap.list.some(b => store.fold(b.title) === t);
-  };
+  const inLibrary = (title) => { const t = store.fold(title); return snap.list.some(b => store.fold(b.title) === t); };
 
   const draw = async () => {
     ctrl?.abort();
     ctrl = new AbortController();
     box.innerHTML = `<p class="muted" role="status">Đang tải danh sách…</p>`;
-    let list;
-    try { list = await fetchTrending(period, ctrl.signal); }
+    let items;
+    try { items = await fetchSource(list.find(s => s.id === cur), ctrl.signal); }
     catch (e) {
       if (e.name === 'AbortError') return;
       box.innerHTML = `<div class="empty">${icon('b-sparkle')}<p>Không tải được danh sách thịnh hành. Kiểm tra mạng rồi thử lại.</p></div>`;
       return;
     }
-    if (!list.length) { box.innerHTML = `<div class="empty">${icon('b-sparkle')}<p>Chưa có dữ liệu cho khoảng thời gian này.</p></div>`; return; }
-    box.innerHTML = `<div class="bk-grid">${list.map((w, i) => `
+    if (!items.length) { box.innerHTML = `<div class="empty">${icon('b-sparkle')}<p>Chưa có dữ liệu cho khoảng thời gian này.</p></div>`; return; }
+    box.innerHTML = `<div class="bk-grid">${items.map((w, i) => `
       <article class="bk-card bk-trend" data-i="${i}">
-        <span class="bk-cover" style="--h:${(i * 47) % 360}">${w.coverId
-          ? `<img src="https://covers.openlibrary.org/b/id/${w.coverId}-M.jpg" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;border-radius:inherit">`
+        <span class="bk-cover" style="--h:${(i * 47) % 360}">${w.cover
+          ? `<img src="${esc(w.cover)}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;border-radius:inherit">`
           : `<span class="bk-cover-ph"><b>${esc(w.title)}</b><small>${esc(w.authors[0] || '')}</small></span>`}</span>
         <span class="bk-card-t">${esc(w.title)}</span>
         <span class="bk-card-a">${esc(w.authors.join(', '))}</span>
@@ -65,18 +46,17 @@ export async function render(el, { ctx, snap, rerender }) {
       </article>`).join('')}</div>`;
     box.querySelectorAll('[data-add]').forEach(btn => btn.onclick = async (e) => {
       e.stopPropagation();
-      const w = list[+btn.dataset.add];
+      const w = items[+btn.dataset.add];
       btn.disabled = true;
-      await store.createBook({ title: w.title, authors: w.authors, physical: 1 }, { quiet: true })
-        .then(id => store.setStatus(id, 'want'));
+      await store.createBook({ title: w.title, authors: w.authors, physical: 1 }, { quiet: true }).then(id => store.setStatus(id, 'want'));
       toast(`Đã thêm "${w.title}" vào Muốn đọc`);
       rerender?.();
     });
   };
 
-  el.querySelectorAll('[data-p]').forEach(b => b.onclick = () => {
-    period = b.dataset.p;
-    el.querySelectorAll('[data-p]').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', x === b); });
+  el.querySelectorAll('[data-s]').forEach(b => b.onclick = () => {
+    cur = b.dataset.s;
+    el.querySelectorAll('[data-s]').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', x === b); });
     draw();
   });
   await draw();

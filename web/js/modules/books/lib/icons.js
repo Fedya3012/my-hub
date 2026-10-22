@@ -3,6 +3,9 @@
 import { registerIcons } from '../../../core/icons.js';
 
 registerIcons({
+  'b-up': '<path d="m5 15 7-7 7 7"/>',
+  'b-down': '<path d="m5 9 7 7 7-7"/>',
+  'b-panel': '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 12h18M12 3v9"/><rect x="13.5" y="13.5" width="6" height="6" rx="1"/>',
   'b-home': '<path d="M4 11 12 4l8 7v9H4z"/><path d="M10 20v-5h4v5"/>',
   'b-shelf': '<path d="M3 20h18M5 20V6h3v14M9.5 20V4h3v16M15 20l-.8-12 3-.4 1.6 12.2"/>',
   'b-author': '<circle cx="12" cy="8" r="3.5"/><path d="M5 20c.8-3.8 3.6-6 7-6s6.2 2.2 7 6"/>',

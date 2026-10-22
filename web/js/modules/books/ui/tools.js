@@ -11,6 +11,7 @@ export async function render(el, { ctx, snap }) {
   const imp = await import('./importer.js');
   const missing = snap.all.list.filter(b => !b.book.isbn || !(b.cover || b.book.coverUrl) || !b.book.description);
   el.innerHTML = `
+  <a class="panel bk-tools-set" href="#books/settings" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;margin-bottom:12px">${icon('settings')}<span style="flex:1"><b>Cài đặt Sách</b><br><small class="muted">Chữ, nền trang, độ sáng, độ ấm, đọc to, nguồn Thịnh hành</small></span><span aria-hidden="true">›</span></a>
   <div class="bk-tools-grid">
     <section class="bk-panel"><h2 class="section-title">${icon('upload')}Thêm sách</h2>
       <p class="muted">Đọc được: ${BOOK_EXT.filter(e => FORMATS[e].engine).map(e => FORMATS[e].label).filter((v, i, a) => a.indexOf(v) === i).join(', ')}. Nhập và theo dõi được (đọc ở giai đoạn 2): CBR, CB7, DjVu, DOCX. Kéo thả tệp/thư mục vào trang Sách cũng được.</p>

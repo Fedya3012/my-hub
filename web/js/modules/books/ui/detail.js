@@ -88,7 +88,7 @@ export async function render(el, { ctx, snap, arg: id, go, rerender }) {
     ${b.book.description ? `<section class="bk-panel"><h2 class="section-title">Giới thiệu</h2><p class="bk-desc">${esc(b.book.description)}</p></section>` : ''}
 
     <section class="bk-panel"><h2 class="section-title">${icon('b-highlight')}Đánh dấu & ghi chú trong sách <span class="num muted">${notes.length}</span>
-      ${notes.length ? `<button class="btn small" data-a="export-notes">${icon('download')}Xuất Markdown</button>` : ''}</h2>
+      ${notes.length ? `<span class="bk-note-exp"><button class="btn small" data-a="export-notes">${icon('download')}Markdown</button><button class="btn small" data-a="export-txt">${icon('download')}TXT</button><button class="btn small" data-a="export-pdf">${icon('download')}PDF</button></span>` : ''}</h2>
       ${notes.length ? `<ul class="bk-notes">${notes.map(n => `<li class="k-${n.kind}" style="--hl:${store.COLORS[n.color] || store.COLORS.yellow}">
         <span class="bk-note-k">${icon({ highlight: 'b-highlight', underline: 'b-underline', note: 'b-note', bookmark: 'b-bookmark' }[n.kind] || 'b-note')}</span>
         <div>${n.text ? `<q>${esc(n.text)}</q>` : ''}${n.note ? `<p>${esc(n.note)}</p>` : ''}<small class="muted">${esc(n.label || '')} · ${fmtDate(n.createdAt)}</small></div>
@@ -154,6 +154,8 @@ export async function render(el, { ctx, snap, arg: id, go, rerender }) {
     upd(); tick = setInterval(upd, 1000);
   }
   $('[data-a="export-notes"]')?.addEventListener('click', () => download(`${b.title} - ghi chú.md`, notesMarkdown(b, notes), 'text/markdown'));
+  $('[data-a="export-txt"]')?.addEventListener('click', () => download(`${b.title} - ghi chú.txt`, notesText(b, notes), 'text/plain'));
+  $('[data-a="export-pdf"]')?.addEventListener('click', () => printNotes(b, notes));
   el.querySelectorAll('[data-go-note]').forEach(btn => btn.onclick = () => { sessionStorage.setItem('hub.books.goto', btn.dataset.goNote); openBook(ctx, b); });
   el.querySelectorAll('[data-del-ses]').forEach(btn => btn.onclick = async () => { await store.removeSession(btn.dataset.delSes); rerender(); });
 
@@ -167,6 +169,25 @@ export async function render(el, { ctx, snap, arg: id, go, rerender }) {
 
 function notesMarkdown(b, notes) {
   return `# ${b.title}\n${b.authors.join(', ')}\n\n` + notes.map(n => `${n.kind === 'bookmark' ? '🔖' : '>'} ${n.text || ''}\n${n.note ? `\n${n.note}\n` : ''}\n— ${n.label || ''}\n`).join('\n');
+}
+
+function notesText(b, notes) {
+  return `${b.title}\n${b.authors.join(', ')}\n${'='.repeat(40)}\n\n` + notes.map(n => `${n.kind === 'bookmark' ? '[Dấu trang]' : '"' + (n.text || '') + '"'}${n.note ? `\nGhi chú: ${n.note}` : ''}\n(${n.label || ''})\n`).join('\n');
+}
+
+// PDF: a printable page in a hidden frame; the system print dialog saves it as PDF (Windows, Android, browsers).
+function printNotes(b, notes) {
+  const f = Object.assign(document.createElement('iframe'), { title: 'In ghi chú' });
+  f.style.cssText = 'position:fixed;width:0;height:0;border:0;right:0;bottom:0';
+  document.body.append(f);
+  const d = f.contentDocument;
+  d.open();
+  d.write(`<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>${esc(b.title)} - ghi chú</title><style>
+    body{font:12pt/1.5 Georgia,serif;margin:2cm;color:#111} h1{font-size:18pt;margin:0} .a{color:#555;margin:0 0 1em}
+    .n{break-inside:avoid;margin:0 0 14pt;padding-left:10pt;border-left:4pt solid var(--c,#f5d04a)} .n p{margin:0} .m{font-style:italic;margin-top:4pt} .l{color:#777;font-size:9pt}
+  </style></head><body><h1>${esc(b.title)}</h1><p class="a">${esc(b.authors.join(', '))}</p>${notes.map(n => `<div class="n" style="--c:${store.COLORS[n.color] || store.COLORS.yellow}"><p>${n.kind === 'bookmark' ? '🔖 Dấu trang' : esc(n.text || '')}</p>${n.note ? `<p class="m">${esc(n.note)}</p>` : ''}<p class="l">${esc(n.label || '')}</p></div>`).join('')}</body></html>`);
+  d.close();
+  setTimeout(() => { f.contentWindow.focus(); f.contentWindow.print(); setTimeout(() => f.remove(), 60000); }, 300);
 }
 
 // Manual progress for paper books (or any book): page, percent or minutes.

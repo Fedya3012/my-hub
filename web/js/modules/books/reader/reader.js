@@ -61,9 +61,11 @@ export async function openReader(root, id, { ctx, onClose }) {
       <button class="icon-btn" data-a="bookmark" aria-label="Dấu trang">${icon('b-bookmark')}</button>
       <button class="icon-btn" data-a="settings" aria-label="Tuỳ chỉnh hiển thị">${icon('b-font')}</button>
       <button class="icon-btn" data-a="tts" aria-label="Đọc to">${icon('b-speak')}</button>
+      <button class="icon-btn" data-a="panelzoom" aria-label="Phóng từng ô" aria-pressed="false" hidden>${icon('b-panel')}</button>
     </header>
     <div class="bk-r-host"><div class="bk-r-loading">Đang mở sách…</div></div>
     <div class="bk-r-dim" aria-hidden="true"></div>
+    <div class="bk-r-warm" aria-hidden="true"></div>
     <footer class="bk-r-bot">
       <button class="icon-btn sm" data-a="prev" aria-label="Trang trước">${icon('b-left')}</button>
       <input type="range" min="0" max="1000" value="0" data-slider aria-label="Vị trí trong sách">
@@ -104,6 +106,7 @@ export async function openReader(root, id, { ctx, onClose }) {
     return close;
   }
   if (!saved?.loc && saved?.percent) engine.goToFraction(saved.percent / 100);
+  panelZoom();
   await logActivity(id, 'books', 'open').catch(() => {});
   if (b.status === 'want' || b.status === 'onhold') { b.status = 'reading'; store.setStatus(id, 'reading').catch(() => {}); }
 
@@ -323,6 +326,38 @@ export async function openReader(root, id, { ctx, onClose }) {
     });
   }
 
+  // ── Phóng từng ô (comics, manga, PDF page by page): the page is split into a grid (Cài đặt → cách chia trang)
+  // and next / previous step through its cells in reading order (right to left for manga), then turn the page.
+  function panelZoom() {
+    const btn = $('[data-a="panelzoom"]');
+    const usable = () => engine.kind === 'fixed' || (eng === 'pdf' && prefs.pdfMode === 'page');
+    btn.hidden = !usable();
+    const st = { on: false, i: 0 };
+    const grid = () => { const [c, r] = String(prefs.panelZoom || '2x2').split('x').map(Number); return { c, r, n: c * r }; };
+    const view = () => host.firstElementChild;
+    const apply = () => {
+      const v = view();
+      if (!v) return;
+      if (!st.on) { v.style.transform = ''; v.style.transformOrigin = ''; return; }
+      const { c, r } = grid(), W = host.clientWidth, H = host.clientHeight;
+      const row = Math.floor(st.i / c), col0 = st.i % c, col = prefs.comicRtl ? c - 1 - col0 : col0;
+      const k = Math.min(c, r), cx = (col + 0.5) / c * W, cy = (row + 0.5) / r * H;
+      v.style.transformOrigin = '0 0';
+      v.style.transition = 'transform .25s ease';
+      v.style.transform = `translate(${W / 2 - k * cx}px, ${H / 2 - k * cy}px) scale(${k})`;
+    };
+    const o = { next: engine.next?.bind(engine), prev: engine.prev?.bind(engine), left: engine.left?.bind(engine), right: engine.right?.bind(engine) };
+    const fwd = async () => { if (st.on && st.i < grid().n - 1) { st.i++; return apply(); } st.i = 0; await o.next(); apply(); };
+    const back = async () => { if (st.on && st.i > 0) { st.i--; return apply(); } await o.prev(); if (st.on) st.i = grid().n - 1; apply(); };
+    engine.next = fwd; engine.prev = back;
+    if (o.left || o.right) {
+      engine.left = () => (st.on ? (prefs.comicRtl ? fwd() : back()) : o.left ? o.left() : o.prev());
+      engine.right = () => (st.on ? (prefs.comicRtl ? back() : fwd()) : o.right ? o.right() : o.next());
+    }
+    btn.onclick = () => { st.on = !st.on; st.i = 0; btn.setAttribute('aria-pressed', st.on); btn.classList.toggle('on', st.on); apply(); };
+    addEventListener('resize', apply);
+  }
+
   function settingsPanel() {
     const p = prefs, fixed = engine.kind === 'fixed', pdf = eng === 'pdf';
     const sl = (k, label, min, max, step, unit = '') => `<label class="bk-r-row"><span>${label}</span><input type="range" data-p="${k}" min="${min}" max="${max}" step="${step}" value="${p[k]}"><output class="num">${p[k]}${unit}</output></label>`;
@@ -339,7 +374,7 @@ export async function openReader(root, id, { ctx, onClose }) {
       <div class="bk-r-seg">${[['paginated', 'Lật trang'], ['scrolled', 'Cuộn']].map(([v, l]) => `<button data-flow="${v}" aria-pressed="${p.flow === v}">${l}</button>`).join('')}</div>
       <div class="bk-r-seg">${[['auto', 'Tự động'], ['1', '1 trang'], ['2', '2 trang']].map(([v, l]) => `<button data-cols="${v}" aria-pressed="${String(p.columns) === v}">${l}</button>`).join('')}</div>
       ${tg('justify', 'Căn đều')}${tg('hyphenate', 'Ngắt chữ')}${tg('animated', 'Hiệu ứng lật trang')}` : ''}
-      ${sl('brightness', 'Độ sáng', 30, 100, 5, '%')}${tg('tapZones', 'Chạm cạnh để lật trang')}
+      ${sl('brightness', 'Độ sáng', 30, 100, 5, '%')}${sl('warmth', 'Độ ấm', 0, 100, 5, '%')}${tg('tapZones', 'Chạm cạnh để lật trang')}
       ${sl('ttsRate', 'Tốc độ đọc to', 0.5, 2.5, 0.1, '×')}
       <p class="muted">Mọi tuỳ chỉnh cũng có trong Cài đặt → Thông số → Sách & trình đọc.</p>`, (body) => {
       body.querySelectorAll('[data-p]').forEach(i => i.addEventListener(i.type === 'range' ? 'input' : 'change', () => {
@@ -373,6 +408,7 @@ export async function openReader(root, id, { ctx, onClose }) {
     const t = themeColors(prefs);
     el.style.setProperty('--r-bg', t.bg); el.style.setProperty('--r-fg', t.fg);
     el.style.setProperty('--r-dim', String(1 - (prefs.brightness || 100) / 100));
+    el.style.setProperty('--r-warm', String((prefs.warmth || 0) / 100 * 0.35));
   }
 
   // ── Dictionary / translation ──

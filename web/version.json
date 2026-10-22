@@ -690,7 +690,14 @@
         "vendor/foliate/view.js",
         "vendor/pdfjs/pdf.min.js",
         "vendor/pdfjs/pdf.worker.min.js",
-        "js/modules/books/ui/trending.js"
+        
+        "js/modules/books/ui/settings.js",
+        "js/modules/books/ui/trending.js",
+        "js/modules/books/lib/trend-sources.js",
+        "vendor/fonts/opendyslexic/opendyslexic-latin-400-normal.woff2",
+        "vendor/fonts/opendyslexic/opendyslexic-latin-400-italic.woff2",
+        "vendor/fonts/opendyslexic/opendyslexic-latin-700-normal.woff2",
+        "vendor/fonts/opendyslexic/opendyslexic-latin-700-italic.woff2"
       ],
       "changelog": [
         {

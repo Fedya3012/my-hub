@@ -7,7 +7,7 @@ import { esc } from './ui.js';
 
 const shown = (d) => d.label && d.ui !== false && !d.readonly;
 
-function control(ns, p) {
+export function control(ns, p) {
   const id = `prm-${ns}-${p.key}`.replace(/[^\w-]/g, '_');
   const key = esc(ns + '.' + p.key);
   const v = p.value;
@@ -19,6 +19,15 @@ function control(ns, p) {
   else if (p.type === 'color') input = `<input type="color" id="${id}" data-param="${key}" value="${esc(v || '#1d6f8f')}">`;
   else input = `<input id="${id}" data-param="${key}" value="${esc(v ?? '')}">`;
   return `<label class="prm-row" for="${id}"><span>${esc(p.label)}</span>${input}</label>`;
+}
+
+// The controls of some parameters of one namespace (an app's own settings page uses this).
+export function namespaceHtml(ns, keys) {
+  const sp = params.registry().find(x => x.ns === ns);
+  if (!sp) return '';
+  const list = sp.params.filter(p => shown(p) && (!keys || keys.includes(p.key)));
+  if (keys) list.sort((a, b) => keys.indexOf(a.key) - keys.indexOf(b.key));
+  return `<div class="prm-grid">${list.map(p => control(ns, p) + (p.hint ? `<small class="hint">${esc(p.hint)}</small>` : '')).join('')}</div>`;
 }
 
 export function paramsSectionHtml() {

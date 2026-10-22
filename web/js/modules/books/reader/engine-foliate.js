@@ -6,7 +6,14 @@
 //   onSelect(fn({ text, loc, label, rect, clear })) · onAnnotation(fn(loc)) · addAnnotation(a) · removeAnnotation(a)
 //   search(query, onHit) · clearSearch() · applyPrefs(p) · tts { start() next() stop() } · destroy()
 import { vendor } from '../lib/formats.js';
-import { THEMES, FONTS } from '../lib/prefs.js';
+import { THEMES, FONTS, FONT_CSS } from '../lib/prefs.js';
+
+// Fonts must be declared inside each book page (an iframe): OpenDyslexic ships with the app, the others come from
+// Google Fonts on first use (offline the fallback fonts apply).
+const OD = (f) => new URL(`../../../../vendor/fonts/opendyslexic/opendyslexic-latin-${f}.woff2`, import.meta.url).href;
+const DYSLEXIC = [['400', 'normal'], ['400', 'italic'], ['700', 'normal'], ['700', 'italic']]
+  .map(([w, st]) => `@font-face { font-family: 'OpenDyslexic'; font-style: ${st}; font-weight: ${w}; font-display: swap; src: url(${OD(`${w}-${st}`)}) format('woff2'); }`).join('\n');
+const fontImport = (k) => (FONT_CSS[k] ? `@import url('https://fonts.googleapis.com/css2?family=${FONT_CSS[k]}&subset=vietnamese&display=swap');` : '');
 import { COLORS } from '../lib/store.js';
 
 export function themeColors(p) {
@@ -19,7 +26,9 @@ export function themeColors(p) {
 function css(p) {
   const t = themeColors(p);
   const font = FONTS[p.font]?.[1];
-  return `@namespace epub "http://www.idpf.org/2007/ops";
+  return `${fontImport(p.font)}
+    @namespace epub "http://www.idpf.org/2007/ops";
+    ${p.font === 'dyslexic' ? DYSLEXIC : ''}
     html { color-scheme: ${t.bg === '#ffffff' || /^#[ef]/i.test(t.bg) ? 'light' : 'dark'}; }
     html, body { background: ${t.bg} !important; color: ${t.fg} !important; }
     body * { color: inherit; background-color: transparent; }

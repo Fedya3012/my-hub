@@ -18,7 +18,7 @@ import { definePrefs, get as pref } from './lib/prefs.js';
 const TABS = [
   ['', 'b-home', 'Trang chủ'], ['library', 'library', 'Thư viện'], ['trending', 'b-sparkle', 'Thịnh hành'], ['shelves', 'b-shelf', 'Kệ sách'],
   ['authors', 'b-author', 'Tác giả'], ['series', 'b-series', 'Bộ sách'], ['stats', 'b-chart', 'Thống kê'],
-  ['goals', 'b-target', 'Mục tiêu'], ['tools', 'upload', 'Thêm & nhập'],
+  ['goals', 'b-target', 'Mục tiêu'], ['tools', 'upload', 'Thêm & nhập'], ['settings', 'settings', 'Cài đặt'],
 ];
 // Phone bottom bar: the five main sections (the top tab row shows all of them on wide screens).
 const BOTTOM = [
@@ -29,7 +29,7 @@ const PAGES = {
   '': () => import('./ui/home.js'), library: () => import('./ui/library.js'), trending: () => import('./ui/trending.js'), book: () => import('./ui/detail.js'),
   shelves: () => import('./ui/shelves.js'), shelf: () => import('./ui/shelves.js'), authors: () => import('./ui/shelves.js'),
   author: () => import('./ui/shelves.js'), series: () => import('./ui/shelves.js'), stats: () => import('./ui/stats.js'),
-  goals: () => import('./ui/stats.js'), tools: () => import('./ui/tools.js'),
+  goals: () => import('./ui/stats.js'), tools: () => import('./ui/tools.js'), settings: () => import('./ui/settings.js'),
 };
 
 let root, ctx, route = '', offs = [], pageOff = null, reader = null, readerCss = null;

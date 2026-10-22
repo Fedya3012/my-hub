@@ -8,6 +8,7 @@ export const FONTS = {
   sans: ['Không chân (Be Vietnam Pro)', "'Be Vietnam Pro', system-ui, sans-serif"],
   hyper: ['Dễ đọc (Atkinson Hyperlegible)', "'Atkinson Hyperlegible', 'Be Vietnam Pro', sans-serif"],
   lexend: ['Cho người khó đọc (Lexend)', "'Lexend', 'Be Vietnam Pro', sans-serif"],
+  dyslexic: ['OpenDyslexic (cho người khó đọc)', "'OpenDyslexic', 'Lexend', 'Be Vietnam Pro', sans-serif"],
   mono: ['Đơn cách', "'JetBrains Mono', ui-monospace, monospace"],
 };
 // Google Fonts families the reader loads on demand (Vietnamese subset).
@@ -19,6 +20,7 @@ export const THEMES = {
   day: { label: 'Ngày', bg: '#ffffff', fg: '#1b1b1b', link: '#1d5fa8' },
   sepia: { label: 'Sepia', bg: '#f4ecd8', fg: '#433422', link: '#8a4b14' },
   paper: { label: 'Giấy', bg: '#ece6da', fg: '#2a2620', link: '#6b4a1a' },
+  gray: { label: 'Xám', bg: '#e4e4e2', fg: '#26282b', link: '#2a5d8f' },
   green: { label: 'Dịu mắt', bg: '#d8e8d3', fg: '#20301e', link: '#1f5a2a' },
   night: { label: 'Đêm', bg: '#1d1f23', fg: '#c9c5bd', link: '#8ab4f8' },
   black: { label: 'Đen OLED', bg: '#000000', fg: '#b8b8b8', link: '#8ab4f8' },
@@ -43,9 +45,11 @@ export function definePrefs() {
       columns: { type: 'enum', default: 'auto', options: { auto: 'Tự động (2 trang khi màn rộng)', 1: 'Một trang', 2: 'Hai trang' }, label: 'Số trang trên màn hình' },
       animated: { type: 'bool', default: 1, label: 'Hiệu ứng lật trang' },
       brightness: { type: 'number', default: 100, min: 30, max: 100, step: 5, label: 'Độ sáng trang', unit: '%' },
+      warmth: { type: 'number', default: 0, min: 0, max: 100, step: 5, label: 'Độ ấm (giảm ánh sáng xanh)', unit: '%' },
       tapZones: { type: 'bool', default: 1, label: 'Chạm cạnh màn hình để lật trang' },
       comicFit: { type: 'enum', default: 'fit-page', options: { 'fit-page': 'Vừa trang', 'fit-width': 'Vừa chiều ngang' }, label: 'Truyện tranh: cách hiển thị' },
       comicRtl: { type: 'bool', default: 0, label: 'Truyện tranh: đọc phải sang trái (manga)' },
+      panelZoom: { type: 'enum', default: '2x2', options: { '2x2': '4 ô (2 × 2)', '2x3': '6 ô (2 × 3)', '1x3': '3 dải ngang', '3x3': '9 ô (3 × 3)' }, label: 'Phóng từng ô: cách chia trang' },
       pdfMode: { type: 'enum', default: 'scroll', options: { scroll: 'Cuộn dọc', page: 'Từng trang', reflow: 'Dàn lại chữ (reflow)' }, label: 'PDF: kiểu xem' },
       ttsRate: { type: 'number', default: 1, min: 0.5, max: 2.5, step: 0.1, label: 'Đọc to: tốc độ', unit: '×' },
       ttsVoice: { type: 'string', default: '', ui: false },
