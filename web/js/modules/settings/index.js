@@ -97,7 +97,7 @@ async function render() {
 
   root.innerHTML = `
   <section class="page settings">
-    <header class="page-head"><div><p class="eyebrow">Tuỳ chỉnh</p><h1>Cài đặt</h1></div></header>
+    <header class="page-head"><div class="app-title"><p class="eyebrow">Tuỳ chỉnh</p><h1>Cài đặt</h1></div></header>
 
     ${accountSummary()}
 

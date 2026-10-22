@@ -323,3 +323,9 @@ body.bk-reader-open #dock .mdock { z-index: 850; bottom: calc(64px + var(--sai-b
 .bk-badges, .bk-goals + .section-title { margin-top: 8px; }
 .bk-goals { margin-bottom: 22px; }
 .bk-week small { white-space: nowrap; }
+.bk-hero-now, .bk-now, .bk-card, .bk-rail [data-id] { -webkit-touch-callout: none; }
+@media (max-width: 860px) {
+  .bk-head .eyebrow { display: none; }
+  .bk-head { margin-bottom: 10px; gap: 8px; }
+  .bk-head-t:empty, .bk-head-t:not(:has(select)) { display: none; }
+}

@@ -15,8 +15,8 @@ export const isPicked = (id) => S.picked.has(id);
 export function setRefresh(fn) { S.refresh = fn; }
 
 function paintRows() {
-  document.querySelectorAll('.mrow[data-id]').forEach(r => {
-    const on = S.picked.has(r.dataset.id);
+  document.querySelectorAll('.mrow[data-id], [data-tid]').forEach(r => {
+    const on = S.picked.has(r.dataset.id || r.dataset.tid);
     r.classList.toggle('sel', on);
     r.setAttribute('aria-selected', on);
   });

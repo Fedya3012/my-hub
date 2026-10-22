@@ -225,8 +225,10 @@ export function registerVirtual(tracks) {
 export const isVirtual = (id) => String(id || '').startsWith('vt:');
 export const virtualTrack = (id) => virtual.get(id);
 
-bus.on('sync:done', invalidate);
-bus.on('item:changed', invalidate);
+// Rebuild the library only when something music-related may have changed: a sync that pulled nothing, or a
+// change in another app (Sách), used to rebuild it and redraw the whole page (covers, cover flow) every time.
+bus.on('sync:done', (r) => { if (!r || r.pulled) invalidate(); });
+bus.on('item:changed', (e) => { if (e?.source !== 'books') invalidate(); });
 
 // Music items created outside this module (Library "Thêm tệp", samples) get a track row.
 async function adoptOrphans() {
@@ -766,24 +768,35 @@ import('./player.js').then(m => attachListenLog(m.player)).catch(() => {});
 
 // Album covers and thumbnails are made on each device (they are not synced): when an album's cover file is not on
 // this device, read its first track's embedded picture again and store it here. Cheap: one tag read per album.
+let coversChecked = false;
 export async function rebuildMissingCovers() {
+  // Once per session, and never from a file that is not on this device: for songs linked from a cloud folder this
+  // used to download whole audio files on every visit to Trình phát nhạc (the main cause of the lag after opening it).
+  if (coversChecked) return 0;
+  coversChecked = true;
+  const tried = (await getSetting('music.coverRebuildTried', {})) || {};
   const albums = await db.albums.toArray();
-  let made = 0;
+  let made = 0, triedNew = false;
   for (const al of albums) {
-    if (!al.coverFileId) continue;
+    if (!al.coverFileId || tried[al.coverFileId]) continue;
     const row = await db.files.get(al.coverFileId);
-    if (!row || row.deleted || (await storage.adapters.local.get(row.locations?.local))) continue;
+    if (!row || row.deleted || !row.locations?.local) continue;
+    if (await storage.adapters.local.get(row.locations.local).catch(() => null)) continue;
     const track = await db.tracks.where('albumId').equals(al.id).first();
     if (!track) continue;
+    const main = await db.files.where('itemId').equals(track.itemId).filter(f => f.role === 'main' && !f.deleted).first();
+    if (!main?.locations?.local) { tried[al.coverFileId] = 1; triedNew = true; continue; }
     try {
       const file = await mainFile(track.itemId);
       if (!file) continue;
       const meta = await readAudioMeta(file, { name: file.name });
-      if (!meta?.picture) continue;
+      if (!meta?.picture) { tried[al.coverFileId] = 1; triedNew = true; continue; }
       await setAlbumCover(al.id, new Blob([meta.picture.data], { type: meta.picture.mime || 'image/jpeg' }));
       made++;
-    } catch { /* unreadable file: try again next time */ }
+    } catch { tried[al.coverFileId] = 1; triedNew = true; }
+    await new Promise(r => setTimeout(r, 0));   // keep the page responsive between albums
   }
+  if (triedNew) await setSetting('music.coverRebuildTried', tried);
   if (made) invalidate();
   return made;
 }

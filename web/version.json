@@ -1,7 +1,17 @@
 {
-  "app": "0.9.8.0",
+  "app": "0.9.9.0",
   "released": "2026-10-21",
   "changelog": [
+    {
+      "version": "0.9.9.0",
+      "date": "2026-10-22",
+      "notes": [
+        "Trình phát nhạc: sửa lag ở Trang chủ: không còn dựng lại cả thư viện và vẽ lại trang sau mỗi lần đồng bộ hay mỗi thay đổi bên Sách; khôi phục ảnh bìa chỉ chạy một lần và không tải lại tệp nhạc từ ổ đám mây; Cover Flow nhẹ hơn trên điện thoại; thanh phát nhạc không còn làm mờ nền khi cuộn",
+        "Trình phát nhạc, Sách: giữ (Android) hoặc chuột phải (Windows) trên bài nhạc, album, nghệ sĩ, danh sách phát và sách ở Trang chủ để mở menu (phát, thêm vào hàng chờ, danh sách phát, chọn nhiều, đổi trạng thái, xoá…)",
+        "Giao diện điện thoại: bỏ tiêu đề trùng với thanh trên cùng, cỡ chữ tiêu đề vừa màn hình, khoảng cách các hàng công cụ đều nhau ở mọi app",
+        "Sửa danh sách tệp ngoại tuyến (một số tệp mới chưa được lưu để dùng khi không có mạng)"
+      ]
+    },
     {
       "version": "0.9.8.0",
       "date": "2026-10-21",
@@ -498,7 +508,10 @@
       "js/core/params-core.js",
       "js/core/tabs-autohide.js",
       "js/core/params-ui.js",
-      "js/core/dnd.js"
+      "js/core/dnd.js",
+      "js/core/longpress.js",
+      "js/core/storage/cleanup.js",
+      "js/core/storage/local-folders.js"
     ]
   },
   "modules": {
@@ -552,7 +565,7 @@
     },
     "music": {
       "name": "Trình phát nhạc",
-      "version": "0.6.0",
+      "version": "0.6.1",
       "minApp": "0.3.0",
       "files": [
         "js/modules/music/index.js",
@@ -600,7 +613,9 @@
         "js/modules/music/ui/lyrics-mini.js",
         "js/modules/music/ui/timers.js",
         "js/modules/music/lib/params-bridge.js",
-        "js/modules/music/ui/dnd.js"
+        "js/modules/music/ui/dnd.js",
+        "js/modules/music/lib/modes.js",
+        "js/modules/music/ui/select.js"
       ],
       "changelog": [
         {
@@ -626,7 +641,7 @@
     },
     "books": {
       "name": "Sách",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "minApp": "0.9.0.0",
       "files": [
         "js/modules/books/index.js",
@@ -671,9 +686,17 @@
         "vendor/foliate/vendor/zip.js",
         "vendor/foliate/view.js",
         "vendor/pdfjs/pdf.min.js",
-        "vendor/pdfjs/pdf.worker.min.js"
+        "vendor/pdfjs/pdf.worker.min.js",
+        "js/modules/books/ui/trending.js"
       ],
       "changelog": [
+        {
+          "version": "0.1.1",
+          "date": "2026-10-22",
+          "notes": [
+            "Giữ hoặc chuột phải trên sách ở Trang chủ để mở menu, có 'Chọn nhiều cuốn'"
+          ]
+        },
         {
           "version": "0.1.0",
           "date": "2026-10-21",

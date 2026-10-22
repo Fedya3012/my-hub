@@ -23,6 +23,8 @@ const SORTS = {
 const CHIPS = [['', 'Tất cả'], ['reading', 'Đang đọc'], ['want', 'Muốn đọc'], ['finished', 'Đã đọc'], ['onhold', 'Tạm dừng'], ['dnf', 'Bỏ dở']];
 
 let st = { q: '', status: '', select: false, sel: new Set() };
+// Opened from another page's "Chọn nhiều cuốn": the library starts in select mode with that book picked.
+export function startSelect(id) { st.select = true; st.sel = new Set(id ? [id] : []); }
 
 export async function render(el, { ctx, snap, arg, go }) {
   if (arg) st.q = decodeURIComponent(arg);

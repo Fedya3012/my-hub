@@ -18,6 +18,7 @@ import { coverFlow } from './ui/coverflow.js';
 import { isSelecting, hold, tap, markRows, setRefresh, exit as exitSelect } from './ui/select.js';
 setRefresh(() => render());
 import { tasks } from '../../core/tasks.js';
+import { onHold } from '../../core/longpress.js';
 import { incremental, cmpVi, cmpViNum } from '../../core/perf.js';
 
 let root, ctx, route = '', offs = [], cleanups = [];
@@ -86,7 +87,7 @@ async function render() {
   if (tab) sessionStorage.setItem('music.tab', tab);
   root.innerHTML = `<div class="mlib page" data-grid="${prefs().gridSize}"${!tab && !search && ['album', 'artist', 'playlist', 'folder', ...Object.keys(GROUPS)].includes(head) ? ' data-detail="1"' : ''}>
     <header class="mlib-head">
-      <div class="mlib-title"><span class="eyebrow">Âm nhạc</span><h1>Trình phát nhạc</h1></div>
+      <div class="mlib-title app-title"><span class="eyebrow">Âm nhạc</span><h1>Trình phát nhạc</h1></div>
       <div class="mlib-actions">
         <label class="search mlib-search">${icon('search')}<input type="search" placeholder="Tìm bài, album, nghệ sĩ…" value="${esc(search)}" aria-label="Tìm trong nhạc"></label>
         <button class="btn primary" data-act="add">${icon('plus')}<span>Thêm nhạc</span></button>
@@ -233,6 +234,30 @@ function groupRow(kind, g, sub) {
 const albumRow = (a) => `<a class="mrow" href="#music/album/${a.id}" data-art-kind="album" data-art-id="${a.id}">${artHtml(a.cover, a.title, { cls: 'xs' })}<span class="mrow-main"><span class="mrow-t">${esc(a.title)}${a.kind && a.kind !== 'album' ? ` <span class="mkind in">${store.KIND_LABEL[a.kind]}</span>` : ''}</span><span class="mrow-s">${esc(a.artist)}${a.year ? ' · ' + a.year : ''} · ${a.tracks.length} bài</span></span><span class="mrow-b">${a.formats.map(f => `<span class="mfmt sm"><b>${esc(f)}</b></span>`).join('')}${a.hiRes && prefs().showHiRes ? '<span class="hires sm">Hi-Res</span>' : ''}</span><span class="mrow-d num">${fmtTotal(a.duration)}</span></a>`;
 const countSub = (g) => `${g.albumCount ?? g.albums?.length ?? 0} album · ${g.count ?? g.tracks.length} bài`;
 
+async function groupTracks(kind, id) {
+  const L = await store.library();
+  if (kind === 'album') return L.albums.get(id)?.tracks || [];
+  if (kind === 'playlist') { const p = L.playlists.find(x => x.id === id) || store.BUILTIN_SMART.find(x => x.id === id); return p ? store.playlistTracks(p) : []; }
+  if (GROUPS[kind]) return L[GROUPS[kind].map].get(id)?.tracks || [];
+  return [];
+}
+function groupMenu(a) {
+  const kind = a.dataset.artKind, id = a.dataset.artId;
+  const title = a.querySelector('.mcard-t, .mrow-t, span')?.textContent || '';
+  const withTracks = (f) => async () => { const list = await groupTracks(kind, id); if (!list.length) return toast('Không có bài nào', 'warn'); f(list); };
+  const src = { kind, id, name: title };
+  menu(a, [
+    { icon: 'play', label: 'Phát', act: withTracks(list => player.play(list, { source: src })) },
+    { icon: 'shuffle', label: 'Phát ngẫu nhiên', act: withTracks(list => player.play(list, { source: src, shuffle: true })) },
+    { icon: 'queue', label: 'Phát tiếp theo', act: withTracks(list => { player.playNext(list.map(t => t.id)); toast(`Đã thêm ${list.length} bài để phát tiếp`); }) },
+    { icon: 'plus', label: 'Thêm vào hàng chờ', act: withTracks(list => { player.addToQueue(list.map(t => t.id)); toast(`Đã thêm ${list.length} bài vào hàng chờ`); }) },
+    { icon: 'list', label: 'Thêm vào danh sách phát…', act: withTracks(list => pickPlaylist(list.map(t => t.id))) },
+    '-',
+    { icon: 'arrow', label: 'Mở', act: () => { if (a.href) location.href = a.href; else a.click(); } },
+    { icon: 'image', label: 'Đổi ảnh…', act: () => changeArt(kind, id) },
+  ], { title });
+}
+
 function bindCards(box) {
   box.querySelectorAll('[data-play*=":"]').forEach(b => b.onclick = (e) => {   // not the coverflow's own bare data-play button
     e.preventDefault(); e.stopPropagation();
@@ -241,11 +266,8 @@ function bindCards(box) {
     if (GROUPS[kind]) { store.library().then(L => { const g = L[GROUPS[kind].map].get(id); if (g) player.play(g.tracks, { source: { kind, id: g.id, name: g.name } }); }); return; }
     player.playSource(kind, id);
   });
-  box.querySelectorAll('[data-art-kind]').forEach(a => a.oncontextmenu = (e) => {
-    e.preventDefault();
-    const kind = a.dataset.artKind, id = a.dataset.artId;
-    menu(a, [{ icon: 'image', label: 'Đổi ảnh…', act: () => changeArt(kind, id) }, { icon: 'play', label: 'Phát', act: () => a.querySelector('[data-play]')?.click() }], { title: a.querySelector('.mcard-t, .mrow-t')?.textContent || '' });
-  });
+  // Press and hold / right-click an album, artist, playlist, genre…: play, queue, add to a playlist, change the picture.
+  onHold(box, '[data-art-kind]', (a) => groupMenu(a));
   hydrate(box);
 }
 
@@ -428,7 +450,13 @@ const VIEWS = {
     const cf = c.querySelector('[data-cf]');
     // The cover flow is the heaviest block: it starts only after the rest of the page has been painted.
     if (cf) { const t = setTimeout(() => cleanups.push(coverFlow(cf, albums.slice(0, 24), { onOpen: (a) => go('album/' + a.id), onPlay: (a) => player.playSource('album', a.id) })), 60); cleanups.push(() => clearTimeout(t)); }
-    c.querySelectorAll('[data-tid]').forEach(b => b.onclick = () => player.play(recent, { start: recent.findIndex(t => t.id === b.dataset.tid), source: { kind: 'recent', name: 'Nghe gần đây' } }));
+    const byTid = (b) => recent.find(t => t.id === b.dataset.tid);
+    c.querySelectorAll('[data-tid]').forEach(b => b.onclick = () => {
+      if (isSelecting()) { tap(byTid(b), recent); return; }
+      player.play(recent, { start: recent.findIndex(t => t.id === b.dataset.tid), source: { kind: 'recent', name: 'Nghe gần đây' } });
+    });
+    // Press and hold / right-click a recent song: its menu, with "Chọn nhiều…".
+    onHold(c, '[data-tid]', (b) => { const t = byTid(b); if (t) trackMenu(b, t, { onChange: () => render(), select: () => hold(t, recent) }); });
     const fb = c.querySelector('[data-fav]');
     if (fb) { const r = trackRows(fav, { source: { kind: 'smart', id: 'smart:fav', name: 'Yêu thích' } }); fb.innerHTML = r.html; r.bind(fb, () => render()); }
     bindSections(c); bindCards(c);

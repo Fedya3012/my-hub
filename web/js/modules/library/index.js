@@ -47,7 +47,7 @@ export async function mount(el, context) {
   root.innerHTML = `
     <section class="page lib">
       <header class="page-head">
-        <div><p class="eyebrow">Trung tâm tổng hợp</p><h1>Thư viện</h1></div>
+        <div class="app-title"><p class="eyebrow">Trung tâm tổng hợp</p><h1>Thư viện</h1></div>
         <div class="head-actions">
           <label class="btn" title="Nhập tệp nhạc, sách, video, ảnh…">${icon('upload')}<span>Nhập tệp</span>
             <input type="file" id="lib-import" multiple hidden></label>

@@ -21,18 +21,19 @@ export function coverFlow(el, albums, { onOpen, onPlay, start = Math.floor((albu
     const w = el.clientWidth;
     const size = Math.min(w < 600 ? w * 0.52 : 300, 300);
     el.style.setProperty('--cf', size + 'px');
-    const step = size * (w < 600 ? 0.3 : 0.26), push = size * 0.42;
+    const step = size * (w < 600 ? 0.3 : 0.26), push = size * 0.42, reach = w < 600 ? 4 : 7;
     for (let i = 0; i < items.length; i++) {
       const o = i - pos, a = Math.abs(o);
-      if (a > 9) { items[i].style.visibility = 'hidden'; continue; }
+      // Only the albums near the centre are drawn: every 3D cover is its own GPU layer (slow on phones).
+      if (a > reach) { if (items[i].style.display !== 'none') items[i].style.display = 'none'; continue; }
       const s = Math.sign(o), near = Math.min(1, a);
       const x = o * step + s * push * near;
       const rot = -s * 62 * near;
       const z = -near * size * 0.55 - a * 4;
-      items[i].style.visibility = '';
+      items[i].style.display = '';
       items[i].style.transform = `translate3d(${x}px,0,${z}px) rotateY(${rot}deg)`;
       items[i].style.zIndex = 1000 - Math.round(a * 10);
-      items[i].style.filter = a > 0.5 ? `brightness(${1 - Math.min(0.45, a * 0.08)})` : '';
+      items[i].style.setProperty('--dim', a > 0.5 ? Math.min(0.45, a * 0.08).toFixed(3) : '0');
       items[i].tabIndex = a < 0.5 ? 0 : -1;
     }
     const cur = albums[Math.round(pos)];

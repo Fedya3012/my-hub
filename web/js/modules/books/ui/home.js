@@ -1,10 +1,11 @@
 // Books home: currently reading (with progress + continue), this year's goal, streak, quick stats,
 // recently added, shelves, and an empty state that explains how to add books.
 import { icon } from '../../../core/icons.js';
-import { esc } from '../../../core/ui.js';
+import { esc, toast, confirmBox } from '../../../core/ui.js';
+import { onHold } from '../../../core/longpress.js';
 import * as store from '../lib/store.js';
 import { compute, goalProgress } from '../lib/stats.js';
-import { coverHtml, cardHtml, hydrateCovers, fmtNum, fmtHours, fmtDate } from './common.js';
+import { coverHtml, cardHtml, hydrateCovers, fmtNum, fmtHours, fmtDate, menu } from './common.js';
 
 export async function render(el, { ctx, snap, go }) {
   const list = snap.list;
@@ -76,6 +77,22 @@ export async function render(el, { ctx, snap, go }) {
   el.querySelectorAll('[data-id]').forEach(c => c.addEventListener('click', (e) => { if (!e.target.closest('button')) go('book/' + c.dataset.id); }));
   el.querySelectorAll('[data-read]').forEach(b => b.onclick = () => openBook(ctx, snap.byId.get(b.dataset.read)));
   el.querySelectorAll('[data-prog]').forEach(b => b.onclick = async () => (await import('./detail.js')).progressSheet(snap.byId.get(b.dataset.prog)));
+  // Press and hold / right-click a book: the same quick actions as in the library, with "Chọn nhiều cuốn".
+  onHold(el, '[data-id]', (card) => {
+    const id = card.dataset.id, b = snap.byId.get(id);
+    if (!b) return;
+    const setSt = (status, label) => ({ label, icon: 'b-bookmark', run: async () => { await store.setStatus(id, status); toast(`Đã đổi trạng thái: ${label}`); } });
+    menu(card, [
+      b.main ? { label: 'Đọc tiếp', icon: 'play', run: () => openBook(ctx, b) } : null,
+      { label: 'Mở trang sách', icon: 'book', run: () => go('book/' + id) },
+      { label: 'Sửa thông tin', icon: 'b-edit', run: async () => (await import('./editor.js')).editBook(b, snap) },
+      '-',
+      setSt('want', 'Muốn đọc'), setSt('reading', 'Đang đọc'), setSt('finished', 'Đã đọc'),
+      '-',
+      { label: 'Chọn nhiều cuốn', icon: 'b-check-all', run: async () => { (await import('./library.js')).startSelect(id); go('library'); } },
+      { label: 'Xoá sách', icon: 'trash', danger: true, run: async () => { if (await confirmBox('Xoá sách này?', `“${b.title}”, tệp, ghi chú và tiến độ sẽ bị xoá khỏi mọi thiết bị đồng bộ.`, 'Xoá')) { await store.removeBooks([id]); toast('Đã xoá'); } } },
+    ].filter(Boolean));
+  });
 }
 
 export function bindAdd(el, ctx) {

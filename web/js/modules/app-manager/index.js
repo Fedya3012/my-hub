@@ -35,7 +35,7 @@ async function render() {
   root.innerHTML = `
   <section class="page am">
     <header class="page-head">
-      <div><p class="eyebrow">Hệ thống</p><h1>Quản lý ứng dụng</h1></div>
+      <div class="app-title"><p class="eyebrow">Hệ thống</p><h1>Quản lý ứng dụng</h1></div>
       <div class="head-actions"><button class="btn primary" data-act="check">${icon('refresh')}<span>Kiểm tra cập nhật</span></button></div>
     </header>
 

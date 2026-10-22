@@ -325,7 +325,9 @@
 .mhome-cf { border-radius: calc(var(--radius) + 6px); background: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--accent) 14%, var(--surface)), var(--bg) 75%); border: 1px solid var(--line); }
 .mcf-stage { position: relative; width: 100%; height: calc(var(--cf, 240px) * 1.32); perspective: 1100px; perspective-origin: 50% 40%; touch-action: pan-y; cursor: grab; }
 .mcf-item { position: absolute; left: 50%; top: 14px; width: var(--cf, 240px); height: var(--cf, 240px); margin-left: calc(var(--cf, 240px) / -2); padding: 0; border: 0; background: none; cursor: pointer;
-  transform-style: preserve-3d; will-change: transform; -webkit-box-reflect: below 3px linear-gradient(transparent 64%, rgb(255 255 255 / .26)); }
+  transform-style: preserve-3d; -webkit-box-reflect: below 3px linear-gradient(transparent 64%, rgb(255 255 255 / .26)); }
+.mcf-item::after { content: ''; position: absolute; inset: 0; background: #000; opacity: var(--dim, 0); pointer-events: none; border-radius: inherit; }
+@media (pointer: coarse) { .mcf-item { -webkit-box-reflect: none; } .mcf-item .mart { box-shadow: 0 10px 22px rgb(0 0 0 / .3); } }
 .mcf-item .mart { box-shadow: 0 18px 40px rgb(0 0 0 / .35); }
 .mcf-cap { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 12px; text-align: center; padding: 0 16px; margin-top: -12px; }
 .mcf-cap b { font-family: var(--font-display); font-size: 1.15rem; }
@@ -879,3 +881,20 @@ body.m-has-bottom.has-dock main#view { padding-bottom: calc(var(--dock-h, 0px) +
 .mmenu button .ic { flex: none; width: 22px; height: 22px; }
 .mmenu button { min-height: 48px; }
 .mmenu button span.mmenu-on { flex: none; }
+/* Phones: no live blur behind the player bar (it is redrawn on every scrolled frame). */
+@media (max-width: 860px), (pointer: coarse) { .mdock { backdrop-filter: none; -webkit-backdrop-filter: none; background: var(--surface); } }
+/* Long-press menus: no system link preview / text selection callout on items that have their own menu. */
+.mtile, .mcard, .mrow, [data-art-kind] { -webkit-touch-callout: none; }
+.mtile.sel { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--radius); }
+@media (max-width: 860px) {
+  .mlib { gap: 12px; }
+  .mlib-head { gap: 10px; }
+  .msections { margin: 0; }
+  .mtool { row-gap: 10px; column-gap: 8px; }
+  .mtool-count { width: 100%; }
+  .mtool-right { margin-left: 0; width: 100%; }
+  .mtool-right .msort { flex: 1; }
+  .mtool-right .msort select { width: 100%; }
+  .mtool2 { gap: 8px; }
+  .mtool2 .btn { flex: 1; justify-content: center; }
+}
