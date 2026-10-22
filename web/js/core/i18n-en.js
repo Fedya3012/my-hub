@@ -2389,4 +2389,12 @@ export default {"(Google cấp quyền theo từng giờ). Bấm một lần đ�
 "Tìm và thay thế":"Find and replace",
 "Kiểm tra lặp từ":"Repetition check",
 "Ý tưởng":"Idea",
-"Nháp":"Draft"};
+"Nháp":"Draft",
+"Hướng dẫn sử dụng":"User guides",
+"Thu gọn mục lục":"Collapse contents",
+"Mở mục lục":"Open contents",
+"Trang đầu":"Start page",
+"Trước":"Previous",
+"Tiếp":"Next",
+"Hướng dẫn cài đặt (Android, Windows), đồng bộ và cách dùng từng ứng dụng trong My Hub, có ảnh minh hoạ; đọc được khi không có mạng.":"How to install (Android, Windows), sync and use every app in My Hub, with screenshots; works offline.",
+"Cách cài app, đồng bộ dữ liệu và dùng từng ứng dụng. Chọn một mục ở mục lục hoặc bên dưới. Chạm vào ảnh để phóng to.":"How to install the app, sync your data and use each app. Pick a topic in the contents or below. Tap a picture to enlarge it."};

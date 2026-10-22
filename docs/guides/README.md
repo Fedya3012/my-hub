@@ -17,3 +17,5 @@ Hướng dẫn cho người dùng. Mở bản đẹp có hình và mục lục: 
 
 Thêm app mới: tạo `3x-<tên>.md`, thêm vào danh sách trên và vào `PAGES` trong `/mnt/project-files/guides/build.py`.
 Cập nhật lần cuối: 2026-10-22, theo app 0.9.9.1.
+
+Trong app: mục **Hướng dẫn sử dụng** trên thanh bên (module `guides`). Sau khi sửa `.md` hoặc ảnh: `python3 tools/build-guides.py && node tools/sync-versions.js`.

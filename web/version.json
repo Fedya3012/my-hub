@@ -528,7 +528,9 @@
       "js/core/storage/local-folders.js",
       "css/foldable.css",
       "js/core/posture.js",
-      "js/core/cover.js"
+      "js/core/cover.js",
+      "js/modules/fanfic/manifest.js",
+      "js/modules/guides/manifest.js"
     ]
   },
   "modules": {
@@ -772,6 +774,31 @@
       "changelog": [
         "Tài khoản Google: đăng nhập, đăng xuất máy này / mọi thiết bị, danh sách thiết bị, xoá dữ liệu trên Drive; đồng bộ giữa máy tính và điện thoại."
       ]
+    },
+    "guides": {
+      "name": "Hướng dẫn sử dụng",
+      "version": "0.1.0",
+      "minApp": "0.9.9.1",
+      "files": [
+        "js/modules/guides/content.js",
+        "js/modules/guides/guides.css",
+        "js/modules/guides/img/cai-dat-tai-khoan.webp",
+        "js/modules/guides/img/cai-dat.webp",
+        "js/modules/guides/img/nhac-dang-phat.webp",
+        "js/modules/guides/img/nhac-dang-them.webp",
+        "js/modules/guides/img/nhac-trong.webp",
+        "js/modules/guides/img/quan-ly-ung-dung.webp",
+        "js/modules/guides/img/sach-them-nhap.webp",
+        "js/modules/guides/img/sach-trang-chu.webp",
+        "js/modules/guides/img/tai-khoan.webp",
+        "js/modules/guides/img/thu-muc-dong-bo.webp",
+        "js/modules/guides/img/thu-vien.webp",
+        "js/modules/guides/img/xuong-viet-ban-viet.webp",
+        "js/modules/guides/img/xuong-viet-them-nhap.webp",
+        "js/modules/guides/img/xuong-viet-truyen-moi.webp",
+        "js/modules/guides/index.js"
+      ],
+      "changelog": []
     }
   }
 }
