@@ -1,7 +1,18 @@
 {
-  "app": "0.9.11.0",
+  "app": "0.9.12.0",
   "released": "2026-10-22",
   "changelog": [
+    {
+      "version": "0.9.12.0",
+      "date": "2026-10-22",
+      "notes": [
+        "Podcast (mới): trang chủ, khám phá và tìm podcast online (Podcast Index, Apple), trang podcast và tập, Đang phát, hàng chờ, nhiều nguồn cho một podcast, so sánh chất lượng từ feed, điều khiển thông báo và Bluetooth trên Android",
+        "Sách: nút Nghe khi đọc chọn Trình phát nhạc hoặc Podcast; mini player nổi gọn; các bảng của Trình phát nhạc (lời, hàng chờ, EQ, hẹn giờ) trong trình đọc",
+        "Trình phát nhạc: nhập nhạc không còn làm đơ ứng dụng; lời bài hát AI thử nhiều cách tải mô hình Whisper trước khi báo lỗi",
+        "Thư viện, Sách, Cài đặt: đặt lại tiến trình đọc, nghe, xem từng mục hoặc theo ứng dụng, hoặc tất cả",
+        "Giao diện tối giản: ô chọn không viền trong Sách và Quản lý ứng dụng; podcast có khoảng cách và nhãn tab gọn hơn trên điện thoại"
+      ]
+    },
     {
       "version": "0.9.11.0",
       "date": "2026-10-22",
@@ -571,7 +582,7 @@
   "modules": {
     "library": {
       "name": "Thư viện",
-      "version": "0.4.0",
+      "version": "0.4.1",
       "minApp": "0.3.0",
       "files": [
         "js/modules/library/index.js"
@@ -619,7 +630,7 @@
     },
     "music": {
       "name": "Trình phát nhạc",
-      "version": "0.7.0",
+      "version": "0.7.1",
       "minApp": "0.3.0",
       "files": [
         "js/modules/music/index.js",
@@ -730,7 +741,7 @@
     },
     "books": {
       "name": "Sách",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "minApp": "0.9.0.0",
       "files": [
         "js/modules/books/index.js",
@@ -782,7 +793,8 @@
         "vendor/fonts/opendyslexic/opendyslexic-latin-400-normal.woff2",
         "vendor/fonts/opendyslexic/opendyslexic-latin-400-italic.woff2",
         "vendor/fonts/opendyslexic/opendyslexic-latin-700-normal.woff2",
-        "vendor/fonts/opendyslexic/opendyslexic-latin-700-italic.woff2"
+        "vendor/fonts/opendyslexic/opendyslexic-latin-700-italic.woff2",
+        "js/modules/books/reader/audio-switch.js"
       ],
       "changelog": [
         {
