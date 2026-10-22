@@ -604,6 +604,7 @@
         "js/modules/music/audio.css",
         "js/modules/music/lib/ambient.js",
         "js/modules/music/lib/lyrics-sources.js",
+        "js/modules/music/lib/lyrics-ai.js",
         "js/modules/music/lib/outputs.js",
         "js/modules/music/lib/timers.js",
         "js/modules/music/lyrics.css",

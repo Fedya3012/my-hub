@@ -12,7 +12,7 @@ import { prefs } from './prefs.js';
 import { parseLyrics, toLrc, toModel, isLrc, lyricsKind } from './lyrics.js';
 import { bus } from '../../../core/bus.js';
 
-export const SOURCE_LABEL = { user: 'Bạn nhập', lrc: 'Tệp .lrc', ttml: 'Tệp .ttml', srt: 'Tệp .srt', tag: 'Thẻ trong tệp', lrclib: 'LRCLIB (trực tuyến)' };
+export const SOURCE_LABEL = { user: 'Bạn nhập', lrc: 'Tệp .lrc', ttml: 'Tệp .ttml', srt: 'Tệp .srt', tag: 'Thẻ trong tệp', lrclib: 'LRCLIB (trực tuyến)', ai: 'Tạo tự động (AI)' };
 const API = 'https://lrclib.net/api';
 const MISS_TTL = 7 * 864e5;
 const lyPrefs = () => prefs().lyrics || {};

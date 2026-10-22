@@ -248,7 +248,7 @@ function wire() {
     else if (dy > 90 && Math.abs(dy) > Math.abs(dx)) closeNowPlaying();
   });
   const bus = (p) => { const path = String(p?.path || ''); if (np && (path.startsWith('np.') || path === '*') && path !== 'np.lyricsSize') renderTrack(); if (np && path.startsWith('lyrics.')) applyLyPrefs(); };
-  import('../../../core/bus.js').then(({ bus: b }) => np?.offs.push(b.on('music:prefs', bus)));
+  import('../../../core/bus.js').then(({ bus: b }) => { np?.offs.push(b.on('music:prefs', bus)); np?.offs.push(b.on('music:lyrics', (e) => { if (np && e?.id === player.track?.id) renderLyrics(player.track, np); })); });
 }
 
 const wide = () => matchMedia('(min-width: 1000px)').matches;
@@ -438,7 +438,8 @@ async function renderAlbumPanel() {
 
 // ── Lyrics panel: sources, translation, view settings, full-screen, line actions ──
 const LY_EMPTY = () => `<div class="ly-empty">${icon('lyrics')}<p>Chưa có lời cho bài này.</p><button class="btn small" data-ly-edit>${icon('edit')}Thêm hoặc đồng bộ lời</button>
-  ${prefs().lyrics?.online ? '' : `<button class="btn small" data-ly-online>${icon('globe')}Bật tìm lời trực tuyến (LRCLIB)</button>`}</div>`;
+  ${prefs().lyrics?.online ? '' : `<button class="btn small" data-ly-online>${icon('globe')}Bật tìm lời trực tuyến (LRCLIB)</button>`}
+  <button class="btn small" data-ly-ai>${icon('lyrics')}Tạo lời tự động (AI)</button></div>`;
 const editLy = (t) => import('./lyrics-editor.js').then(m => m.editLyrics(t, renderTrack));
 
 function applyLyPrefs() {
@@ -479,6 +480,11 @@ function showLyrics(t, ly) {
   applyLyPrefs();
   box.querySelector('[data-ly-edit]')?.addEventListener('click', () => editLy(t));
   box.querySelector('[data-ly-online]')?.addEventListener('click', async () => { await setPref('lyrics.online', 1); toast('Đang tìm lời trên LRCLIB…'); renderLyrics(t, np); });
+  box.querySelector('[data-ly-ai]')?.addEventListener('click', async (e) => {
+    e.currentTarget.disabled = true;
+    const { generate } = await import('../lib/lyrics-ai.js');
+    generate(t).then(r => { if (np && player.track?.id === t.id) renderLyrics(t, np); }, () => { e.currentTarget.disabled = false; });
+  });
   if (!parsed) return;
   const hasTr = parsed.lines.some(l => l.tr || l.roman);
   const kind = parsed.words ? 'Karaoke từng chữ' : parsed.synced ? 'Đồng bộ theo dòng' : 'Lời tĩnh';
@@ -530,6 +536,10 @@ function lyricsStyleMenu(anchor) {
     { icon: 'lyrics', label: Y.mini ? 'Ẩn lời trên thanh phát nhỏ' : 'Hiện lời trên thanh phát nhỏ', act: () => set('lyrics.mini', Y.mini ? 0 : 1) },
     '-',
     { icon: 'globe', label: Y.online ? 'Tắt tìm lời trực tuyến (LRCLIB)' : 'Bật tìm lời trực tuyến (LRCLIB)', act: async () => { await set('lyrics.online', Y.online ? 0 : 1); if (!Y.online && np) renderLyrics(player.track, np); } },
+    '-',
+    { icon: 'lyrics', label: Y.aiAuto !== 0 ? 'Tắt tự tạo lời khi không có (AI)' : 'Tự tạo lời khi không có (AI)', act: () => set('lyrics.aiAuto', Y.aiAuto !== 0 ? 0 : 1) },
+    ...Object.entries({ tiny: 'Nhanh · ≈ 40 MB', base: 'Cân bằng · ≈ 80 MB', small: 'Chính xác · ≈ 250 MB' }).map(([k, v]) => ({ icon: 'lyrics', label: 'Mô hình AI: ' + v + ck((Y.aiModel || 'base') === k), act: () => set('lyrics.aiModel', k) })),
+    ...[['', 'Tự nhận ngôn ngữ'], ['vi', 'Tiếng Việt'], ['en', 'Tiếng Anh'], ['ja', 'Tiếng Nhật'], ['ko', 'Tiếng Hàn'], ['zh', 'Tiếng Trung']].map(([k, v]) => ({ icon: 'translate', label: 'Ngôn ngữ AI: ' + v + ck((Y.aiLang || '') === k), act: () => set('lyrics.aiLang', k) })),
   ], { title: 'Kiểu chữ lời' });
 }
 
