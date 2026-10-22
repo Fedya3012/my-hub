@@ -58,13 +58,13 @@ async function listHandle(dir, prefix, out) {
 }
 
 // Reads only the chosen folders. → { added, failed, skipped? }
-export async function scanLocal() {
+export async function scanLocal(track = (h) => h) {
   const folders = await localFolders();
   if (!folders.length) return { skipped: 'none', added: 0, failed: [] };
   const { isBookFile } = await import('../../modules/books/lib/formats.js');
   const done = (await getSetting(DONE, {})) || {};
   const res = { added: 0, failed: [] };
-  const scan = tasks.start({ label: 'Đang quét thư mục trên máy', unit: 'items', cancellable: true, delay: 300 });
+  const scan = track(tasks.start({ label: 'Đang quét thư mục trên máy', unit: 'items', cancellable: true, delay: 300 }));
   const todo = [];
   try {
     for (const f of folders) {
@@ -94,7 +94,7 @@ export async function scanLocal() {
   scan.finish(`Quét xong: ${todo.length} tệp mới`);
   if (!todo.length) return res;
 
-  const task = tasks.start({ label: `Đang nhập ${todo.length} tệp từ máy`, total: todo.length, unit: 'items', cancellable: true });
+  const task = track(tasks.start({ label: `Đang nhập ${todo.length} tệp từ máy`, total: todo.length, unit: 'items', cancellable: true }));
   const music = await import('../../modules/music/lib/store.js');
   const books = await import('../../modules/books/ui/importer.js');
   const P = nativeRoot();
@@ -107,11 +107,11 @@ export async function scanLocal() {
         const { path } = await P.copyToCache({ uri: e.saf.uri, name: e.name });
         const blob = await (await fetch(window.Capacitor.convertFileSrc('file://' + path))).blob();
         const file = Object.assign(new File([blob], e.name, { type: blob.type }), { relPath: e.relPath });
-        await (e.music ? music.importFiles([file], { kind: 'music', localFolder: f.id }) : books.importFiles([file], { localFolder: f.id }));
+        await (e.music ? music.importFiles([file], { kind: 'music', localFolder: e.f.id }) : books.importFiles([file], { localFolder: e.f.id }));
         await P.clearCache();
       } else {
         const item = { handle: e.handle, name: e.name, size: e.size, relPath: e.relPath };
-        await (e.music ? music.importFiles([item], { kind: 'music', localFolder: f.id }) : books.importFiles([item], { localFolder: f.id }));
+        await (e.music ? music.importFiles([item], { kind: 'music', localFolder: e.f.id }) : books.importFiles([item], { localFolder: e.f.id }));
       }
       done[e.key] = e.size;
       await setSetting(DONE, done);

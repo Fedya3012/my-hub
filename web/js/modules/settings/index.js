@@ -42,6 +42,10 @@ async function renderFolders() {
     <div id="folder-picker"></div>
     <div id="fold-progress" style="${card};padding:14px;display:flex;flex-direction:column;gap:10px"></div>
     <div style="display:flex;flex-direction:row;flex-wrap:wrap;gap:10px">
+      <button type="button" data-act="pause" style="flex:1 1 160px;${btn};border:1px solid var(--line);background:var(--surface);color:inherit">Tạm dừng</button>
+      <button type="button" data-act="cancel-sync" style="flex:1 1 160px;${btn};border:1px solid var(--danger);background:var(--surface);color:var(--danger)">Huỷ đồng bộ</button>
+    </div>
+    <div style="display:flex;flex-direction:row;flex-wrap:wrap;gap:10px">
       <button type="button" data-act="clean" style="flex:1 1 160px;${btn};border:1px solid var(--line);background:var(--surface);color:inherit">Dọn mục đã mất tệp</button>
       <button type="button" data-act="sync-now" style="flex:1 1 160px;${btn};border:0;background:var(--accent);color:var(--accent-fg)">Đồng bộ ngay</button>
     </div>
@@ -56,10 +60,18 @@ async function renderFolders() {
 
   // Live progress card: the scan / import task of the folder sync (also visible in the task tray).
   const prog = root.querySelector('#fold-progress');
-  const idle = async () => { const n = (await (await import('../../core/storage/folders.js')).folderList()).length; prog.innerHTML = `<div style="font-size:13px;color:var(--muted)">${n ? 'Đã chọn ' + n + ' thư mục. Bấm “Đồng bộ ngay” để quét và nhập tệp mới.' : 'Chưa chọn thư mục nào.'}</div>`; };
+  const F = await import('../../core/storage/folders.js');
+  const pauseBtn = root.querySelector('[data-act="pause"]');
+  const idle = async () => {
+    const n = st.mode === 'local' ? (await (await import('../../core/storage/local-folders.js')).localFolders()).length : (await F.folderList()).length;
+    const paused = await F.folderPaused();
+    pauseBtn.disabled = paused;
+    prog.innerHTML = `<div style="font-size:13px;color:var(--muted)">${paused ? '<b style="color:var(--warn)">Đã tạm dừng.</b> Bấm “Đồng bộ ngay” để tiếp tục từ chỗ đã dừng.' : n ? 'Đã chọn ' + n + ' thư mục. Bấm “Đồng bộ ngay” để quét và nhập tệp mới.' : 'Chưa chọn thư mục nào.'}</div>`;
+  };
   const show = (list) => {
     const t = (list || []).find(x => x.state === 'running' && /^Đang (quét|nhập|dọn)/.test(x.label));
     if (!t) { idle(); return; }
+    pauseBtn.disabled = false;
     const pct = t.total ? Math.min(100, Math.round(t.done / t.total * 100)) : null;
     prog.innerHTML = `<div style="display:flex;justify-content:space-between;font-size:14px"><span style="font-weight:600">${esc(t.label)}</span><span style="color:var(--muted)">${t.total ? t.done + ' / ' + t.total : ''}</span></div>
       <div style="height:8px;border-radius:99px;background:var(--line);overflow:hidden"><div style="width:${pct == null ? 40 : pct}%;height:100%;background:var(--accent)"></div></div>
@@ -68,15 +80,25 @@ async function renderFolders() {
   idle();
   offs.push(ctx.bus.on('tasks:changed', show));
 
-  const run = async (b, fn) => { b.disabled = true; try { await fn(); } catch (err) { ctx.toast(err.message, 'error'); } finally { b.disabled = false; } };
+  const run = async (b, fn) => { b.disabled = true; try { await fn(); } catch (err) { if (err?.name !== 'AbortError') ctx.toast(err.message, 'error'); } finally { b.disabled = false; idle(); } };
   root.querySelectorAll('[data-act="sync-now"]').forEach(b => b.onclick = () => run(b, async () => {
-    const fr = await (await import('../../core/storage/folders.js')).syncFolders();
+    const fr = await F.syncFolders({ resume: true });
+    if (await F.folderPaused()) return;   // paused or cancelled while running: those buttons report it
     if (fr?.added) ctx.toast(`Đã nhập ${fr.added} tệp từ thư mục đã chọn`);
     if (fr?.failed?.length) ctx.toast(`${fr.failed.length} tệp lỗi: ${fr.failed[0]}`, 'warn');
     if (fr?.missing?.length) ctx.toast(`Thư mục không còn trên ổ: ${fr.missing.join(', ')}. Hãy bỏ chọn hoặc chọn lại thư mục.`, 'warn');
     if (fr?.removed) ctx.toast(`Đã xoá ${fr.removed} mục có tệp gốc không còn`);
     if (fr && !fr.added && !fr.removed && !fr.skipped) ctx.toast('Đã đồng bộ, không có tệp mới');
   }));
+  pauseBtn.onclick = () => run(pauseBtn, async () => {
+    await F.pauseFolderSync();
+    ctx.toast('Đã tạm dừng đồng bộ thư mục. Các tệp đã nhập vẫn giữ nguyên.');
+  });
+  root.querySelector('[data-act="cancel-sync"]').onclick = (e) => run(e.currentTarget, async () => {
+    if (!(await confirmBox('Huỷ đồng bộ thư mục?', 'Dừng đồng bộ và xoá khỏi thư viện mọi bài nhạc, sách đã nhập từ các thư mục đã chọn. Tiến trình đồng bộ được đặt lại từ đầu. Tệp gốc trên ổ hoặc trong máy không bị đụng tới. Danh sách thư mục vẫn giữ, bấm “Đồng bộ ngay” để đồng bộ lại.', 'Huỷ đồng bộ'))) return;
+    const r = await F.cancelFolderSync();
+    ctx.toast(r.removed ? `Đã huỷ đồng bộ và xoá ${r.removed} mục đã nhập` : 'Đã huỷ đồng bộ');
+  });
   root.querySelector('[data-act="clean"]').onclick = (e) => run(e.currentTarget, async () => {
     if (!(await confirmBox('Dọn mục đã mất tệp?', 'Xoá khỏi thư viện những mục mà tệp gốc đã bị xoá (trong thư mục đồng bộ hoặc trong máy). Tệp còn tồn tại không bị đụng tới.', 'Dọn'))) return;
     const r = await (await import('../../core/storage/cleanup.js')).cleanMissing('library');

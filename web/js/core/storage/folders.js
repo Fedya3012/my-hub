@@ -49,14 +49,19 @@ async function pruneMissing(mode, folders, found, missing = []) {
 async function removeLinked(mode, gone) {
   if (!gone.length) return 0;
   const done = (await getSetting('sync.folderDone', {})) || {};
+  for (const f of gone) delete done[f.locations[mode].key];
+  await setSetting('sync.folderDone', done);
+  return removeRows(gone);
+}
+
+// Deletes the library entries (music tracks / books) behind these file rows.
+async function removeRows(gone) {
   const ids = { music: [], books: [] };
   for (const f of gone) {
-    delete done[f.locations[mode].key];
     const item = await db.items.get(f.itemId);
     if (item && !item.deleted) (item.type === 'book' ? ids.books : ids.music).push(item.id);
     else await db.files.delete(f.id);
   }
-  await setSetting('sync.folderDone', done);
   if (ids.music.length) await (await import('../../modules/music/lib/store.js')).deleteTracks(ids.music);
   if (ids.books.length) await (await import('../../modules/books/lib/store.js')).removeBooks(ids.books);
   return ids.music.length + ids.books.length;
@@ -84,10 +89,54 @@ export async function pruneOrphans() {
   return removeLinked(mode, gone);
 }
 
+// Pause / cancel. Paused: no folder sync runs until "Đồng bộ ngay" resumes it; what was imported stays and the
+// next run only fetches the files not imported yet. Cancel: stops the run, then reverts it: every library entry
+// imported from the chosen folders is deleted and the progress (sync.folderDone / sync.localDone) is reset.
+// The folder selection itself is kept, paused, so nothing comes back until the user syncs again.
+const active = new Set();
+let current = null;
+const track = (h) => { active.add(h); return h; };
+const stopRunning = () => { for (const h of active) tasks.cancel(h.id); active.clear(); };
+export const folderPaused = async () => !!(await getSetting('sync.folderPaused', false));
+export const folderSyncRunning = () => !!current;
+export async function pauseFolderSync() {
+  await setSetting('sync.folderPaused', true);
+  stopRunning();
+  await current?.catch(() => {});
+}
+export const resumeFolderSync = () => setSetting('sync.folderPaused', false);
+export async function cancelFolderSync() {
+  await pauseFolderSync();
+  return tasks.run({ label: 'Đang huỷ đồng bộ thư mục', detail: 'Xoá các mục đã nhập…' }, async () => {
+    const mode = await storage.mode();
+    let rows;
+    if (mode === 'local') {
+      const ids = new Set((await (await import('./local-folders.js')).localFolders()).map(f => f.id));
+      rows = await db.files.filter(f => !!f.localFolder && ids.has(f.localFolder)).toArray();
+      await setSetting('sync.localDone', {});
+    } else {
+      const folders = (await folderList()).map(f => f.toLowerCase());
+      rows = await db.files.filter(f => f.linked && f.locations?.[mode]?.key && folders.some(fo => inFolder(f.locations[mode].key.toLowerCase(), fo))).toArray();
+      await setSetting('sync.folderDone', {});
+    }
+    return { removed: await removeRows(rows) };
+  });
+}
+
 // Imports the new music and book files of the chosen folders. → { added, failed, skipped? }
-export async function syncFolders({ signal, pruneOnly = false } = {}) {
+// Skipped ({ skipped: 'paused' }) while paused; pass resume: true (the "Đồng bộ ngay" button) to resume first.
+export async function syncFolders(opts = {}) {
+  if (opts.resume) await resumeFolderSync();
+  else if (!opts.pruneOnly && (await folderPaused())) return { skipped: 'paused', added: 0, failed: [] };
+  if (current) await current.catch(() => {});
+  const p = runSync(opts);
+  current = p;
+  try { return await p; } finally { if (current === p) current = null; active.clear(); }
+}
+
+async function runSync({ pruneOnly = false } = {}) {
   const mode = await storage.mode();
-  if (mode === 'local') return pruneOnly ? { added: 0, failed: [], removed: 0, missing: [] } : (await import('./local-folders.js')).scanLocal();
+  if (mode === 'local') return pruneOnly ? { added: 0, failed: [], removed: 0, missing: [] } : (await import('./local-folders.js')).scanLocal(track);
   const d = drives[mode];
   if (!d || !d.listDir) return { skipped: 'no-folders' };
   if (!d.connected() || !navigator.onLine) return { skipped: 'offline' };
@@ -97,7 +146,7 @@ export async function syncFolders({ signal, pruneOnly = false } = {}) {
   const allows = (path, app) => folders.some(f => inFolder(path, f) && (appMap[f] || APPS.map(a => a[0])).includes(app));
 
   // Progress: folders scanned (one step per folder listed) and files found; then files imported (x / y, %).
-  const scan = tasks.start({ label: 'Đang quét thư mục trên ' + d.label, unit: 'items', cancellable: true, delay: 300 });
+  const scan = track(tasks.start({ label: 'Đang quét thư mục trên ' + d.label, unit: 'items', cancellable: true, delay: 300 }));
   const found = [];
   let dirs = 0;
   const count = (e) => { if (e.isDir) dirs++; };
@@ -125,7 +174,7 @@ export async function syncFolders({ signal, pruneOnly = false } = {}) {
   const todo = found.filter(e => ((MUSIC.test(e.name) && allows(e.path, 'music')) || (!MUSIC.test(e.name) && isBookFile({ name: e.name }) && allows(e.path, 'books'))) && done[e.path] !== e.size);
   if (!todo.length) return { added: 0, failed: [], removed, missing };
 
-  const task = tasks.start({ label: `Đang nhập ${todo.length} tệp từ ${d.label}`, total: todo.length, unit: 'items', cancellable: true });
+  const task = track(tasks.start({ label: `Đang nhập ${todo.length} tệp từ ${d.label}`, total: todo.length, unit: 'items', cancellable: true }));
   const music = await import('../../modules/music/lib/store.js');
   const books = await import('../../modules/books/ui/importer.js');
   const res = { added: 0, failed: [], removed, missing };
