@@ -540,10 +540,16 @@ function lyricsStyleMenu(anchor) {
     '-',
     { icon: 'globe', label: Y.online ? 'Tắt tìm lời trực tuyến (LRCLIB)' : 'Bật tìm lời trực tuyến (LRCLIB)', act: async () => { await set('lyrics.online', Y.online ? 0 : 1); if (!Y.online && np) renderLyrics(player.track, np); } },
     '-',
+    player.track && { icon: 'lyrics', label: 'Tự đồng bộ từng chữ (AI)', act: () => aiWordSync(player.track) },
     { icon: 'lyrics', label: Y.aiAuto !== 0 ? 'Tắt tự tạo lời khi không có (AI)' : 'Tự tạo lời khi không có (AI)', act: () => set('lyrics.aiAuto', Y.aiAuto !== 0 ? 0 : 1) },
     ...Object.entries({ tiny: 'Nhanh · ≈ 40 MB', base: 'Cân bằng · ≈ 80 MB', small: 'Chính xác · ≈ 250 MB' }).map(([k, v]) => ({ icon: 'lyrics', label: 'Mô hình AI: ' + v + ck((Y.aiModel || 'base') === k), act: () => set('lyrics.aiModel', k) })),
     ...[['', 'Tự nhận ngôn ngữ'], ['vi', 'Tiếng Việt'], ['en', 'Tiếng Anh'], ['ja', 'Tiếng Nhật'], ['ko', 'Tiếng Hàn'], ['zh', 'Tiếng Trung']].map(([k, v]) => ({ icon: 'translate', label: 'Ngôn ngữ AI: ' + v + ck((Y.aiLang || '') === k), act: () => set('lyrics.aiLang', k) })),
   ], { title: 'Kiểu chữ lời' });
+}
+
+async function aiWordSync(t) {
+  const { autoWordSync } = await import('../lib/lyrics-ai.js');
+  autoWordSync(t).catch(e => toast(e.message || 'Không đồng bộ được', 'warn'));
 }
 
 function lyricLineMenu(L, i, lineEl) {
@@ -556,6 +562,7 @@ function lyricLineMenu(L, i, lineEl) {
     navigator.share && { icon: 'share', label: 'Chia sẻ dòng…', act: () => navigator.share({ text: `“${L.text}”\n— ${t?.title || ''}${t?.artist ? ' · ' + t.artist : ''}` }).catch(() => {}) },
     { icon: 'copy', label: 'Sao chép toàn bộ lời', act: () => copy(np.karaoke.data.lines.map(x => x.text).join('\n')) },
     { icon: 'edit', label: 'Sửa / đồng bộ lời', act: () => editLy(t) },
+    { icon: 'lyrics', label: 'Tự đồng bộ từng chữ (AI)', act: () => aiWordSync(t) },
   ], { title: 'Dòng lời' });
 }
 
