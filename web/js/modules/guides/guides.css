@@ -68,3 +68,8 @@
   .gd-toc { max-height: 60vh; }
   .gd-body figure img { max-height: 440px; }
 }
+/* Phones: fit the table to the screen (wrap long file names) instead of a hidden sideways scroll. */
+@media (max-width: 520px) {
+  .gd-tw table { min-width: 0; font-size: 13px; }
+  .gd-tw th, .gd-tw td { padding: 8px; overflow-wrap: anywhere; }
+}

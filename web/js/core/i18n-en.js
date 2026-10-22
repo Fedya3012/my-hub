@@ -2441,4 +2441,7 @@ export default {"(Google cấp quyền theo từng giờ). Bấm một lần đ�
 "Thông số của từng ứng dụng, trạng thái hiện tại":"Each app's parameters, current state",
 "Xuất, nhập JSON, xoá dữ liệu":"Export, import JSON, erase data",
 "Quay lại Thư mục đồng bộ để kết nối.":"Go back to Sync folders to connect.",
-"Các mục cài đặt":"Settings sections"};
+"Các mục cài đặt":"Settings sections",
+"Bỏ dấu trang này":"Remove this bookmark",
+"Thêm dấu trang ở trang này":"Bookmark this page",
+"Chưa có. Bôi chọn chữ để đánh dấu, hoặc thêm dấu trang ở trang đang đọc.":"Nothing yet. Select text to highlight, or bookmark the page you are reading."};

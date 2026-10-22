@@ -186,12 +186,13 @@ export async function openReader(root, id, { ctx, onClose }) {
   $('[data-a="notes"]').onclick = () => notesPanel();
   $('[data-a="search"]').onclick = () => searchPanel();
   $('[data-a="settings"]').onclick = () => settingsPanel();
-  $('[data-a="bookmark"]').onclick = async () => {
+  const toggleBookmark = async () => {
     const hit = notes.find(n => n.kind === 'bookmark' && n.loc === last.loc);
     if (hit) { await store.annotations.remove(hit.id); notes = notes.filter(n => n !== hit); toast('Đã bỏ dấu trang'); }
     else { const a = await store.annotations.add({ itemId: id, kind: 'bookmark', loc: last.loc, label: last.label + (last.tocLabel ? ' · ' + last.tocLabel : ''), pos: last.fraction }); notes.push(a); toast('Đã thêm dấu trang'); }
     $('[data-a="bookmark"]').innerHTML = icon(hit ? 'b-bookmark' : 'b-bookmark-fill');
   };
+  $('[data-a="bookmark"]').onclick = toggleBookmark;
   $('[data-a="tts"]').onclick = () => tts.on ? tts.stop() : tts.start();
   // Fanfic: jump to Xưởng Viết at the chapter being read (reading progress stays synced on the shared item).
   $('[data-a="fic-edit"]')?.addEventListener('click', () => { const i = last?.index ?? null; close(); ctx.services.get('fanfic')?.edit(id, i); });
@@ -305,9 +306,16 @@ export async function openReader(root, id, { ctx, onClose }) {
   function notesPanel() {
     const kinds = { highlight: 'Đánh dấu', underline: 'Gạch chân', note: 'Ghi chú', bookmark: 'Dấu trang' };
     const list = [...notes].sort((a, b) => (a.pos ?? 0) - (b.pos ?? 0));
-    panel(`Đánh dấu & ghi chú (${list.length})`, list.length ? `<ul class="bk-r-notes">${list.map(n => `<li style="--hl:${store.COLORS[n.color] || store.COLORS.yellow}" class="k-${n.kind}"><button data-goto="${n.id}">
-      <small>${kinds[n.kind] || n.kind} · ${esc(n.label || '')}</small>${n.text ? `<q>${esc(n.text.slice(0, 300))}</q>` : ''}${n.note ? `<p>${esc(n.note)}</p>` : ''}</button></li>`).join('')}</ul>` : '<p class="muted">Chưa có. Bôi chọn chữ để đánh dấu, hoặc bấm biểu tượng dấu trang.</p>',
-    (body) => body.querySelectorAll('[data-goto]').forEach(x => x.onclick = () => { const n = notes.find(y => y.id === x.dataset.goto); if (n?.loc) engine.goTo(n.loc); hidePanel(); }));
+    const marked = notes.some(n => n.kind === 'bookmark' && n.loc === last?.loc);
+    // Phones hide the search and bookmark buttons in the top bar (too narrow), so both live here too.
+    const acts = `<div class="row-actions wrap" style="margin-bottom:10px"><button class="btn small" data-pa="bm">${icon(marked ? 'b-bookmark-fill' : 'b-bookmark')}${marked ? 'Bỏ dấu trang này' : 'Thêm dấu trang ở trang này'}</button><button class="btn small" data-pa="find">${icon('search')}Tìm trong sách</button></div>`;
+    panel(`Đánh dấu & ghi chú (${list.length})`, acts + (list.length ? `<ul class="bk-r-notes">${list.map(n => `<li style="--hl:${store.COLORS[n.color] || store.COLORS.yellow}" class="k-${n.kind}"><button data-goto="${n.id}">
+      <small>${kinds[n.kind] || n.kind} · ${esc(n.label || '')}</small>${n.text ? `<q>${esc(n.text.slice(0, 300))}</q>` : ''}${n.note ? `<p>${esc(n.note)}</p>` : ''}</button></li>`).join('')}</ul>` : '<p class="muted">Chưa có. Bôi chọn chữ để đánh dấu, hoặc thêm dấu trang ở trang đang đọc.</p>'),
+    (body) => {
+      body.querySelector('[data-pa="bm"]').onclick = async () => { await toggleBookmark(); notesPanel(); };
+      body.querySelector('[data-pa="find"]').onclick = () => searchPanel();
+      body.querySelectorAll('[data-goto]').forEach(x => x.onclick = () => { const n = notes.find(y => y.id === x.dataset.goto); if (n?.loc) engine.goTo(n.loc); hidePanel(); });
+    });
   }
   function searchPanel(q = '') {
     panel('Tìm trong sách', `<form class="bk-r-search"><input type="search" value="${esc(q)}" placeholder="Từ hoặc cụm từ…" aria-label="Tìm"><button class="btn" type="submit">${icon('search')}</button></form><p class="muted" data-n></p><ul class="bk-r-results"></ul>`, (body) => {

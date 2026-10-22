@@ -67,7 +67,8 @@ async function render() {
 }
 
 async function openWriter(id, chapterId) {
-  if (writer?.id === id) { writer.show?.(chapterId); return; }
+  if (!id) return go('works');
+  if (writer && writer.id === id) { writer.show?.(chapterId); return; }
   closeWriter();
   const { openWriter: open } = await import('./ui/writer.js');
   writer = { id };

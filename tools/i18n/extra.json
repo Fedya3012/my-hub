@@ -999,5 +999,8 @@
  "Xuất, nhập JSON, xoá dữ liệu": "Export, import JSON, erase data",
  "Chọn thư mục": "Choose folders",
  "Quay lại Thư mục đồng bộ để kết nối.": "Go back to Sync folders to connect.",
- "Các mục cài đặt": "Settings sections"
+ "Các mục cài đặt": "Settings sections",
+ "Bỏ dấu trang này": "Remove this bookmark",
+ "Thêm dấu trang ở trang này": "Bookmark this page",
+ "Chưa có. Bôi chọn chữ để đánh dấu, hoặc thêm dấu trang ở trang đang đọc.": "Nothing yet. Select text to highlight, or bookmark the page you are reading."
 }

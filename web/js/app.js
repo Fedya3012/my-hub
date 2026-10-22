@@ -91,7 +91,11 @@ async function render() {
   const route = routeHead();
   const all = await listModules();
   let m = all.find(x => x.route === route);
-  if (!m || m.status === 'planned' || !(await isEnabled(m.id))) m = byId('library');
+  if (!m || m.status === 'planned' || !(await isEnabled(m.id))) {
+    m = byId('library');
+    // Unknown or disabled route: show the address of the page actually opened, so the title and menu match it.
+    if (route !== m.route) history.replaceState(null, '', '#' + m.route);
+  }
   // Same module, new sub-path: let it navigate in place (keeps state) when it can.
   if (current?.id === m.id && current.mod.navigate) { await current.mod.navigate(routeRest(), ctx); return; }
   const view = document.getElementById('view');

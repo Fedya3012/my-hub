@@ -69,12 +69,17 @@ async function renderFolders() {
     const n = src === 'local' ? (await (await import('../../core/storage/local-folders.js')).localFolders()).length : (await F.folderList()).length;
     const paused = await F.folderPaused();
     pauseBtn.disabled = paused;
+    // Nothing chosen yet: the picker already says so, and sync/pause/cancel have nothing to act on.
+    const none = !n && !paused;
+    prog.hidden = none;
+    root.querySelectorAll('.row-actions [data-act]').forEach(b => { if (b.dataset.act !== 'clean') b.disabled = none || (b === pauseBtn && paused); });
     prog.innerHTML = `<div style="font-size:13px;color:var(--muted)">${paused ? '<b style="color:var(--warn)">Đã tạm dừng.</b> Bấm “Đồng bộ ngay” để tiếp tục từ chỗ đã dừng.' : n ? 'Đã chọn ' + n + ' thư mục. Bấm “Đồng bộ ngay” để quét và nhập tệp mới.' : 'Chưa chọn thư mục nào.'}</div>`;
   };
   const show = (list) => {
     const t = (list || []).find(x => x.state === 'running' && /^Đang (quét|nhập|dọn)/.test(x.label));
     if (!t) { idle(); return; }
-    pauseBtn.disabled = false;
+    prog.hidden = false;
+    root.querySelectorAll('.row-actions [data-act]').forEach(b => { b.disabled = false; });
     const pct = t.total ? Math.min(100, Math.round(t.done / t.total * 100)) : null;
     prog.innerHTML = `<div style="display:flex;justify-content:space-between;font-size:14px"><span style="font-weight:600">${esc(t.label)}</span><span style="color:var(--muted)">${t.total ? t.done + ' / ' + t.total : ''}</span></div>
       <div style="height:8px;border-radius:99px;background:var(--line);overflow:hidden"><div style="width:${pct == null ? 40 : pct}%;height:100%;background:var(--accent)"></div></div>
@@ -82,6 +87,11 @@ async function renderFolders() {
   };
   idle();
   offs.push(ctx.bus.on('tasks:changed', show));
+  // The pickers re-render after a folder is added or removed: refresh the count and the buttons.
+  const mo = new MutationObserver(debounceIdle());
+  mo.observe(pick, { childList: true, subtree: true });
+  offs.push(() => mo.disconnect());
+  function debounceIdle() { let t; return () => { clearTimeout(t); t = setTimeout(() => root.isConnected && idle(), 250); }; }
 
   const run = async (b, fn) => { b.disabled = true; try { await fn(); } catch (err) { if (err?.name !== 'AbortError') ctx.toast(err.message, 'error'); } finally { b.disabled = false; idle(); } };
   root.querySelectorAll('[data-act="sync-now"]').forEach(b => b.onclick = () => run(b, async () => {
