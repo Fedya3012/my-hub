@@ -281,6 +281,12 @@ export class Engine extends EventTarget {
   preload(track, url, { gainDb = 0, plan = {} } = {}) {
     if (this.xsOn) { this.xs.preload(track, url).catch(() => {}); return; }
     this.init();
+    const wait = (this._xfUntil || 0) - performance.now();
+    if (wait > 0) {   // a crossfade is still using the other deck: preload once it has finished
+      clearTimeout(this._preloadT);
+      this._preloadT = setTimeout(() => this.preload(track, url, { gainDb, plan }), wait);
+      return;
+    }
     const d = this.decks[1 - this.active];
     if (this.next?.url === url) { this.next.plan = plan; return; }
     this._stopDeck(d);
@@ -293,12 +299,15 @@ export class Engine extends EventTarget {
     d.el.load();
     this.next = { deck: d, track, url, plan, started: false };
   }
-  clearNext() { if (this.xsOn) this.xs.clearNext(); if (this.next) { this._stopDeck(this.next.deck); this.next = null; } }
+  clearNext() { clearTimeout(this._preloadT); if (this.xsOn) this.xs.clearNext(); if (this.next) { this._stopDeck(this.next.deck); this.next = null; } }
 
   // Runs every 50 ms (and faster near the end): starts the next deck on time.
   _tick() {
     const d = this.deck, n = this.next;
-    if (!d || d.el.paused || !n || n.started) { this._checkSilence(); return; }
+    if (!d || d.el.paused || !n || n.started) {
+      if (this._fast) { clearInterval(this._fast); this._fast = null; }   // paused / next cleared inside the last 60 ms: stop the 250 Hz poll
+      this._checkSilence(); return;
+    }
     const remaining = (d.el.duration - d.el.currentTime) / (this.rate || 1);
     if (!isFinite(remaining)) return;
     const cf = n.plan.crossfade || 0;
@@ -340,7 +349,9 @@ export class Engine extends EventTarget {
       this._setFade(n.deck, 0, 0);
       this._fadeTo(n.deck, 1, cf, true);
       this._fadeTo(old, 0, cf, true);
-      setTimeout(() => { if (this.deck !== old) this._stopDeck(old); }, cf * 1000 + 80);
+      // The old deck is still fading out until then: preload() waits for it instead of reusing it mid-fade.
+      this._xfUntil = performance.now() + cf * 1000 + 100;
+      setTimeout(() => { if (this.deck !== old && this.next?.deck !== old) this._stopDeck(old); }, cf * 1000 + 80);
     } else {
       this._setFade(n.deck, 1, 0);
       setTimeout(() => { if (this.deck !== old) this._stopDeck(old); }, 120);

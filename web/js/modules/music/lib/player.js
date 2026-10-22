@@ -128,7 +128,7 @@ class Player extends EventTarget {
     return this.engine.toggle();
   }
   pause() { this.engine.pause(); }
-  seek(t) { this.engine.seek(t); this._saveSoon(true); this._emit('time'); }
+  seek(t) { this.engine.seek(t); this._saveSoon(); this._emit('time'); }   // debounced: dragging a timeline seeks many times a second
   seekBy(d) { this.seek(this.time + d); }
 
   async next({ user = true } = {}) {
@@ -435,9 +435,16 @@ class Player extends EventTarget {
 
   async _onEnded() {
     await this._commitPlay();
-    if (this.sleep?.stopAtEnd) { this.sleep.stopAtEnd(); return; }
+    // Only a "stop after N songs" timer on its final song ends playback here; a minutes timer stops on its own
+    // clock ('ended' also fires on repeat-one or when the next song was not preloaded in time).
+    if (this.sleep?.kind === 'tracks' && this.sleep.tracksLeft <= 1 && this.sleep.stopAtEnd) { this.sleep.stopAtEnd(); return; }
     const i = this._nextIndex();
-    if (i == null) { if (await this.backToMain()) return; this._emit('state'); this._saveSoon(true); return; }
+    if (i == null) {
+      if (await this.backToMain()) return;
+      // "Phát / lặp mọi danh mục": move on to the next album / artist / playlist, as the Next button does.
+      if ((this.repeat === 'allcats' || this.repeat === 'repeatcats') && await this._nextCategory()) return;
+      this._emit('state'); this._saveSoon(true); return;
+    }
     this.index = i;
     await this._load({});
     this._emit('queue');
@@ -447,7 +454,8 @@ class Player extends EventTarget {
     if (d.blocked) { toast('Nhấn Phát để bắt đầu (trình duyệt chặn tự phát).', 'warn'); return; }
     const t = d.track;
     toast(`Không phát được “${t?.title || 'bài này'}”${d.message ? ': ' + d.message : ''}`, 'error');
-    if (this.queue.length > 1) setTimeout(() => this.next({ user: false }), 1500);
+    // Skip the failed song, unless the user already moved on to another one meanwhile.
+    if (this.queue.length > 1) setTimeout(() => { if (this.track?.id === t?.id) this.next({ user: false }); }, 1500);
   }
 
   // Count a listen once half the track (or 4 minutes) has been heard.

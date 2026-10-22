@@ -248,7 +248,7 @@ export const virtualTrack = (id) => virtual.get(id);
 // Rebuild the library only when something music-related may have changed: a sync that pulled nothing, or a
 // change in another app (Sách), used to rebuild it and redraw the whole page (covers, cover flow) every time.
 bus.on('sync:done', (r) => { if (!r || r.pulled) invalidate(); });
-bus.on('item:changed', (e) => { if (e?.source !== 'books') invalidate(); });
+bus.on('item:changed', (e) => { if (e?.source !== 'books' && e?.source !== 'fanfic') invalidate(); });   // other apps' edits do not touch music
 
 // Music items created outside this module (Library "Thêm tệp", samples) get a track row.
 async function adoptOrphans() {
