@@ -197,7 +197,12 @@ class Player extends EventTarget {
     this.shuffle = on;
     const cur = this.queue[this.index];
     if (on) { this.order = [...this.queue]; this.queue = [cur, ...shuffled(this.queue.filter((x, i) => i !== this.index))]; this.index = 0; }
-    else if (this.order) { this.queue = this.order; this.index = Math.max(0, this.queue.indexOf(cur)); this.order = null; }
+    else if (this.order) {
+      // Back to the original order, keeping queue edits made while shuffled (removed songs stay out, added ones go last).
+      const inQ = new Set(this.queue), inO = new Set(this.order);
+      this.queue = [...this.order.filter(x => inQ.has(x)), ...this.queue.filter(x => !inO.has(x))];
+      this.index = Math.max(0, this.queue.indexOf(cur)); this.order = null;
+    }
     this._afterQueueEdit();
   }
   async setCatShuffle(on) { this.catShuffle = !!on; await setSetting('music.catShuffle', this.catShuffle); this._emit('state'); }
@@ -491,10 +496,12 @@ class Player extends EventTarget {
     const t = this.track;
     if (!t) return;
     const pos = this.time, dur = this.duration;
+    const win = this.queue.length > 600 ? Math.max(0, this.index - 100) : 0;
     await progress.save({ id: SESSION, moduleId: 'music' }, {
       position: pos, total: dur, state: this.playing ? 'playing' : 'paused', flush,
       label: `${t.title} · ${fmtTime(pos)} / ${fmtTime(dur)}`,
-      extra: { virtual: 1, trackId: t.id, queue: this.queue, index: this.index, shuffle: this.shuffle ? 1 : 0, source: this.source },
+      // A long queue is saved as a window around the current song: this record syncs live to every device.
+      extra: { virtual: 1, trackId: t.id, queue: this.queue.slice(win, win + 600), index: this.index - win, shuffle: this.shuffle ? 1 : 0, source: this.source },
     });
     if (t.type === 'podcast' || (t.duration || 0) > 600) await progress.save(t.item, { position: pos, total: dur, state: this.playing ? 'playing' : 'paused', flush });
   }

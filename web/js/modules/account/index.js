@@ -13,7 +13,7 @@ let notice = null;            // { kind: 'ok' | 'warn' | 'error', text } shown o
 
 export async function mount(el, context) {
   root = el; ctx = context;
-  await render();
+  const first = render();   // listeners below are added before awaiting it, so an early unmount removes them
   let t = 0;
   const soon = () => { clearTimeout(t); t = setTimeout(render, 120); };
   offs.push(ctx.bus.on('account:changed', (e) => { if (e.reason !== 'refresh') soon(); }));
@@ -23,6 +23,7 @@ export async function mount(el, context) {
   const onNet = () => soon();
   window.addEventListener('online', onNet); window.addEventListener('offline', onNet);
   offs.push(() => { window.removeEventListener('online', onNet); window.removeEventListener('offline', onNet); clearTimeout(t); });
+  await first;
 }
 export function unmount() { offs.forEach(f => f()); offs = []; }
 

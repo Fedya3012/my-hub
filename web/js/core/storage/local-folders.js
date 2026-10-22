@@ -98,6 +98,7 @@ export async function scanLocal(track = (h) => h) {
   const music = await import('../../modules/music/lib/store.js');
   const books = await import('../../modules/books/ui/importer.js');
   const P = nativeRoot();
+  try {
   for (let i = 0; i < todo.length; i++) {
     task.check();
     const e = todo[i];
@@ -114,13 +115,14 @@ export async function scanLocal(track = (h) => h) {
         await (e.music ? music.importFiles([item], { kind: 'music', localFolder: e.f.id }) : books.importFiles([item], { localFolder: e.f.id }));
       }
       done[e.key] = e.size;
-      await setSetting(DONE, done);
       res.added++;
+      if (res.added % 25 === 0) await setSetting(DONE, done);   // not after every file: the map keeps growing
     } catch (err) {
       if (err?.name === 'AbortError') break;
       res.failed.push(`${e.name}: ${err.message}`);
     }
   }
+  } finally { await setSetting(DONE, done); }
   task.finish(`Đã nhập ${res.added}/${todo.length}`);
   return res;
 }

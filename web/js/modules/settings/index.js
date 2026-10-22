@@ -18,15 +18,20 @@ let root, ctx, offs = [];
 let sub = '';
 export async function mount(el, context, rest = '') {
   root = el; ctx = context; sub = rest;
-  await render();
+  // Before the first await: leaving during the first render still removes them in unmount().
   offs.push(ctx.bus.on('sync:done', render));
   offs.push(ctx.bus.on('account:changed', (e) => { if (e.reason !== 'refresh') render(); }));
+  await render();
 }
-export function unmount() { offs.forEach(f => f()); offs = []; paramsOff?.(); paramsOff = null; }
+export function unmount() { offs.forEach(f => f()); offs = []; dropPage(); paramsOff?.(); paramsOff = null; }
+// Listeners of the folders sub page: replaced on each of its renders (they used to pile up in offs).
+let pageOffs = [];
+const dropPage = () => { pageOffs.forEach(f => f()); pageOffs = []; };
 let paramsOff = null;
 
 // Sub page: Settings → Thư mục đồng bộ (its own page with a back link).
 async function renderFolders() {
+  dropPage();
   const st = await ctx.storage.status();
   const F = await import('../../core/storage/folders.js');
   const { drives } = await import('../../core/storage/index.js');
@@ -86,11 +91,11 @@ async function renderFolders() {
       <div style="font-size:12px;color:var(--muted)">${esc(t.detail || '')}${pct != null ? ' · ' + pct + '%' : ''}</div>`;
   };
   idle();
-  offs.push(ctx.bus.on('tasks:changed', show));
+  pageOffs.push(ctx.bus.on('tasks:changed', show));
   // The pickers re-render after a folder is added or removed: refresh the count and the buttons.
   const mo = new MutationObserver(debounceIdle());
   mo.observe(pick, { childList: true, subtree: true });
-  offs.push(() => mo.disconnect());
+  pageOffs.push(() => mo.disconnect());
   function debounceIdle() { let t; return () => { clearTimeout(t); t = setTimeout(() => root.isConnected && idle(), 250); }; }
 
   const run = async (b, fn) => { b.disabled = true; try { await fn(); } catch (err) { if (err?.name !== 'AbortError') ctx.toast(err.message, 'error'); } finally { b.disabled = false; idle(); } };

@@ -139,7 +139,8 @@ export class Visualizer {
     this.raf = 0;
     if (!this.running || document.hidden || !this.visible) return;
     let dt = Math.min(0.05, (now - this.last) / 1000 || 0.016);
-    const cap = lowBattery || this.reduced ? 1 / 30 : 0;
+    // Paused: the calm breath needs only ~12 frames/s.
+    const cap = !this.isPlaying() ? 1 / 12 : lowBattery || this.reduced ? 1 / 30 : 0;
     if (cap && dt < cap - 0.002) { this.raf = requestAnimationFrame((t) => this.frame(t)); return; }
     this.last = now; this.t += dt;
     // Colours glide towards their target (video / artwork palette changes are smooth).
@@ -147,7 +148,7 @@ export class Visualizer {
     this.features(dt);
     try { this.r?.draw(dt, this.t); } catch (e) { console.warn('[visualizer]', e); this.stop(); return; }
     this.ptr.dx *= 0.5; this.ptr.dy *= 0.5; this.ptr.active *= Math.exp(-dt * 2); this.ptr.moved = false;
-    this.govern(dt, now);
+    if (this.isPlaying()) this.govern(dt, now);   // the paused frame cap is not slowness
     this.raf = requestAnimationFrame((t) => this.frame(t));
   }
 

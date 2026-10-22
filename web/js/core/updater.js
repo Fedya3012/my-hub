@@ -119,8 +119,16 @@ export async function applyModuleUpdate(u) {
   if (r.noSW) throw new Error('Service Worker chưa hoạt động nên chưa tải được bản mới của module. Hãy tải lại trang rồi thử lại.');
   await db.modules.update(u.id, { installedVersion: u.to, updatedAt: now(), previousVersion: u.from });
   forgetLoaded(u.id);
-  const mod = await loadModule(u.id);
-  if (mod.migrate) await mod.migrate({ from: u.from, to: u.to, db });
+  // The new files load from the new version's cache, so the version is set first; a failed migration
+  // puts the old version back, so it runs again on the next try instead of being skipped for good.
+  try {
+    const mod = await loadModule(u.id);
+    if (mod.migrate) await mod.migrate({ from: u.from, to: u.to, db });
+  } catch (e) {
+    await db.modules.update(u.id, { installedVersion: u.from, previousVersion: undefined });
+    forgetLoaded(u.id);
+    throw e;
+  }
   pendingUpdates = pendingUpdates.filter(x => x.id !== u.id);
   bus.emit('module:updated', u);
 }

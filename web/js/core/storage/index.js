@@ -87,6 +87,15 @@ async function mergeTable(name, remoteRows = [], tomb = {}) {
   return { all: [...map.values()], changed: changed.filter(r => map.has(r[key])), removed };
 }
 
+// The merge reads each table before the write transaction: a row edited here in between is newer
+// than the remote copy and must not be overwritten. Call inside the rw transaction.
+async function stillNewer(name, rows) {
+  if (!rows.length) return rows;
+  const table = db.table(name), key = table.schema.primKey.keyPath;
+  const now = await table.bulkGet(rows.map(r => r[key]));
+  return rows.filter((r, i) => { const m = now[i]; return !m || (r.updatedAt || 0) > (m.updatedAt || 0) || (r.updatedAt === m.updatedAt && (r.rev || 0) >= (m.rev || 0)); });
+}
+
 const HASH_MAX = 200 * 1024 * 1024;   // skip hashing huge files
 const READ_CHUNK = 8 * 1024 * 1024;
 const BIG_FILE = 4 * 1024 * 1024;     // smaller files never get their own progress task
@@ -311,12 +320,18 @@ export const storage = {
       for (const id of removedAll.files || []) { const f = await db.files.get(id); if (f?.locations?.local) await local.remove(f.locations.local).catch(() => {}); }
       await withoutSyncHooks(() => db.transaction('rw', SYNCED_TABLES.map(t => db.table(t)), async () => {
         for (const t of SYNCED_TABLES) {
-          if (changedAll[t].length) await db.table(t).bulkPut(changedAll[t]);
+          const rows = await stillNewer(t, changedAll[t]);
+          if (rows.length) await db.table(t).bulkPut(rows);
           if (removedAll[t].length) await db.table(t).bulkDelete(removedAll[t]);
         }
       }));
+      // Nothing to push (no local change queued, the drive already holds every row and tombstone): skip
+      // re-uploading the whole snapshot, which happened on every 2-minute sync before.
+      const same = !lastQ && remote.data && !(await getSetting('sync.fullPushNeeded', false))
+        && SYNCED_TABLES.every(t => (remote.data.tables?.[t]?.length || 0) === merged[t].length && !changedAll[t].length && !removedAll[t].length)
+        && JSON.stringify(Object.keys(tombs).map(t => [t, Object.keys(tombs[t] || {}).length])) === JSON.stringify(Object.keys(tombs).map(t => [t, Object.keys(remote.data.tombstones?.[t] || {}).length]));
       task.update({ done: 50, detail: pulled ? `Đã nhận ${pulled} thay đổi · đang đẩy dữ liệu lên ${cloud().label}…` : `Đang đẩy dữ liệu lên ${cloud().label}…` });
-      await cloud().writeSnapshot(remote.id, { format: 'my-hub-snapshot', schema: db.verno, at: new Date().toISOString(), tables: merged, tombstones: tombs }, 'hub-db.json', { signal, onProgress: part(50, 40) });
+      if (!same) await cloud().writeSnapshot(remote.id, { format: 'my-hub-snapshot', schema: db.verno, at: new Date().toISOString(), tables: merged, tombstones: tombs }, 'hub-db.json', { signal, onProgress: part(50, 40) });
       await db.syncQueue.where('seq').belowOrEqual(lastQ).delete();   // changes made during the sync go next time
       await setSetting('sync.fullPushNeeded', false);
 
@@ -490,7 +505,7 @@ storage.syncLive = async function ({ quiet = false } = {}) {
     const out = {}; let pulled = 0;
     for (const t of LIVE_TABLES) {
       const { all, changed } = await mergeTable(t, remote.data?.tables?.[t]);
-      if (changed.length) await db.table(t).bulkPut(changed);
+      if (changed.length) await db.transaction('rw', db.table(t), async () => { const rows = await stillNewer(t, changed); if (rows.length) await db.table(t).bulkPut(rows); });
       out[t] = all; pulled += changed.length;
     }
     await cloud().writeSnapshot(remote.id, { format: 'my-hub-live', at: new Date().toISOString(), tables: out, signouts: marks }, 'hub-live.json');

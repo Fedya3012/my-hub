@@ -31,10 +31,10 @@ function swCell(dm) {
 export async function mount(el, context) {
   root = el; ctx = context;
   updates = [...pendingUpdates];
-  await render();
-  offs.push(ctx.bus.on('module:updated', render));
+  offs.push(ctx.bus.on('module:updated', render));   // before the first await: an early unmount removes them
   offs.push(ctx.bus.on('update:shell-ready', render));
   offs.push(ctx.bus.on('update:checked', (list) => { updates = [...list]; render(); }));
+  await render();
 }
 export function unmount() { offs.forEach(f => f()); offs = []; }
 

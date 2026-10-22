@@ -184,12 +184,12 @@ function renderContinue() {
   if (!list.length) { el.innerHTML = ''; return; }
   el.innerHTML = `<h2 class="section-title">${icon('clock')}Tiếp tục</h2>
     <div class="rail">${list.map(i => `
-      <button class="cont" data-id="${i.id}">
-        <span class="cover sm t-${i.type}">${icon(CONTENT_TYPES[i.type]?.icon)}</span>
+      <button class="cont" data-id="${esc(i.id)}">
+        <span class="cover sm t-${esc(i.type)}">${icon(CONTENT_TYPES[i.type]?.icon)}</span>
         <span class="cont-body"><span class="cont-title">${esc(i.title)}</span>
         <span class="cont-sub">${esc(pOf(i).label)} · ${fmtAgo(pOf(i).updatedAt)}</span>
         <span class="cont-where">${icon(pOf(i).deviceId === data.me.id ? 'device' : 'cloud')}${esc(whereOf(pOf(i)))}</span>
-        <span class="bar"><i style="width:${pOf(i).percent || 0}%"></i></span></span>
+        <span class="bar"><i style="width:${+pOf(i).percent || 0}%"></i></span></span>
       </button>`).join('')}</div>`;
   el.querySelectorAll('.cont').forEach(b => b.onclick = () => openDrawer(b.dataset.id));
 }
@@ -249,15 +249,15 @@ function renderResults() {
   disposeList = incremental(el, list, (i) => {
     const def = CONTENT_TYPES[i.type] || CONTENT_TYPES.note;
     const extra = i.meta?.duration ? fmtDuration(i.meta.duration) : i.meta?.pages ? `${i.meta.pages} trang` : '';
-    return `<button class="card" data-id="${i.id}">
-      <span class="cover t-${i.type}">${icon(def.icon)}<span class="initial">${esc(i.title.slice(0, 1))}</span></span>
+    return `<button class="card" data-id="${esc(i.id)}">
+      <span class="cover t-${esc(i.type)}">${icon(def.icon)}<span class="initial">${esc(i.title.slice(0, 1))}</span></span>
       <span class="card-body">
         <span class="card-meta"><span class="type-tag">${def.label}</span>${extra ? `<span class="num">${extra}</span>` : ''}</span>
         <span class="card-title">${esc(i.title)}</span>
         <span class="card-sub">${esc(i.subtitle || '')}</span>
-        ${pOf(i) && pOf(i).state !== 'finished' ? `<span class="bar"><i style="width:${pOf(i).percent || 0}%"></i></span>` : ''}
+        ${pOf(i) && pOf(i).state !== 'finished' ? `<span class="bar"><i style="width:${+pOf(i).percent || 0}%"></i></span>` : ''}
         <span class="card-foot">
-          <span class="status s-${i.status}">${STATUS[i.status] || ''}</span>
+          <span class="status s-${esc(i.status)}">${STATUS[i.status] || ''}</span>
           ${storageBadges(i)}${i.favorite ? `<span class="fav" title="Yêu thích">${icon('star')}</span>` : ''}
         </span>
       </span></button>`;
@@ -300,14 +300,14 @@ async function openDrawer(id) {
       </div>
       ${!owner.ready ? `<p class="hint">${!owner.m || owner.m.status === 'planned' ? 'Module mở loại nội dung này chưa được xây. Bạn vẫn quản lý, gắn thẻ và liên kết mục này ngay từ Thư viện.' : `<a href="#apps">Mở Quản lý ứng dụng</a> để bật module.`}</p>` : ''}
       <div id="lib-ext" class="lib-ext"></div>
-      ${prog ? `<div class="block"><h3>Tiến độ · đồng bộ mọi thiết bị</h3><div class="bar lg"><i style="width:${prog.percent || 0}%"></i></div>
+      ${prog ? `<div class="block"><h3>Tiến độ · đồng bộ mọi thiết bị</h3><div class="bar lg"><i style="width:${+prog.percent || 0}%"></i></div>
         <p class="resume">${prog.state === 'finished' ? 'Đã xong' : `Dừng ở <strong class="num">${esc(prog.label)}</strong>`} trên <strong>${esc(prog.where || 'thiết bị khác')}</strong> · ${esc(prog.ago)}</p>
         ${prog.state !== 'finished' && prog.where !== 'máy này' ? '<p class="hint">Mở trên máy này sẽ tiếp tục đúng chỗ đó.</p>' : ''}</div>` : ''}
       <div class="block"><h3>Thẻ</h3>
         <div class="tags">${(item.tags || []).map(t => `<span class="tag">${esc(t)}<button data-untag="${esc(t)}" aria-label="Bỏ thẻ ${esc(t)}">${icon('x')}</button></span>`).join('')}
         <form id="lib-tagform"><input id="lib-newtag" placeholder="Thêm thẻ" aria-label="Thêm thẻ"></form></div></div>
       <div class="block"><h3>Liên kết giữa các module <button class="btn small" data-act="link">${icon('link')}Liên kết</button></h3>
-        ${related.length ? `<ul class="rel">${related.map(r => `<li><button data-goto="${r.item.id}">
+        ${related.length ? `<ul class="rel">${related.map(r => `<li><button data-goto="${esc(r.item.id)}">
           <span class="rel-kind">${esc(RELATIONS[r.link.relation]?.[r.dir === 'out' ? 0 : 1] || r.link.relation)}</span>
           <i class="dot t-${r.item.type}"></i><span class="rel-title">${esc(r.item.title)}</span><span class="type-tag">${CONTENT_TYPES[r.item.type]?.label}</span></button></li>`).join('')}</ul>`
           : '<p class="muted">Chưa liên kết với mục nào. Ví dụ: nối bài nhạc phim với bộ phim, cuốn sách với podcast bàn về nó.</p>'}</div>
@@ -316,7 +316,7 @@ async function openDrawer(id) {
           <span class="locs">${f.locations?.local ? `<span class="pill">${icon('device')}Máy (${f.locations.local.kind})</span>` : ''}</span></li>`).join('')}</ul>`
           : '<p class="muted">Mục này chưa có tệp đính kèm.</p>'}</div>
       <div class="block"><h3>Hoạt động</h3>
-        <ul class="activity">${acts.slice(0, 5).map(a => `<li><span>${{ open: 'Đã mở', play: 'Đã phát', finish: 'Đã xong', import: 'Đã nhập' }[a.action] || a.action}</span><span class="muted">${fmtAgo(a.at)}</span></li>`).join('') || '<li class="muted">Chưa có</li>'}
+        <ul class="activity">${acts.slice(0, 5).map(a => `<li><span>${{ open: 'Đã mở', play: 'Đã phát', finish: 'Đã xong', import: 'Đã nhập' }[a.action] || esc(a.action)}</span><span class="muted">${fmtAgo(a.at)}</span></li>`).join('') || '<li class="muted">Chưa có</li>'}
         <li><span>Thêm vào</span><span class="muted">${new Date(item.createdAt).toLocaleDateString((globalThis.__LOCALE || 'vi-VN'))}</span></li></ul></div>
     </div>`;
   d.hidden = false;

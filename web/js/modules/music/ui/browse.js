@@ -8,6 +8,7 @@ import { artHtml, hydrate } from '../lib/art.js';
 import { fmtTime, badges } from '../lib/format.js';
 import { player } from '../lib/player.js';
 import { menu } from './sheets.js';
+import { incremental } from '../../../core/perf.js';
 
 const KIND_IC = { internal: 'device', sd: 'sd', usb: 'usb', network: 'cloud', other: 'folder' };
 let sortBy = localStorage.getItem('music.browse.sort') || 'name';
@@ -127,9 +128,10 @@ async function folderView(c, root, path, rerender) {
   const tracks = await F.toTracks(root, files, { image: res.image, signal }).catch(() => []);
   const ordered = sortBy === 'track' ? sortFiles(tracks.map((t, i) => ({ ...files[i], trackNo: t.trackNo, discNo: t.discNo, _t: t }))).map(x => x._t) : tracks;
   if (signal.aborted) return;
-  box.innerHTML = ordered.map((t, i) => row(t, i)).join('');
-  hydrate(box);
-  box.querySelectorAll('.mrow').forEach(r => r.onclick = () => player.play(ordered, { start: +r.dataset.i, source: { kind: 'browse', id: root.id + '/' + path, name: parts.at(-1) || root.name } }));
+  // Big flat folders: rows are added in chunks while scrolling (one click handler for the whole list).
+  const stop = incremental(box, ordered, row, { chunk: 200, onChunk: hydrate });
+  signal.addEventListener('abort', stop, { once: true });
+  box.onclick = (e) => { const r = e.target.closest('.mrow'); if (r) player.play(ordered, { start: +r.dataset.i, source: { kind: 'browse', id: root.id + '/' + path, name: parts.at(-1) || root.name } }); };
 }
 
 function row(t, i) {
@@ -164,8 +166,8 @@ async function toggleDir(d, root, signal, open) {
     bindDirs(b, root, signal);
     const tracks = await F.toTracks(root, files, { image: r.image, signal });
     const box = b.querySelector('[data-sub]');
-    box.innerHTML = tracks.map((t, i) => row(t, i)).join('') || (r.dirs.length ? '' : '<p class="muted">Không có tệp nhạc.</p>');
-    hydrate(box);
-    box.querySelectorAll('.mrow').forEach(x => x.onclick = () => player.play(tracks, { start: +x.dataset.i, source: { kind: 'browse', name: d.dataset.path } }));
+    if (tracks.length) signal.addEventListener('abort', incremental(box, tracks, row, { chunk: 200, onChunk: hydrate }), { once: true });
+    else box.innerHTML = r.dirs.length ? '' : '<p class="muted">Không có tệp nhạc.</p>';
+    box.onclick = (e) => { const x = e.target.closest('.mrow'); if (x) player.play(tracks, { start: +x.dataset.i, source: { kind: 'browse', name: d.dataset.path } }); };
   } catch (e) { b.innerHTML = `<p class="muted">${esc(e.message)}</p>`; }
 }

@@ -144,8 +144,8 @@ export async function cancelFolderSync() {
 export async function syncFolders(opts = {}) {
   if (opts.resume) await resumeFolderSync();
   else if (!opts.pruneOnly && (await folderPaused())) return { skipped: 'paused', added: 0, failed: [] };
-  if (current) await current.catch(() => {});
-  const p = runSync(opts);
+  // Chained on the running sync: two callers waiting on it would otherwise both start a run.
+  const p = (current || Promise.resolve()).catch(() => {}).then(() => runSync(opts));
   current = p;
   try { return await p; } finally { if (current === p) current = null; active.clear(); }
 }
@@ -194,6 +194,7 @@ async function runSync({ pruneOnly = false } = {}) {
   const music = await import('../../modules/music/lib/store.js');
   const books = await import('../../modules/books/ui/importer.js');
   const res = { added: 0, failed: [], removed, missing };
+  try {
   for (let i = 0; i < todo.length; i++) {
     task.check();
     const e = todo[i];
@@ -206,13 +207,15 @@ async function runSync({ pruneOnly = false } = {}) {
       if (MUSIC.test(e.name)) await music.importFiles([file], { kind: 'music', remote });
       else await books.importFiles([file], { remote });
       done[e.path] = e.size;
-      await setSetting('sync.folderDone', done);
       res.added++;
+      // The map holds every imported path: writing it after each file grew O(n²) on big folders.
+      if (res.added % 25 === 0) await setSetting('sync.folderDone', done);
     } catch (err) {
       if (err?.name === 'AbortError') break;
       res.failed.push(`${e.name}: ${err.message}`);
     }
   }
+  } finally { await setSetting('sync.folderDone', done); }   // also after a cancel / error
   task.finish(`Đã nhập ${res.added}/${todo.length}`);
   return res;
 }

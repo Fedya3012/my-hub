@@ -184,6 +184,7 @@ export class Engine extends EventTarget {
 
   // ── Loading & transport ───────────────────────────────────────
   async load(track, url, { gainDb = 0, startAt = 0, autoplay = true, rate = 0 } = {}) {
+    const tok = this._loadTok = (this._loadTok || 0) + 1;   // a newer load() wins: older ones stop after their awaits
     // WASAPI Exclusive: lossless songs go to the native helper; anything it cannot open stays here.
     if (this.xsWanted) {
       for (const d of this.decks) this._stopDeck(d);
@@ -193,6 +194,7 @@ export class Engine extends EventTarget {
       this._xsVolume();
       let ok = false;
       try { ok = await x.load(track, url, { startAt, autoplay }); } catch (e) { console.warn('[exclusive]', e); }
+      if (tok !== this._loadTok) return;
       if (ok) { this._emit('state'); return; }
       this.xsOn = false;
       x.stop();   // free the DAC for Web Audio
@@ -212,7 +214,7 @@ export class Engine extends EventTarget {
     this.next = null;
     const d = this.deck;
     const wasPlaying = !d.el.paused;
-    if (wasPlaying && this.ctx) { this._fadeTo(d, 0, 0.12); await sleep(120); }
+    if (wasPlaying && this.ctx) { this._fadeTo(d, 0, 0.12); await sleep(120); if (tok !== this._loadTok) return; }
     this._stopDeck(d);
     d.track = track; d.url = url; d.gainDb = gainDb;
     this._setGain(d, gainDb);
@@ -222,6 +224,7 @@ export class Engine extends EventTarget {
     d.el.playbackRate = this.rate;
     if (startAt > 0) {
       await once(d.el, 'loadedmetadata', 8000);
+      if (tok !== this._loadTok) return;
       if (isFinite(d.el.duration) && startAt < d.el.duration - 1) d.el.currentTime = startAt;
     }
     this._emit('state');

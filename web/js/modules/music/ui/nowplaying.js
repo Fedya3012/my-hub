@@ -108,7 +108,7 @@ export async function openNowPlaying(panel = null) {
 export function closeNowPlaying({ fromPop = false } = {}) {
   if (!np) return;
   const { el } = np;
-  cancelAnimationFrame(np.raf);
+  cancelAnimationFrame(np.raf); clearTimeout(np.slowT);
   np.offs.forEach(f => f());
   np.stopQueue?.();
   np.fx?.destroy();
@@ -587,7 +587,9 @@ function loop() {
     el.querySelector('.cs-reel.l')?.style.setProperty('--tape', (1 - p).toFixed(3));
     el.querySelector('.cs-reel.r')?.style.setProperty('--tape', p.toFixed(3));
   }
-  np.raf = requestAnimationFrame(loop);
+  // Paused: nothing moves on its own, so ~4 frames/s is enough to follow seeks and edits (saves battery).
+  if (player.playing || np.seeking) np.raf = requestAnimationFrame(loop);
+  else { clearTimeout(np.slowT); np.slowT = setTimeout(() => { if (np) np.raf = requestAnimationFrame(loop); }, 250); }
 }
 
 // The spectrum strip and the background themes run in ./visualizer.js (via ./np-fx.js).

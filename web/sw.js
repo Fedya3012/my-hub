@@ -29,7 +29,9 @@ self.addEventListener('activate', (event) => {
   })());
 });
 
-self.addEventListener('message', async (event) => {
+self.addEventListener('message', (event) => { event.waitUntil(onMessage(event)); });   // keeps the worker alive during long downloads
+
+async function onMessage(event) {
   const { type } = event.data || {};
   const reply = (data) => event.ports[0]?.postMessage(data);
   if (type === 'SKIP_WAITING') return self.skipWaiting();
@@ -47,7 +49,7 @@ self.addEventListener('message', async (event) => {
     } catch (e) { reply({ ok: false, error: e.message }); }
   }
   if (type === 'GET_VERSION') reply({ ok: true, version: SW_VERSION });
-});
+}
 
 self.addEventListener('fetch', (event) => {
   const req = event.request;
