@@ -86,6 +86,7 @@ async function render() {
   const tab = (NAMES[head] && (head !== 'browse' || !rest.length)) ? head : !head ? (folderMode ? 'browse' : tabs.includes(remembered) ? remembered : tabs[0]) : null;
   if (tab) localStorage.setItem('music.tab', tab);
   if (SECTION_TABS.includes(tab)) localStorage.setItem('music.section', tab);   // "Âm nhạc" reopens on Album, Nghệ sĩ… as last left
+  const navItems = `${bottomTabs.map(t => { const on = (t === tab || (t === 'songs' && SECTION_TABS.includes(tab))) && !search; const to = t === 'songs' && SECTION_TABS.includes(lastSection()) ? lastSection() : t; return `<a href="#music/${to}" class="${on ? 'on' : ''}" ${on ? 'aria-current="page"' : ''}>${icon(BOTTOM_ICONS[t] || 'disc')}<span>${NAMES[t]}</span></a>`; }).join('')}<button type="button" data-act="settings">${icon('settings')}<span>Cài đặt</span></button>`;   // one set of links: the top tab row on desktop, the bottom bar on phones
   root.innerHTML = `<div class="mlib page" data-grid="${prefs().gridSize}"${!tab && !search && ['album', 'artist', 'playlist', 'folder', ...Object.keys(GROUPS)].includes(head) ? ' data-detail="1"' : ''}>
     <header class="mlib-head">
       <div class="mlib-title app-title"><span class="eyebrow">Âm nhạc</span><h1>Trình phát nhạc</h1></div>
@@ -95,15 +96,16 @@ async function render() {
         <button class="icon-btn" data-act="clean" aria-label="Dọn dữ liệu Trình phát nhạc" title="Dọn dữ liệu Trình phát nhạc: xoá bài đã mất tệp gốc">${icon('refresh')}</button>
       </div>
     </header>
+    <nav class="mtabs" aria-label="Mục chính của Trình phát nhạc">${navItems}</nav>
     ${SECTION_TABS.includes(tab) || head === 'browse' ? `<details class="msections"><summary>${icon('list')}<span>${esc(tab === 'songs' ? 'Âm nhạc · Bài hát' : 'Âm nhạc · ' + (NAMES[tab] || NAMES.browse))}</span><i aria-hidden="true">▾</i></summary>
       <div class="msections-menu" role="menu">${SECTION_TABS.map(t => `<a role="menuitem" href="#music/${t}" class="${t === tab ? 'on' : ''}">${esc(SONG_NAMES[t])}</a>`).join('')}</div></details>` : ''}
     <div class="mcontent"></div></div>
-    <nav class="mbottom" aria-label="Mục chính của Nhạc">${bottomTabs.map(t => { const on = (t === tab || (t === 'songs' && SECTION_TABS.includes(tab))) && !search; const to = t === 'songs' && SECTION_TABS.includes(lastSection()) ? lastSection() : t; return `<a href="#music/${to}" class="${on ? 'on' : ''}" ${on ? 'aria-current="page"' : ''}>${icon(BOTTOM_ICONS[t] || 'disc')}<span>${NAMES[t]}</span></a>`; }).join('')}<button type="button" data-act="settings">${icon('settings')}<span>Cài đặt</span></button></nav>`;
+    <nav class="mbottom" aria-label="Mục chính của Nhạc">${navItems}</nav>`;
   document.body.classList.add('m-has-bottom');
   const c = root.querySelector('.mcontent');
   root.querySelector('[data-act="add"]').onclick = (e) => addMenu(e.currentTarget);
   root.querySelector('[data-act="clean"]').onclick = async () => { const m = await import('../../core/storage/cleanup.js'); if ((await m.cleanDataAction('music', 'Trình phát nhạc'))?.removed) render(); };
-  root.querySelector('[data-act="settings"]').onclick = () => import('./ui/customize.js').then(m => m.customizeSheet(() => render()));
+  root.querySelectorAll('[data-act="settings"]').forEach(b => b.onclick = () => import('./ui/customize.js').then(m => m.customizeSheet(() => render())));
   swipePages(root.querySelector('.mcontent'), { tab, tabs: SECTION_TABS.includes(tab) ? SECTION_TABS : bottomTabs, detail: !tab && !search, go });
   const si = root.querySelector('.mlib-search input');
   si.oninput = debounce(() => { search = si.value.trim(); cleanups.forEach(f => f()); cleanups = []; renderBody(c, L, tab, head, arg); }, 180);

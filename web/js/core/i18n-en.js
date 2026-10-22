@@ -3694,4 +3694,5 @@ export default {"(Google cấp quyền theo từng giờ). Bấm một lần đ�
 "Bỏ khoảng lặng (Skip silence)":"Skip silence",
 "Mức bỏ khoảng lặng":"Skip silence level",
 "Nhẹ (chỉ khoảng lặng dài)":"Light (long pauses only)",
-"Mạnh (cả khoảng ngắt ngắn)":"Strong (short pauses too)"};
+"Mạnh (cả khoảng ngắt ngắn)":"Strong (short pauses too)",
+"Mục chính của Trình phát nhạc":"Music Player sections"};
