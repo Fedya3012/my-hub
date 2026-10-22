@@ -1,7 +1,23 @@
 {
-  "app": "0.9.9.1",
+  "app": "0.9.10.0",
   "released": "2026-10-22",
   "changelog": [
+    {
+      "version": "0.9.10.0",
+      "date": "2026-10-22",
+      "notes": [
+        "Xưởng Viết (mới): module viết fanfic, quản lý tác phẩm và fandom, nhập/xuất, đọc trong Sách; có chế độ tập trung, làm mờ, khoá phiên, nền giấy, tự lưu nháp, so sánh phiên bản, bảng kanban và liên kết giữa các trang; tab Cài đặt cạnh Thống kê",
+        "Hướng dẫn sử dụng (mới): mục lục đánh số bên trái, thu gọn được và nhớ lựa chọn, mỗi app một trang, ảnh chụp có phóng to, đọc được khi offline",
+        "Cài đặt: trang Thư mục đồng bộ theo màu giao diện; chỉ còn một cách kết nối Dropbox / OneDrive; lời nhắc đồng bộ nhắc tới cả Dropbox và OneDrive",
+        "Ghi nhớ lựa chọn khi chuyển tab, đổi ứng dụng và khởi động lại: bộ lọc Thư viện, trạng thái Sách, kiểu sắp xếp và mục đã thu gọn của Trình phát nhạc",
+        "Giao diện tối giản: thanh công cụ nhạc gọn thành một hàng, ô tìm kiếm không viền ở Thư viện và Sách, bỏ tab Ứng dụng khỏi thanh dưới",
+        "Điện thoại: tài liệu tự cuộn thay vì khung cuộn bên trong; Trình phát nhạc cuộn mượt hơn",
+        "Sách: tab Cài đặt, nguồn Thịnh hành, phông OpenDyslexic, nền Xám, độ ấm, phóng từng khung, xuất ghi chú TXT/PDF",
+        "Trình phát nhạc, Sách: hỗ trợ màn hình gập (bố cục Flex, thẻ trên màn hình ngoài)",
+        "Hiệu năng: bộ nhớ đệm số lần nghe, thư viện nhạc khởi động nhanh hơn, trang chủ Sách nhẹ hơn",
+        "Giao diện: sửa khoảng cách và biểu tượng nút ở trang trống, tên ứng dụng trên thanh điện thoại, sửa chữ mô tả đồng bộ cũ (WebDAV, pCloud, Google Drive)"
+      ]
+    },
     {
       "version": "0.9.9.1",
       "date": "2026-10-22",
