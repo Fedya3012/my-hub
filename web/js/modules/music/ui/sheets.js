@@ -159,6 +159,7 @@ export async function infoSheet(t) {
     ['ReplayGain', g.used === 'off' ? 'Tắt' : `${dB(g.db)} (${{ track: 'theo bài', album: 'theo album', untagged: 'không có thẻ, mức mặc định' }[g.used] || g.used})${g.clipped ? ' · đã giới hạn chống vỡ tiếng' : ''}`, g.used === 'off' || !g.db ? 'ok' : 'warn'],
     ['EQ', eq?.enabled ? `${esc(eq.name || 'Tuỳ chỉnh')} · ${eq.bands.filter(b => b.on).length} dải` : 'Tắt', eq?.enabled ? 'warn' : 'ok'],
     ['Chuyển bài', player.planFor(t, player.nextTrack).crossfade ? `Crossfade ${player.planFor(t, player.nextTrack).crossfade.toFixed(1)} s` : prefs().playback.gapless ? 'Gapless' : 'Có khoảng lặng', ''],
+    isCur && E.xsOn && E.xs?.format ? ['Đầu ra', `WASAPI Exclusive · ${khz(E.xs.format.rate)} ${E.xs.format.bits}-bit${E.xs.format.cont !== E.xs.format.bits ? ` trong khung ${E.xs.format.cont}-bit` : ''} · ${E.volume >= 0.999 && !E.muted ? 'bit-perfect' : 'âm lượng số (chưa bit-perfect)'}`, E.volume >= 0.999 ? 'ok' : 'warn'] :
     ['Đầu ra', E.mode === 'direct' ? 'Phát trực tiếp (không Web Audio)' : outRate ? `Web Audio ${khz(outRate)} float 32-bit${resample ? ` · chuyển mẫu ${khz(T.sampleRate)} → ${khz(outRate)}` : ''}` : 'Chưa phát', resample ? 'warn' : 'ok'],
   ] : [];
   const body = h(`<div class="minfo">

@@ -45,6 +45,7 @@ class Player extends EventTarget {
     E.addEventListener('transition', (e) => this._onTransition(e.detail));
     E.addEventListener('ended', () => this._onEnded());
     E.addEventListener('error', (e) => this._onError(e.detail));
+    E.addEventListener('xs-fallback', (e) => { if (this._xsWarned !== e.detail.track?.id) { this._xsWarned = e.detail.track?.id; toast(`Phát qua Web Audio: ${e.detail.reason || 'không mở được chế độ độc quyền'}`, 'warn'); } });
   }
 
   _emit(type, detail) { this.dispatchEvent(new CustomEvent(type, { detail })); bus.emit('music:' + type, detail); }
@@ -123,7 +124,7 @@ class Player extends EventTarget {
   async toggle() {
     await this.init();
     if (!this.track) { const L = await this.lib(); return this.play([...L.tracks.values()], { source: { kind: 'all', name: 'Tất cả bài hát' } }); }
-    if (!this.engine.el?.src) return this._load({ startAt: this._resumeAt || 0 });
+    if (!this.engine.xsOn && !this.engine.el?.src) return this._load({ startAt: this._resumeAt || 0 });
     return this.engine.toggle();
   }
   pause() { this.engine.pause(); }
@@ -544,7 +545,15 @@ class Player extends EventTarget {
     this._emit('state');
   }
   async setEngineOpts(o) {
+    const wasXs = this.engine.opts.engine === 'exclusive';
     Object.assign(this.engine.opts, o);
+    if (this.track && wasXs !== (this.engine.opts.engine === 'exclusive')) {
+      // Into / out of WASAPI Exclusive: reload the song where it is.
+      const at = this.time, was = this.playing;
+      await this._load({ startAt: at, autoplay: was });
+      this._emit('state');
+      return;
+    }
     if (this.engine.decks.length) {
       // A different engine / output rate needs fresh audio elements; the URLs stay valid.
       await this.engine.rebuild();

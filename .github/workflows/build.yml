@@ -51,6 +51,10 @@ jobs:
       - run: npm ci
       - run: node tools/sync-versions.js   # version.json lists every file the offline cache needs
       - run: node scripts/sync-version.js
+      # Bit-perfect output helper (WASAPI Exclusive), see native/xs-audio. Zig from PyPI cross-compiles C for Windows.
+      - run: python -m pip install ziglang
+      - run: New-Item -ItemType Directory -Force build/native
+      - run: python -m ziglang cc -target x86_64-windows-gnu -O2 -o build/native/xs-audio.exe native/xs-audio/xs-audio.c -lole32
       # File names carry the real x.y.z.w version (package.json holds a semver mapping of it).
       - run: npx electron-builder --win --publish never "-c.nsis.artifactName=MyHub-${{ needs.version.outputs.version }}-x64-Setup.exe" "-c.portable.artifactName=MyHub-${{ needs.version.outputs.version }}-portable.exe"
       - uses: actions/upload-artifact@v4

@@ -8,6 +8,9 @@ files:
   - web/**
   - build/icon.png
   - package.json
+extraResources:
+  - from: build/native/xs-audio.exe
+    to: native/xs-audio.exe
 win:
   icon: build/icon.png
   target:
