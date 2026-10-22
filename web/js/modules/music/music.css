@@ -898,3 +898,19 @@ body.m-has-bottom.has-dock main#view { padding-bottom: calc(var(--dock-h, 0px) +
   .mtool2 { gap: 8px; }
   .mtool2 .btn { flex: 1; justify-content: center; }
 }
+
+/* ── Foldables (docs/FOLDABLE.md) ──────────────────────────────────────
+   Flex Mode: cover art, lyrics or the queue above the crease; title, seek bar and controls below it.
+   Cover screen: the Quick View card replaces the player; nothing animated runs behind it. */
+@media (max-width: 860px) {
+  body[data-posture="flex"] .mnp-top { position: absolute; top: var(--sai-top, 0px); left: 0; right: 0; z-index: 2; }
+  body[data-posture="flex"] .mnp-body, body[data-posture="flex"] .mnp[data-panel]:not([data-panel=""]) .mnp-body {
+    grid-template-rows: calc(var(--fold-y, 50vh) - 24px - var(--sai-top, 0px)) var(--fold-h, 48px) minmax(0, 1fr);
+    grid-template-areas: "stage" "." "info"; padding-top: var(--sai-top, 0px); gap: 0; }
+  body[data-posture="flex"] .mnp[data-panel]:not([data-panel=""]) .mnp-body { grid-template-areas: "panel" "." "info"; }
+  body[data-posture="flex"] .mnp-stage { --art: min(70vw, calc(var(--fold-y, 50vh) - 96px), 440px); padding-top: 44px; }
+  body[data-posture="flex"] .mnp-panel { padding-top: 48px; }
+  body[data-posture="flex"] .mnp-vis { display: none; }
+  body[data-posture="flex"] .mnp-info { justify-content: center; overflow-y: auto; }
+}
+body[data-posture="cover"]:not(.cover-full) .mnp-bg-a, body[data-posture="cover"]:not(.cover-full) .mnp-bg-b { animation-play-state: paused; }

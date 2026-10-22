@@ -20,6 +20,15 @@
             </intent-filter>
         </activity>
 
+        <!-- Galaxy Z Flip cover screen (Flex Window) widget, see CoverWidgetProvider.java -->
+        <receiver android:name=".CoverWidgetProvider" android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/cover_widget_info" />
+            <meta-data android:name="com.samsung.android.appwidget.provider" android:resource="@xml/samsung_cover_widget" />
+        </receiver>
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

@@ -44,11 +44,33 @@ export async function start(context) {
     B.on('progress:pulled', async () => { if (player.playing) return; const s = await player.checkRemote(); if (s) showRemote(s); }),
     B.on('theme:changed', accent),
     extend('library.drawer', drawerBlock),
+    extend('cover.cards', coverCard),
   );
+  // Quick View on the cover screen: rebuilt on a new track or play/pause, not on every time tick (battery).
+  const coverSoon = () => B.emit('cover:refresh');
+  player.addEventListener('track', coverSoon);
+  player.addEventListener('state', coverSoon);
+  offs.push(() => { player.removeEventListener('track', coverSoon); player.removeEventListener('state', coverSoon); });
   player.addEventListener('track', accent);
   offs.push(() => player.removeEventListener('track', accent));
   document.addEventListener('keydown', keys);
   offs.push(() => document.removeEventListener('keydown', keys));
+}
+
+// "Đang phát" card for the cover screen (core/cover.js, docs/FOLDABLE.md).
+function coverCard() {
+  const t = player.track;
+  if (!t) return null;
+  return {
+    id: 'music', app: 'Trình phát nhạc', icon: 'music', order: 10, route: 'music',
+    title: t.title || 'Không rõ tên', sub: [t.artist, t.album].filter(Boolean).join(' · '),
+    percent: player.duration ? player.time / player.duration * 100 : null,
+    actions: [
+      { label: 'Bài trước', icon: 'prev', run: () => player.prev() },
+      { label: player.playing ? 'Tạm dừng' : 'Phát', icon: player.playing ? 'pause' : 'play', primary: true, run: () => player.toggle() },
+      { label: 'Bài tiếp', icon: 'next', run: () => player.next() },
+    ],
+  };
 }
 
 export async function stop() {

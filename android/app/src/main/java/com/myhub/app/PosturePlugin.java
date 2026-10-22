@@ -1,6 +1,8 @@
 package com.myhub.app;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.graphics.Rect;
 import android.util.DisplayMetrics;
 import android.view.Display;
@@ -12,6 +14,7 @@ import androidx.window.layout.DisplayFeature;
 import androidx.window.layout.FoldingFeature;
 import androidx.window.layout.WindowInfoTracker;
 import androidx.window.layout.WindowLayoutInfo;
+import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
@@ -27,10 +30,48 @@ public class PosturePlugin extends Plugin {
   private WindowInfoTrackerCallbackAdapter tracker;
   private final Consumer<WindowLayoutInfo> listener = this::onLayout;
   private JSObject last = new JSObject();
+  private String pendingRoute = null;   // set when the cover-screen widget opened the app
 
   @Override
   public void load() {
     tracker = new WindowInfoTrackerCallbackAdapter(WindowInfoTracker.getOrCreate(getActivity()));
+    pendingRoute = routeOf(getActivity().getIntent());
+  }
+
+  @Override
+  protected void handleOnNewIntent(Intent intent) {
+    super.handleOnNewIntent(intent);
+    String r = routeOf(intent);
+    if (r == null) return;
+    JSObject o = new JSObject();
+    o.put("route", r);
+    notifyListeners("route", o);
+  }
+
+  private static String routeOf(Intent i) {
+    if (i == null || !i.hasExtra(CoverWidgetProvider.EXTRA_ROUTE)) return null;
+    String r = i.getStringExtra(CoverWidgetProvider.EXTRA_ROUTE);
+    i.removeExtra(CoverWidgetProvider.EXTRA_ROUTE);
+    return r == null ? "" : r;
+  }
+
+  // The page the widget asked for at cold start (js/core/cover.js asks once after boot).
+  @PluginMethod
+  public void takeRoute(PluginCall call) {
+    JSObject o = new JSObject();
+    if (pendingRoute != null) o.put("route", pendingRoute);
+    pendingRoute = null;
+    call.resolve(o);
+  }
+
+  // Rows for the Flex Window widget: [{ app, title, sub, percent?, route }], at most 2.
+  @PluginMethod
+  public void setCoverWidget(PluginCall call) {
+    JSArray rows = call.getArray("rows", new JSArray());
+    getContext().getSharedPreferences(CoverWidgetProvider.PREFS, Context.MODE_PRIVATE).edit()
+      .putString(CoverWidgetProvider.KEY, rows.toString()).apply();
+    CoverWidgetProvider.refreshAll(getContext());
+    call.resolve();
   }
 
   @Override

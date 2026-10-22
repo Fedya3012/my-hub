@@ -4,4 +4,6 @@
     <string name="title_activity_main">My Hub</string>
     <string name="package_name">com.myhub.app</string>
     <string name="custom_url_scheme">com.myhub.app</string>
+    <string name="cover_widget_desc">Đang đọc, đang nghe và mục dở dang của My Hub</string>
+    <string name="cover_widget_empty">Chưa có gì đang dở. Chạm để mở My Hub.</string>
 </resources>

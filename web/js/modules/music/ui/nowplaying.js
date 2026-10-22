@@ -2,6 +2,7 @@
 // a CD sliding out of its case, a vinyl record with tonearm or a cassette whose reels wind with
 // the progress. Karaoke lyrics, queue and album beside it on desktop, swapped in on phones.
 // A looping video can play behind the lyrics (per track, per album or a default), as in Noctis.
+import { bus as ctxBus } from '../../../core/bus.js';
 import { icon } from '../../../core/icons.js';
 import { REPEAT_MODES, repeatMode, SHUFFLE_MODES, shuffleId, shuffleMode } from '../lib/modes.js';
 import { esc, toast } from '../../../core/ui.js';
@@ -203,6 +204,7 @@ function wire() {
   document.addEventListener('keydown', key); np.offs.push(() => document.removeEventListener('keydown', key));
   const vis = () => syncVideo();
   document.addEventListener('visibilitychange', vis); np.offs.push(() => document.removeEventListener('visibilitychange', vis));
+  np.offs.push(ctxBus.on('posture:change', vis));
   const A = (k, f) => el.querySelectorAll(`[data-act="${k}"]`).forEach(b => b.onclick = f);
   A('close', () => closeNowPlaying());
   holdMenu(el.querySelector('[data-act="play"]'), playMenu, () => player.toggle());
@@ -294,7 +296,8 @@ async function applyVideo() {
 function syncVideo() {
   const v = np?.el.querySelector('.mnp-video video');
   if (!v?.dataset.src) return;
-  const run = np.el.dataset.video === '1' && (player.playing || !prefs().np.videoFollow) && !document.hidden;
+  const run = np.el.dataset.video === '1' && (player.playing || !prefs().np.videoFollow) && !document.hidden
+    && document.body.dataset.posture !== 'cover';   // cover screen: Quick View is shown, the clip would only drain the battery
   if (run && v.paused) v.play().catch(() => {});
   else if (!run && !v.paused) v.pause();
 }
