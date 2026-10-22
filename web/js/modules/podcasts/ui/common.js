@@ -2,6 +2,7 @@
 import { icon } from '../../../core/icons.js';
 import { esc, toast } from '../../../core/ui.js';
 import { tasks } from '../../../core/tasks.js';
+import { onHold } from '../../../core/longpress.js';
 import { hash } from '../lib/net.js';
 import * as store from '../lib/store.js';
 import { player } from '../lib/player.js';
@@ -92,7 +93,40 @@ export function bindEpisodes(root, { ctx, rerender } = {}) {
     if (m) { ev.preventDefault(); await episodeMenu(m.dataset.menu, { ctx, anchor: m }); rerender?.(); }
   };
   root.addEventListener('click', onClick);
+  onHold(root, '.pc-ep', async (row, e) => { if (e?.target?.closest?.('.pc-grip')) return; await episodeMenu(row.dataset.ep, { ctx }); rerender?.(); });   // long press / right-click = the ⋯ menu
   return () => root.removeEventListener('click', onClick);
+}
+
+// Long press / right-click a show card or result row: open, (un)subscribe, refresh, share the feed.
+export function bindShows(root, { rerender } = {}) {
+  onHold(root, '.pc-show, .pc-result', async (el) => {
+    const link = el.matches('a') ? el : el.querySelector('a[href^="#podcasts/"]');
+    const m = /^#podcasts\/(show|preview)\/(.+)$/.exec(link?.getAttribute('href') || '');
+    if (!m) return;
+    await showMenu(m[1], decodeURIComponent(m[2]), el.querySelector('b')?.textContent || '');
+    rerender?.();
+  });
+}
+
+async function showMenu(kind, key, name) {
+  const s = kind === 'show' ? await store.show(key) : null;
+  const feed = s?.feedUrl || (kind === 'preview' ? key : '');
+  const subbed = !!s?.subscribed;
+  const acts = [
+    ['open', 'podcast', 'Mở podcast'],
+    subbed ? ['unsub', 'pc-trash', 'Huỷ đăng ký'] : ['sub', 'pc-plus', 'Đăng ký'],
+    ...(subbed ? [['refresh', 'refresh', 'Làm mới tập']] : []),
+    ...(feed ? [['share', 'link', 'Chép liên kết RSS']] : []),
+  ];
+  const v = await pick(s?.title || name || 'Podcast', `<div class="pc-menu">${acts.map(([k, ic, l]) => `<button class="btn ghost" data-v="${k}">${icon(ic)}${l}</button>`).join('')}</div>`);
+  const fail = (err) => err?.name !== 'AbortError' && toast(err.message, 'error');
+  switch (v) {
+    case 'open': location.hash = `podcasts/${kind}/${encodeURIComponent(key)}`; break;
+    case 'sub': await tasks.run({ label: 'Đăng ký podcast', detail: s?.title || name, cancellable: true }, (t) => s ? store.subscribeCached(s.itemId) : store.subscribe({ feedUrl: feed, title: name }, { signal: t?.signal })).then(() => toast('Đã đăng ký')).catch(fail); break;
+    case 'unsub': await store.unsubscribe(s.itemId); toast('Đã huỷ đăng ký'); break;
+    case 'refresh': await tasks.run({ label: 'Làm mới podcast', detail: s.title, cancellable: true }, (t) => store.refresh(s.itemId, { signal: t?.signal })).then(() => toast('Đã làm mới')).catch(fail); break;
+    case 'share': try { await navigator.clipboard.writeText(feed); toast('Đã chép liên kết RSS'); } catch { toast('Không chép được liên kết', 'error'); } break;
+  }
 }
 
 export async function episodeMenu(id, { ctx } = {}) {

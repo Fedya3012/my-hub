@@ -3685,4 +3685,10 @@ export default {"(Google cấp quyền theo từng giờ). Bấm một lần đ�
 "Chương / chép lời":"Chapters / transcripts",
 "Điểm":"Score",
 "Bitrate":"Bitrate",
-"đang theo":"following"};
+"đang theo":"following",
+"Làm mới tập":"Refresh episodes",
+"Chép liên kết RSS":"Copy RSS link",
+"Đã huỷ đăng ký":"Unsubscribed",
+"Đã làm mới":"Refreshed",
+"Không chép được liên kết":"Couldn't copy the link",
+"Đã chép liên kết RSS":"RSS link copied"};

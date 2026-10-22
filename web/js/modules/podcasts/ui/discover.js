@@ -7,7 +7,7 @@ import * as store from '../lib/store.js';
 import { search, topCharts, trending, CATEGORIES, hasPodcastIndex, SOURCES, sourceNames } from '../lib/online.js';
 import { get, set } from '../lib/prefs.js';
 import { normFeed } from '../lib/net.js';
-import { art, showCard } from './common.js';
+import { art, showCard, bindShows } from './common.js';
 
 const KINDS = [['all', 'Tất cả'], ['title', 'Tên podcast'], ['person', 'Người dẫn / khách mời']];
 let kind = 'all', ctl = null;
@@ -33,6 +33,7 @@ export async function render(el, { arg, go }) {
   el.querySelectorAll('[data-kind]').forEach(b => b.onclick = () => { kind = b.dataset.kind; el.querySelectorAll('[data-kind]').forEach(x => x.setAttribute('aria-checked', x === b)); if (q) results(body, q); });
   el.querySelectorAll('[data-source]').forEach(btn => btn.onclick = async () => { await set('searchSource', btn.dataset.source); el.querySelectorAll('[data-source]').forEach(x => x.setAttribute('aria-checked', x === btn)); const v = form.q.value.trim(); if (v) results(body, v); });
   body.addEventListener('click', onSubscribeClick);
+  bindShows(el);
   if (q) await results(body, q);
   else if (arg?.startsWith('genre:')) await genre(body, arg.slice(6));
   else await landing(body, arg);

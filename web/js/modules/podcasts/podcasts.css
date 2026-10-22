@@ -372,3 +372,6 @@ body.bk-reader-open[data-audio-source]:not([data-audio-source="podcast"]) .pc-mi
   .pc-bottom { padding-inline: 2px; }
   .pc-bottom a > span { font-size: .56rem; letter-spacing: -.03em; }
 }
+
+/* Long press / right-click on episodes and shows opens their menu: no native callout or text selection on hold */
+.pc-ep, .pc-show, .pc-result { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }

@@ -4,7 +4,7 @@ import { esc } from '../../../core/ui.js';
 import * as store from '../lib/store.js';
 import { CATEGORIES, topCharts } from '../lib/online.js';
 import { player } from '../lib/player.js';
-import { art, episodeList, bindEpisodes, showCard, fmtLen, fmtDate } from './common.js';
+import { art, episodeList, bindEpisodes, bindShows, showCard, fmtLen, fmtDate } from './common.js';
 
 let chartCache = null;   // { at, list } — charts change slowly; one fetch per session is plenty
 
@@ -40,6 +40,7 @@ export async function render(el, { ctx, go }) {
   const form = el.querySelector('[data-search]');
   form.onsubmit = (e) => { e.preventDefault(); const q = form.q.value.trim(); if (q) go('discover/' + encodeURIComponent(q)); };
   const off = bindEpisodes(el, { ctx });
+  bindShows(el);
   el.querySelectorAll('[data-cont]').forEach(b => b.addEventListener('click', async (ev) => { ev.preventDefault(); const e = await store.episode(b.dataset.cont); if (e) { await player.playEpisode(e); go('play'); } }));
   loadCharts(el.querySelector('[data-charts]'));
   return off;
