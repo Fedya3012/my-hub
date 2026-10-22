@@ -2,7 +2,7 @@
 import { db, getSetting, setSetting } from '../../core/db.js';
 import { listModules } from '../../core/registry.js';
 import { CONTENT_TYPES } from '../../core/content-types.js';
-import { swState, checkForUpdates, applyModuleUpdate, applyShellUpdate, rollbackModule } from '../../core/updater.js';
+import { swState, checkForUpdates, applyModuleUpdate, applyShellUpdate, rollbackModule, nativeApp, changelogGroups, pendingUpdates, cmpVer } from '../../core/updater.js';
 import { icon } from '../../core/icons.js';
 import { cleanDataAction } from '../../core/storage/cleanup.js';
 import { esc, fmtAgo, toast, confirmBox } from '../../core/ui.js';
@@ -12,17 +12,29 @@ let root, ctx, updates = [], offs = [];
 const POLICIES = { auto: 'Tự động cập nhật module', ask: 'Hỏi trước khi cập nhật', manual: 'Chỉ khi tôi bấm kiểm tra' };
 
 function displayMode() {
-  if (document.referrer.startsWith('android-app://')) return { label: 'Ứng dụng Android (APK/TWA)', apk: true };
-  if (matchMedia('(display-mode: standalone)').matches || navigator.standalone) return { label: 'Đã cài như ứng dụng', apk: false };
-  if (window.top !== window.self) return { label: 'Bản xem thử nhúng', apk: false, embedded: true };
-  return { label: 'Trình duyệt', apk: false };
+  const native = nativeApp();
+  if (native === 'windows') return { label: 'Ứng dụng Windows', native, updates: 'Tự tải bản mới từ GitHub Releases (bản portable chỉ báo có bản mới)' };
+  if (native === 'android') return { label: 'Ứng dụng Android', native, updates: 'Cài bản mới qua Obtainium (GitHub Releases)' };
+  const pwa = { updates: 'Lõi và từng module cập nhật riêng qua Service Worker' };
+  if (matchMedia('(display-mode: standalone)').matches || navigator.standalone) return { ...pwa, label: 'Ứng dụng web đã cài (PWA)' };
+  if (window.top !== window.self) return { ...pwa, label: 'Bản xem thử nhúng', embedded: true };
+  return { ...pwa, label: 'Trình duyệt' };
+}
+
+function swCell(dm) {
+  if (dm.native === 'android') return 'Không cần (tệp nằm sẵn trong ứng dụng)';
+  if (swState.active) return '<span class="pill ok">Đang hoạt động</span>';
+  if (swState.supported) return '<span class="pill">Đang khởi tạo</span>';
+  return `<span class="pill warn">Không khả dụng${dm.embedded ? ' ở bản xem thử' : ''}</span>`;
 }
 
 export async function mount(el, context) {
   root = el; ctx = context;
+  updates = [...pendingUpdates];
   await render();
   offs.push(ctx.bus.on('module:updated', render));
   offs.push(ctx.bus.on('update:shell-ready', render));
+  offs.push(ctx.bus.on('update:checked', (list) => { updates = [...list]; render(); }));
 }
 export function unmount() { offs.forEach(f => f()); offs = []; }
 
@@ -53,9 +65,9 @@ async function render() {
         <h2 class="panel-title">${icon('device')}Cài đặt & ngoại tuyến</h2>
         <dl class="kv">
           <dt>Đang chạy dưới dạng</dt><dd>${dm.label}</dd>
-          <dt>Service Worker</dt><dd>${swState.active ? '<span class="pill ok">Đang hoạt động</span>' : swState.supported ? '<span class="pill">Đang khởi tạo</span>' : `<span class="pill warn">Không khả dụng${dm.embedded ? ' ở bản xem thử' : ''}</span>`}</dd>
-          <dt>Dùng offline</dt><dd>${swState.active ? 'Có' : 'Khi chạy từ máy chủ HTTPS'}</dd>
-          <dt>Đóng gói APK</dt><dd>${dm.apk ? '<span class="pill ok">Đang chạy trong APK</span>' : 'Sẵn sàng cho PWABuilder / Bubblewrap'}</dd>
+          <dt>Service Worker</dt><dd>${swCell(dm)}</dd>
+          <dt>Dùng offline</dt><dd>${dm.native || swState.active ? 'Có' : 'Khi chạy từ máy chủ HTTPS'}</dd>
+          <dt>Cách cập nhật</dt><dd>${dm.updates}</dd>
         </dl>
       </div>
     </div>
@@ -63,8 +75,7 @@ async function render() {
     <section id="am-updates">${renderUpdates()}</section>
 
     <h2 class="section-title">${icon('grid')}Module</h2>
-    <ul class="mod-list">${mods.map((m, i) => modRow(m, i, mods.length, counts)).join('')}</ul>
-    <p class="hint">Thêm module mới: tạo thư mục <code>js/modules/&lt;id&gt;/</code> có <code>manifest.js</code> và <code>index.js</code>, khai báo trong <code>js/core/registry.js</code> và <code>version.json</code>. Xem docs/MODULES.md.</p>
+    <ul class="mod-list">${mods.map((m, i) => modRow(m, i, mods.length, counts, !dm.native && swState.active)).join('')}</ul>
   </section>`;
 
   root.querySelector('[data-act="check"]').onclick = check;
@@ -76,19 +87,19 @@ async function render() {
   root.querySelectorAll('[data-toggle]').forEach(b => b.onclick = () => toggle(b.dataset.toggle));
   root.querySelectorAll('[data-move]').forEach(b => b.onclick = () => move(b.dataset.move, +b.dataset.dir, mods));
   root.querySelectorAll('[data-rollback]').forEach(b => b.onclick = async () => {
-    try { await rollbackModule(b.dataset.rollback); ctx.toast('Đã quay lại phiên bản trước'); } catch (e) { ctx.toast(e.message, 'error'); }
+    try { await rollbackModule(b.dataset.rollback); } catch (e) { ctx.toast(e.message, 'error'); }
   });
   bindUpdateButtons();
 }
 
+// Counted per module through the moduleId index (a big music library would not fit in one array).
 async function itemCounts() {
-  const items = await db.items.filter(i => !i.deleted).toArray();
-  const by = {};
-  for (const i of items) by[i.moduleId] = (by[i.moduleId] || 0) + 1;
-  return by;
+  const mods = await listModules();
+  const counts = await Promise.all(mods.map(m => db.items.where('moduleId').equals(m.id).filter(i => !i.deleted).count()));
+  return Object.fromEntries(mods.map((m, k) => [m.id, counts[k]]));
 }
 
-function modRow(m, i, n, counts) {
+function modRow(m, i, n, counts, canRollback) {
   const s = m.state;
   const status = m.status === 'planned' ? ['planned', 'Sắp có'] : m.core ? ['core', 'Lõi'] : s.enabled ? ['on', 'Đang bật'] : ['off', 'Đã tắt'];
   const types = m.contentTypes === '*' ? 'Mọi loại nội dung' : (m.contentTypes || []).map(t => CONTENT_TYPES[t]?.label).filter(Boolean).join(', ');
@@ -101,7 +112,7 @@ function modRow(m, i, n, counts) {
       <p class="mod-meta"><code>${m.id}</code> · <span class="num">${m.status === 'planned' ? 'chưa cài' : 'v' + esc(s.installedVersion || m.version)}</span>${types ? ` · ${types}` : ''}${count && m.contentTypes !== '*' ? ` · <span class="num">${count}</span> mục trong Thư viện` : ''}</p>
     </div>
     <div class="mod-actions">
-      ${s.previousVersion ? `<button class="btn small" data-rollback="${m.id}">Quay lại v${esc(s.previousVersion)}</button>` : ''}
+      ${canRollback && s.previousVersion ? `<button class="btn small" data-rollback="${m.id}">${cmpVer(s.previousVersion, s.installedVersion) < 0 ? 'Quay lại' : 'Dùng lại'} v${esc(s.previousVersion)}</button>` : ''}
       <div class="seg small" role="group" aria-label="Thứ tự">
         <button data-move="${m.id}" data-dir="-1" ${i === 0 ? 'disabled' : ''} aria-label="Lên">↑</button><button data-move="${m.id}" data-dir="1" ${i === n - 1 ? 'disabled' : ''} aria-label="Xuống">↓</button>
       </div>
@@ -117,8 +128,19 @@ function renderUpdates() {
       ${updates.length > 1 ? '<button class="btn small primary" data-upd-all>Cập nhật tất cả</button>' : ''}</h2>
     <ul>${updates.map((u, i) => `<li>
       <div><strong>${esc(u.name)}</strong> <span class="num muted">${esc(u.from)} → ${esc(u.to)}</span>
-      ${u.changelog?.length ? `<ul class="changelog">${u.changelog.map(c => `<li>${esc(c)}</li>`).join('')}</ul>` : ''}</div>
+      ${changelogHtml(u)}</div>
       <button class="btn small primary" data-upd="${i}">Cập nhật</button></li>`).join('')}</ul></div>`;
+}
+
+const MAX_GROUPS = 4;
+function changelogHtml(u) {
+  const groups = changelogGroups(u.changelog, u.from);
+  if (!groups.length) return '';
+  const shown = groups.slice(0, MAX_GROUPS);
+  return `<div class="changelog-groups">${shown.map(g => `
+    ${g.version ? `<p class="changelog-ver num">v${esc(g.version)}${g.date ? ` · ${esc(g.date)}` : ''}</p>` : ''}
+    <ul class="changelog">${g.notes.map(c => `<li>${esc(c)}</li>`).join('')}</ul>`).join('')}
+    ${groups.length > shown.length ? `<p class="changelog-ver muted">và ${groups.length - shown.length} bản trước đó</p>` : ''}</div>`;
 }
 
 function bindUpdateButtons() {
@@ -129,7 +151,11 @@ function bindUpdateButtons() {
 async function apply(list) {
   for (const u of list) {
     try {
-      if (u.kind === 'shell') { await applyShellUpdate(); return; } // page reloads
+      if (u.kind === 'shell') {   // browser: the page reloads; Windows/Android: the update continues outside
+        const msg = await applyShellUpdate(u.to);
+        if (msg) ctx.toast(msg);
+        return;
+      }
       await applyModuleUpdate(u);
       updates = updates.filter(x => x !== u);
     } catch (e) { ctx.toast(e.message, 'error'); }
@@ -142,7 +168,7 @@ async function check() {
   btn.disabled = true;
   try {
     ({ updates } = await checkForUpdates());
-    if (swState.waiting && !updates.some(u => u.kind === 'shell')) updates.unshift({ kind: 'shell', id: 'shell', name: 'Lõi ứng dụng', from: ctx.appVersion, to: 'mới', changelog: [] });
+    if (swState.waiting && !nativeApp() && !updates.some(u => u.kind === 'shell')) updates.unshift({ kind: 'shell', id: 'shell', name: 'Lõi ứng dụng', from: ctx.appVersion, to: 'mới', changelog: [] });
     ctx.toast(updates.length ? `Có ${updates.length} bản cập nhật` : 'Mọi thứ đã là bản mới nhất');
   } catch (e) { ctx.toast(e.message, 'error'); }
   await render();

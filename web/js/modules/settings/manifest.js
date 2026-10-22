@@ -1,7 +1,7 @@
 export default {
   id: 'settings',
   name: 'Cài đặt',
-  version: '0.2.0',
+  version: '0.4.0',
   core: true,
   icon: 'settings',
   route: 'settings',

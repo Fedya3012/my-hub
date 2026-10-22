@@ -474,7 +474,6 @@
       "js/core/storage/github.js",
       "js/core/storage/http.js",
       "js/core/storage/clouds.js",
-      "js/core/storage/webdav.js",
       "js/core/atob-guard.js",
       "js/core/storage/folders.js",
       "js/core/storage/folder-ui.js",
