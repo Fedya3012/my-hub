@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Flex Window widget: up to two "go on" rows (CoverWidgetProvider). Big text, nothing to read at a glance below 13sp. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/cover_root" android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:background="@drawable/cover_widget_bg" android:padding="16dp">
+    <TextView android:id="@+id/cover_empty" android:layout_width="match_parent" android:layout_height="match_parent"
+        android:gravity="center" android:textColor="#D4D4D8" android:textSize="15sp" android:text="@string/cover_widget_empty" />
+    <LinearLayout android:id="@+id/row1" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+        android:orientation="vertical" android:gravity="center_vertical" android:paddingTop="6dp" android:paddingBottom="6dp">
+        <TextView android:id="@+id/row1_app" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textColor="#A1A1AA" android:textSize="13sp" android:textStyle="bold" />
+        <TextView android:id="@+id/row1_title" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:textColor="#FFFFFF" android:textSize="20sp" android:textStyle="bold" android:maxLines="2" android:ellipsize="end" />
+        <TextView android:id="@+id/row1_sub" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:textColor="#D4D4D8" android:textSize="15sp" android:maxLines="1" android:ellipsize="end" />
+        <ProgressBar android:id="@+id/row1_bar" style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent" android:layout_height="6dp" android:layout_marginTop="6dp" android:max="100" />
+    </LinearLayout>
+    <LinearLayout android:id="@+id/row2" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+        android:orientation="vertical" android:gravity="center_vertical" android:paddingTop="6dp" android:paddingBottom="6dp">
+        <TextView android:id="@+id/row2_app" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textColor="#A1A1AA" android:textSize="13sp" android:textStyle="bold" />
+        <TextView android:id="@+id/row2_title" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:textColor="#FFFFFF" android:textSize="20sp" android:textStyle="bold" android:maxLines="2" android:ellipsize="end" />
+        <TextView android:id="@+id/row2_sub" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:textColor="#D4D4D8" android:textSize="15sp" android:maxLines="1" android:ellipsize="end" />
+        <ProgressBar android:id="@+id/row2_bar" style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent" android:layout_height="6dp" android:layout_marginTop="6dp" android:max="100" />
+    </LinearLayout>
+</LinearLayout>

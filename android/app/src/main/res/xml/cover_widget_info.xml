@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Galaxy Z Flip Flex Window widget (352 x 339 dp per Samsung's guide); also usable on the home screen. -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="352dp"
+    android:minHeight="339dp"
+    android:resizeMode="horizontal|vertical"
+    android:updatePeriodMillis="0"
+    android:initialLayout="@layout/cover_widget"
+    android:widgetCategory="keyguard|home_screen"
+    android:description="@string/cover_widget_desc" />
