@@ -510,7 +510,10 @@
       "js/core/dnd.js",
       "js/core/longpress.js",
       "js/core/storage/cleanup.js",
-      "js/core/storage/local-folders.js"
+      "js/core/storage/local-folders.js",
+      "css/foldable.css",
+      "js/core/posture.js",
+      "js/core/cover.js"
     ]
   },
   "modules": {

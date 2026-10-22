@@ -79,7 +79,7 @@ async function render() {
       <nav class="bk-tabs" aria-label="Mục của Sách">${TABS.map(([r, ic, l]) => `<a href="#books${r ? '/' + r : ''}" class="${tab === r ? 'on' : ''}" ${tab === r ? 'aria-current="page"' : ''}>${icon(ic)}<span>${l}</span></a>`).join('')}</nav>
     </header>
     <div class="bk-page" id="bk-page"></div>
-    <nav class="bk-bottom" aria-label="Mục chính của Sách">${BOTTOM.map(([r, ic, l]) => `<a href="#books${r ? '/' + r : ''}" class="${tab === r ? 'on' : ''}" ${tab === r ? 'aria-current="page"' : ''}>${icon(ic)}<span>${l}</span></a>`).join('')}</nav></section>`;
+    <nav class="bk-bottom" aria-label="Mục chính của Sách">${BOTTOM.map(([r, ic, l]) => `<a href="#books${r ? '/' + r : ''}" class="${tab === r ? 'on' : ''}" ${tab === r ? 'aria-current="page"' : ''}>${icon(ic)}<span>${l}</span></a>`).join('')}<a href="#" data-open-nav aria-label="Tất cả ứng dụng">${icon('grid')}<span>Ứng dụng</span></a></nav></section>`;
   root.querySelector('.bk-vlib')?.addEventListener('change', async (e) => { await (await import('./lib/prefs.js')).set('library', e.target.value); render(); });
   root.querySelector('.bk-tabs a.on')?.scrollIntoView?.({ inline: 'center', block: 'nearest' });
   const page = await (PAGES[head] || PAGES[''])();

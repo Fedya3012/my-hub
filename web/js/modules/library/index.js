@@ -45,7 +45,7 @@ export async function mount(el, context) {
   root = el; ctx = context;
   state = { q: '', type: 'all', status: 'all', fav: false, tag: '', sort: 'updated', layout: 'grid', ...loadPrefs() };
   root.innerHTML = `
-    <section class="page lib">
+    <section class="page lib"><div class="fold-top">
       <header class="page-head">
         <div class="app-title"><p class="eyebrow">Trung tâm tổng hợp</p><h1>Thư viện</h1></div>
         <div class="head-actions">
@@ -56,7 +56,8 @@ export async function mount(el, context) {
         </div>
       </header>
       <div class="stats" id="lib-stats"></div>
-      <section class="continue" id="lib-continue"></section>
+      <section class="continue" id="lib-continue"></section></div>
+      <div class="fold-bottom">
       <div class="toolbar">
         <div class="search">${icon('search')}<input id="lib-q" type="search" placeholder="Tìm tên, tác giả, thẻ…  ( / )" autocomplete="off" aria-label="Tìm kiếm"></div>
         <div class="chips" id="lib-types" role="group" aria-label="Loại nội dung"></div>
@@ -71,7 +72,7 @@ export async function mount(el, context) {
         </div>
       </div>
       <p class="result-count" id="lib-count" aria-live="polite"></p>
-      <div id="lib-results"></div>
+      <div id="lib-results"></div></div>
       <aside class="drawer" id="lib-drawer" hidden aria-label="Chi tiết"></aside>
       <div class="dropzone" id="lib-drop" hidden><div>${icon('upload')}<p>Thả tệp để thêm vào Thư viện</p></div></div>
     </section>`;
