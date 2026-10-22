@@ -100,7 +100,7 @@ async function busy(btn, fn) {
 // ── Signed out ─────────────────────────────────────────────────
 function renderSignedOut() {
   root.innerHTML = page('Đồng bộ giữa các máy', 'Tài khoản đồng bộ', `
-    <div class="acct-auth" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;align-items:start">
+    <div class="acct-auth" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;align-items:stretch">
       <div class="panel acct-card acct-center">
         <span class="acct-big-ic">${GITHUB_LOGO}</span>
         <h2>Đăng nhập bằng GitHub</h2>
@@ -111,7 +111,7 @@ function renderSignedOut() {
       </div>
       <div data-drive-cards style="display:contents"></div>
     </div>
-    <p class="hint">Chọn một tài khoản để đồng bộ thư viện và tiến độ. Dropbox, OneDrive, WebDAV và pCloud còn đồng bộ được cả tệp nhạc/sách. Chỉ dùng một tài khoản đồng bộ tại một thời điểm.</p>
+    <p class="hint">Chọn một tài khoản để đồng bộ thư viện và tiến độ. Dropbox và OneDrive còn đồng bộ được cả tệp nhạc/sách. Chỉ dùng một tài khoản đồng bộ tại một thời điểm.</p>
     <aside class="acct-why">
       <h2>Một tài khoản, mọi thiết bị</h2>
       <ul>
@@ -120,7 +120,7 @@ function renderSignedOut() {
         <li>${icon('cloud')}<span><b>Tệp nhạc/sách ở lại trên máy</b>: chỉ thư viện và tiến độ được đồng bộ.</span></li>
         <li>${icon('device')}<span><b>Vẫn chạy offline</b>: mọi thay đổi được lưu trên máy rồi gửi đi khi có mạng.</span></li>
       </ul>
-      <p class="hint">Không muốn đăng nhập? App vẫn dùng đầy đủ ở chế độ Trên máy. <a href="#settings">Cài đặt lưu trữ</a></p>
+      <p class="hint">Không muốn đăng nhập? App vẫn dùng đầy đủ ở chế độ Trên máy. <a href="#settings">Cài đặt</a></p>
     </aside>`);
   const showErr = (which, err) => {
     const errEl = root.querySelector(`[data-e="${which}"]`);
@@ -172,7 +172,7 @@ async function renderSignedIn() {
           <div class="acct-prog-row"><span class="acct-prog-t"></span><span class="num"></span></div><span class="bar lg"><i style="width:0%"></i></span></div>
         <div class="row-actions">
           <button class="btn primary" data-act="sync" ${on ? '' : 'disabled'}>${icon('refresh')}Đồng bộ ngay</button>
-          <a class="btn" href="#settings">${icon('database')}Cài đặt lưu trữ</a>
+          <a class="btn" href="#settings">${icon('database')}Cài đặt</a>
         </div>
       </section>
 

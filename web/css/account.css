@@ -116,3 +116,4 @@ input[type="email"], input[type="password"] {
 .acct-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
 .acct-big-ic .ic { width: 30px; height: 30px; }
 .acct .notice > .btn { flex: none; }
+.acct-auth .acct-card > .btn.block { margin-top: auto; }

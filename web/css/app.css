@@ -259,7 +259,8 @@ input[type="range"] { accent-color: var(--accent); }
 .results.list .card:hover { transform: none; }
 
 .empty { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 48px 16px; color: var(--muted); text-align: center; }
-.empty .ic { width: 32px; height: 32px; }
+.results > .empty { grid-column: 1 / -1; }
+.empty > .ic { width: 32px; height: 32px; }
 
 /* Drawer */
 .drawer { position: fixed; z-index: 40; top: 0; right: 0; bottom: 0; width: min(460px, 100%); background: var(--surface); border-left: 1px solid var(--line);
@@ -510,6 +511,7 @@ body.mnp-open .task-tray { bottom: calc(16px + var(--sai-bottom)); }
   .section-title { font-size: 1.02rem; }
   .chip, .btn.small { min-height: 36px; font-size: .86rem; }
   .bk-head-t .eyebrow { display: none; }
+  .bk-head:not(:has(.bk-vlib)) { display: none; }   /* nothing left in it on phones: no blank band above the page */
 }
 .changelog-groups { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; }
 .changelog-ver { font-size: .78rem; color: var(--muted); margin-top: 4px; font-weight: 600; }

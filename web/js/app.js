@@ -35,7 +35,8 @@ const routeRest = () => decodeURIComponent((location.hash.slice(1).split('/').sl
 const OWN_TABS = ['music', 'books'];   // apps with their own phone bottom tabs
 
 async function renderNav() {
-  const mods = (await listModules()).filter(m => m.route && m.nav !== false && m.status !== 'planned' && (m.core || m.state.enabled));
+  const all = (await listModules()).filter(m => m.route && m.status !== 'planned' && (m.core || m.state.enabled));
+  const mods = all.filter(m => m.nav !== false);
   const route = routeHead();
   const links = mods.map(m => `<a href="#${m.route}" class="nav-link${m.route === route ? ' active' : ''}" ${m.route === route ? 'aria-current="page"' : ''}>
       ${icon(m.icon)}<span>${esc(m.name)}</span></a>`).join('');
@@ -46,7 +47,7 @@ async function renderNav() {
   document.getElementById('tabbar').innerHTML = mods.slice(0, 4).map(tab).join('') +
     `<button type="button" data-open-nav aria-label="Tất cả ứng dụng">${icon('grid')}<span>Ứng dụng</span></button>`;
   document.body.classList.toggle('own-tabs', OWN_TABS.includes(route));
-  const here = mods.find(m => m.route === route);
+  const here = all.find(m => m.route === route);   // pages outside the menu (Tài khoản) still name themselves
   const title = document.getElementById('appbar-title');
   if (title && here) title.textContent = here.name;
 }
@@ -210,7 +211,7 @@ async function boot() {
   await safe(() => renderStorageBadge(), 'badge');
   document.body.classList.add('ready');
   if (storageFull) toast('Bộ nhớ trình duyệt gần đầy: một số thay đổi chưa lưu được. Vào Cài đặt để giải phóng chỗ.', 'warn');
-  window.addEventListener('unhandledrejection', (ev) => { if (isQuota(ev.reason)) { ev.preventDefault(); toast('Bộ nhớ trình duyệt đã đầy, không lưu được. Vào Cài đặt → Lưu trữ để giải phóng chỗ.', 'error'); } });
+  window.addEventListener('unhandledrejection', (ev) => { if (isQuota(ev.reason)) { ev.preventDefault(); toast('Bộ nhớ trình duyệt đã đầy, không lưu được. Vào Cài đặt → Tài khoản đồng bộ để giải phóng chỗ.', 'error'); } });
 
   initDrawer();
   safe(() => initCover(ctx), 'cover');            // Quick View for the cover screen (core/cover.js)

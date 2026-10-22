@@ -868,5 +868,9 @@
  "Tự tải bản mới từ GitHub Releases (bản portable chỉ báo có bản mới)": "Downloads new versions from GitHub Releases (the portable build only notifies)",
  "Ứng dụng Android": "Android app",
  "Ứng dụng web đã cài (PWA)": "Installed web app (PWA)",
- "Ứng dụng Windows": "Windows app"
+ "Ứng dụng Windows": "Windows app",
+ "Chọn một tài khoản để đồng bộ thư viện và tiến độ. Dropbox và OneDrive còn đồng bộ được cả tệp nhạc/sách. Chỉ dùng một tài khoản đồng bộ tại một thời điểm.": "Pick one account to sync your library and progress. Dropbox and OneDrive can also sync music/book files. Only one sync account is used at a time.",
+ "Thông tin sách, trạng thái, đánh giá, nhận xét, đánh dấu, ghi chú, phiên đọc, mục tiêu và tiến độ đọc đồng bộ giữa các máy qua tài khoản đồng bộ (Cài đặt → Tài khoản đồng bộ: GitHub, Dropbox hoặc OneDrive). Tệp sách ở lại trên từng máy: thêm tệp trên máy kia, app tự ghép với sách đã có nếu cùng tên và dung lượng.": "Book info, status, ratings, reviews, bookmarks, notes, reading sessions, goals and reading progress sync between devices through your sync account (Settings → Sync account: GitHub, Dropbox or OneDrive). Book files stay on each device: add the file on the other device and the app matches it to the existing book by name and size.",
+ "Muốn có cả tệp sách trên mọi máy: chọn thư mục Dropbox hoặc OneDrive trong Cài đặt → Thư mục đồng bộ.": "To have the book files on every device too, pick a Dropbox or OneDrive folder in Settings → Sync folders.",
+ "Bộ nhớ trình duyệt đã đầy, không lưu được. Vào Cài đặt → Tài khoản đồng bộ để giải phóng chỗ.": "Browser storage is full, nothing could be saved. Go to Settings → Sync account to free up space."
 }

@@ -37,8 +37,8 @@ export async function render(el, { ctx, snap }) {
       <p class="muted">Xoá khỏi thư viện những sách đã mất tệp gốc (tệp trong máy hoặc thư mục đồng bộ đã bị xoá). Sách giấy và sách còn tệp không bị đụng tới.</p>
       <button class="btn" data-a="clean">${icon('refresh')}Dọn dữ liệu Sách</button></section>
     <section class="bk-panel"><h2 class="section-title">${icon('cloud')}Đồng bộ</h2>
-      <p class="muted">Thông tin sách, trạng thái, đánh giá, nhận xét, đánh dấu, ghi chú, phiên đọc, mục tiêu và tiến độ đọc đồng bộ giữa các máy qua GitHub (Cài đặt → Lưu trữ). Tệp sách ở lại trên từng máy: thêm tệp trên máy kia, app tự ghép với sách đã có nếu cùng tên và dung lượng.</p>
-      <p class="hint">Google Drive đã được gỡ khỏi app ở bản 0.8.0.0. Đồng bộ cả tệp sách qua mây (Google Drive, Dropbox, OneDrive, WebDAV) là việc của giai đoạn 2.</p></section>
+      <p class="muted">Thông tin sách, trạng thái, đánh giá, nhận xét, đánh dấu, ghi chú, phiên đọc, mục tiêu và tiến độ đọc đồng bộ giữa các máy qua tài khoản đồng bộ (Cài đặt → Tài khoản đồng bộ: GitHub, Dropbox hoặc OneDrive). Tệp sách ở lại trên từng máy: thêm tệp trên máy kia, app tự ghép với sách đã có nếu cùng tên và dung lượng.</p>
+      <p class="hint">Muốn có cả tệp sách trên mọi máy: chọn thư mục Dropbox hoặc OneDrive trong Cài đặt → Thư mục đồng bộ.</p></section>
   </div>`;
   el.querySelector('[data-a="clean"]')?.addEventListener('click', async () => (await import('../../../core/storage/cleanup.js')).cleanDataAction('books', 'Sách'));
   const on = (a, fn) => el.querySelector(`[data-a="${a}"]`)?.addEventListener('click', fn);
