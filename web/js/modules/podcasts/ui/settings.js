@@ -9,7 +9,7 @@ import { parseOpml, toOpml } from '../lib/rss.js';
 import { NAME } from '../lib/prefs.js';
 
 const GROUPS = [
-  ['pc-speed', 'Phát', ['speed', 'skipBack', 'skipFwd', 'skipSilence', 'voiceBoost', 'autoplayNext', 'markPlayedAt']],
+  ['pc-speed', 'Phát', ['speed', 'skipBack', 'skipFwd', 'skipSilence', 'silenceLevel', 'voiceBoost', 'autoplayNext', 'markPlayedAt']],
   ['download', 'Tải về', ['autoDownload', 'autoDownloadWifi', 'autoDownloadCharging', 'keepDownloads', 'autoDelete']],
   ['pc-inbox', 'Tập mới', ['refreshEvery', 'newToQueue']],
   ['pc-transcript', 'Bản chép lời', ['aiTranscript']],

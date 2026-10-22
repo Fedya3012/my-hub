@@ -1,5 +1,5 @@
 // Đang phát (#podcasts/play): big cover, Chép lời / Chương / Dấu trang / Ghi chú, waveform seek bar, orange play,
-// skip buttons, speed, sleep timer, Voice Boost and Smart Speed. Flex Mode (Z Flip half-open): the cover and panels
+// skip buttons, speed, sleep timer, Voice Boost and Skip silence. Flex Mode (Z Flip half-open): the cover and panels
 // sit in the top half (.fold-top), the waveform and controls in the bottom half (.fold-bottom).
 import { icon } from '../../../core/icons.js';
 import { esc, toast } from '../../../core/ui.js';

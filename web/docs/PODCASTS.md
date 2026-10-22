@@ -17,7 +17,7 @@ Design notes for the Podcast app. Code: `js/modules/podcasts/`. Schema: `js/core
 
 ## Playback
 - One `<audio>` element per episode. Speed 0.5–3× keeps the pitch.
-- Voice Boost and Smart Speed need Web Audio, which requires CORS on remote files. If a host refuses, the episode plays without effects.
+- Voice Boost and Skip silence need Web Audio, which requires CORS on remote files. If a host refuses, the episode plays without effects.
 - The Media Session (lock screen) is wired in `player.js`. Music and Podcast pause each other when one starts (`media:play` event).
 - Sleep timer: a minutes timer that fades out in the last 8 seconds, plus "end of episode" and "end of chapter".
 

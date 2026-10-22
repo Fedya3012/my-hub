@@ -3407,7 +3407,6 @@ export default {"(Google cấp quyền theo từng giờ). Bấm một lần đ�
 "Bỏ khỏi hàng chờ":"Remove from queue",
 "Bỏ qua đoạn kết":"Skip the ending",
 "Bỏ qua đoạn mở đầu":"Skip the intro",
-"Bỏ qua khoảng lặng (Smart Speed)":"Skip silence (Smart Speed)",
 "Bỏ sao":"Unstar",
 "Bộ lọc của bạn":"Your filter",
 "Bộ lọc mới":"New filter",
@@ -3691,4 +3690,8 @@ export default {"(Google cấp quyền theo từng giờ). Bấm một lần đ�
 "Đã huỷ đăng ký":"Unsubscribed",
 "Đã làm mới":"Refreshed",
 "Không chép được liên kết":"Couldn't copy the link",
-"Đã chép liên kết RSS":"RSS link copied"};
+"Đã chép liên kết RSS":"RSS link copied",
+"Bỏ khoảng lặng (Skip silence)":"Skip silence",
+"Mức bỏ khoảng lặng":"Skip silence level",
+"Nhẹ (chỉ khoảng lặng dài)":"Light (long pauses only)",
+"Mạnh (cả khoảng ngắt ngắn)":"Strong (short pauses too)"};

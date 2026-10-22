@@ -63,6 +63,7 @@ export async function saveFeed(parsed, meta = {}, { subscribe = false, showId = 
     if (isNew) fresh.push(eid);
     return {
       ...prev, ...e, id: eid, showId: id, played: prev?.played || 0, starred: prev?.starred || 0,
+      chapters: e.chapters?.length ? e.chapters : prev?.chapters || [],   // keep chapters read earlier from chaptersUrl
       inbox: prev ? prev.inbox || 0 : isNew ? 1 : 0, createdAt: prev?.createdAt || now(), deleted: 0,
     };
   });
@@ -170,7 +171,8 @@ export async function clearInbox(ids) {
   changed({});
 }
 export async function inbox() {
-  const eps = (await db.pcEpisodes.where('inbox').equals(1).toArray()).filter(e => !e.deleted && !e.played);
+  const subs = new Set((await shows()).map(s => s.itemId));
+  const eps = (await db.pcEpisodes.where('inbox').equals(1).toArray()).filter(e => !e.deleted && !e.played && subs.has(e.showId));
   return withShows(eps.sort((a, b) => (b.pubDate || 0) - (a.pubDate || 0)));
 }
 
@@ -231,7 +233,8 @@ export async function addToPlaylist(pid, ids) {
 }
 
 export async function runFilter(rules = {}, { limit = 300 } = {}) {
-  const subs = new Set((await shows({ subscribed: false })).map(s => s.itemId));
+  // Shows only opened from search (not subscribed) count only for downloads and starred episodes.
+  const subs = new Set((await shows({ subscribed: !(rules.downloaded || rules.starred) })).map(s => s.itemId));
   let eps = (await db.pcEpisodes.toArray()).filter(e => !e.deleted && subs.has(e.showId));
   if (rules.showIds?.length) eps = eps.filter(e => rules.showIds.includes(e.showId));
   const prog = await progressOf(eps.map(e => e.id));

@@ -1,4 +1,4 @@
-// Podcast player: one <audio> element per episode, speed 0.5–3× with the pitch kept, Smart Speed (plays the
+// Podcast player: one <audio> element per episode, speed 0.5–3× with the pitch kept, Skip silence (plays the
 // silent parts fast), Voice Boost (speech EQ + compressor), custom skip, sleep timer, skip intro / outro per show,
 // the queue, the lock screen (Media Session) and cross-device position (core/progress.js).
 // Effects need Web Audio, which hears a remote file only when its host allows CORS: an episode whose host does not
@@ -63,8 +63,8 @@ class PodPlayer extends EventTarget {
 
   _wire(el) {
     const on = (t, f) => el.addEventListener(t, f);
-    on('play', () => { this._emit('state'); this._mediaState(); bus.emit('media:play', { app: 'podcasts' }); this.ac?.resume?.(); });
-    on('pause', () => { this._emit('state'); this._mediaState(); this._maybeMarkPlayed(); });
+    on('play', () => { this._silenceStart(); this._emit('state'); this._mediaState(); bus.emit('media:play', { app: 'podcasts' }); this.ac?.resume?.(); });
+    on('pause', () => { this._silenceStop(); this._emit('state'); this._mediaState(); this._maybeMarkPlayed(); });
     on('timeupdate', () => this._tick());
     on('ended', () => this._ended());
     on('ratechange', () => this._mediaPos());
@@ -86,7 +86,7 @@ class PodPlayer extends EventTarget {
       const pk = Object.assign(ac.createBiquadFilter(), { type: 'peaking' }); pk.frequency.value = 2800; pk.Q.value = 0.9;
       const comp = ac.createDynamicsCompressor();
       const gain = ac.createGain();
-      const an = ac.createAnalyser(); an.fftSize = 1024;
+      const an = ac.createAnalyser(); an.fftSize = 512;
       src.connect(hp); hp.connect(pk); pk.connect(comp); comp.connect(gain); gain.connect(ac.destination);
       src.connect(an);
       this.fx = { src, hp, pk, comp, gain, an, buf: new Float32Array(an.fftSize) };
@@ -109,13 +109,15 @@ class PodPlayer extends EventTarget {
     const want = !!(get('voiceBoost') || get('skipSilence'));
     if (want && !this.fx) { const at = this.time, was = this.playing; await this.load(this.ep, { autoplay: was, at }); }
     else this.applyFx();
+    this._silenceStart();
     this._emit('state');
   }
 
   _teardown() {
+    this._silenceStop(); this._lv = null;
     if (this.el) { const el = this.el; this.el = null; el.pause(); this._untrack?.(); el.removeAttribute('src'); el.load(); }
     this._untrack = null;
-    try { this.fx?.src.disconnect(); this.fx?.gain.disconnect(); } catch { /* ignore */ }
+    try { this.fx?.src.disconnect(); this.fx?.gain.disconnect(); if (this.fx?.meter) this.fx.meter.port.onmessage = null; } catch { /* ignore */ }
     this.fx = null;
     if (this._url) { URL.revokeObjectURL(this._url); this._url = null; }
   }
@@ -132,6 +134,7 @@ class PodPlayer extends EventTarget {
     r = Math.max(0.5, Math.min(3, Math.round(r * 100) / 100));
     if (forShow && this.show) await store.setShowSettings(this.show.itemId, { speed: r }), this.show = await store.show(this.show.itemId);
     else await set('speed', r);
+    if (this.el) this.el.defaultPlaybackRate = r;
     if (this.el && !this._boosted) { this.el.playbackRate = r; this.el.defaultPlaybackRate = r; }
     this._emit('state');
   }
@@ -152,7 +155,7 @@ class PodPlayer extends EventTarget {
     return true;
   }
 
-  // ── Ticks: Smart Speed, outro, sleep timer, played mark ───────
+  // ── Ticks: Skip silence, outro, sleep timer, played mark ───────
   _tick() {
     const el = this.el; if (!el) return;
     this._emit('time');
@@ -160,21 +163,82 @@ class PodPlayer extends EventTarget {
     if (outro && this.duration && el.currentTime > this.duration - outro && !el.paused) { el.currentTime = this.duration; return; }
     if (this.sleep?.until && Date.now() >= this.sleep.until - 8000) this._sleepFade();
     if (this.sleep?.chapterEnd != null && el.currentTime >= this.sleep.chapterEnd) { this.cancelSleep(); this.pause(); toast('Hẹn giờ ngủ: đã dừng ở cuối chương'); }
-    if (get('skipSilence') && this.fx && !el.paused) this._silence();
   }
-  _silence() {
-    const f = this.fx, now = performance.now();
-    if (now - (this._sT || 0) < 90) return;
-    const dt = this._sT ? (now - this._sT) / 1000 : 0; this._sT = now;
-    f.an.getFloatTimeDomainData(f.buf);
-    let sum = 0; for (let i = 0; i < f.buf.length; i++) sum += f.buf[i] * f.buf[i];
-    const rms = Math.sqrt(sum / f.buf.length);
-    const quiet = rms < 0.012;
-    this._silent = quiet ? this._silent + dt : 0;
-    const base = this.rate;
-    if (this._silent > 0.25 && !this._boosted) { this._boosted = true; this.el.playbackRate = Math.min(4, base * 2.5); }
-    else if (!quiet && this._boosted) { this._boosted = false; this.el.playbackRate = base; }
-    if (this._boosted) this._saved = (this._saved || 0) + dt * (Math.min(4, base * 2.5) / base - 1);
+  // Skip silence: an analyser on the raw signal, polled every 30 ms while playing (timeupdate is only ~4 Hz, too slow).
+  // The threshold follows the recording (noise floor and speech level), so quiet or noisy shows both work. A silence
+  // longer than the level's minimum plays fast; when speech returns the player steps back a little so the first
+  // syllable is not swallowed.
+  async _silenceStart() {
+    clearInterval(this._sTimer); this._sTimer = null;
+    if (!get('skipSilence') || !this.fx || !this.el || this.el.paused) return;
+    this._silent = 0; this._sT = 0;
+    // Preferred: an AudioWorklet measures loudness on the audio thread every 10 ms and keeps working when the app is
+    // in the background (timers there are slowed to once a second). Fallback: poll the analyser every 30 ms.
+    if (await this._meter()) return;
+    this._sTimer = setInterval(() => {
+      const f = this.fx; if (!f) return;
+      const now = performance.now(), dt = this._sT ? Math.min(0.2, (now - this._sT) / 1000) : 0; this._sT = now;
+      f.an.getFloatTimeDomainData(f.buf);
+      let sum = 0; for (let i = 0; i < f.buf.length; i++) sum += f.buf[i] * f.buf[i];
+      this._silence(Math.sqrt(sum / f.buf.length), dt);
+    }, 30);
+  }
+  async _meter() {
+    const f = this.fx, ac = this.ac;
+    if (f.meter) return true;
+    if (!ac?.audioWorklet || typeof AudioWorkletNode === 'undefined') return false;
+    try {
+      if (!PodPlayer._meterLoaded) {
+        const code = `registerProcessor('pc-meter', class extends AudioWorkletProcessor {
+          constructor() { super(); this.n = 0; this.sum = 0; this.block = Math.round(sampleRate / 100); }
+          process(inputs) {
+            const ch = inputs[0]; if (!ch || !ch.length) return true;
+            const len = ch[0].length;
+            for (let i = 0; i < len; i++) { let v = 0; for (let c = 0; c < ch.length; c++) v += ch[c][i]; v /= ch.length; this.sum += v * v; }
+            this.n += len;
+            if (this.n >= this.block) { this.port.postMessage([Math.sqrt(this.sum / this.n), this.n / sampleRate]); this.n = 0; this.sum = 0; }
+            return true;
+          }
+        });`;
+        const url = URL.createObjectURL(new Blob([code], { type: 'text/javascript' }));
+        await ac.audioWorklet.addModule(url); URL.revokeObjectURL(url);
+        PodPlayer._meterLoaded = true;
+      }
+      if (this.fx !== f) return true;
+      const node = new AudioWorkletNode(ac, 'pc-meter', { numberOfOutputs: 0 });
+      node.port.onmessage = ({ data }) => { if (this.fx === f) this._silence(data[0], data[1]); };
+      f.src.connect(node); f.meter = node;
+      return true;
+    } catch (e) { console.warn('[podcasts] meter', e); return false; }
+  }
+  _silenceStop() {
+    clearInterval(this._sTimer); this._sTimer = null;
+    if (this._boosted && this.el) { this._boosted = false; this.el.playbackRate = this.rate; }
+    this._silent = 0;
+  }
+  // rms: loudness of the last slice; dt: its length in real seconds.
+  _silence(rms, dt) {
+    const el = this.el;
+    if (!this.fx || !el || el.paused || !get('skipSilence')) { if (this._boosted || this._sTimer) this._silenceStop(); return; }
+    // Adaptive levels: the floor drops at once and creeps up; speech is a slow average of the loud frames.
+    const lv = this._lv ||= { floor: 0.004, speech: 0.08 };
+    lv.floor = rms < lv.floor ? rms : Math.min(lv.floor * 1.003 + 1e-6, 0.05);
+    const thr = Math.min(0.05, Math.max(0.0025, lv.floor * 2.5, lv.speech * 0.1));
+    if (rms > thr * 1.4) lv.speech += (rms - lv.speech) * 0.02;
+    const level = +get('silenceLevel') || 2;
+    const minQuiet = [0, 0.45, 0.3, 0.18][level];
+    const fast = Math.min(4, this.rate * [0, 2, 3, 4][level]);
+    const quiet = rms < thr, loud = rms > thr * 1.3;
+    this._silent = quiet ? this._silent + dt * el.playbackRate : 0;
+    if (!this._boosted && this._silent >= minQuiet) { this._boosted = true; el.playbackRate = fast; }
+    else if (this._boosted && loud) {
+      this._boosted = false; el.playbackRate = this.rate;
+      // Speech was detected up to ~one poll late, played at the fast rate: step back over it.
+      const back = Math.min(0.25, (this._sTimer ? 0.045 : 0.02) * fast);
+      const t = el.currentTime - back, b = el.buffered;
+      for (let i = 0; i < b.length; i++) if (t >= b.start(i) && t <= b.end(i)) { el.currentTime = t; this._saved = (this._saved || 0) - back / this.rate; break; }
+    }
+    if (this._boosted) this._saved = (this._saved || 0) + dt * (el.playbackRate / this.rate - 1);
     if ((this._saved || 0) > 5) { const s = this._saved; this._saved = 0; getSetting('podcasts.timeSaved', 0).then(v => setSetting('podcasts.timeSaved', v + s)); }
   }
   async _maybeMarkPlayed() {
@@ -223,7 +287,7 @@ class PodPlayer extends EventTarget {
     s('nexttrack', () => this.next());
   }
   _mediaState() { if ('mediaSession' in navigator) { navigator.mediaSession.playbackState = this.playing ? 'playing' : 'paused'; if (this.playing) this._media(); } }
-  _mediaPos() { try { if (this.duration) navigator.mediaSession.setPositionState({ duration: this.duration, position: Math.min(this.time, this.duration), playbackRate: this.el.playbackRate }); } catch { /* ignore */ } }
+  _mediaPos() { try { if (this.duration) navigator.mediaSession.setPositionState({ duration: this.duration, position: Math.min(this.time, this.duration), playbackRate: this.rate }); } catch { /* ignore */ } }
 }
 
 export const player = new PodPlayer();

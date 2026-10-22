@@ -1,4 +1,4 @@
-// Podcast: subscribe, search online (Podcast Index + Apple), listen with speed / Smart Speed / Voice Boost / sleep
+// Podcast: subscribe, search online (Podcast Index + Apple), listen with speed / Skip silence / Voice Boost / sleep
 // timer, queue and smart filters, downloads, chapters, bookmarks, transcripts (feed or AI). Design: docs/PODCASTS.md.
 export default {
   id: 'podcasts',
