@@ -60,6 +60,19 @@ export function customizeSheet(onChange, start = 'library') {
     root.querySelector('[data-act="export"]')?.addEventListener('click', () => busy({ label: 'Đang xuất dữ liệu nhạc', delay: 300 }, exportMusic));
     root.querySelector('[data-act="m3u"]')?.addEventListener('click', () => busy({ label: 'Đang xuất danh sách phát', delay: 300 }, exportM3u));
     if (root.querySelector('[data-skin-host]')) bindSkins(root, () => show(sec));
+    root.querySelector('[data-act="lb"]')?.addEventListener('click', async () => {
+      const { ask } = await import('./sheets.js');
+      const tok = (await ask('User token ListenBrainz', prefs().qol?.lbToken || ''))?.trim();
+      if (!tok) return;
+      {
+        const { testToken } = await import('../lib/qol.js');
+        const user = await testToken(tok).catch(() => null);
+        if (!user) { toast('Token không hợp lệ hoặc không có mạng', 'warn'); return; }
+        toast('Đã kết nối ListenBrainz: ' + user);
+      }
+      await setPref('qol.lbToken', tok); show(sec);
+    });
+    root.querySelector('[data-act="lb-off"]')?.addEventListener('click', async () => { await setPref('qol.lbToken', ''); toast('Đã ngắt ListenBrainz'); show(sec); });
     root.querySelector('[data-act="sinks"]')?.addEventListener('click', () => pickSink(root));
   }
 
@@ -143,6 +156,10 @@ const RENDER = {
       ${row('Crossfade', range('playback.crossfade', b.crossfade, 0, 12, 0.5))}
       ${row('Crossfade thông minh', sw('playback.smartCrossfade', b.smartCrossfade), 'Không trộn hai bài liền nhau của cùng album, rút ngắn với bài ngắn, bỏ qua podcast')}
       ${row('Bỏ đoạn im lặng cuối bài', sw('playback.skipSilence', b.skipSilence), 'Sang bài sau khi đoạn cuối im hơn −55 dBFS trong 1,5 giây')}
+      <h3>Hàng chờ</h3>
+      ${row('Auto DJ', sw('qol.autoDj', prefs().qol?.autoDj), 'Hết hàng chờ (khi không lặp) thì tự thêm bài tương tự: cùng nghệ sĩ, thể loại, thời kỳ')}
+      <h3>Scrobble (ListenBrainz)</h3>
+      ${row('Tài khoản ListenBrainz', `<button class="btn small" data-act="lb">${prefs().qol?.lbToken ? 'Đổi token…' : 'Kết nối…'}</button>${prefs().qol?.lbToken ? ` <button class="btn small" data-act="lb-off">Ngắt</button>` : ''}`, prefs().qol?.lbToken ? 'Đang ghi lại lịch sử nghe lên ListenBrainz (mất mạng thì gửi sau)' : 'Dán User token ở listenbrainz.org/settings để ghi lại lịch sử nghe')}
       <h3>ReplayGain</h3>
       ${row('Chế độ', sel('playback.rgMode', b.rgMode, { auto: 'Tự động (album khi nghe cả album)', track: 'Theo bài', album: 'Theo album', off: 'Tắt' }))}
       ${row('Preamp', range('playback.rgPreamp', b.rgPreamp, -12, 12, 0.5))}

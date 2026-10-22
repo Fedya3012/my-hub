@@ -83,6 +83,8 @@ export function trackMenu(anchor, t, { playlist, linkId, onChange, select } = {}
     { icon: 'play', label: 'Phát ngay', act: () => player.play([t], { source: { kind: 'track', id: t.id, name: t.title } }) },
     { icon: 'queue', label: 'Phát tiếp theo', act: () => player.playNext([t.id]) },
     { icon: 'plus', label: 'Thêm vào hàng chờ', act: () => player.addToQueue([t.id]) },
+    { icon: 'play', label: 'Phát tạm (giữ hàng chờ hiện tại)', act: () => player.playTemp([t.id], t.title) },
+    { icon: 'bolt', label: 'Phát bài tương tự (Auto DJ)', act: async () => { const { similar } = await import('../lib/qol.js'); player.play([t.id, ...(await similar(t, 30))], { source: { kind: 'autodj', name: 'Tương tự: ' + (t.title || '') }, shuffle: false }); } },
     { icon: 'list', label: 'Thêm vào danh sách phát…', act: () => pickPlaylist([t.id]) },
     '-',
     { icon: 'heart', label: t.favorite ? 'Bỏ yêu thích' : 'Yêu thích', act: async () => { await store.setFavorite(t.id, !t.favorite); onChange?.(); } },

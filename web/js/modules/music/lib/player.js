@@ -84,6 +84,7 @@ class Player extends EventTarget {
     let ids = tracks.map(t => typeof t === 'string' ? t : t.id).filter(id => L.tracks.has(id));
     if (!ids.length) { toast('Không có bài nào để phát', 'warn'); return; }
     const first = ids[Math.min(start, ids.length - 1)];
+    if (source?.kind !== 'temp') this._main = null;
     this.shuffle = shuffle ?? this.shuffle;
     this.order = null;
     this._seen = null;
@@ -96,6 +97,26 @@ class Player extends EventTarget {
   }
 
   async playIds(ids, opts) { return this.play(ids, opts); }
+
+  // Temporary queue: play these now, keeping the main queue (and the place in it) to come back to when they
+  // end or with backToMain().
+  async playTemp(ids, name = 'Hàng chờ tạm') {
+    await this.init();
+    if (this.track && !this._main) this._main = { queue: [...this.queue], order: this.order, index: this.index, time: this.time, source: this.source, shuffle: this.shuffle };
+    await this.play(ids, { source: { kind: 'temp', name }, shuffle: false });
+    this._emit('state');
+  }
+  async backToMain() {
+    const m = this._main;
+    if (!m) return false;
+    this._main = null;
+    await this._commitPlay();
+    Object.assign(this, { queue: m.queue, order: m.order, index: m.index, source: m.source, shuffle: m.shuffle });
+    await this._load({ startAt: m.time });
+    this._emit('queue'); this._emit('state');
+    toast('Đã quay lại hàng chờ chính');
+    return true;
+  }
 
   async jump(i) { if (i < 0 || i >= this.queue.length) return; await this._commitPlay(); this.index = i; await this._load({}); this._emit('queue'); }
 
@@ -112,6 +133,7 @@ class Player extends EventTarget {
   async next({ user = true } = {}) {
     const i = this._nextIndex(user);
     if (i == null) {
+      if (await this.backToMain()) return;
       if ((this.repeat === 'allcats' || this.repeat === 'repeatcats') && await this._nextCategory()) return;
       this.engine.pause(); this.engine.seek(0); return;
     }
@@ -414,7 +436,7 @@ class Player extends EventTarget {
     await this._commitPlay();
     if (this.sleep?.stopAtEnd) { this.sleep.stopAtEnd(); return; }
     const i = this._nextIndex();
-    if (i == null) { this._emit('state'); this._saveSoon(true); return; }
+    if (i == null) { if (await this.backToMain()) return; this._emit('state'); this._saveSoon(true); return; }
     this.index = i;
     await this._load({});
     this._emit('queue');
@@ -435,6 +457,7 @@ class Player extends EventTarget {
     if (this.listened >= Math.max(20, need)) {
       this._committed = t.id + ':' + this._loadStamp;
       await logPlay(t, { ms: this.listened * 1000, completed: this.listened >= (t.duration || 0) * 0.9, source: this.source?.id });
+      bus.emit('music:listened', { track: t, at: Date.now() - this.listened * 1000 });
     }
   }
 

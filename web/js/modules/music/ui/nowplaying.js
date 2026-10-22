@@ -228,6 +228,9 @@ function wire() {
       { icon: 'wave', label: prefs().np.visualizer ? 'Ẩn phổ âm thanh' : 'Hiện phổ âm thanh', act: async () => { await setPref('np.visualizer', prefs().np.visualizer ? 0 : 1); } },
       { icon: 'palette', label: prefs().np.ambient ? 'Tắt nền ambient' : 'Bật nền ambient', act: async () => { await setPref('np.ambient', prefs().np.ambient ? 0 : 1); renderTrack(); } },
       { icon: 'link', label: 'Gắn vào sách / fanfic / podcast…', act: () => linkPicker({ sourceId: t.id, source: 'track', name: t.title }) },
+      { icon: 'output', label: 'Phát lên loa / TV (Chromecast)…', act: () => import('../lib/qol.js').then(m => m.cast(player)) },
+      { icon: 'bolt', label: prefs().qol?.autoDj ? 'Tắt Auto DJ' : 'Bật Auto DJ (tự thêm bài tương tự khi hết hàng chờ)', act: () => setPref('qol.autoDj', prefs().qol?.autoDj ? 0 : 1) },
+      player._main && { icon: 'queue', label: 'Quay lại hàng chờ chính', act: () => player.backToMain() },
       '-',
       { icon: 'more', label: 'Thêm thao tác cho bài này…', act: () => trackMenu(null, t, { onChange: renderTrack }) },
     ], { title: 'Tuỳ chọn' });

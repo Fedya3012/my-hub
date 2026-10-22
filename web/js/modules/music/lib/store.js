@@ -639,6 +639,8 @@ export const BUILTIN_SMART = [
   { id: 'smart:hires', name: 'Hi-Res', icon: 'hires', rules: { match: 'all', rules: [{ field: 'hiRes', op: 'is', value: 1 }], sort: 'title' } },
   { id: 'smart:top', name: 'Nghe nhiều nhất', icon: 'bolt', rules: { match: 'all', rules: [{ field: 'plays', op: 'gte', value: 1 }], sort: 'plays', limit: 50 } },
   { id: 'smart:new', name: 'Mới thêm', icon: 'sparkle', rules: { match: 'all', rules: [{ field: 'addedAt', op: 'within', value: 30 }], sort: 'addedAt', limit: 100 } },
+  { id: 'smart:never', name: 'Chưa nghe bao giờ', icon: 'sparkle', rules: { match: 'all', rules: [{ field: 'plays', op: 'lte', value: 0 }], sort: 'random', limit: 100 } },
+  { id: 'smart:recent', name: 'Nghe gần đây', icon: 'clock', rules: { match: 'all', rules: [{ field: 'lastPlayed', op: 'within', value: 14 }], sort: 'lastPlayed', limit: 100 } },
   { id: 'smart:forgotten', name: 'Lâu chưa nghe', icon: 'clock', rules: { match: 'all', rules: [{ field: 'lastPlayed', op: 'older', value: 60 }], sort: 'random', limit: 50 } },
 ];
 

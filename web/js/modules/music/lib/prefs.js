@@ -34,6 +34,7 @@ export const DEFAULTS = {
     engine: 'auto', outputRate: 0, sinkId: '', volume: 0.85, rate: 1, resume: 1,
   },
   links: { autoplay: 1, stopOnClose: 1 },
+  qol: { autoDj: 0, lbToken: '' },
   // Folder-first: browse folders / SD card / USB live, without importing (ui/browse.js).
   folderMode: 0,
   // Automatic artwork: artists = 'collage' (4 album covers) | 'single' (most common cover); groups likewise.

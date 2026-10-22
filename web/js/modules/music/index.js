@@ -29,6 +29,7 @@ let libCss = null;
 export async function mount(el, context, sub = '') {
   root = el; ctx = context;
   import('./lib/lyrics-ai.js').then(m => m.watch(player)).catch(() => {});
+  import('./lib/qol.js').then(m => m.start(player)).catch(() => {});
   // Covers are made on each device: rebuild any that are missing here (quietly, after the page is shown).
   setTimeout(() => store.rebuildMissingCovers().catch(() => {}), 2000);
   // Styles of the tag editor, artwork, folder browser and statistics (separate from music.css).
