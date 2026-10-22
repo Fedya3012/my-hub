@@ -949,3 +949,8 @@ body[data-posture="cover"]:not(.cover-full) .mnp-bg-a, body[data-posture="cover"
   .mlib-actions .btn.primary .ic { width: 22px; height: 22px; }
   .mlib-search input { min-height: 40px; }
 }
+
+/* Long queues scroll inside the Now Playing panel. Before, a queue taller than the panel pushed the layout out
+   of its grid cell and left the lower part of the screen empty. */
+.mnp-queue { min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 10px; }
+.mnp-queue > .mq-head, .mnp-queue > .mq { flex: 0 0 auto; }
