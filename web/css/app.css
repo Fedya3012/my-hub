@@ -556,3 +556,13 @@ body.mnp-open .task-tray { bottom: calc(16px + var(--sai-bottom)); }
 .set-link > svg { flex: none; color: var(--accent); }
 .set-link > span:nth-child(2) { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .set-link .hint { margin: 0; }
+
+/* App Manager: policy select matches the borderless selects elsewhere */
+[data-module="app-manager"] dd select {
+  border: 0;
+  background: var(--soft, rgba(127, 127, 127, 0.12));
+  border-radius: 999px;
+  padding: 6px 12px;
+  font: inherit;
+  color: inherit;
+}
