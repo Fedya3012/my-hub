@@ -1,7 +1,23 @@
 {
-  "app": "0.9.10.0",
+  "app": "0.9.11.0",
   "released": "2026-10-22",
   "changelog": [
+    {
+      "version": "0.9.11.0",
+      "date": "2026-10-22",
+      "notes": [
+        "Trình phát nhạc: Auto DJ, hàng chờ tạm, ghi nhận lượt nghe (ListenBrainz), phát lên loa hoặc TV, thêm danh sách phát thông minh, karaoke đồng bộ từng từ và công cụ AI căn lời theo giọng hát",
+        "Trình phát nhạc: sửa crossfade, hẹn giờ ngủ, chế độ lặp và trộn theo mọi danh mục; hàng đợi cuộn trong khung riêng; mục Âm nhạc mở lại mục bạn xem gần nhất",
+        "Android: phát nhạc nền, thông báo phát nhạc, Android Auto, DLNA/UPnP và kết nối DAC qua USB",
+        "Windows: đầu ra WASAPI Exclusive (bit-perfect)",
+        "Sách và Xưởng Viết: làm sạch HTML của sách, sửa phím tắt và rò rỉ bộ lắng nghe sự kiện, rà soát và sửa lỗi Xưởng Viết",
+        "Cài đặt: trang chính là mục lục, mỗi mục mở trang riêng; nhóm đang mở được giữ nguyên khi tải lại; xoá giao diện tuỳ chỉnh",
+        "Thư mục đồng bộ là một chiều: tệp trong thư mục không bao giờ bị tải lên ổ đám mây",
+        "Lõi: dọn dữ liệu an toàn hơn, nhập sao lưu, điều hướng ổn định hơn, gộp đồng bộ an toàn, bỏ tải lên snapshot không đổi",
+        "Giao diện tiếng Anh: dịch thêm khoảng 920 cụm từ ở mọi ứng dụng",
+        "Hệ thống: các nút phụ ở Cài đặt, Quản lý ứng dụng và Thư mục đồng bộ đổi thành chữ thường cho gọn"
+      ]
+    },
     {
       "version": "0.9.10.0",
       "date": "2026-10-22",
@@ -583,7 +599,7 @@
     },
     "settings": {
       "name": "Cài đặt",
-      "version": "0.4.0",
+      "version": "0.5.0",
       "minApp": "0.2.0",
       "files": [
         "js/modules/settings/index.js"
@@ -601,7 +617,7 @@
     },
     "music": {
       "name": "Trình phát nhạc",
-      "version": "0.6.1",
+      "version": "0.7.0",
       "minApp": "0.3.0",
       "files": [
         "js/modules/music/index.js",
