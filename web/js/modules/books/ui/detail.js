@@ -59,6 +59,7 @@ export async function render(el, { ctx, snap, arg: id, go, rerender }) {
       <p class="muted">${b.percent}%${b.progress?.label ? ' · ' + esc(b.progress.label) : ''}${b.progress?.updatedAt ? ' · ' + fmtDate(b.progress.updatedAt) : ''} · đã đọc ${fmtMin(totalSec)} trong ${sessions.length} phiên</p>
       <div class="row-actions">
         <button class="btn small" data-a="progress">${icon('b-edit')}Cập nhật tiến độ</button>
+        ${b.progress && b.progress.state !== 'reset' || b.status !== 'want' ? `<button class="btn small" data-a="reset-progress">${icon('refresh')}Đặt lại tiến độ</button>` : ''}
         ${t?.itemId === id ? `<button class="btn small primary" data-a="timer-stop">${icon('b-stop')}Dừng hẹn giờ · <span data-tick class="num"></span></button>` : `<button class="btn small" data-a="timer">${icon('b-timer')}Bấm giờ đọc</button>`}
         <button class="btn small" data-a="session">${icon('plus')}Thêm phiên đọc</button>
       </div>
@@ -146,6 +147,12 @@ export async function render(el, { ctx, snap, arg: id, go, rerender }) {
   });
   el.querySelectorAll('[data-shelf]').forEach(c => c.onclick = () => store.toggleShelf([id], c.dataset.shelf));
   $('[data-a="progress"]').onclick = () => progressSheet(b);
+  $('[data-a="reset-progress"]')?.addEventListener('click', async () => {
+    if (!(await confirmBox('Đặt lại tiến độ đọc?', `“${b.title}” về trạng thái Muốn đọc, 0%, trên mọi thiết bị. Các phiên đọc, đánh dấu và ghi chú vẫn giữ.`, 'Đặt lại'))) return;
+    await progress.reset(b.item);
+    store.changed([id]);
+    toast('Đã đặt lại tiến độ');
+  });
   $('[data-a="session"]').onclick = () => manualSession(b);
   $('[data-a="timer"]')?.addEventListener('click', () => { timer.start(id); if (b.status !== 'reading') store.setStatus(id, 'reading'); rerender(); });
   $('[data-a="timer-stop"]')?.addEventListener('click', () => stopTimer(b, rerender));

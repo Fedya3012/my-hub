@@ -178,7 +178,7 @@ function renderStats() {
 
 function renderContinue() {
   // Ordered by the last progress update from ANY device, so what you paused on Windows comes first on the phone.
-  const list = data.items.filter(i => { const p = pOf(i); return p && p.state !== 'finished' && p.percent < 98; })
+  const list = data.items.filter(i => { const p = pOf(i); return p && p.state !== 'finished' && p.state !== 'reset' && p.percent < 98; })
     .sort((a, b) => pOf(b).updatedAt - pOf(a).updatedAt).slice(0, 8);
   const el = root.querySelector('#lib-continue');
   if (!list.length) { el.innerHTML = ''; return; }
@@ -302,7 +302,8 @@ async function openDrawer(id) {
       <div id="lib-ext" class="lib-ext"></div>
       ${prog ? `<div class="block"><h3>Tiến độ · đồng bộ mọi thiết bị</h3><div class="bar lg"><i style="width:${+prog.percent || 0}%"></i></div>
         <p class="resume">${prog.state === 'finished' ? 'Đã xong' : `Dừng ở <strong class="num">${esc(prog.label)}</strong>`} trên <strong>${esc(prog.where || 'thiết bị khác')}</strong> · ${esc(prog.ago)}</p>
-        ${prog.state !== 'finished' && prog.where !== 'máy này' ? '<p class="hint">Mở trên máy này sẽ tiếp tục đúng chỗ đó.</p>' : ''}</div>` : ''}
+        ${prog.state !== 'finished' && prog.state !== 'reset' && prog.where !== 'máy này' ? '<p class="hint">Mở trên máy này sẽ tiếp tục đúng chỗ đó.</p>' : ''}
+        ${prog.state !== 'reset' ? `<button class="btn small" data-act="reset-progress">${icon('refresh')}Đặt lại tiến trình</button>` : ''}</div>` : ''}
       <div class="block"><h3>Thẻ</h3>
         <div class="tags">${(item.tags || []).map(t => `<span class="tag">${esc(t)}<button data-untag="${esc(t)}" aria-label="Bỏ thẻ ${esc(t)}">${icon('x')}</button></span>`).join('')}
         <form id="lib-tagform"><input id="lib-newtag" placeholder="Thêm thẻ" aria-label="Thêm thẻ"></form></div></div>
@@ -342,6 +343,11 @@ async function openDrawer(id) {
     await logActivity(item.id, item.moduleId, 'open');
     ctx.bus.emit('item:open', { item });
   };
+  d.querySelector('[data-act="reset-progress"]')?.addEventListener('click', async () => {
+    if (!(await confirmBox('Đặt lại tiến trình?', `“${item.title}” sẽ về trạng thái chưa bắt đầu trên mọi thiết bị. Lịch sử và thống kê vẫn giữ.`, 'Đặt lại'))) return;
+    await progress.reset(item);
+    await refresh(); openDrawer(id);
+  });
   d.querySelector('[data-act="fav"]').onclick = async () => { await db.items.update(id, { favorite: item.favorite ? 0 : 1 }); await refresh(); openDrawer(id); };
   d.querySelector('#lib-d-status').onchange = async (e) => { await db.items.update(id, { status: e.target.value }); await refresh(); };
   d.querySelector('[data-act="delete"]').onclick = async () => {

@@ -76,6 +76,35 @@ export const progress = {
     };
   },
 
+  // Back to "not started" for one item. The row is kept (position 0, state 'reset') rather than deleted: a deleted row
+  // would be restored by the next sync from another device, while a newer reset row wins the merge like any save.
+  async reset(item, { flush = true } = {}) {
+    const dev = await thisDevice();
+    const old = await db.progress.get(item.id);
+    const row = { itemId: item.id, moduleId: item.moduleId || old?.moduleId, position: 0, total: old?.total, unit: old?.unit || 'second', percent: 0,
+      state: 'reset', deviceId: dev.id, updatedAt: now(), label: 'Chưa bắt đầu' };
+    await db.progress.put(row);
+    if (item.status && item.status !== 'new') { item.status = 'new'; await db.items.update(item.id, { status: 'new' }); }
+    // Books and fanfics keep their own reading status next to the progress row: back to "want to read".
+    const bk = await db.books.get(item.id);
+    if (bk && (bk.status !== 'want' || bk.startedAt || bk.finishedAt || bk.manualPercent)) await db.books.update(item.id, { status: 'want', startedAt: null, finishedAt: null, manualPercent: 0 });
+    bus.emit('progress:changed', row);
+    syncHook({ flush });
+    return row;
+  },
+
+  // Every item of the given modules (all modules when omitted) that has a saved position. Returns how many were reset.
+  async resetAll(moduleIds = null) {
+    const rows = (await db.progress.toArray()).filter(p => !String(p.itemId).includes(':') && p.state !== 'reset' && (p.position > 0 || p.state === 'finished')
+      && (!moduleIds || moduleIds.includes(p.moduleId)));
+    for (const p of rows) {
+      const item = await db.items.get(p.itemId);
+      await this.reset(item || { id: p.itemId, moduleId: p.moduleId }, { flush: false });
+    }
+    if (rows.length) { syncHook({ flush: true }); bus.emit('progress:reset', { moduleIds, count: rows.length }); }
+    return rows.length;
+  },
+
   // Text for the UI: "Dừng ở 1:23 / 3:45 trên Máy tính Windows · 5 phút trước"
   async summary(itemId) {
     const p = await this.get(itemId);

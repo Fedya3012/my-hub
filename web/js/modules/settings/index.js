@@ -11,6 +11,8 @@ import { esc, h, modal, confirmBox, saveJson, pickJson, fmtBytes, fmtAgo } from 
 import { skinSectionHtml, bindSkins } from '../../core/skin-ui.js';
 import { paramsSectionHtml, bindParams } from '../../core/params-ui.js';
 import { bus } from '../../core/bus.js';
+import { progress } from '../../core/progress.js';
+import { listModules } from '../../core/registry.js';
 import { LANGS, lang, setLang } from '../../core/i18n.js';
 
 let root, ctx, offs = [];
@@ -141,6 +143,7 @@ const SECS = {
   devices: ['device', 'Thiết bị dùng chung thư viện', () => 'Tên máy này, các máy đang dùng'],
   appearance: ['palette', 'Giao diện', () => 'Ngôn ngữ, skin, theme, màu nhấn, cỡ chữ'],
   params: ['grid', 'Thông số dùng chung', () => 'Thông số của từng ứng dụng, trạng thái hiện tại'],
+  progress: ['clock', 'Đặt lại tiến trình', () => 'Đọc, nghe, xem: về lại từ đầu'],
   backup: ['download', 'Sao lưu dữ liệu', () => 'Xuất, nhập JSON, xoá dữ liệu'],
 };
 
@@ -157,6 +160,11 @@ async function renderPage() {
   const F = await import('../../core/storage/folders.js');
   const { drives } = await import('../../core/storage/index.js');
   const fsrc = await F.folderSource();
+
+  // Items with a saved position, per app (the virtual rows such as the Music queue have a ":" in their id).
+  const live = (await db.progress.toArray()).filter(p => !String(p.itemId).includes(':') && p.state !== 'reset' && (p.position > 0 || p.state === 'finished'));
+  const mods = await listModules();
+  const progRows = [...new Set(live.map(p => p.moduleId))].map(id => ({ id, name: mods.find(m => m.id === id)?.name || id, count: live.filter(p => p.moduleId === id).length }));
 
   root.innerHTML = `
   <section class="page settings">
@@ -249,6 +257,18 @@ async function renderPage() {
     </section>
 
     <div data-sec="params">${paramsSectionHtml()}</div>
+
+    <section class="set-block" data-sec="progress">
+      <h2 class="section-title">${icon('clock')}Đặt lại tiến trình</h2>
+      <div class="panel">
+        <p>Đưa vị trí đã đọc, nghe, xem về từ đầu trên mọi thiết bị. Trạng thái của sách về “Muốn đọc”. Lịch sử, thống kê, đánh dấu, ghi chú và tệp vẫn giữ nguyên.</p>
+        <ul class="set-prog" style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px">
+          ${progRows.map(r => `<li style="display:flex;flex-direction:row;align-items:center;gap:10px"><span style="flex:1;min-width:0"><strong>${esc(r.name)}</strong><span class="hint" style="display:block">${r.count ? r.count + ' mục có tiến trình' : 'Chưa có tiến trình'}</span></span>
+            <button class="btn small" data-reset-mod="${esc(r.id)}" ${r.count ? '' : 'disabled'}>Đặt lại</button></li>`).join('') || '<li class="hint">Chưa có tiến trình nào.</li>'}
+        </ul>
+        <div class="row-actions"><button class="btn danger-ghost" data-act="reset-all" ${progRows.some(r => r.count) ? '' : 'disabled'}>${icon('refresh')}Đặt lại tất cả ứng dụng</button></div>
+      </div>
+    </section>
 
     <section class="set-block" data-sec="backup">
       <h2 class="section-title">${icon('download')}Sao lưu dữ liệu</h2>
@@ -380,6 +400,17 @@ async function renderPage() {
       bus.emit('backup:imported', { mode });
       ctx.toast(`Đã nhập ${n} bản ghi`); await applyTheme(); render();
     } catch (e) { ctx.toast(e.message, 'error'); }
+  });
+  root.querySelectorAll('[data-reset-mod]').forEach(b => b.onclick = async () => {
+    const r = progRows.find(x => x.id === b.dataset.resetMod);
+    if (!(await confirmBox(`Đặt lại tiến trình ${r.name}?`, `${r.count} mục của ${r.name} về trạng thái chưa bắt đầu, trên mọi thiết bị. Lịch sử và thống kê vẫn giữ.`, 'Đặt lại'))) return;
+    const n = await progress.resetAll([r.id]);
+    ctx.toast(`Đã đặt lại ${n} mục`); render();
+  });
+  on('reset-all', async () => {
+    if (!(await confirmBox('Đặt lại tiến trình của tất cả ứng dụng?', `${progRows.reduce((a, r) => a + r.count, 0)} mục về trạng thái chưa bắt đầu, trên mọi thiết bị. Lịch sử và thống kê vẫn giữ.`, 'Đặt lại tất cả'))) return;
+    const n = await progress.resetAll();
+    ctx.toast(`Đã đặt lại ${n} mục`); render();
   });
   on('wipe', async () => {
     if (!(await confirmBox('Xoá toàn bộ dữ liệu?', 'Mọi mục, liên kết, cài đặt và tệp lưu trên máy này sẽ mất. Dữ liệu đã đồng bộ lên GitHub, Dropbox hoặc OneDrive không bị ảnh hưởng.', 'Xoá hết'))) return;

@@ -115,7 +115,7 @@ const refresh = debounce(async () => {
 // Built-in cards of the core apps: Library ("Tiếp tục") and App Manager (updates and sync).
 function coreCards() {
   extend('cover.cards', async (c) => {
-    const rows = (await db.progress.toArray()).filter(p => p.state !== 'finished' && (p.percent || 0) < 98)
+    const rows = (await db.progress.toArray()).filter(p => p.state !== 'finished' && p.state !== 'reset' && (p.percent || 0) < 98)
       .sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 2);
     const out = [];
     for (const p of rows) {
