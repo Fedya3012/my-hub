@@ -66,7 +66,7 @@ export const go = (r) => { location.hash = 'books' + (r ? '/' + r : ''); };
 async function render() {
   const [head, ...rest] = route.split('/');
   const arg = rest.join('/');
-  if (head === 'read') return openReader(arg);
+  if (head === 'read') return openReader(arg.split('?')[0]);   // '?r=…' only forces a fresh open (PDF mode switch)
   closeReader();
   pageOff?.(); pageOff = null;
   const snap = await scoped();
@@ -100,11 +100,12 @@ export async function scoped() {
 }
 
 async function openReader(id) {
-  if (reader?.id === id) return;
+  if (reader?.id === id && !/[?&]r=/.test(location.hash)) return;
   closeReader();
   readerCss ||= document.head.appendChild(Object.assign(document.createElement('link'), { rel: 'stylesheet', href: new URL('./reader.css', import.meta.url).href }));
+  const r = reader = { id, close: null };   // set before any await: leaving while it loads closes it once ready
   const { openReader: open } = await import('./reader/reader.js');
-  reader = { id, close: null };
-  reader.close = await open(root, id, { ctx, onClose: () => { const back = history.length > 1 && reader?.fromApp; reader = null; if (back) history.back(); else go('book/' + id); } });
+  const close = await open(root, id, { ctx, onClose: () => { const back = history.length > 1 && reader?.fromApp; if (reader === r) reader = null; if (back) history.back(); else go('book/' + id); } });
+  if (reader === r) r.close = close; else close?.();   // the user left (or opened another book) during loading
 }
 function closeReader() { if (!reader) return; const r = reader; reader = null; r.close?.(); }

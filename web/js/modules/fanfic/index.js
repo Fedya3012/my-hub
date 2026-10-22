@@ -70,9 +70,9 @@ async function openWriter(id, chapterId) {
   if (!id) return go('works');
   if (writer && writer.id === id) { writer.show?.(chapterId); return; }
   closeWriter();
+  const me = writer = { id };   // set before any await so a fast exit closes the stale writer
   const { openWriter: open } = await import('./ui/writer.js');
-  writer = { id };
-  const w = await open(root, id, chapterId, { ctx, onClose: () => { writer = null; go('work/' + id); } });
-  if (writer) Object.assign(writer, w);
+  const w = await open(root, id, chapterId, { ctx, onClose: () => { if (writer === me) writer = null; go('work/' + id); } });
+  if (writer === me) Object.assign(me, w); else w?.close?.();
 }
 function closeWriter() { if (!writer) return; const w = writer; writer = null; w.close?.(); }

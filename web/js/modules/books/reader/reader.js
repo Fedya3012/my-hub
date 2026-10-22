@@ -125,7 +125,8 @@ export async function openReader(root, id, { ctx, onClose }) {
   // ── Location, progress, sessions ──
   const words = b.book.words || (b.pages ? b.pages * 275 : 0);
   const sessions = await store.sessionsOf(id).catch(() => []);
-  const all = await store.allSessions().catch(() => []);
+  // Recent sessions are enough for the reading speed (the table only grows).
+  const all = await db.readingSessions.orderBy('start').reverse().limit(300).toArray().catch(() => []);
   const wsec = all.filter(s => s.words && s.seconds > 60);
   const myWpm = wsec.length >= 3 ? wsec.reduce((a, s) => a + s.words, 0) / (wsec.reduce((a, s) => a + s.seconds, 0) / 60) : 0;
   const wpm = () => Math.max(60, Math.min(1200, myWpm || prefs.wpm || 230));
@@ -218,8 +219,8 @@ export async function openReader(root, id, { ctx, onClose }) {
     else if (k === '+' || k === '=') changePref('fontSize', Math.min(40, prefs.fontSize + 1));
     else if (k === '-') changePref('fontSize', Math.max(12, prefs.fontSize - 1));
   };
+  // Keys from the page iframe are re-dispatched on host and bubble up to el: one listener, so each key acts once.
   el.addEventListener('keydown', onKey);
-  host.addEventListener('keydown', onKey);
   const onDocKey = (e) => { if (!el.contains(e.target) || e.target === document.body) onKey(e); };
   document.addEventListener('keydown', onDocKey);
   offs.push(() => document.removeEventListener('keydown', onDocKey));
@@ -373,6 +374,7 @@ export async function openReader(root, id, { ctx, onClose }) {
     }
     btn.onclick = () => { st.on = !st.on; st.i = 0; btn.setAttribute('aria-pressed', st.on); btn.classList.toggle('on', st.on); apply(); };
     addEventListener('resize', apply);
+    offs.push(() => removeEventListener('resize', apply));
   }
 
   function settingsPanel() {
@@ -445,7 +447,7 @@ export async function openReader(root, id, { ctx, onClose }) {
         const r = await fetch(`https://${lang}.wiktionary.org/api/rest_v1/page/definition/${encodeURIComponent(word)}`);
         const j = r.ok ? await r.json() : {};
         html = Object.values(j).flat().slice(0, 4).map(e => `<p><i>${esc(e.partOfSpeech || '')}</i> <small class="muted">${esc(e.language || '')}</small></p><ol>${(e.definitions || []).slice(0, 4).map(d => `<li>${d.definition || ''}</li>`).join('')}</ol>`).join('');
-        const tmp = document.createElement('div'); tmp.innerHTML = html; tmp.querySelectorAll('a').forEach(a => a.replaceWith(a.textContent)); html = tmp.innerHTML;
+        const tmp = new DOMParser().parseFromString(html, 'text/html').body; tmp.querySelectorAll('a').forEach(a => a.replaceWith(a.textContent)); tmp.querySelectorAll('*').forEach(n => { for (const at of [...n.attributes]) if (/^on/i.test(at.name)) n.removeAttribute(at.name); }); tmp.querySelectorAll('script,iframe,object,embed,img').forEach(n => n.remove()); html = tmp.innerHTML;
       }
       body.innerHTML = (html || '<p class="muted">Không tìm thấy định nghĩa.</p>') + `<p><a href="https://${lang}.wiktionary.org/wiki/${encodeURIComponent(word)}" target="_blank" rel="noopener">Mở Wiktionary</a></p>`;
     } catch { body.innerHTML = '<p class="muted">Cần kết nối mạng để tra từ điển (từ điển ngoại tuyến: giai đoạn 2).</p>'; }

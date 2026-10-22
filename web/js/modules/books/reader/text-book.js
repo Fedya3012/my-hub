@@ -13,7 +13,14 @@ const page = (title, body, lang) => `<?xml version="1.0" encoding="utf-8"?>
 // Valid XHTML from arbitrary HTML (the reader loads sections as XHTML).
 function toXhtml(html) {
   const doc = new DOMParser().parseFromString(`<body>${html}</body>`, 'text/html');
-  doc.querySelectorAll('script,style,link,iframe,object,embed').forEach(e => e.remove());
+  // The section is shown in a same-origin iframe that allows scripts (foliate): strip everything that can run code.
+  doc.querySelectorAll('script,style,link,iframe,object,embed,form,base,meta').forEach(e => e.remove());
+  for (const n of doc.body.querySelectorAll('*')) {
+    for (const a of [...n.attributes]) {
+      if (/^on/i.test(a.name)) n.removeAttribute(a.name);
+      else if (/^(href|src|xlink:href|action|formaction|srcset)$/i.test(a.name) && !/^(https?:|#|data:image\/|blob:|mailto:)/i.test(a.value.trim())) n.removeAttribute(a.name);
+    }
+  }
   return new XMLSerializer().serializeToString(doc.body).replace(/^<body[^>]*>|<\/body>$/g, '');
 }
 

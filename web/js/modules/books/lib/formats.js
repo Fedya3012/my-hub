@@ -54,7 +54,8 @@ export async function loadPdfjs() {
 
 const langName = (x) => !x ? '' : typeof x === 'string' ? x : x[Object.keys(x)[0]] || '';
 const contributor = (c) => !c ? [] : Array.isArray(c) ? c.flatMap(contributor) : [typeof c === 'string' ? c : langName(c.name)].filter(Boolean);
-const textOf = (html) => { const d = document.createElement('div'); d.innerHTML = String(html || ''); return d.textContent.replace(/\s+\n/g, '\n').trim(); };
+// Parsed inertly (DOMParser): a detached div's innerHTML still loads images and runs onerror handlers from the book.
+const textOf = (html) => (new DOMParser().parseFromString(String(html || ''), 'text/html').body.textContent || '').replace(/\s+\n/g, '\n').trim();
 
 // Read title, authors, series, ISBN, language, description, subjects, pages and the cover image.
 // Never throws: a file that cannot be parsed still imports with its file name as the title.

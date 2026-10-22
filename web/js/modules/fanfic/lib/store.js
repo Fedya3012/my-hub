@@ -48,7 +48,7 @@ export const snapshot = cached(async () => {
 });
 bus.on('sync:done', () => snapshot.invalidate());
 bus.on('progress:pulled', () => snapshot.invalidate());
-bus.on('progress:changed', () => snapshot.invalidate());
+bus.on('progress:changed', (p) => { if (p?.moduleId === 'fanfic') snapshot.invalidate(); });   // music/book progress ticks do not touch works
 bus.on('item:changed', (e) => { if (e?.source !== 'fanfic') snapshot.invalidate(); });
 
 export const byOrder = (a, b) => (a.order ?? 0) - (b.order ?? 0);
