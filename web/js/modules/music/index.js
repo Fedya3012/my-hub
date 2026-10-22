@@ -98,7 +98,7 @@ async function render() {
     ${SECTION_TABS.includes(tab) || head === 'browse' ? `<details class="msections"><summary>${icon('list')}<span>${esc(tab === 'songs' ? 'Âm nhạc · Bài hát' : 'Âm nhạc · ' + (NAMES[tab] || NAMES.browse))}</span><i aria-hidden="true">▾</i></summary>
       <div class="msections-menu" role="menu">${SECTION_TABS.map(t => `<a role="menuitem" href="#music/${t}" class="${t === tab ? 'on' : ''}">${esc(SONG_NAMES[t])}</a>`).join('')}</div></details>` : ''}
     <div class="mcontent"></div></div>
-    <nav class="mbottom" aria-label="Mục chính của Nhạc">${bottomTabs.map(t => { const on = (t === tab || (t === 'songs' && SECTION_TABS.includes(tab))) && !search; return `<a href="#music/${t}" class="${on ? 'on' : ''}" ${on ? 'aria-current="page"' : ''}>${icon(BOTTOM_ICONS[t] || 'disc')}<span>${NAMES[t]}</span></a>`; }).join('')}<button type="button" data-open-nav aria-label="Tất cả ứng dụng">${icon('grid')}<span>Ứng dụng</span></button><button type="button" data-act="settings">${icon('settings')}<span>Cài đặt</span></button></nav>`;
+    <nav class="mbottom" aria-label="Mục chính của Nhạc">${bottomTabs.map(t => { const on = (t === tab || (t === 'songs' && SECTION_TABS.includes(tab))) && !search; return `<a href="#music/${t}" class="${on ? 'on' : ''}" ${on ? 'aria-current="page"' : ''}>${icon(BOTTOM_ICONS[t] || 'disc')}<span>${NAMES[t]}</span></a>`; }).join('')}<button type="button" data-act="settings">${icon('settings')}<span>Cài đặt</span></button></nav>`;
   document.body.classList.add('m-has-bottom');
   const c = root.querySelector('.mcontent');
   root.querySelector('[data-act="add"]').onclick = (e) => addMenu(e.currentTarget);
@@ -295,22 +295,19 @@ const SONG_SORTS = { title: 'Tên', artist: 'Nghệ sĩ', album: 'Album', year: 
 const ALBUM_SORTS = { year: 'Năm', title: 'Tên album', artist: 'Nghệ sĩ', addedAt: 'Mới thêm', plays: 'Nghe nhiều', lastPlayed: 'Nghe gần đây', count: 'Số bài', duration: 'Thời lượng' };
 const GROUP_SORTS = { name: 'Tên', count: 'Số bài', albumCount: 'Số album', plays: 'Nghe nhiều', addedAt: 'Mới thêm', duration: 'Thời lượng' };
 
+// One quiet row: "↓ Tên" (sort menu, tap again to flip), the count, then plain icons for filters and view.
+const CODECS = ['FLAC', 'ALAC', 'PCM', 'DSD', 'WavPack', 'APE', 'MP3', 'AAC', 'Opus', 'Vorbis'];
+const filtersOn = (F) => !!(F.quality || F.fav || F.codec || +F.minRating);
 function toolbar(tab, { sorts, views, filters = true, count, def }) {
   const P = prefs(), F = P.filters;
   const cur = P.sort[tab] in (sorts || {}) ? P.sort[tab] : def || Object.keys(sorts || {})[0];
   return `<div class="mtool" data-key="${tab}">
+    ${sorts ? `<button class="mt-sort" data-sortmenu data-sorts="${esc(JSON.stringify(sorts))}" data-cur="${cur}" aria-label="Sắp xếp theo: ${esc(sorts[cur])}"><span>${esc(sorts[cur])}</span><i class="mt-dir${P.desc[tab] ? ' up' : ''}" aria-hidden="true">${icon('chev-down')}</i></button>` : ''}
     ${count != null ? `<span class="mtool-count muted">${count}</span>` : ''}
-    ${filters ? `<div class="mtool-filters">
-      <button class="chip" aria-pressed="${F.quality === 'lossless'}" data-q="lossless">Lossless</button>
-      <button class="chip" aria-pressed="${F.quality === 'hires'}" data-q="hires">Hi-Res</button>
-      <button class="chip" aria-pressed="${!!F.fav}" data-fav>${icon('heart')}Yêu thích</button>
-      <select data-codec aria-label="Định dạng"><option value="">Mọi định dạng</option>${['FLAC', 'ALAC', 'PCM', 'DSD', 'WavPack', 'APE', 'MP3', 'AAC', 'Opus', 'Vorbis'].map(c => `<option ${F.codec === c ? 'selected' : ''}>${c}</option>`).join('')}</select>
-      <select data-rating aria-label="Đánh giá"><option value="0">Mọi đánh giá</option>${[1, 2, 3, 4, 5].map(n => `<option value="${n}" ${+F.minRating === n ? 'selected' : ''}>≥ ${'★'.repeat(n)}</option>`).join('')}</select></div>` : ''}
-    <div class="mtool-right">
-      ${sorts ? `<label class="msort">${icon('sort')}<select data-sort aria-label="Sắp xếp theo">${Object.entries(sorts).map(([k, v]) => `<option value="${k}" ${cur === k ? 'selected' : ''}>${v}</option>`).join('')}</select></label>
-      <button class="icon-btn sm mdir" data-dir aria-label="${P.desc[tab] ? 'Đang đảo chiều, bấm để về chiều thường' : 'Đảo chiều sắp xếp'}" aria-pressed="${!!P.desc[tab]}">${icon('chev-down')}</button>` : ''}
-      ${views ? `<div class="seg small" role="group" aria-label="Kiểu xem">${views.map(v => `<button data-view="${v}" aria-pressed="${P.view[tab] === v}" aria-label="${VIEW_NAMES[v]}" title="${VIEW_NAMES[v]}">${icon(VIEW_ICONS[v])}</button>`).join('')}</div>` : ''}
-    </div></div>`;
+    <span class="grow"></span>
+    ${filters ? `<button class="icon-btn mt-ic${filtersOn(F) ? ' on' : ''}" data-filtermenu aria-label="Lọc" title="Lọc">${icon('filter')}</button>` : ''}
+    ${views ? views.map(v => `<button class="icon-btn mt-ic${P.view[tab] === v ? ' on' : ''}" data-view="${v}" aria-pressed="${P.view[tab] === v}" aria-label="${VIEW_NAMES[v]}" title="${VIEW_NAMES[v]}">${icon(VIEW_ICONS[v])}</button>`).join('') : ''}
+  </div>`;
 }
 const VIEW_NAMES = { grid: 'Lưới', list: 'Danh sách', coverflow: 'Cover Flow', tree: 'Cây thư mục' };
 const VIEW_ICONS = { grid: 'grid', list: 'list', coverflow: 'coverflow', tree: 'folder' };
@@ -319,14 +316,25 @@ const VIEW_ICONS = { grid: 'grid', list: 'list', coverflow: 'coverflow', tree: '
 function bindToolbar(c) {
   const re = () => {};   // the music:prefs event re-renders (debounced, once)
   const F = prefs().filters;
-  c.querySelectorAll('[data-q]').forEach(b => b.onclick = async () => { await setPref('filters.quality', F.quality === b.dataset.q ? '' : b.dataset.q); re(); });
-  c.querySelectorAll('[data-fav]').forEach(b => b.onclick = async () => { await setPref('filters.fav', F.fav ? 0 : 1); re(); });
-  c.querySelectorAll('[data-codec]').forEach(s => s.onchange = async (e) => { await setPref('filters.codec', e.target.value); re(); });
-  c.querySelectorAll('[data-rating]').forEach(s => s.onchange = async (e) => { await setPref('filters.minRating', +e.target.value); re(); });
+  const filterMenu = (anchor) => menu(anchor, [
+    { label: 'Lossless', icon: 'wave', on: F.quality === 'lossless', act: async () => { await setPref('filters.quality', F.quality === 'lossless' ? '' : 'lossless'); re(); } },
+    { label: 'Hi-Res', icon: 'hires', on: F.quality === 'hires', act: async () => { await setPref('filters.quality', F.quality === 'hires' ? '' : 'hires'); re(); } },
+    { label: 'Yêu thích', icon: 'heart', on: !!F.fav, act: async () => { await setPref('filters.fav', F.fav ? 0 : 1); re(); } },
+    '-',
+    { label: 'Định dạng', hint: F.codec || 'Tất cả', icon: 'disc', act: () => menu(anchor, ['', ...CODECS].map(k => ({ label: k || 'Mọi định dạng', icon: 'disc', on: (F.codec || '') === k, act: async () => { await setPref('filters.codec', k); re(); } })), { title: 'Định dạng' }) },
+    { label: 'Đánh giá', hint: +F.minRating ? '≥ ' + '★'.repeat(F.minRating) : 'Tất cả', icon: 'star', act: () => menu(anchor, [0, 1, 2, 3, 4, 5].map(n => ({ label: n ? '≥ ' + '★'.repeat(n) : 'Mọi đánh giá', icon: 'star', on: +F.minRating === n, act: async () => { await setPref('filters.minRating', n); re(); } })), { title: 'Đánh giá' }) },
+    filtersOn(F) && '-',
+    filtersOn(F) && { label: 'Bỏ lọc', icon: 'x', act: async () => { for (const [k, v] of [['quality', ''], ['fav', 0], ['codec', ''], ['minRating', 0]]) await setPref('filters.' + k, v); re(); } },
+  ], { title: 'Lọc' });
+  c.querySelectorAll('[data-filtermenu]').forEach(b => b.onclick = () => filterMenu(b));
   c.querySelectorAll('.mtool[data-key]').forEach(tb => {
     const key = tb.dataset.key;
-    tb.querySelector('[data-sort]')?.addEventListener('change', async (e) => { await setPref('sort.' + key, e.target.value); re(); });
-    tb.querySelector('[data-dir]')?.addEventListener('click', async () => { await setPref('desc.' + key, prefs().desc[key] ? 0 : 1); re(); });
+    const sb = tb.querySelector('[data-sortmenu]');
+    if (sb) sb.onclick = () => {
+      const sorts = JSON.parse(sb.dataset.sorts), cur = sb.dataset.cur, desc = !!prefs().desc[key];
+      menu(sb, [...Object.entries(sorts).map(([k, v]) => ({ label: v, icon: 'sort', on: k === cur, act: async () => { await setPref('sort.' + key, k); re(); } })), '-',
+        { label: desc ? 'Về chiều thường' : 'Đảo chiều', icon: 'chev-down', act: async () => { await setPref('desc.' + key, desc ? 0 : 1); re(); } }], { title: 'Sắp xếp theo' });
+    };
     tb.querySelectorAll('[data-view]').forEach(b => b.onclick = async () => { await setPref('view.' + key, b.dataset.view); re(); });
   });
 }

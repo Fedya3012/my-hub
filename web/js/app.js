@@ -41,11 +41,10 @@ async function renderNav() {
   const links = mods.map(m => `<a href="#${m.route}" class="nav-link${m.route === route ? ' active' : ''}" ${m.route === route ? 'aria-current="page"' : ''}>
       ${icon(m.icon)}<span>${esc(m.name)}</span></a>`).join('');
   document.getElementById('nav-links').innerHTML = links;
-  // Phone bottom bar (one-handed): the first apps in nav order + "Ứng dụng" for the full drawer. Music and Books keep
-  // their own bottom tabs and add an "Ứng dụng" button there instead (data-open-nav), so the bar hides on them.
+  // Phone bottom bar (one-handed): the first apps in nav order; ☰ in the app bar opens the full list. Music and Books
+  // keep their own bottom tabs, so the bar hides on them.
   const tab = (m) => `<a href="#${m.route}" class="${m.route === route ? 'active' : ''}" ${m.route === route ? 'aria-current="page"' : ''}>${icon(m.icon)}<span>${esc(m.name)}</span></a>`;
-  document.getElementById('tabbar').innerHTML = mods.slice(0, 4).map(tab).join('') +
-    `<button type="button" data-open-nav aria-label="Tất cả ứng dụng">${icon('grid')}<span>Ứng dụng</span></button>`;
+  document.getElementById('tabbar').innerHTML = mods.slice(0, 5).map(tab).join('');
   document.body.classList.toggle('own-tabs', OWN_TABS.includes(route));
   const here = all.find(m => m.route === route);   // pages outside the menu (Tài khoản) still name themselves
   const title = document.getElementById('appbar-title');

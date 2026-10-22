@@ -4,7 +4,7 @@
 import { player } from '../lib/player.js';
 import * as store from '../lib/store.js';
 import { confirmBox, toast } from '../../../core/ui.js';
-import { pickPlaylist } from './sheets.js';
+import { pickPlaylist, menu } from './sheets.js';
 import { tagEditor } from './tageditor.js';
 import { icon } from '../../../core/icons.js';
 
@@ -34,15 +34,11 @@ function drawBar() {
   }
   const n = S.picked.size;
   const dis = n ? '' : 'disabled';
-  S.bar.innerHTML = `<b class="num msel-n">${n}</b><span class="msel-t">đã chọn</span>
-    <button class="icon-btn sm" data-s="all" aria-label="Chọn hết (${S.visible.length})" title="Chọn hết (${S.visible.length})">${icon('check')}</button>
-    <button class="icon-btn sm" data-s="play" ${dis} aria-label="Phát" title="Phát">${icon('play')}</button>
-    <button class="icon-btn sm" data-s="next" ${dis} aria-label="Phát tiếp" title="Phát tiếp">${icon('next')}</button>
-    <button class="icon-btn sm" data-s="queue" ${dis} aria-label="Thêm vào hàng chờ" title="Thêm vào hàng chờ">${icon('queue')}</button>
-    <button class="icon-btn sm" data-s="list" ${dis} aria-label="Thêm vào danh sách phát" title="Thêm vào danh sách phát">${icon('list')}</button>
-    <button class="icon-btn sm" data-s="edit" ${dis} aria-label="Sửa thẻ" title="Sửa thẻ">${icon('edit')}</button>
-    <button class="icon-btn sm danger" data-s="del" ${dis} aria-label="Xoá khỏi thư viện" title="Xoá khỏi thư viện">${icon('trash')}</button>
-    <button class="icon-btn sm" data-s="exit" aria-label="Thoát chọn" title="Thoát chọn">${icon('x')}</button>`;
+  const ib = (k, ic, label, { off, cls = '' } = {}) => `<button class="icon-btn ${cls}" data-s="${k}" ${off ? dis : ''} aria-label="${label}" title="${label}">${icon(ic)}</button>`;
+  S.bar.innerHTML = `${ib('exit', 'x', 'Thoát chọn')}<span class="msel-t"><b class="num">${n}</b> đã chọn</span><span class="grow"></span>
+    ${ib('play', 'play', 'Phát', { off: 1 })}${ib('next', 'next', 'Phát tiếp', { off: 1 })}${ib('queue', 'queue', 'Thêm vào hàng chờ', { off: 1 })}${ib('list', 'list', 'Thêm vào danh sách phát', { off: 1 })}
+    ${ib('all', 'check', `Chọn hết (${S.visible.length})`, { cls: 'msel-x' })}${ib('edit', 'edit', 'Sửa thẻ', { off: 1, cls: 'msel-x' })}${ib('del', 'trash', 'Xoá khỏi thư viện', { off: 1, cls: 'msel-x danger' })}
+    ${ib('more', 'more', 'Thêm thao tác', { cls: 'msel-more' })}`;
 }
 
 async function onBarClick(e) {
@@ -62,6 +58,11 @@ async function onBarClick(e) {
       if (!(await confirmBox(`Xoá ${ids.length} bài khỏi thư viện?`, 'Tệp nhạc trên máy này cũng bị xoá. Tệp trên thư mục đồng bộ không bị động tới.', 'Xoá'))) return;
       await store.deleteTracks(ids); toast(`Đã xoá ${ids.length} bài`); exit(); S.refresh(); break;
     case 'exit': exit(); break;
+    case 'more': menu(b, [
+      { label: `Chọn hết (${S.visible.length})`, icon: 'check', act: () => { S.visible.forEach(t => S.picked.set(t.id, t)); paintRows(); drawBar(); } },
+      tracks.length && { label: 'Sửa thẻ', icon: 'edit', act: () => tagEditor(tracks, () => S.refresh()) },
+      tracks.length && { label: 'Xoá khỏi thư viện', icon: 'trash', danger: true, act: () => onBarClick({ target: S.bar.querySelector('[data-s="del"]') }) },
+    ]); break;
   }
 }
 

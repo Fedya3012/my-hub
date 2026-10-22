@@ -259,7 +259,7 @@ input[type="range"] { accent-color: var(--accent); }
 .results.list .card:hover { transform: none; }
 
 .empty { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 48px 16px; color: var(--muted); text-align: center; }
-.results > .empty { grid-column: 1 / -1; }
+.empty { grid-column: 1 / -1; }   /* inside any grid of results: span it, centred */
 .empty > .ic { width: 32px; height: 32px; }
 
 /* Drawer */
@@ -515,3 +515,25 @@ body.mnp-open .task-tray { bottom: calc(16px + var(--sai-bottom)); }
 }
 .changelog-groups { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; }
 .changelog-ver { font-size: .78rem; color: var(--muted); margin-top: 4px; font-weight: 600; }
+
+/* ── Minimal chrome (2026-10-22), shared by every app: tool rows carry no boxes.
+   Search is a soft pill, filter selects read as plain text with a chevron, chips are soft tints, view switches are bare icons. */
+.search { border-color: transparent; background: var(--surface-2); border-radius: 999px; }
+.search:focus-within { border-color: var(--accent); background: var(--surface); }
+.filters select, .bk-toolbar select, .mtool select { border-color: transparent; background-color: transparent; padding-inline: 6px 26px; min-height: 36px; font-weight: 600; color: var(--muted); }
+.filters select:hover, .bk-toolbar select:hover { color: var(--fg); background-color: var(--surface-2); }
+.chips .chip, .toolbar .chip, .filters .chip, .bk-toolbar .chip, .mtool .chip { border-color: transparent; background: var(--surface-2); }
+.chips .chip[aria-pressed="true"], .chips .chip.on, .toolbar .chip[aria-pressed="true"], .toolbar .chip.on, .filters .chip[aria-pressed="true"], .bk-toolbar .chip[aria-pressed="true"], .bk-toolbar .chip.on {
+  background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); border-color: transparent; }
+.filters .seg, .bk-toolbar .seg { border: 0; background: none; gap: 2px; }
+.filters .seg button, .bk-toolbar .seg button { border-radius: 50%; }
+.filters .seg button[aria-pressed="true"], .bk-toolbar .seg button[aria-pressed="true"] { background: none; color: var(--accent); }
+.page-head .btn:not(.primary), .bk-toolbar .btn:not(.primary) { border-color: transparent; background: none; }
+.page-head .btn:not(.primary):hover, .bk-toolbar .btn:not(.primary):hover { background: var(--surface-2); }
+.page-head .btn:not(.primary) .ic, .bk-toolbar .btn:not(.primary) .ic { color: var(--accent); }
+@media (max-width: 620px) {
+  .bk-toolbar .bk-tools { flex-wrap: nowrap; width: 100%; gap: 2px; }
+  .bk-toolbar .bk-tools select { flex: 1 1 auto; min-width: 0; }
+  .bk-toolbar .bk-tools .btn { min-height: 40px; width: 40px; padding: 0; }
+  .bk-toolbar .bk-tools .btn.primary { background: none; border-color: transparent; color: var(--fg); }
+}

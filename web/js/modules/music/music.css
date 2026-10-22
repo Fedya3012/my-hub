@@ -921,4 +921,31 @@ body[data-posture="cover"]:not(.cover-full) .mnp-bg-a, body[data-posture="cover"
 @media (max-width: 860px), (pointer: coarse) {
   .mdock { background: color-mix(in srgb, var(--surface) 97%, var(--m-acc, var(--accent))); -webkit-backdrop-filter: none; backdrop-filter: none; }
   .mbottom { -webkit-backdrop-filter: none; backdrop-filter: none; background: var(--surface); }
+
+/* ── Minimal chrome (2026-10-22): no boxes around tools; text and plain icons, accent marks state ── */
+.mtool { flex-wrap: nowrap; gap: 4px; min-height: 40px; }
+.mtool .grow { flex: 1; }
+.mtool-count { width: auto !important; font-size: .84rem; white-space: nowrap; }
+.mt-sort { display: inline-flex; align-items: center; gap: 4px; min-height: 40px; padding: 0 6px 0 0; border: 0; background: none; color: var(--muted); font: 600 .92rem/1 var(--font-body); cursor: pointer; white-space: nowrap; }
+.mt-sort:hover { color: var(--fg); }
+.mt-dir { display: inline-grid; transition: transform .15s; } .mt-dir .ic { width: 18px; height: 18px; } .mt-dir.up { transform: rotate(180deg); }
+.mt-ic { width: 40px; height: 40px; color: var(--muted); } .mt-ic .ic { width: 20px; height: 20px; }
+.mt-ic.on { color: var(--accent); }
+.mt-ic.on[data-filtermenu] { position: relative; } .mt-ic.on[data-filtermenu]::after { content: ''; position: absolute; top: 8px; right: 8px; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+/* Play / shuffle / small actions: plain text buttons, accent icon */
+.mtool2 { gap: 2px 4px; }
+.mtool2 .btn { min-height: 38px; padding: 0 10px; border-color: transparent; background: none; color: var(--fg); font-weight: 600; flex: none !important; }
+.mtool2 .btn:hover { background: var(--surface-2); }
+.mtool2 .btn .ic { color: var(--accent); }
+.mtool2 .btn.primary { color: var(--accent); }
+/* Section switcher reads as a heading, not a pill */
+.msections > summary { padding: 0; border: 0 !important; background: none !important; box-shadow: none !important; font-size: 1.15rem; font-weight: 700; }
+.msections > summary .ic { display: none; }
+/* Header: search is a soft field, add/clean are plain icons */
+.mlib-search { border-color: transparent; background: var(--surface-2); border-radius: 999px; }
+.mlib-search:focus-within { border-color: var(--accent); background: var(--surface); }
+@media (max-width: 600px) {
+  .mlib-actions .btn.primary { width: 40px; min-height: 40px; padding: 0; border-color: transparent; background: none; color: var(--fg); box-shadow: none; }
+  .mlib-actions .btn.primary .ic { width: 22px; height: 22px; }
+  .mlib-search input { min-height: 40px; }
 }

@@ -566,8 +566,8 @@ export default {"(Google cấp quyền theo từng giờ). Bấm một lần đ�
 "Mọi thẻ":"All Tags",
 "Mọi thứ đã là bản mới nhất":"Everything is up to date",
 "Mọi trạng thái":"All Statuses",
-"Mọi đánh giá":"All Ratings",
-"Mọi định dạng":"All Formats",
+"Mọi đánh giá":"Any rating",
+"Mọi định dạng":"Any format",
 "Mốc":"Timestamp",
 "Mỗi dòng ở đây là bản dịch / phiên âm của dòng lời tương ứng (bỏ qua dòng trống trong lời). Có thể dán LRC bản dịch có mốc thời gian.":"Each line here is the translation / transliteration of the corresponding lyrics line (blank lines in the lyrics are skipped). You can paste a timestamped translation LRC.",
 "Một cửa sổ Google sẽ mở ra để chọn tài khoản và cho phép truy cập Drive.":"A Google window will open so you can choose an account and allow access to Drive.",
@@ -2337,4 +2337,11 @@ export default {"(Google cấp quyền theo từng giờ). Bấm một lần đ�
 "Đọc to và dịch":"Read aloud and translate",
 "Theo dõi việc đọc":"Reading tracking",
 "Tệp và dữ liệu":"Files and data",
-"Phóng từng khung":"Panel zoom"};
+"Phóng từng khung":"Panel zoom",
+"Lọc":"Filter",
+"Bỏ lọc":"Clear filters",
+"Đảo chiều":"Reverse order",
+"Về chiều thường":"Normal order",
+"Thêm thao tác":"More actions",
+"Sắp xếp theo":"Sort by",
+"Thoát chọn":"Exit selection"};

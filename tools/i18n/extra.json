@@ -886,5 +886,16 @@
  "Theo dõi việc đọc": "Reading tracking",
  "Tệp và dữ liệu": "Files and data",
  "Nguồn": "Sources",
- "Phóng từng khung": "Panel zoom"
+ "Phóng từng khung": "Panel zoom",
+ "Lọc": "Filter",
+ "Bỏ lọc": "Clear filters",
+ "Đảo chiều": "Reverse order",
+ "Về chiều thường": "Normal order",
+ "Thêm thao tác": "More actions",
+ "Mọi đánh giá": "Any rating",
+ "Mọi định dạng": "Any format",
+ "Định dạng": "Format",
+ "Đánh giá": "Rating",
+ "Sắp xếp theo": "Sort by",
+ "Thoát chọn": "Exit selection"
 }
