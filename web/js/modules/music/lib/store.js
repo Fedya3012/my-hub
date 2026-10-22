@@ -9,7 +9,7 @@ import { readAudioMeta } from './meta.js';
 import { makeThumb, palette, forgetUrl, collageRef } from './art.js';
 import { isHiRes } from './format.js';
 import { prefs } from './prefs.js';
-import { cmpVi, cmpViNum } from '../../../core/perf.js';
+import { cmpVi, cmpViNum, yieldToMain } from '../../../core/perf.js';
 
 // ── Ids & names ─────────────────────────────────────────────────
 export const norm = (s) => String(s || '').normalize('NFC').toLowerCase().replace(/\s+/g, ' ').trim();
@@ -40,7 +40,18 @@ const maxOf = (list, f) => { let m = 0; for (const x of list) { const v = f(x) |
 let lib = null, building = null, gen = 0;
 
 // A build that started before a change must not be cached (or handed out) afterwards.
-export function invalidate() { gen++; lib = null; building = null; bus.emit('music:changed'); }
+// While songs are being imported the library is not rebuilt (and the pages not redrawn) after every cover:
+// the changes are announced once when the import ends.
+let holds = 0, held = false;
+export function invalidate() {
+  gen++; lib = null; building = null;
+  if (holds) { held = true; return; }
+  bus.emit('music:changed');
+}
+export async function whileImporting(fn) {
+  holds++;
+  try { return await fn(); } finally { if (!--holds && held) { held = false; bus.emit('music:changed'); } }
+}
 
 export async function library() {
   if (lib) return lib;
@@ -309,7 +320,8 @@ const dirOf = (f) => (f.webkitRelativePath || f.relPath || '').split('/').slice(
 const base = (n) => n.replace(/\.[^.]+$/, '');
 
 // files: File[] (from <input multiple> or a folder picker), or [{ handle, relPath }] to link without copying.
-export async function importFiles(files, { onProgress, sample = false, kind = 'music', signal, remote = null, localFolder = null } = {}) {
+export function importFiles(files, opts = {}) { return whileImporting(() => importFilesNow(files, opts)); }
+async function importFilesNow(files, { onProgress, sample = false, kind = 'music', signal, remote = null, localFolder = null } = {}) {
   const list = [];
   for (const f of files) {
     const file = f.handle ? Object.assign(await f.handle.getFile(), { relPath: f.relPath }) : f;
@@ -340,7 +352,8 @@ export async function importFiles(files, { onProgress, sample = false, kind = 'm
     if (signal?.aborted) { res.cancelled = true; break; }
     const { file, handle } = audio[i];
     onProgress?.(i, audio.length, file.name);
-    if (existing.has(file.name + '|' + file.size)) { res.skipped++; continue; }
+    if (existing.has(file.name + '|' + file.size)) { res.skipped++; if (i % 25 === 24) await yieldToMain(); continue; }
+    await yieldToMain();   // let the page draw and react between songs
     try {
       const meta = await readAudioMeta(file, { name: file.name });
       const t = meta.tags || {};
@@ -358,6 +371,7 @@ export async function importFiles(files, { onProgress, sample = false, kind = 'm
       if (tv) await setBgVideo('track', item.id, tv);
       else if (fv && !(await db.albums.get(track.albumId))?.bgVideoFileId) await setBgVideo('album', track.albumId, fv);
       await logActivity(item.id, 'music', 'import');
+      await yieldToMain();
       existing.add(file.name + '|' + file.size);
       res.added++;
     } catch (e) { console.error(e); res.failed.push(`${file.name}: ${e.message}`); }

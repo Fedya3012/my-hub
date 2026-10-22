@@ -101,9 +101,28 @@ const READ_CHUNK = 8 * 1024 * 1024;
 const BIG_FILE = 4 * 1024 * 1024;     // smaller files never get their own progress task
 const canHash = (blob) => blob.size <= HASH_MAX && !!crypto.subtle;
 
-// Big blobs are read in 8 MB slices (so reading from disk reports progress), then digested.
+// The digest runs in a worker (hash-worker.js); a page without workers digests on the page itself.
+let hashWorker = null, hashSeq = 0;
+const hashWaits = new Map();
+function hashInWorker(blob) {
+  if (hashWorker === null) {
+    try {
+      hashWorker = new Worker(new URL('./hash-worker.js', import.meta.url));
+      hashWorker.onmessage = (e) => { const w = hashWaits.get(e.data.id); hashWaits.delete(e.data.id); if (w) e.data.error ? w.rej(new Error(e.data.error)) : w.res(e.data.hex); };
+      hashWorker.onerror = () => { hashWorker = false; for (const w of hashWaits.values()) w.rej(new Error('hash worker')); hashWaits.clear(); };
+    } catch { hashWorker = false; }
+  }
+  if (!hashWorker) return null;
+  return new Promise((res, rej) => { const id = ++hashSeq; hashWaits.set(id, { res, rej }); hashWorker.postMessage({ id, blob }); });
+}
+
+// Big blobs are digested in the worker; without one they are read in 8 MB slices (so reading from disk reports progress).
 async function sha256(blob, { onProgress, signal } = {}) {
   if (!canHash(blob)) return null;
+  const w = hashInWorker(blob);
+  if (w) {
+    try { const hex = await w; onProgress?.(blob.size); return hex; } catch { /* fall back to the page */ }
+  }
   let buf;
   if (blob.size <= READ_CHUNK) buf = await blob.arrayBuffer();
   else {
@@ -112,6 +131,7 @@ async function sha256(blob, { onProgress, signal } = {}) {
       if (signal?.aborted) throw abortError();
       buf.set(new Uint8Array(await blob.slice(off, off + READ_CHUNK).arrayBuffer()), off);
       onProgress?.(Math.min(blob.size, off + READ_CHUNK) * 0.9);
+      await new Promise(r => setTimeout(r, 0));   // a big file must not hold the page for its whole read
     }
   }
   const d = await crypto.subtle.digest('SHA-256', buf);

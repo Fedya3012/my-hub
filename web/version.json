@@ -517,6 +517,7 @@
       "js/core/theme.js",
       "js/core/updater.js",
       "js/core/storage/index.js",
+      "js/core/storage/hash-worker.js",
       "js/core/storage/local.js",
       "js/core/storage/github.js",
       "js/core/storage/http.js",
