@@ -25,23 +25,43 @@ const Y = () => prefs().lyrics || {};
 export const autoOn = () => Y().aiAuto !== 0;
 const modelKey = () => (AI_MODELS[Y().aiModel] ? Y().aiModel : 'base');
 
-let asr = null, asrKey = '';
-async function recognizer(task) {
+let asr = null, asrKey = '', loading = null;
+let modelFailed = '';   // model that could not be loaded: automatic mode stops retrying it on every song (manual still can)
+// One model load at a time: two songs asking together share it (and its error) instead of loading twice.
+function recognizer(task) {
   const key = modelKey();
-  if (asr && asrKey === key) return asr;
+  if (asr && asrKey === key) return Promise.resolve(asr);
+  if (loading?.key === key) return loading.p;
+  const p = loadRecognizer(task, key).finally(() => { if (loading?.p === p) loading = null; });
+  loading = { key, p };
+  return p;
+}
+async function loadRecognizer(task, key) {
   const T = await import(LIB);
   T.env.allowLocalModels = false;
   const files = new Map();
-  asr = await T.pipeline('automatic-speech-recognition', AI_MODELS[key].id, {
-    device: 'wasm', dtype: 'q8',
-    progress_callback: (p) => {
-      if (p.status !== 'progress' || !p.total) return;
-      files.set(p.file, [p.loaded || 0, p.total]);
-      let done = 0, total = 0;
-      for (const [a, b] of files.values()) { done += a; total += b; }
-      task.update({ done, total, unit: 'bytes', detail: `Đang tải mô hình nhận dạng giọng hát (${AI_MODELS[key].label}, chỉ lần đầu)…` });
-    },
-  });
+  const progress_callback = (p) => {
+    if (p.status !== 'progress' || !p.total) return;
+    files.set(p.file, [p.loaded || 0, p.total]);
+    let done = 0, total = 0;
+    for (const [a, b] of files.values()) { done += a; total += b; }
+    task.update({ done, total, unit: 'bytes', detail: `Đang tải mô hình nhận dạng giọng hát (${AI_MODELS[key].label}, chỉ lần đầu)…` });
+  };
+  // Some ONNX Runtime builds fail to optimise the 8-bit Whisper decoder ("Can't create a session …
+  // TransposeDQWeightsForMatMulNBits … Missing required scale"). That comes from a graph optimisation, so the
+  // same model is retried with optimisations off, then as full-precision weights as a last resort.
+  const tries = [
+    { dtype: 'q8' },
+    { dtype: 'q8', session_options: { graphOptimizationLevel: 'disabled' } },
+    { dtype: 'fp32' },
+  ];
+  let err = null;
+  for (const opt of tries) {
+    try { asr = await T.pipeline('automatic-speech-recognition', AI_MODELS[key].id, { device: 'wasm', progress_callback, ...opt }); err = null; break; }
+    catch (e) { err = e; asr = null; if (!/session|MatMulNBits|DequantizeLinear|scale/i.test(String(e?.message || e))) break; console.warn('[lyrics-ai] model load failed, retrying', opt, e); }
+  }
+  if (err) { modelFailed = key; throw err; }
+  modelFailed = '';
   asrKey = key;
   return asr;
 }
@@ -133,7 +153,7 @@ export function watch(player) {
     const t = player.track;
     if (!t || !autoOn()) return;
     timer = setTimeout(async () => {
-      if (player.track?.id !== t.id || !player.playing || running.size) return;
+      if (player.track?.id !== t.id || !player.playing || running.size || modelFailed === modelKey()) return;
       if ((await getSetting(MISS, {}))?.[t.id]) return;
       if (await loadLyrics(t, { allowOnline: !!Y().online })) return;
       generate(t).catch(() => {});
