@@ -284,7 +284,8 @@ body[data-posture="flex"] .fx-writer .fx-w-page { padding-bottom: 24px; }
   .fx-meta dt { font-size: .78rem; padding-top: 2px; }
   .fx-sec-h .section-title { white-space: nowrap; font-size: .95rem; }
   .fx-sec-h .seg button { min-width: 34px; min-height: 34px; }
-  .fx-cont small { display: block; font-weight: 400; opacity: .85; font-size: .78rem; }
+  .fx-cont { min-width: 0; max-width: 100%; }
+  .fx-cont small { display: block; font-weight: 400; opacity: .85; font-size: .78rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
   .fx-desk { grid-template-columns: auto 1fr; justify-items: start; text-align: left; padding: 14px; gap: 14px; }
   .fx-ring { width: 96px; }
   .fx-ring b { font-size: 1.25rem; }
@@ -377,6 +378,7 @@ button.fx-tag { border: 0; font: inherit; font-size: .78rem; cursor: pointer; }
 /* Kanban */
 .fx-kanban { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(200px, 1fr); gap: 10px; overflow-x: auto; padding-bottom: 6px; scroll-snap-type: x mandatory; }
 .fx-kcol { display: grid; grid-template-rows: auto 1fr; gap: 6px; padding: 8px; border-radius: 12px; background: var(--surface-2); scroll-snap-align: start; min-height: 160px; }
+body.fx-dragging .fx-kanban { scroll-snap-type: none; }
 .fx-kcol.drop { outline: 2px dashed var(--fx); }
 .fx-kcol h3 { font-size: .85rem; display: flex; gap: 6px; align-items: center; }
 .fx-kcol h3 small { color: var(--muted); }
@@ -400,3 +402,10 @@ button.fx-tag { border: 0; font: inherit; font-size: .78rem; cursor: pointer; }
 /* Minimal chrome, as in the other apps: search + plain icon on one row, quiet "Tất cả" links */
 .fx-toolbar.fx-tb-row { grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px; }
 .fx .section-title .more { text-decoration: none; font-weight: 600; font-size: .86rem; color: var(--fx, var(--accent)); }
+/* The writer covers the app shell (z 800): shared dialogs and toasts must stay above it. */
+body.fx-writer-open .modal-wrap { z-index: 1000; }
+body.fx-writer-open #toasts { z-index: 1001; }
+.fx-cols, .fx-col, .fx-cols > *, .fx-panel, .fx-binder, .fx-ch { min-width: 0; }
+.fx-meta dd { overflow-wrap: anywhere; }
+.fx-sec-h { flex-wrap: wrap; row-gap: 8px; }
+.fx-cont > span { min-width: 0; overflow: hidden; }

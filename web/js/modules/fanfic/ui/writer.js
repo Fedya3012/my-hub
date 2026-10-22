@@ -8,7 +8,6 @@
 import { icon } from '../../../core/icons.js';
 import { esc, toast, h, modal } from '../../../core/ui.js';
 import { debounce } from '../../../core/perf.js';
-import { db } from '../../../core/db.js';
 import * as store from '../lib/store.js';
 import { mdToHtml, countWords, today } from '../lib/text.js';
 import { CH_STATUS } from '../lib/vocab.js';
@@ -118,6 +117,7 @@ export async function openWriter(root, id, chapterId, { ctx, onClose }) {
 
   async function show(chId) {
     await flush();
+    if (cur) todayBase += countWords(ta.value) - sessionStart;   // words written in the previous chapter stay in today's total
     if (!v.chapters.length) { await store.addChapter(id, {}, { quiet: true }); await reload(); }
     cur = v.chapters.find(c => c.id === chId) || v.chapters.find(c => c.id === v.fic.lastChapterId) || v.tops[0] || v.chapters[0];
     titleIn.value = cur.title || '';
@@ -162,7 +162,7 @@ export async function openWriter(root, id, chapterId, { ctx, onClose }) {
     keySound(e.inputType);
     count(); grow(); paintDim(); typewriter(); suggest(); save();
   });
-  titleIn.addEventListener('input', () => { dirty = true; save(); });
+  titleIn.addEventListener('input', () => { dirty = true; try { localStorage.setItem(DRAFT(cur.id), JSON.stringify({ body: ta.value, title: titleIn.value, at: Date.now() })); } catch { /* storage unavailable */ } save(); });
   async function flush() {
     if (!dirty || !cur) return;
     dirty = false;
@@ -185,6 +185,7 @@ export async function openWriter(root, id, chapterId, { ctx, onClose }) {
     g.classList.toggle('done', todayWords >= daily);
     lockTick();
   }
+  const written = () => todayBase + countWords(ta.value) - sessionStart;   // today's words, across chapters
   function grow() { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; }
   const mirror = document.createElement('div');
   mirror.className = 'fx-w-mirror';
@@ -254,11 +255,9 @@ export async function openWriter(root, id, chapterId, { ctx, onClose }) {
   async function pick(i) {
     const t = sugList[i]; if (!t) return;
     const s = ta.selectionStart, before = ta.value.slice(0, s).replace(/\[\[([^\]\n]{0,40})$/, `[[${t.name}]]`);
-    ta.value = before + ta.value.slice(s).replace(/^\]\]/, '');
-    ta.setSelectionRange(before.length, before.length);
     sug.hidden = true;
+    replaceText(before + ta.value.slice(s).replace(/^\]\]/, ''), before.length);
     if (t.create) { await store.saveNote({ fanficId: id, kind: 'character', title: t.name }); await loadTargets(); toast(`Đã tạo hồ sơ “${t.name}”`); }
-    ta.dispatchEvent(new Event('input'));
   }
   ta.addEventListener('keydown', (e) => {
     if (sug.hidden) return;
@@ -281,8 +280,17 @@ export async function openWriter(root, id, chapterId, { ctx, onClose }) {
     else if (kind === '[[') { out = val.slice(0, s) + '[[' + sel + (sel ? ']]' : '') + val.slice(e); caret = s + 2 + sel.length + (sel ? 2 : 0); }
     else if (kind.endsWith(' ')) { const ls = val.lastIndexOf('\n', s - 1) + 1; out = val.slice(0, ls) + kind + val.slice(ls); caret = e + kind.length; }
     else { out = val.slice(0, s) + kind + sel + kind + val.slice(e); caret = sel ? e + kind.length * 2 : s + kind.length; }
-    ta.value = out; ta.focus(); ta.setSelectionRange(caret, caret);
-    ta.dispatchEvent(new Event('input'));
+    replaceText(out, caret);
+  }
+  // Replace the whole text but keep the browser's undo history (Ctrl+Z): only the changed middle part is typed in.
+  function replaceText(out, caret) {
+    const old = ta.value;
+    let a = 0; while (a < old.length && a < out.length && old[a] === out[a]) a++;
+    let b = 0; while (b < old.length - a && b < out.length - a && old[old.length - 1 - b] === out[out.length - 1 - b]) b++;
+    ta.focus(); ta.setSelectionRange(a, old.length - b);
+    const mid = out.slice(a, out.length - b);
+    if (!(mid ? document.execCommand('insertText', false, mid) : document.execCommand('delete')) || ta.value !== out) { ta.value = out; ta.dispatchEvent(new Event('input')); }
+    ta.setSelectionRange(caret, caret);
   }
   ta.addEventListener('keydown', (e) => {
     const mod = e.ctrlKey || e.metaKey;
@@ -290,7 +298,6 @@ export async function openWriter(root, id, chapterId, { ctx, onClose }) {
     else if (mod && e.key === 'i') { e.preventDefault(); format('*'); }
     else if (mod && e.shiftKey && (e.key === 'S' || e.key === 's')) { e.preventDefault(); snap(); }
     else if (mod && e.key === 's') { e.preventDefault(); flush().then(() => toast('Đã lưu')); }
-    else if (mod && (e.key === 'h' || e.key === 'f')) { e.preventDefault(); tools().then(t => t.findReplace(api)); }
   });
 
   // ── Bar actions ──
@@ -370,7 +377,7 @@ export async function openWriter(root, id, chapterId, { ctx, onClose }) {
   // ── Session lock (Cold Turkey style): no leaving until the word or time goal is met ──
   function lockTick() {
     if (!lock) return;
-    const words = countWords(ta.value) - lock.startWords, left = Math.max(0, lock.until - Date.now());
+    const words = written() - lock.startWords, left = Math.max(0, lock.until - Date.now());
     const doneW = lock.words ? words >= lock.words : true, doneT = lock.until ? left <= 0 : true;
     const pW = lock.words ? Math.min(1, words / lock.words) : 1, pT = lock.until ? 1 - left / (lock.until - lock.start) : 1;
     $('[data-locktext]').textContent = doneW && doneT ? 'Đã đạt mục tiêu phiên. Có thể thoát.'
@@ -428,9 +435,7 @@ export async function openWriter(root, id, chapterId, { ctx, onClose }) {
   }
   function insertAtCaret(text) {
     const s = ta.selectionStart;
-    ta.value = ta.value.slice(0, s) + text + ta.value.slice(ta.selectionEnd);
-    ta.setSelectionRange(s + text.length, s + text.length);
-    ta.dispatchEvent(new Event('input'));
+    replaceText(ta.value.slice(0, s) + text + ta.value.slice(ta.selectionEnd), s + text.length);
     toast('Đã chèn đoạn từ phiên bản cũ');
   }
   function inspector() {
@@ -454,7 +459,7 @@ export async function openWriter(root, id, chapterId, { ctx, onClose }) {
   // What the tools module (find/replace, analysis, lock, look, sound) needs from the writer.
   const api = {
     id, get v() { return v; }, get cur() { return cur; }, ta, flush, reload, show, paint: () => { count(); grow(); paintDim(); },
-    startLock(words, minutes) { lock = { words, until: minutes ? Date.now() + minutes * 60000 : 0, start: Date.now(), startWords: countWords(ta.value) }; $('[data-lockbar]').hidden = false; el.classList.add('locked'); lockTick(); },
+    startLock(words, minutes) { lock = { words, until: minutes ? Date.now() + minutes * 60000 : 0, start: Date.now(), startWords: written() }; $('[data-lockbar]').hidden = false; el.classList.add('locked'); lockTick(); },
     stopLock() { lock = null; $('[data-lockbar]').hidden = true; el.classList.remove('locked'); },
     get lock() { return lock; },
   };
@@ -464,6 +469,7 @@ export async function openWriter(root, id, chapterId, { ctx, onClose }) {
   const onKey = (e) => {
     if (e.key === 'Escape' && focus) { e.preventDefault(); setFocus(false); }
     if ((e.ctrlKey || e.metaKey) && e.key === '.') { e.preventDefault(); scratch(scr.hidden); }
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'h' || e.key === 'f') && !document.querySelector('.fx-sheet-wrap')) { e.preventDefault(); tools().then(t => t.findReplace(api)); }
   };
   const onHide = () => { if (document.visibilityState === 'hidden') { flush(); logSession(false); } };
   document.addEventListener('keydown', onKey);
@@ -501,6 +507,5 @@ export async function openWriter(root, id, chapterId, { ctx, onClose }) {
   refreshToday();
   loadTargets();
   if (!narrow() && pref('pinOpen')) pinShow(null);
-  void db;
   return { close, show, locked: () => !!(lock && !lock.done), nudge: () => { toast('Phiên viết đang khoá: viết tới mục tiêu để thoát', 'warn'); ta.focus(); } };
 }

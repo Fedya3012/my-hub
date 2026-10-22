@@ -51,8 +51,16 @@ export async function soundSheet(ctx, item) {
   box.querySelector('[data-k="keyVolume"]').oninput = (e) => { setPref('keyVolume', +e.target.value); e.target.nextElementSibling.textContent = Math.round(e.target.value * 100) + '%'; };
   box.querySelectorAll('[data-amb]').forEach(r => r.oninput = () => { amb.set(r.dataset.amb, +r.value); r.nextElementSibling.textContent = Math.round(r.value * 100) + '%'; });
   // Music listens to item:open and plays what is attached; 'unhandled' keeps the app from navigating.
-  box.querySelector('[data-music]').onclick = () => { ctx.bus.emit('item:open', { item, unhandled: true }); toast('Đang phát nhạc đã gắn (nếu có)'); };
-  box.querySelector('[data-pause]').onclick = () => ctx.bus.emit('music:pause');
+  box.querySelector('[data-music]').onclick = async () => {
+    const player = ctx.services.get('player');
+    if (!player) return toast('Bật Trình phát nhạc trong Quản lý ứng dụng để phát nhạc', 'warn');
+    const linked = await (await import('../../music/lib/store.js')).musicFor(item.id).catch(() => []);
+    if (!linked.length) return toast('Truyện chưa gắn nhạc. Gắn ở trang tác phẩm, khối Nhạc nền.', 'warn');
+    const m = linked[0];
+    await player.play(m.kind, m.link.fromId, { shuffle: !!m.link.shuffle });
+    toast(`Đang phát: ${m.name}`);
+  };
+  box.querySelector('[data-pause]').onclick = () => ctx.services.get('player')?.pause();
 }
 
 // ── Session lock ──

@@ -11,7 +11,7 @@ export async function render(el, { ctx, go }) {
       <button class="fx-tool" data-t="ao3">${icon('fx-research')}<b>Lưu truyện từ AO3</b><small>Tải bản HTML trên AO3 (Download → HTML) rồi chọn tệp: giữ fandom, tag, xếp hạng, chương</small></button>
       <button class="fx-tool" data-t="export" ${snap.list.length ? '' : 'disabled'}>${icon('download')}<b>Xuất tất cả (Markdown)</b><small>${snap.list.length} truyện, mỗi truyện một tệp</small></button>
     </div>
-    <p class="hint">Có thể kéo thả tệp vào bất kỳ trang nào của Xưởng Viết. Xuất EPUB / PDF / HTML ở trang từng truyện. Nhập DOCX và EPUB sẽ có ở giai đoạn sau.</p>`;
+    <p class="hint">Có thể kéo thả tệp vào bất kỳ trang nào của Xưởng Viết. Xuất Word (.docx), EPUB, EPUB cho Amazon KDP, PDF, HTML, Markdown và TXT ở menu ⋯ của từng truyện. Chưa nhập được tệp DOCX và EPUB.</p>`;
   const io = () => import('../lib/io.js');
   el.querySelector('[data-t="new"]').onclick = async () => (await import('./edit.js')).editWork(null, { go });
   el.querySelector('[data-t="import"]').onclick = async () => { const m = await io(); m.importFiles(await m.pickFiles(), ctx, { origin: 'mine' }); };

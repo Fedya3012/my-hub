@@ -26,7 +26,8 @@ export async function start(context) {
     edit: async (id, chapterIndex = null) => {
       const v = await store.get(id);
       const ch = chapterIndex != null ? v?.tops.filter(c => c.pubAt)[chapterIndex] : null;
-      ctx.go(ch ? `fanfic/write/${id}/${ch.id}` : 'fanfic/work/' + id);
+      if (!v) return ctx.go('fanfic/works');
+      ctx.go(`fanfic/write/${id}${ch ? '/' + ch.id : ''}`);   // no position yet: the writer opens the last edited chapter
     },
     show: (id) => ctx.go('fanfic/work/' + id),
     snapshot: () => store.snapshot(),

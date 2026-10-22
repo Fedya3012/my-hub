@@ -286,6 +286,9 @@ function kanbanDrag(board, onDrop) {
     const col = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-col]');
     if (col) col.classList.add('drop');
     drag.col = col;
+    // Near the left / right edge, scroll the board so columns off screen (phones show one at a time) can be reached.
+    const r = board.getBoundingClientRect(), edge = 40;
+    board.scrollLeft += e.clientX < r.left + edge ? -12 : e.clientX > r.right - edge ? 12 : 0;
   });
   const end = () => {
     if (!drag) return;
