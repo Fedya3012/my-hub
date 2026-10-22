@@ -70,16 +70,22 @@ function dedupeEpisodes(items) {
   return [...m.values()];
 }
 
-// Same feed from two sources → one result with the best of both (rating from iTunes, counts from Podcast Index).
+// Same show from two sources → one result with the best of both (rating from iTunes, counts from Podcast Index).
+// Feed URLs that differ are kept as alternates: the show page lets the user choose which source to follow.
 function merge(list) {
   const m = new Map();
-  const key = (r) => r.itunesId ? 'i' + r.itunesId : 'u' + String(r.feedUrl || '').replace(/^https?:\/\//, '').replace(/\/$/, '').toLowerCase();
+  const norm = (u) => String(u || '').replace(/^https?:\/\//, '').replace(/\/$/, '').toLowerCase();
   for (const r of list) {
     if (!r.feedUrl) continue;
-    const k = key(r), k2 = 'u' + String(r.feedUrl).replace(/^https?:\/\//, '').replace(/\/$/, '').toLowerCase();
+    const k = r.itunesId ? 'i' + r.itunesId : 'u' + norm(r.feedUrl), k2 = 'u' + norm(r.feedUrl);
     const old = m.get(k) || m.get(k2);
-    if (old) { old.sources = [...new Set([...(old.sources || []), ...(r.sources || [])])]; for (const [f, v] of Object.entries(r)) if (f !== 'sources' && (old[f] == null || old[f] === '' || (Array.isArray(old[f]) && !old[f].length))) old[f] = v; }
-    else { m.set(k, r); m.set(k2, r); }
+    if (old) {
+      old.sources = [...new Set([...(old.sources || []), ...(r.sources || [])])];
+      if (norm(r.feedUrl) !== norm(old.feedUrl) && !(old.alternates || []).some(x => norm(x.feedUrl) === norm(r.feedUrl)))
+        old.alternates = [...(old.alternates || []), { feedUrl: r.feedUrl, source: r.source, title: r.title }];
+      for (const [f, v] of Object.entries(r)) if (!['sources', 'alternates'].includes(f) && (old[f] == null || old[f] === '' || (Array.isArray(old[f]) && !old[f].length))) old[f] = v;
+      m.set(k, old); m.set(k2, old);
+    } else { const o = { ...r, alternates: [] }; m.set(k, o); m.set(k2, o); }
   }
   return [...new Set(m.values())];
 }

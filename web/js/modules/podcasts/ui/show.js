@@ -4,6 +4,7 @@ import { icon } from '../../../core/icons.js';
 import { esc, toast, confirmBox } from '../../../core/ui.js';
 import { tasks } from '../../../core/tasks.js';
 import * as store from '../lib/store.js';
+import { SOURCES } from '../lib/online.js';
 import { seen, sourceNames } from '../lib/online.js';
 import { normFeed } from '../lib/net.js';
 import { get } from '../lib/prefs.js';
@@ -63,6 +64,7 @@ export async function render(el, { head, arg, go, ctx, rerender }) {
     <p class="pc-source big">${icon('pc-wifi')}<span>Nguồn: <b>${esc(sourceNames(s.sources) || (local ? 'Tệp trên máy này' : 'Link RSS trực tiếp'))}</b>${local ? '' : ` · RSS: <a href="${esc(s.feedUrl)}" target="_blank" rel="noopener">${esc(hostOf(s.feedUrl))}</a>`}${s.itunesId ? ` · Apple ID ${esc(s.itunesId)}` : ''}${s.piId ? ` · Podcast Index ID ${esc(s.piId)}` : ''}</span></p>
     ${s.funding?.length ? `<p class="pc-fund">${icon('pc-star')} Ủng hộ: ${s.funding.map(f => `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.label || 'Ủng hộ')}</a>`).join(' · ')}</p>` : ''}
     ${Object.keys(sets).length ? `<p class="muted pc-sets">${[sets.speed && `Tốc độ ${sets.speed}×`, sets.skipIntro && `Bỏ ${sets.skipIntro}s đầu`, sets.skipOutro && `Bỏ ${sets.skipOutro}s cuối`, sets.autoDownload != null && (sets.autoDownload ? 'Tự tải' : 'Không tự tải')].filter(Boolean).join(' · ')}</p>` : ''}
+    ${sourcesBox(s)}
     <div class="pc-toolbar">
       <div class="pc-seg sm">${[['', 'Tất cả'], ['unplayed', 'Chưa nghe'], ['progress', 'Đang nghe'], ['starred', 'Có sao']].map(([k, l]) => `<button data-f="${k}" aria-current="${st.f === k}">${l}</button>`).join('')}</div>
       <label class="pc-find">${icon('search')}<input type="search" placeholder="Tìm trong ${all.length} tập" value="${esc(st.q)}" data-q></label>
@@ -72,6 +74,13 @@ export async function render(el, { head, arg, go, ctx, rerender }) {
     <div data-eps>${await episodeList(eps.slice(0, 200), { showName: false, empty: 'Không có tập nào khớp.' })}</div>
     ${eps.length > 200 ? `<p class="muted">Hiện 200 / ${eps.length} tập. Dùng ô tìm để lọc.</p>` : ''}`;
   const off = bindEpisodes(el, { ctx, rerender });
+  el.querySelector('[data-srccheck]')?.addEventListener('click', () => compareSources(el, s, rerender));
+  el.querySelectorAll('[data-use]').forEach(b => b.onclick = async () => {
+    b.disabled = true;
+    try { await tasks.run({ label: 'Đổi nguồn podcast', detail: s.title, cancellable: true }, () => store.switchSource(id, b.dataset.use)); toast('Đã chuyển sang nguồn này'); }
+    catch (e) { if (e?.name !== 'AbortError') toast('Không đổi được nguồn: ' + e.message, 'error'); }
+    rerender();
+  });
   const save = (p) => { filters.set(id, { ...st, ...p }); rerender(); };
   el.querySelectorAll('[data-f]').forEach(b => b.onclick = () => save({ f: b.dataset.f }));
   let t; el.querySelector('[data-q]').addEventListener('input', (e) => { clearTimeout(t); t = setTimeout(() => save({ q: e.target.value }), 300); });
@@ -109,3 +118,40 @@ async function showSettings(s) {
 }
 
 const hostOf = (u) => { try { return new URL(u).host; } catch { return u; } };
+
+// Where the podcast is listed: the source it is followed from, and the others (when several directories list it).
+function sourcesBox(s) {
+  const alts = s.alternates || [];
+  if (!alts.length) return '';
+  const label = (k) => SOURCES[k] || 'Link RSS';
+  const rows = [{ url: s.feedUrl, name: label(s.sources?.[0]), current: true }, ...alts.map(a => ({ url: a.feedUrl, name: label(a.source), current: false }))];
+  return `<section class="pc-sec pc-srcs"><header><h2>Nguồn của podcast này</h2><small class="muted">${rows.length} nguồn · đang theo: ${esc(rows[0].name)}</small>
+    <button class="btn sm" data-srccheck>${icon('pc-chart')}So sánh chất lượng</button></header>
+    <ul class="pc-srclist" data-srclist>${rows.map(r => `<li><span><b>${esc(r.name)}</b><small class="muted">${esc(hostOf(r.url))}</small></span>${r.current ? '<span class="pc-badge-txt">Đang theo</span>' : `<button class="btn sm" data-use="${esc(r.url)}">Theo nguồn này</button>`}</li>`).join('')}</ul></section>`;
+}
+
+async function compareSources(el, s, rerender) {
+  const box = el.querySelector('[data-srclist]');
+  const btn = el.querySelector('[data-srccheck]');
+  btn.disabled = true; btn.textContent = 'Đang đo…';
+  const urls = [{ url: s.feedUrl, name: SOURCES[s.sources?.[0]] || 'Link RSS' }, ...(s.alternates || []).map(a => ({ url: a.feedUrl, name: SOURCES[a.source] || 'Link RSS' }))];
+  const res = await Promise.allSettled(urls.map(u => store.sourceQuality(u.url, s.itunesId, { fresh: true })));
+  const ok = res.map((r, i) => r.status === 'fulfilled' ? { ...r.value, name: urls[i].name } : { url: urls[i].url, name: urls[i].name, error: r.reason?.message || 'lỗi' });
+  const best = Math.max(...ok.filter(x => !x.error).map(x => x.score));
+  const fmtNew = (t) => t ? new Date(t).toLocaleDateString('vi-VN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+  box.outerHTML = `<div class="pc-cmp"><table><thead><tr><th>Nguồn</th><th>Tập</th><th>Mới nhất</th><th>Bitrate</th><th>Định dạng</th><th>Chương / chép lời</th><th>Điểm</th><th></th></tr></thead><tbody>
+    ${ok.map(x => x.error ? `<tr><td><b>${esc(x.name)}</b></td><td colspan="6" class="muted">Không đọc được: ${esc(x.error)}</td><td></td></tr>` : `<tr class="${x.score === best ? 'best' : ''}">
+      <td><b>${esc(x.name)}</b>${x.score === best ? ' <span class="pc-badge-txt">Tốt nhất</span>' : ''}<small class="muted">${esc(hostOf(x.feedUrl))}</small></td>
+      <td>${x.episodes}</td><td>${fmtNew(x.newest)}</td><td>${x.kbps ? x.kbps + ' kbps' : '—'}</td><td>${esc(x.formats.join(', ') || '—')}</td>
+      <td>${x.chapters || 0} / ${x.transcripts || 0}</td><td><b>${x.score}</b></td>
+      <td>${x.feedUrl === s.feedUrl ? '<small class="muted">đang theo</small>' : `<button class="btn sm" data-use="${esc(x.feedUrl)}">Theo nguồn này</button>`}</td></tr>`).join('')}
+    </tbody></table>
+    <p class="muted"><small>Điểm tính từ số tập, độ mới (30 ngày), bitrate thật (kích thước tệp / thời lượng, tối đa 192 kbps), có chương và bản chép lời. Nguồn chỉ đọc được từ Apple bị trừ điểm vì không đầy đủ.</small></p></div>`;
+  btn.remove();
+  el.querySelectorAll('[data-use]').forEach(b => b.onclick = async () => {
+    b.disabled = true;
+    try { await tasks.run({ label: 'Đổi nguồn podcast', detail: s.title, cancellable: true }, () => store.switchSource(s.itemId, b.dataset.use)); toast('Đã chuyển sang nguồn này'); }
+    catch (e) { if (e?.name !== 'AbortError') toast('Không đổi được nguồn: ' + e.message, 'error'); }
+    rerender();
+  });
+}

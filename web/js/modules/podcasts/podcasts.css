@@ -289,3 +289,15 @@ body.bk-reader-open[data-audio-source]:not([data-audio-source="podcast"]) .pc-mi
 .pc-source.big { display: flex !important; align-items: flex-start; font-size: .88rem; margin: 8px 0; color: var(--muted); }
 .pc-source.big b { color: var(--fg); font-weight: 600; }
 .pc-source.big a { color: var(--pc-accent); overflow-wrap: anywhere; }
+
+.pc-srclist { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.pc-srclist li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border-radius: 12px; background: var(--surface-2); }
+.pc-srclist span { display: grid; min-width: 0; }
+.pc-srclist small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pc-badge-txt { display: inline-block; padding: 2px 8px; margin-left: 6px; border-radius: 999px; background: var(--pc-accent); color: var(--pc-accent-fg); font-size: .72rem; font-weight: 700; }
+.pc-cmp { overflow-x: auto; margin: 10px 0; }
+.pc-cmp table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+.pc-cmp th, .pc-cmp td { padding: 8px 6px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.pc-cmp th { color: var(--muted); font-weight: 600; white-space: nowrap; }
+.pc-cmp td small { display: block; }
+.pc-cmp tr.best td { background: color-mix(in srgb, var(--pc-accent) 10%, transparent); }

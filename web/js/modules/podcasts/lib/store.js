@@ -37,9 +37,10 @@ export async function loadFeed(feedUrl, { itunesId = null, signal } = {}) {
 }
 
 // Save a feed (and its episodes). subscribe: true adds it to Đăng ký and to the Library.
-export async function saveFeed(parsed, meta = {}, { subscribe = false } = {}) {
+export async function saveFeed(parsed, meta = {}, { subscribe = false, showId = null } = {}) {
+  const opts = { showId };
   const feedUrl = normFeed(meta.feedUrl || parsed.show.feedUrl);
-  const id = showIdOf(feedUrl);
+  const id = opts.showId || showIdOf(feedUrl);
   const old = await db.pcShows.get(id);
   const s = parsed.show;
   const row = {
@@ -48,7 +49,7 @@ export async function saveFeed(parsed, meta = {}, { subscribe = false } = {}) {
     link: s.link || old?.link || '', language: s.language || meta.language || old?.language || '',
     categories: s.categories?.length ? s.categories : meta.categories?.length ? meta.categories : old?.categories || [],
     persons: s.persons || [], funding: s.funding || [], explicit: !!s.explicit, complete: !!s.complete,
-    sources: [...new Set([...(old?.sources || []), ...(meta.sources || [])])], itunesId: meta.itunesId || old?.itunesId || null, piId: meta.piId || old?.piId || null, rating: meta.rating ?? old?.rating ?? null,
+    sources: [...new Set([...(old?.sources || []), ...(meta.sources || [])])], alternates: meta.alternates?.length ? meta.alternates : old?.alternates || [], itunesId: meta.itunesId || old?.itunesId || null, piId: meta.piId || old?.piId || null, rating: meta.rating ?? old?.rating ?? null,
     subscribed: subscribe ? 1 : old?.subscribed || 0, subscribedAt: subscribe && !old?.subscribed ? now() : old?.subscribedAt || null,
     settings: old?.settings || {}, refreshedAt: now(), lastEpisodeAt: Math.max(0, ...parsed.episodes.map(e => e.pubDate || 0)),
     createdAt: old?.createdAt || now(), deleted: 0, partial: !!s.partial,
@@ -396,4 +397,42 @@ export async function stats() {
   const listened = rows.reduce((a, r) => a + Math.min(r.position || 0, r.total || r.position || 0), 0);
   const saved = (await db.settings.get('podcasts.timeSaved'))?.value || 0;
   return { listened, finished: rows.filter(r => r.state === 'finished').length, started: rows.length, saved, shows: (await shows()).length };
+}
+
+// ── Choosing the source of a show that exists on several directories ──
+// Quality is measured from the feeds themselves: how many episodes, how fresh, the real bitrate (file size / length),
+// whether episodes carry chapters and transcripts, and whether the feed is partial (read from iTunes only).
+const qcache = new Map();
+const ext = (u) => (String(u || '').split('?')[0].split('.').pop() || '').toLowerCase();
+const median = (a) => { if (!a.length) return 0; const b = [...a].sort((x, y) => x - y); return b[b.length >> 1]; };
+export async function sourceQuality(feedUrl, itunesId = null, { fresh = false } = {}) {
+  if (!fresh && qcache.has(feedUrl)) return qcache.get(feedUrl);
+  const p = await loadFeed(feedUrl, { itunesId });
+  const eps = p.episodes, newest = Math.max(0, ...eps.map(e => e.pubDate || 0));
+  const rates = eps.slice(0, 12).filter(e => e.size && e.duration).map(e => e.size * 8 / e.duration / 1000);
+  const q = {
+    feedUrl, episodes: eps.length, newest, kbps: Math.round(median(rates)),
+    formats: [...new Set(eps.slice(0, 12).map(e => (e.mime || '').split('/')[1] || ext(e.url)).filter(Boolean))].slice(0, 3),
+    chapters: eps.filter(e => e.chapters?.length || e.chaptersUrl).length,
+    transcripts: eps.filter(e => e.transcripts?.length).length,
+    partial: !!p.show.partial,
+  };
+  q.score = Math.round(Math.min(eps.length, 300) / 3 + Math.min(q.kbps, 192) / 8 + (q.transcripts ? 15 : 0) + (q.chapters ? 10 : 0)
+    + (newest > Date.now() - 30 * 864e5 ? 15 : 0) - (q.partial ? 20 : 0));
+  qcache.set(feedUrl, q);
+  return q;
+}
+
+// Follow another source of the same show: its episodes replace the old feed's (progress for episodes with the same
+// guid is kept; episodes only the old feed had are hidden).
+export async function switchSource(id, feedUrl) {
+  const s = await db.pcShows.get(id);
+  if (!s) return;
+  const parsed = await loadFeed(feedUrl, { itunesId: s.itunesId });
+  const keep = new Set(parsed.episodes.map(e => episodeIdOf(id, e.guid)));
+  await saveFeed(parsed, { ...s, feedUrl, alternates: (s.alternates || []).filter(a => normFeed(a.feedUrl) !== normFeed(feedUrl)).concat(
+    [{ feedUrl: s.feedUrl, source: s.sources?.[0] }].filter(a => normFeed(a.feedUrl) !== normFeed(feedUrl))) }, { showId: id, subscribe: !!s.subscribed });
+  const old = await db.pcEpisodes.where('showId').equals(id).toArray();
+  await db.transaction('rw', db.pcEpisodes, async () => { for (const e of old) if (!keep.has(e.id) && !e.local && !e.deleted) await db.pcEpisodes.update(e.id, { deleted: 1 }); });
+  changed({ showId: id });
 }
