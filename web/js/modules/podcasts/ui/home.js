@@ -40,7 +40,7 @@ export async function render(el, { ctx, go }) {
   const form = el.querySelector('[data-search]');
   form.onsubmit = (e) => { e.preventDefault(); const q = form.q.value.trim(); if (q) go('discover/' + encodeURIComponent(q)); };
   const off = bindEpisodes(el, { ctx });
-  bindShows(el);
+  bindShows(el, { rerender: () => loadCharts(el.querySelector("[data-charts]")) });
   el.querySelectorAll('[data-cont]').forEach(b => b.addEventListener('click', async (ev) => { ev.preventDefault(); const e = await store.episode(b.dataset.cont); if (e) { await player.playEpisode(e); go('play'); } }));
   loadCharts(el.querySelector('[data-charts]'));
   return off;
