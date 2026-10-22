@@ -203,7 +203,7 @@ input[type="range"] { accent-color: var(--accent); }
 
 .toolbar { display: flex; flex-direction: column; gap: 10px; position: sticky; top: var(--sai-top); z-index: 5; background: var(--bg); padding-block: 8px; }
 @media (max-width: 860px) { .toolbar { position: static; } }
-.search { display: flex; align-items: center; gap: 8px; padding: 0 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+.search { display: flex; flex-direction: row; align-items: center; gap: 8px; padding: 0 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
 .search:focus-within { border-color: var(--accent); }
 .search .ic { color: var(--muted); }
 .search input { flex: 1; border: 0; background: none; min-height: 44px; padding: 0; outline: none; min-width: 0; }

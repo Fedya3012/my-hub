@@ -439,7 +439,7 @@ const VIEWS = {
         <div class="mstats-fmt"><div class="mfmt-bar">${fmts.map(([k, n], i) => `<i style="flex:${n};--i:${i}" title="${esc(k)}: ${n}"></i>`).join('')}</div>
           <div class="mfmt-legend">${fmts.slice(0, 6).map(([k, n], i) => `<span><i style="--i:${i}"></i>${esc(k)} <b class="num">${n}</b></span>`).join('')}</div></div>
       </section>
-      <section class="mquick">${store.BUILTIN_SMART.map(s => `<a class="mquick-i" href="#music/playlist/${s.id}" data-art-kind="playlist" data-art-id="${s.id}">${artHtml(L.smartCover(s), 'smart:' + s.name, { cls: 'xs lq-art', label: s.name })}${icon(s.icon)}<span>${s.name}</span></a>`).join('')}</section>
+      <section class="mquick">${store.BUILTIN_SMART.map(s => `<a class="mquick-i" href="#music/playlist/${s.id}" data-art-kind="playlist" data-art-id="${s.id}">${artHtml(L.smartCover(s), 'smart:' + s.name, { cls: 'xs lq-art', label: ' ' })}${icon(s.icon)}<span>${s.name}</span></a>`).join('')}</section>
       <div class="mtool2 end">${xallBtn()}</div>
       ${recent.length ? section('recent', 'Nghe gần đây', { ic: 'clock', count: recent.length, body: `<div class="mrail">${recent.map(t => `<button class="mtile" data-tid="${t.id}">${artHtml(t._cover, t.album || t.title, { cls: 'card' })}<span class="mcard-t">${esc(t.title)}</span><span class="mcard-s">${esc(t.artist)}</span></button>`).join('')}</div>` }) : ''}
       ${section('new', 'Album mới thêm', { ic: 'album', count: L.albums.size, tools: '<a class="see" href="#music/albums">Tất cả</a>', body: `<div class="mrail">${albums.slice(0, 14).map(a => card('album', a, esc(a.artist))).join('')}</div>` })}

@@ -262,7 +262,7 @@
 .mstats > div { display: flex; flex-direction: column; gap: 2px; }
 .mstats b { font-family: var(--font-display); font-size: 1.5rem; line-height: 1.1; }
 .mstats span { font-size: .78rem; color: var(--muted); }
-.mstats-hr span.hires { color: var(--m-hires-fg); align-self: flex-start; }
+.mstats-hr span.hires { color: var(--m-hires-fg); align-self: flex-start; margin: 2px 0; }
 .mfmt-bar { display: flex; height: 10px; border-radius: 6px; overflow: hidden; gap: 2px; }
 .mfmt-bar i, .mfmt-legend i { background: hsl(calc(170 + var(--i) * 47) 55% 50%); }
 .mfmt-legend { display: flex; flex-wrap: wrap; gap: 2px 12px; margin-top: 6px; }
