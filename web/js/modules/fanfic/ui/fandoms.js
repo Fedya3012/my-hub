@@ -13,8 +13,8 @@ export async function render(el, ctx2) {
   const { go } = ctx2;
   const snap = await store.snapshot();
   el.innerHTML = `
-    <div class="fx-toolbar"><label class="search">${icon('search')}<input type="search" data-q placeholder="Tìm fandom" aria-label="Tìm fandom"></label>
-      <button class="btn primary" data-new>${icon('plus')}<span>Fandom mới</span></button></div>
+    <div class="fx-toolbar fx-tb-row"><label class="search">${icon('search')}<input type="search" data-q placeholder="Tìm fandom" aria-label="Tìm fandom"></label>
+      <button class="icon-btn" data-new aria-label="Fandom mới" title="Fandom mới">${icon('plus')}</button></div>
     <div class="fx-fd-grid" data-list></div>`;
   const draw = (q = '') => {
     const list = snap.fandomList.filter(f => store.fold(f.name + ' ' + (f.aliases || []).join(' ')).includes(store.fold(q)));

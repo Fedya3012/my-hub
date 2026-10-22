@@ -86,6 +86,7 @@ async function render() {
   const remembered = localStorage.getItem('music.tab');
   const tab = (NAMES[head] && (head !== 'browse' || !rest.length)) ? head : !head ? (folderMode ? 'browse' : tabs.includes(remembered) ? remembered : tabs[0]) : null;
   if (tab) localStorage.setItem('music.tab', tab);
+  if (SECTION_TABS.includes(tab)) localStorage.setItem('music.section', tab);   // "Âm nhạc" reopens on Album, Nghệ sĩ… as last left
   root.innerHTML = `<div class="mlib page" data-grid="${prefs().gridSize}"${!tab && !search && ['album', 'artist', 'playlist', 'folder', ...Object.keys(GROUPS)].includes(head) ? ' data-detail="1"' : ''}>
     <header class="mlib-head">
       <div class="mlib-title app-title"><span class="eyebrow">Âm nhạc</span><h1>Trình phát nhạc</h1></div>
@@ -98,7 +99,7 @@ async function render() {
     ${SECTION_TABS.includes(tab) || head === 'browse' ? `<details class="msections"><summary>${icon('list')}<span>${esc(tab === 'songs' ? 'Âm nhạc · Bài hát' : 'Âm nhạc · ' + (NAMES[tab] || NAMES.browse))}</span><i aria-hidden="true">▾</i></summary>
       <div class="msections-menu" role="menu">${SECTION_TABS.map(t => `<a role="menuitem" href="#music/${t}" class="${t === tab ? 'on' : ''}">${esc(SONG_NAMES[t])}</a>`).join('')}</div></details>` : ''}
     <div class="mcontent"></div></div>
-    <nav class="mbottom" aria-label="Mục chính của Nhạc">${bottomTabs.map(t => { const on = (t === tab || (t === 'songs' && SECTION_TABS.includes(tab))) && !search; return `<a href="#music/${t}" class="${on ? 'on' : ''}" ${on ? 'aria-current="page"' : ''}>${icon(BOTTOM_ICONS[t] || 'disc')}<span>${NAMES[t]}</span></a>`; }).join('')}<button type="button" data-act="settings">${icon('settings')}<span>Cài đặt</span></button></nav>`;
+    <nav class="mbottom" aria-label="Mục chính của Nhạc">${bottomTabs.map(t => { const on = (t === tab || (t === 'songs' && SECTION_TABS.includes(tab))) && !search; const to = t === 'songs' && SECTION_TABS.includes(lastSection()) ? lastSection() : t; return `<a href="#music/${to}" class="${on ? 'on' : ''}" ${on ? 'aria-current="page"' : ''}>${icon(BOTTOM_ICONS[t] || 'disc')}<span>${NAMES[t]}</span></a>`; }).join('')}<button type="button" data-act="settings">${icon('settings')}<span>Cài đặt</span></button></nav>`;
   document.body.classList.add('m-has-bottom');
   const c = root.querySelector('.mcontent');
   root.querySelector('[data-act="add"]').onclick = (e) => addMenu(e.currentTarget);
@@ -111,6 +112,8 @@ async function render() {
   await renderBody(c, L, tab, head, arg);
   markPlaying();
 }
+
+const lastSection = () => { try { return localStorage.getItem('music.section') || 'songs'; } catch { return 'songs'; } };
 
 async function renderBody(c, L, tab, head, arg) {
   if (head === 'browse' || tab === 'browse') return import('./ui/browse.js').then(m => m.browsePage(c, tab ? '' : arg, () => render()));

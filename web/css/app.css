@@ -81,7 +81,7 @@ body.has-dock main#view { padding-bottom: calc(var(--dock-h, 0px) + 12px); }
 .update-banner .btn { background: var(--accent); color: var(--accent-fg); border: 0; }
 
 @media (max-width: 860px) {
-  .app { grid-template-columns: minmax(0, 1fr); }
+  .app { grid-template-columns: minmax(0, 1fr); align-content: start; }   /* short pages: no stretched app bar */
   /* Phones: the sidebar becomes a drawer on the left (☰ in the top bar, edge swipe, or tap outside to close). */
   .appbar { display: flex; position: sticky; top: 0; z-index: 20; align-items: center; gap: 10px; min-height: calc(52px + var(--sai-top));
     padding: var(--sai-top) max(10px, var(--sai-right)) 0 max(10px, var(--sai-left)); background: var(--surface); border-bottom: 1px solid var(--line); }
@@ -537,3 +537,6 @@ body.mnp-open .task-tray { bottom: calc(16px + var(--sai-bottom)); }
   .bk-toolbar .bk-tools .btn { min-height: 40px; width: 40px; padding: 0; }
   .bk-toolbar .bk-tools .btn.primary { background: none; border-color: transparent; color: var(--fg); }
 }
+/* No glow or lift on filled buttons (skins included); the phone's floating main action keeps its shadow. */
+.btn.primary:not(.page-head .head-actions .btn) { box-shadow: none !important; }
+@media (max-width: 600px) { .mlib-actions .btn.primary { background: none !important; box-shadow: none !important; color: var(--fg) !important; } }

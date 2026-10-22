@@ -396,3 +396,7 @@ button.fx-tag { border: 0; font: inherit; font-size: .78rem; cursor: pointer; }
 .fx-chart .lbl { fill: var(--muted); font-size: 11px; }
 .fx-mini li { display: grid; gap: 2px; }
 @media (max-width: 860px) { .fx-bottom a span { font-size: .62rem; } }
+
+/* Minimal chrome, as in the other apps: search + plain icon on one row, quiet "Tất cả" links */
+.fx-toolbar.fx-tb-row { grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px; }
+.fx .section-title .more { text-decoration: none; font-weight: 600; font-size: .86rem; color: var(--fx, var(--accent)); }
