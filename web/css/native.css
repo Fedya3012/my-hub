@@ -24,10 +24,11 @@ pre, code { overflow-wrap: anywhere; white-space: pre-wrap; }
   button:active, .btn:active, .tabbar a:active { transform: scale(.97); opacity: .85; }
 }
 
-/* Phones: the body is the scroller (html does not scroll), so rubber-band / overscroll can never drag the fixed bars. */
+/* Phones: the document itself scrolls (root scroller), which gets Android's native fling and the compositor's
+   fast path. Making <body> an inner scroller (as before) made swiping feel heavy and slow on the phone.
+   overscroll-behavior: none on html/body above already keeps the fixed bars from being dragged. */
 @media (max-width: 860px) {
-  html { overflow: hidden; height: 100%; }
-  body { height: 100%; min-height: 0; overflow-x: clip; overflow-y: auto; overscroll-behavior: none; -webkit-overflow-scrolling: touch; }
+  html { scroll-behavior: auto; }
 }
 
 /* Auto-hide tab bars (setting ui.tabsAutoHide): the bar slides down, floating mini players drop to the bottom. */
