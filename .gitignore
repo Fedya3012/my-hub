@@ -3,3 +3,4 @@ dist/
 *.jks
 *.keystore
 .DS_Store
+build/native/

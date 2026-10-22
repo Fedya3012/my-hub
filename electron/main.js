@@ -7,6 +7,9 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
+const { spawn } = require('child_process');
+const os = require('os');
+
 const PORT = 47821;
 const WEB = path.join(__dirname, '..', 'web');
 const TYPES = {
@@ -73,6 +76,42 @@ function setupHttp() {
   });
 }
 
+// Bit-perfect output (WASAPI Exclusive): native/xs-audio (C, built in CI) plays FLAC / WAV / MP3 files straight to
+// the DAC at their own format. The page copies the song to a temp file once (hub:xs-file), then drives the
+// player with one-line commands (hub:xs) and gets its lines back as 'hub:xs-event'. See native/xs-audio/xs-audio.c.
+function setupExclusive() {
+  const exe = app.isPackaged ? path.join(process.resourcesPath, 'native', 'xs-audio.exe') : path.join(__dirname, '..', 'build', 'native', 'xs-audio.exe');
+  const dir = path.join(os.tmpdir(), 'myhub-xs');
+  let proc = null, buf = '';
+  const send = (line) => { for (const w of BrowserWindow.getAllWindows()) w.webContents.send('hub:xs-event', line); };
+  const start = () => {
+    if (proc) return proc;
+    if (process.platform !== 'win32' || !fs.existsSync(exe)) throw new Error('Chế độ độc quyền chỉ có trên bản Windows');
+    proc = spawn(exe, [], { stdio: ['pipe', 'pipe', 'ignore'], windowsHide: true });
+    proc.stdout.setEncoding('utf8');
+    proc.stdout.on('data', (d) => { buf += d; let i; while ((i = buf.indexOf('\n')) >= 0) { send(buf.slice(0, i).trim()); buf = buf.slice(i + 1); } });
+    proc.on('exit', () => { proc = null; send('exit'); });
+    return proc;
+  };
+  ipcMain.handle('hub:xs-available', () => process.platform === 'win32' && fs.existsSync(exe));
+  ipcMain.handle('hub:xs', (_e, line) => {
+    if (typeof line !== 'string' || /[\r\n]/.test(line)) throw new Error('Lệnh không hợp lệ');
+    start().stdin.write(line + '\n');
+  });
+  // Song → temp file named by key (track id + size). The last few are kept so going back is instant.
+  ipcMain.handle('hub:xs-file', async (_e, { key, data }) => {
+    await fs.promises.mkdir(dir, { recursive: true });
+    const file = path.join(dir, String(key).replace(/[^\w.-]/g, '_'));
+    if (data) await fs.promises.writeFile(file, Buffer.from(data));
+    else if (!fs.existsSync(file)) return null;
+    const all = (await fs.promises.readdir(dir)).map(n => path.join(dir, n));
+    const st = await Promise.all(all.map(async f => [f, (await fs.promises.stat(f)).mtimeMs]));
+    st.sort((a, b) => b[1] - a[1]).slice(6).forEach(([f]) => { if (f !== file) fs.promises.unlink(f).catch(() => {}); });
+    return file;
+  });
+  app.on('before-quit', () => { try { proc?.stdin.write('quit\n'); } catch { /* gone */ } });
+}
+
 const REPO = 'Fedya3012/my-hub';
 const newer = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number); for (let i = 0; i < 4; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); return false; };
 
@@ -130,6 +169,7 @@ else {
     try { await serve(); } catch (e) { console.error('[my-hub] port in use', e.message); }
     createWindow();
     setupHttp();
+    setupExclusive();
     if (app.isPackaged) setupUpdates();
   });
   app.on('window-all-closed', () => app.quit());

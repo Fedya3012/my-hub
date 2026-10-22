@@ -16,6 +16,8 @@ const IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform 
 const dbToLin = (db) => Math.pow(10, db / 20);
 const now = () => performance.now() / 1000;
 
+import { Exclusive, xsSupported } from './exclusive.js';
+
 export class Engine extends EventTarget {
   constructor() {
     super();
@@ -33,15 +35,33 @@ export class Engine extends EventTarget {
     this.outCfg = null;          // prefs.audio.out
     this.ctxRate = 0;            // bit-perfect: the rate the context was opened at on request
     this._timer = null;
+    this.xs = null;              // WASAPI Exclusive backend (Windows app), see ./exclusive.js
+    this.xsOn = false;           // the current song plays through it
   }
+
+  get xsWanted() { return this.opts.engine === 'exclusive' && xsSupported(); }
+  _xs() {
+    if (this.xs) return this.xs;
+    const x = this.xs = new Exclusive();
+    const mine = (f) => (e) => { if (this.xsOn) f(e); };
+    x.addEventListener('time', mine(() => this._emit('time')));
+    x.addEventListener('state', mine(() => this._emit('state')));
+    x.addEventListener('format', mine(() => this._emit('state')));
+    x.addEventListener('transition', mine((e) => { this._emit('transition', { track: e.detail.track, crossfade: 0 }); this._emit('state'); }));
+    x.addEventListener('ended', mine((e) => this._emit('ended', { track: e.detail.track })));
+    x.addEventListener('error', mine((e) => this._emit('error', { track: x.track, message: e.detail.message })));
+    return x;
+  }
+  _xsVolume() { this.xs?.setVolume(this.muted ? 0 : this.volume * this.volume * this.duck); }
 
   get deck() { return this.decks[this.active]; }
   get el() { return this.deck?.el; }
-  get currentTime() { return this.el?.currentTime || 0; }
+  get currentTime() { return this.xsOn ? this.xs.time : this.el?.currentTime || 0; }
   // Smooth, latency-compensated playback position for lyrics: media time is sampled coarsely by
   // browsers, so extrapolate from the last sample with performance.now() × rate, and subtract the
   // audio output latency so text lines up with what is heard. Snaps on seeks / big drift.
   get preciseTime() {
+    if (this.xsOn) return this.xs.time;
     const el = this.el;
     if (!el) return 0;
     const ct = el.currentTime, now = performance.now();
@@ -59,8 +79,8 @@ export class Engine extends EventTarget {
     const lat = this.ctx && this.ctx.state === 'running' ? (this.ctx.outputLatency || 0) + (this.ctx.baseLatency || 0) : 0;
     return Math.max(0, t - (el.paused ? 0 : Math.min(lat, 0.5) * c.rate));
   }
-  get duration() { const d = this.el?.duration; return isFinite(d) ? d : (this.deck?.track?.duration || 0); }
-  get paused() { return !this.el || this.el.paused; }
+  get duration() { if (this.xsOn) return this.xs.dur || this.xs.track?.duration || 0; const d = this.el?.duration; return isFinite(d) ? d : (this.deck?.track?.duration || 0); }
+  get paused() { return this.xsOn ? this.xs.paused : !this.el || this.el.paused; }
   get outputRate() { return this.ctx?.sampleRate || null; }
   get baseLatency() { return this.ctx ? (this.ctx.baseLatency || 0) + (this.ctx.outputLatency || 0) : null; }
 
@@ -164,6 +184,20 @@ export class Engine extends EventTarget {
 
   // ── Loading & transport ───────────────────────────────────────
   async load(track, url, { gainDb = 0, startAt = 0, autoplay = true, rate = 0 } = {}) {
+    // WASAPI Exclusive: lossless songs go to the native helper; anything it cannot open stays here.
+    if (this.xsWanted) {
+      for (const d of this.decks) this._stopDeck(d);
+      this.next = null;
+      const x = this._xs();
+      this.xsOn = true;
+      this._xsVolume();
+      let ok = false;
+      try { ok = await x.load(track, url, { startAt, autoplay }); } catch (e) { console.warn('[exclusive]', e); }
+      if (ok) { this._emit('state'); return; }
+      this.xsOn = false;
+      x.stop();   // free the DAC for Web Audio
+      this._emit('xs-fallback', { track, reason: this.xs.lastError });
+    } else if (this.xsOn || this.xs?.track) { this.xsOn = false; this.xs.stop(); }
     // Bit-perfect: reopen the context at this track's rate (only between tracks; costs ~50 ms).
     if (this.bitPerfect && rate && !this.ctx && this.wantMode() === 'webaudio') this.ctxRate = rate;
     if (this.bitPerfect && rate && this.mode === 'webaudio' && this.ctx && this.ctx.sampleRate !== rate && this._triedRate !== rate + ':' + this.ctx.sampleRate) {
@@ -195,6 +229,7 @@ export class Engine extends EventTarget {
   }
 
   async play() {
+    if (this.xsOn) return this.xs.play();
     this.init();
     if (this.ctx?.state === 'suspended') await this.ctx.resume().catch(() => {});
     this.router?.resume();
@@ -208,6 +243,7 @@ export class Engine extends EventTarget {
   }
 
   pause({ fade = 0.18 } = {}) {
+    if (this.xsOn) return this.xs.pause();
     const d = this.deck;
     if (!d || d.el.paused) return;
     for (const x of this.decks) if (x !== d && !x.el.paused) this._stopDeck(x);
@@ -225,6 +261,7 @@ export class Engine extends EventTarget {
   toggle() { return this.paused ? this.play() : this.pause(); }
 
   seek(t) {
+    if (this.xsOn) return this.xs.seek(t);
     const el = this.el;
     if (!el) return;
     const d = this.duration;
@@ -232,7 +269,7 @@ export class Engine extends EventTarget {
     if (this.next) { this.next.started = false; this.next.deck.el.pause(); this.next.deck.el.currentTime = 0; }
   }
 
-  stop() { for (const d of this.decks) this._stopDeck(d); this.next = null; this._emit('state'); }
+  stop() { if (this.xsOn) { this.xs.stop(); this.xsOn = false; } for (const d of this.decks) this._stopDeck(d); this.next = null; this._emit('state'); }
 
   _stopDeck(d) {
     d.el.pause();
@@ -242,6 +279,7 @@ export class Engine extends EventTarget {
 
   // The player hands over the next track early. plan = { gapless, crossfade (s) }.
   preload(track, url, { gainDb = 0, plan = {} } = {}) {
+    if (this.xsOn) { this.xs.preload(track, url).catch(() => {}); return; }
     this.init();
     const d = this.decks[1 - this.active];
     if (this.next?.url === url) { this.next.plan = plan; return; }
@@ -255,7 +293,7 @@ export class Engine extends EventTarget {
     d.el.load();
     this.next = { deck: d, track, url, plan, started: false };
   }
-  clearNext() { if (this.next) { this._stopDeck(this.next.deck); this.next = null; } }
+  clearNext() { if (this.xsOn) this.xs.clearNext(); if (this.next) { this._stopDeck(this.next.deck); this.next = null; } }
 
   // Runs every 50 ms (and faster near the end): starts the next deck on time.
   _tick() {
@@ -361,8 +399,8 @@ export class Engine extends EventTarget {
     d.el.volume = Math.max(0, Math.min(1, v));
   }
 
-  setVolume(v) { this.volume = Math.max(0, Math.min(1, v)); this.applyVolume(); }
-  setMuted(m) { this.muted = m; this.applyVolume(); }
+  setVolume(v) { this.volume = Math.max(0, Math.min(1, v)); this.applyVolume(); this._xsVolume(); }
+  setMuted(m) { this.muted = m; this.applyVolume(); this._xsVolume(); }
   applyVolume() {
     // Perceptual curve: slider^2.
     if (this.master) this.master.gain.setTargetAtTime(this.muted ? 0 : this.volume * this.volume, this.ctx.currentTime, 0.015);
@@ -386,6 +424,7 @@ export class Engine extends EventTarget {
   pathInfo() {
     const c = this.ctx;
     return {
+      xs: this.xsOn ? this.xs.format : null,
       mode: this.mode, ctxRate: c?.sampleRate || 0, state: c?.state,
       baseLatency: c?.baseLatency || 0, outputLatency: c?.outputLatency || 0,
       filters: this.filters?.length || 0, preampDb: this.eq.enabled && !this.bitPerfect ? (this.eq.preampDb || 0) : 0,
