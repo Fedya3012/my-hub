@@ -1,14 +1,19 @@
 # Hướng dẫn sử dụng My Hub / Guides
 
-Bộ hướng dẫn ngắn cho người dùng (Fedya). Tài liệu kỹ thuật cho người viết code nằm ở `web/docs/` và `docs/NATIVE.md`.
+Hướng dẫn cho người dùng. Mở bản đẹp có hình và mục lục: https://claude.ai/artifact/JVnWU1v2T4t2Y9WtUU1DUL
 
-| # | Hướng dẫn | Khi nào cần |
-|---|---|---|
-| 1 | [Android: cài và cập nhật bằng Obtainium](01-android-obtainium.md) | Cài lần đầu trên điện thoại, nhận bản mới |
-| 2 | [Windows: cài đặt và cập nhật](02-windows.md) | Cài trên máy tính, bản Setup và bản portable |
-| 3 | [Đồng bộ: tài khoản và thư mục](03-dong-bo.md) | Chọn Chỉ trên máy / GitHub / Dropbox / OneDrive, chọn thư mục nhạc và sách, tạm dừng, huỷ |
-| 4 | [Xưởng Viết / Writer Studio](04-xuong-viet.md) | Viết, nhập, xuất fanfic, xuất bản sang Sách |
-| 5 | [Sách / Books](05-sach.md) | Thêm sách, đọc, theo dõi tiến độ |
-| 6 | [Phát hành phiên bản mới](06-phat-hanh.md) | Thay đổi được gom lại và chỉ phát hành khi bạn nói "cập nhật" |
+1. Bắt đầu
+   1. [Android: cài và cập nhật bằng Obtainium](10-android.md)
+   2. [Windows: cài đặt và cập nhật](11-windows.md)
+2. [Đồng bộ: tài khoản và thư mục](20-dong-bo.md)
+3. Ứng dụng
+   1. [Thư viện](30-thu-vien.md)
+   2. [Quản lý ứng dụng](31-quan-ly-ung-dung.md)
+   3. [Trình phát nhạc](32-trinh-phat-nhac.md)
+   4. [Sách](33-sach.md)
+   5. [Xưởng Viết](34-xuong-viet.md)
+   6. [Cài đặt](35-cai-dat.md)
+4. [Phát hành phiên bản mới](40-phat-hanh.md)
 
+Thêm app mới: tạo `3x-<tên>.md`, thêm vào danh sách trên và vào `PAGES` trong `/mnt/project-files/guides/build.py`.
 Cập nhật lần cuối: 2026-10-22, theo app 0.9.9.1.
