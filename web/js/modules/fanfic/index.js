@@ -5,6 +5,7 @@
 //   write/<id>[/<chapterId>]  Trình viết toàn màn hình (binder, Markdown, tập trung, phiên bản)
 //   fandoms | fandom/<id>     Fandom: nguyên tác bên Sách, nhân vật, cặp đôi, tác phẩm
 //   stats           Thống kê: số từ theo ngày, chuỗi ngày, thời gian viết, WPM, từ dùng nhiều
+//   settings        Cài đặt: chữ, trang viết, hỗ trợ khi viết, âm thanh, mục tiêu, bút danh
 //   tools           Thêm & nhập (TXT, Markdown, HTML/AO3), xuất (Markdown, TXT, HTML, EPUB)
 import './lib/icons.js';
 import { icon } from '../../core/icons.js';
@@ -13,10 +14,10 @@ import { dropFiles } from '../../core/dnd.js';
 import { definePrefs } from './lib/prefs.js';
 
 export const NAME = 'Xưởng Viết';
-const TABS = [['', 'fx-desk', 'Bàn viết'], ['works', 'fx-works', 'Tác phẩm'], ['fandoms', 'fx-fandom', 'Fandom'], ['stats', 'fx-stats', 'Thống kê'], ['tools', 'upload', 'Thêm & nhập']];
+const TABS = [['', 'fx-desk', 'Bàn viết'], ['works', 'fx-works', 'Tác phẩm'], ['fandoms', 'fx-fandom', 'Fandom'], ['stats', 'fx-stats', 'Thống kê'], ['tools', 'upload', 'Thêm & nhập'], ['settings', 'settings', 'Cài đặt']];
 const PAGES = {
   '': () => import('./ui/home.js'), works: () => import('./ui/works.js'), work: () => import('./ui/work.js'),
-  stats: () => import('./ui/stats.js'), fandoms: () => import('./ui/fandoms.js'), fandom: () => import('./ui/fandoms.js'), tools: () => import('./ui/tools.js'),
+  stats: () => import('./ui/stats.js'), fandoms: () => import('./ui/fandoms.js'), fandom: () => import('./ui/fandoms.js'), tools: () => import('./ui/tools.js'), settings: () => import('./ui/settings.js'),
 };
 
 let root, ctx, route = '', offs = [], pageOff = null, writer = null;

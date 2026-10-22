@@ -750,6 +750,7 @@
         "js/modules/fanfic/ui/edit.js",
         "js/modules/fanfic/ui/fandoms.js",
         "js/modules/fanfic/ui/home.js",
+        "js/modules/fanfic/ui/settings.js",
         "js/modules/fanfic/ui/stats.js",
         "js/modules/fanfic/ui/tools.js",
         "js/modules/fanfic/ui/work.js",

@@ -45,7 +45,7 @@ export async function render(el) {
         ${days.map(([d, w], i) => `<rect x="${i * bw + 2}" y="${H - w / max * H}" width="${bw - 4}" height="${Math.max(0, w / max * H)}" rx="2" class="${goal && w >= goal ? 'hit' : ''}"><title>${d}: ${fmtNum(w)} từ</title></rect>`).join('')}
         ${days.map(([d], i) => i % 5 === 0 || i === 29 ? `<text x="${i * bw + bw / 2}" y="${H + 16}" text-anchor="middle" class="lbl">${d.slice(8)}/${d.slice(5, 7)}</text>` : '').join('')}
       </svg></div>
-      <p class="muted">${goal ? `Đạt mục tiêu ${hit}/30 ngày.` : 'Đặt mục tiêu mỗi ngày trong Cài đặt → Xưởng Viết.'}</p></section>
+      <p class="muted">${goal ? `Đạt mục tiêu ${hit}/30 ngày.` : 'Đặt mục tiêu mỗi ngày trong tab <a href="#fanfic/settings">Cài đặt</a>.'}</p></section>
     <div class="fx-cols">
       <section class="fx-panel"><h2 class="section-title">${icon('fx-works')}Theo truyện</h2>
         <ul class="fx-mini">${mine.sort((a, b) => b.words - a.words).map(v => `<li><a href="#fanfic/work/${v.id}">${esc(v.title)}</a> <small class="muted num">${fmtNum(v.words)} từ · năm nay +${fmtNum(byFic.get(v.id) || 0)}</small>${v.fic.goal?.total ? `<div class="bar sm"><i style="width:${Math.min(100, v.words / v.fic.goal.total * 100)}%"></i></div>` : ''}</li>`).join('') || '<li class="muted">Chưa có truyện.</li>'}</ul></section>
