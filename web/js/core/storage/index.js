@@ -70,8 +70,13 @@ async function mergeTable(name, remoteRows = [], tomb = {}) {
     if (tomb[String(r[key])] >= (r.updatedAt || 0)) continue;
     const mine = map.get(r[key]);
     if (!mine || (r.updatedAt || 0) > (mine.updatedAt || 0) || (r.updatedAt === mine.updatedAt && (r.rev || 0) > (mine.rev || 0))) {
-      // A file row from another device must not wipe this device's own copy of the bytes.
-      if (name === 'files' && mine?.locations?.local) r = { ...r, locations: { ...r.locations, local: mine.locations.local } };
+      // 'local' says where the bytes are on the device that wrote the row: it never travels to another device
+      // (a foreign path made "Dọn dữ liệu" think the file was lost here and delete it everywhere). This device's
+      // own copy, if any, is kept.
+      if (name === 'files' && r.locations?.local !== mine?.locations?.local) {
+        const { local: _theirs, ...rest } = r.locations || {};
+        r = { ...r, locations: mine?.locations?.local ? { ...rest, local: mine.locations.local } : rest };
+      }
       map.set(r[key], r); changed.push(r);
     }
   }
@@ -200,8 +205,8 @@ export const storage = {
         createdAt: now(),
       };
       if (r.signal?.aborted) throw abortError();
-      row.locations.local = source.handle ? await local.link(id, source.handle)
-        : await local.put(id, blob, { signal: r.signal, onProgress: (d) => r.report(hashW + d, 'ghi vào máy') });
+      row.locations.local = { ...(source.handle ? await local.link(id, source.handle)
+        : await local.put(id, blob, { signal: r.signal, onProgress: (d) => r.report(hashW + d, 'ghi vào máy') })), dev: (await thisDevice()).id };
       row.syncStatus = 'local-only';
       if (localFolder) row.localFolder = localFolder;   // imported from a 'Thư mục đồng bộ' folder: Dọn removes it once that folder is removed
       await db.files.put(row);
@@ -223,7 +228,7 @@ export const storage = {
       try {
         const got = await d.getFile(key, { signal: r.signal, onProgress: (done, total) => r.report(done) });
         if (fileRow.linked) { r.finish(fileRow.name); return got; }   // a chosen-folder file: never kept on this device
-        const loc = await local.put(fileRow.id, got);
+        const loc = { ...(await local.put(fileRow.id, got)), dev: (await thisDevice()).id };
         await withoutSyncHooks(() => db.files.update(fileRow.id, { 'locations.local': loc }));
         fileRow.locations = { ...fileRow.locations, local: loc };
         r.finish(fileRow.name);

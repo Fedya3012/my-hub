@@ -5,11 +5,15 @@ import { db } from '../db.js';
 import { local } from './local.js';
 import { syncFolders, pruneOrphans } from './folders.js';
 import { tasks } from '../tasks.js';
+import { thisDevice } from '../device.js';
 
 let unknown = 0; // files that could not be checked (no permission) in the last clean
 async function localMissing(f) {
   const loc = f.locations?.local;
   if (!loc) return false;
+  // A copy recorded by another device (dev), or a file that also lives on a drive, is not lost from here.
+  if (loc.dev && loc.dev !== (await thisDevice()).id) return false;
+  if (Object.entries(f.locations).some(([k, v]) => k !== 'local' && v?.key)) return false;
   try {
     if (loc.kind === 'handle') {
       const row = await db.handles.get(loc.ref);

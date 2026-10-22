@@ -120,7 +120,7 @@ function coreCards() {
     const out = [];
     for (const p of rows) {
       const item = await db.items.get(p.itemId);
-      if (!item || item.deletedAt) continue;
+      if (!item || item.deleted) continue;
       out.push({
         id: 'continue-' + item.id, app: 'Thư viện', icon: 'clock', order: 30,
         route: byId(item.moduleId)?.openRoute?.(item) || byId(item.moduleId)?.route || 'library',

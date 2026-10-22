@@ -30,7 +30,7 @@ function go(route) {
 
 // Routes may have a sub-path: #music/album/<id> belongs to the module whose route is 'music'.
 const routeHead = () => (location.hash.slice(1) || 'library').split('/')[0];
-const routeRest = () => decodeURIComponent((location.hash.slice(1).split('/').slice(1)).join('/'));
+const routeRest = () => { const r = location.hash.slice(1).split('/').slice(1).join('/'); try { return decodeURIComponent(r); } catch { return r; } };   // a stray % must not break navigation
 
 const OWN_TABS = ['music', 'books', 'fanfic'];   // apps with their own phone bottom tabs
 
@@ -87,7 +87,11 @@ async function renderStorageBadge() {
   el.href = b.href;
 }
 
+// Each navigation gets a number: a render overtaken by a newer one (two quick taps) stops at its next await,
+// so two modules are never mounted into the page at once.
+let renderSeq = 0;
 async function render() {
+  const my = ++renderSeq;
   const route = routeHead();
   const all = await listModules();
   let m = all.find(x => x.route === route);
@@ -96,15 +100,21 @@ async function render() {
     // Unknown or disabled route: show the address of the page actually opened, so the title and menu match it.
     if (route !== m.route) history.replaceState(null, '', '#' + m.route);
   }
+  if (my !== renderSeq) return;
   // Same module, new sub-path: let it navigate in place (keeps state) when it can.
   if (current?.id === m.id && current.mod.navigate) { await current.mod.navigate(routeRest(), ctx); return; }
   const view = document.getElementById('view');
   try { current?.mod?.unmount?.(); } catch (e) { console.error(e); }
   view.innerHTML = '';
   view.dataset.module = m.id;
-  const mod = await loadModule(m.id);
+  let mod;
+  try { mod = await loadModule(m.id); }
+  catch (e) { console.error(e); if (my === renderSeq) view.replaceChildren(h(`<div class="empty"><h2>Không mở được ${esc(m.name)}</h2><p>${esc(e.message)}</p></div>`)); return; }
+  if (my !== renderSeq) return;
   current = { id: m.id, mod };
-  await mod.mount(view, ctx, routeRest());
+  try { await mod.mount(view, ctx, routeRest()); }
+  catch (e) { console.error(e); if (my === renderSeq) view.appendChild(h(`<div class="empty"><h2>${esc(m.name)} gặp lỗi</h2><p>${esc(e.message)}</p></div>`)); }
+  if (my !== renderSeq) return;
   view.focus({ preventScroll: true });
   await renderNav();
 }
@@ -190,7 +200,7 @@ async function boot() {
     // already-imported sub-files in memory. The Service Worker has the new version cached.
     if (byId(u.id)?.reloadOnUpdate) { setTimeout(() => location.reload(), 1200); return; }
     startServices();
-    if (current?.id === u.id) { current = null; render(); }
+    if (current?.id === u.id) { try { current.mod.unmount?.(); } catch (e) { console.error(e); } current = null; render(); }
   });
   bus.on('storage:mode', renderStorageBadge);
   bus.on('account:changed', (e) => { if (e.reason !== 'refresh') renderStorageBadge(); });

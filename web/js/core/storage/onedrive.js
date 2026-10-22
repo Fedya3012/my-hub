@@ -46,6 +46,8 @@ async function token() {
   if (!c?.refresh) throw err('Chưa kết nối OneDrive.', 'signed_out');
   if (c.access && Date.now() < c.expires) return c.access;
   const { r, j } = await tokenCall({ client_id: c.clientId, grant_type: 'refresh_token', refresh_token: c.refresh, scope: SCOPE });
+  // Only a refused refresh token (400/401) means the access was revoked; a server hiccup (429/5xx) is retried later.
+  if (!r.ok && r.status !== 400 && r.status !== 401) throw err(`OneDrive tạm thời không phản hồi (${r.status}), sẽ thử lại.`, 'offline');
   if (!r.ok) { clouds.set('onedrive', { ...c, access: null, refresh: null }); throw err('OneDrive đã thu hồi quyền truy cập, hãy kết nối lại.', 'reconnect'); }
   clouds.set('onedrive', { ...c, access: j.access_token, refresh: j.refresh_token || c.refresh, expires: Date.now() + (j.expires_in - 60) * 1000 });
   return j.access_token;

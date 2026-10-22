@@ -67,7 +67,7 @@ export async function loadModule(id) {
   const m = byId(id);
   const v = (await db.modules.get(id))?.installedVersion || m.version;
   const key = id + '@' + v;
-  if (!loaded.has(key)) loaded.set(key, import(`../modules/${id}/index.js?v=${v}`));
+  if (!loaded.has(key)) loaded.set(key, import(`../modules/${id}/index.js?v=${v}`).catch((e) => { loaded.delete(key); throw e; }));   // a failed load can be retried
   return loaded.get(key);
 }
 
@@ -77,7 +77,7 @@ export async function loadService(id) {
   const m = byId(id);
   const v = (await db.modules.get(id))?.installedVersion || m.version;
   const key = id + '@' + v + ':service';
-  if (!loaded.has(key)) loaded.set(key, import(`../modules/${id}/${m.service}?v=${v}`));
+  if (!loaded.has(key)) loaded.set(key, import(`../modules/${id}/${m.service}?v=${v}`).catch((e) => { loaded.delete(key); throw e; }));
   return loaded.get(key);
 }
 

@@ -34,7 +34,7 @@ async function coverCard() {
   const p = (await db.progress.where('moduleId').equals('books').toArray())
     .filter(r => r.state !== 'finished' && (r.percent || 0) < 98).sort((a, b) => b.updatedAt - a.updatedAt)[0];
   const item = p && await db.items.get(p.itemId);
-  if (!item || item.deletedAt) return null;
+  if (!item || item.deleted) return null;
   return {
     id: 'continue-' + item.id, app: 'Sách', icon: 'book', order: 20, route: 'books/read/' + item.id,
     title: item.title, sub: p.label || '', percent: p.percent || 0,

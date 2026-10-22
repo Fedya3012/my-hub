@@ -39,6 +39,8 @@ async function token() {
   const r = await http('https://api.dropboxapi.com/oauth2/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ grant_type: 'refresh_token', refresh_token: c.refresh, client_id: c.appKey }).toString() });
   const j = JSON.parse(await r.text() || '{}');
+  // Only a refused refresh token (400/401) means the access was revoked; a server hiccup (429/5xx) is retried later.
+  if (!r.ok && r.status !== 400 && r.status !== 401) throw err(`Dropbox tạm thời không phản hồi (${r.status}), sẽ thử lại.`, 'offline');
   if (!r.ok) { clouds.set('dropbox', { ...c, access: null, refresh: null }); throw err('Dropbox đã thu hồi quyền truy cập, hãy kết nối lại.', 'reconnect'); }
   clouds.set('dropbox', { ...c, access: j.access_token, expires: Date.now() + (j.expires_in - 60) * 1000 });
   return j.access_token;

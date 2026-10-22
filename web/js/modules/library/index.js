@@ -366,6 +366,9 @@ async function showPreview(file, item) {
   const box = root.querySelector('#lib-preview');
   try {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
+    previewUrl = null;
+    // Only media and images have a preview: never read (or download from a drive) a book or document for nothing.
+    if (!/^(audio|video|image)\//.test(file.mime || '')) { box.innerHTML = ''; return; }
     previewUrl = await ctx.storage.objectUrl(file);
     if (file.mime.startsWith('audio/')) box.innerHTML = `<audio controls preload="metadata" src="${previewUrl}"></audio>`;
     else if (file.mime.startsWith('video/')) box.innerHTML = `<video controls preload="metadata" src="${previewUrl}"></video>`;
@@ -405,7 +408,7 @@ async function importFiles(files) {
     let item = null;
     try {
       const type = detectType(file);
-      const item = {
+      item = {
         id: uid(), type, moduleId: CONTENT_TYPES[type].module,
         title: file.name.replace(/\.[^.]+$/, '').replace(/[_]+/g, ' '),
         subtitle: '', tags: [], status: 'new', favorite: 0, deleted: 0, rating: 0,

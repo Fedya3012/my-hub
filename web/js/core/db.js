@@ -149,10 +149,14 @@ export const SYNCED_TABLES = ['items', 'files', 'links', 'collections', 'themes'
 export const LIVE_TABLES = ['progress', 'devices'];
 
 // Stamp updatedAt / rev on every write and queue the change for sync.
-let syncHooksPaused = false;
+// A depth counter: two overlapping callers (a sync merge and a download) must not switch the hooks back on
+// for each other half-way through.
+let syncHooksPaused = 0;
 export function withoutSyncHooks(fn) {
-  syncHooksPaused = true;
-  return Promise.resolve(fn()).finally(() => { syncHooksPaused = false; });
+  syncHooksPaused++;
+  let p;
+  try { p = fn(); } catch (e) { syncHooksPaused--; throw e; }
+  return Promise.resolve(p).finally(() => { syncHooksPaused--; });
 }
 
 for (const name of SYNCED_TABLES) {
@@ -240,14 +244,19 @@ export async function exportAll({ includeActivity = true } = {}) {
 // mode: 'merge' keeps newer record by updatedAt; 'replace' wipes tables first.
 export async function importAll(backup, { mode = 'merge' } = {}) {
   if (!backup || backup.format !== 'my-hub-backup') throw new Error('Tệp không phải bản sao lưu My Hub.');
-  const tables = Object.keys(backup.data).filter(t => db.tables.some(x => x.name === t));
+  // This device's identity and state stay its own: the device list and installed module versions are never
+  // taken from a backup, and neither are settings that name this device, its account or its sync position.
+  const DEVICE_TABLES = new Set(['devices', 'modules', 'syncQueue']);
+  const deviceKey = (k) => /^(device\.|storage\.|sync\.|account\.|cloud)/.test(String(k));
+  const tables = Object.keys(backup.data).filter(t => !DEVICE_TABLES.has(t) && db.tables.some(x => x.name === t));
+  if (backup.data.settings) backup = { ...backup, data: { ...backup.data, settings: backup.data.settings.filter(r => !deviceKey(r.key)) } };
   let count = 0;
   // Imported records keep their own updatedAt/rev; the whole DB is marked for a full sync instead.
   await withoutSyncHooks(() => db.transaction('rw', tables.map(t => db.table(t)), async () => {
     for (const t of tables) {
       const table = db.table(t);
       const rows = backup.data[t] || [];
-      if (mode === 'replace') await table.clear();
+      if (mode === 'replace') { if (t === 'settings') await table.filter(r => !deviceKey(r.key)).delete(); else await table.clear(); }
       if (mode === 'merge' && table.schema.primKey.name !== 'seq') {
         const keys = rows.map(r => r[table.schema.primKey.keyPath]);
         const existing = await table.bulkGet(keys);
