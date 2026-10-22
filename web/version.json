@@ -500,6 +500,7 @@
       "js/modules/settings/manifest.js",
       "js/modules/music/manifest.js",
       "js/modules/books/manifest.js",
+      "js/modules/fanfic/manifest.js",
       "js/core/progress.js",
       "js/core/device.js",
       "js/core/extensions.js",

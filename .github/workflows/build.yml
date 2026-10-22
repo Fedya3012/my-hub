@@ -49,6 +49,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: node tools/sync-versions.js   # version.json lists every file the offline cache needs
       - run: node scripts/sync-version.js
       # File names carry the real x.y.z.w version (package.json holds a semver mapping of it).
       - run: npx electron-builder --win --publish never "-c.nsis.artifactName=MyHub-${{ needs.version.outputs.version }}-x64-Setup.exe" "-c.portable.artifactName=MyHub-${{ needs.version.outputs.version }}-portable.exe"
@@ -76,6 +77,7 @@ jobs:
           java-version: 21
           cache: gradle
       - run: npm ci
+      - run: node tools/sync-versions.js   # version.json lists every file the offline cache needs
       - run: npx cap sync android
       - name: Restore signing key
         env:
