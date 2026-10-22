@@ -648,7 +648,7 @@ body.mnp-open { overflow: hidden; }
 .ly-line.next { color: color-mix(in srgb, var(--fg) 48%, transparent); }
 .ly-line.on { transform: none; filter: none; }
 .ly-w { white-space: nowrap; }
-.ly-line.on .ly-c { --dim: color-mix(in srgb, var(--fg) 34%, transparent); background: linear-gradient(90deg, var(--fg) calc(var(--p, 0) * 100%), var(--dim) calc(var(--p, 0) * 100%));
+.ly-line.on .ly-c { --dim: color-mix(in srgb, var(--fg) 34%, transparent); background: linear-gradient(90deg, var(--fg) calc(var(--p, 0) * 140% - 40%), var(--dim) calc(var(--p, 0) * 140%));
   -webkit-background-clip: text; background-clip: text; color: transparent; }
 .ly-line.on.ly-approx .ly-c { --dim: color-mix(in srgb, var(--fg) 42%, transparent); }
 .ly-off { display: inline-flex; align-items: center; gap: 2px; margin-right: auto; font-size: .78rem; }

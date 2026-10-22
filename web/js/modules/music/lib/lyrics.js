@@ -271,10 +271,19 @@ export function mergeTranslation(parsed, trText) {
 }
 
 // Line-synced only: spread the line's time over its characters (approximate karaoke).
+// Each word gets time by its length (vowels count more: they are held when sung), plus a short gap after
+// it; the last word of the line is held longer. The line fills most of its slot, like a real singer.
 function fakeWords(L) {
-  const n = L.text.replace(/\s/g, '').length;
-  const span = Math.min(L.end - L.t, Math.max(1.5, n * 0.085 + 0.4));
-  build(L, [{ t: L.t, end: L.t + span, text: L.text }]);
+  const parts = L.text.match(/\S+\s*/g) || [L.text];
+  const weight = (w) => [...w.trim()].reduce((a, c) => a + (/[aeiouyàáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵ]/i.test(c) ? 1.6 : /[\p{L}\p{N}]/u.test(c) ? 1 : 0.3), 0) || 1;
+  const ws = parts.map((p, i) => weight(p) * (i === parts.length - 1 ? 1.5 : 1));
+  const total = ws.reduce((a, b) => a + b, 0);
+  const slot = Number.isFinite(L.end) && L.end > L.t ? L.end - L.t : 4;
+  const span = Math.min(slot * 0.92, Math.max(1.2, total * 0.17 + 0.3));
+  const gap = parts.length > 1 ? Math.min(0.08, span * 0.04) : 0;
+  const per = (span - gap * (parts.length - 1)) / total;
+  let t = L.t;
+  build(L, parts.map((text, i) => { const s = { t, end: t + ws[i] * per, text }; t = s.end + gap; return s; }));
 }
 
 const fmt = (t) => `${String(Math.floor(t / 60)).padStart(2, '0')}:${(t % 60).toFixed(2).padStart(5, '0')}`;
@@ -424,7 +433,7 @@ export class KaraokeView {
     if (parsed.synced) for (const L of parsed.lines) if (!L.words.length && this.fake && L.text) fakeWords(L), L.approx = true;
     const word = (w) => {
       const m = w.text.match(/^(\S*)(\s*)$/s) || [w.text, w.text, ''];
-      return `<span class="ly-w">${w.chars.map(c => `<span class="ly-c">${esc(c.ch)}</span>`).join('')}</span>${m[2] ? ' ' : ''}`;
+      return `<span class="ly-w${w.end - w.t >= 1 && w.chars.length <= 14 ? ' ly-long' : ''}">${w.chars.map(c => `<span class="ly-c">${esc(c.ch)}</span>`).join('')}</span>${m[2] ? ' ' : ''}`;
     };
     const persons = new Set(parsed.lines.map(l => l.agent).filter(a => a && a !== 'v1000'));
     const side = (a) => !a || persons.size < 2 ? '' : a === 'v1000' ? ' ly-group' : a === 'v1' ? ' ly-v1' : ' ly-v2';
@@ -446,7 +455,9 @@ export class KaraokeView {
       const L = this.data.lines[i], el = this.lineEls[i];
       const list = [...(L.words || []), ...(L.bg?.words || [])].flatMap(w => w.chars);
       const els = el ? [...el.querySelectorAll('.ly-c')] : [];
-      c = { list, els, p: new Float32Array(els.length).fill(-1) };
+      const words = [...(L.words || []), ...(L.bg?.words || [])];
+      const wels = el ? [...el.querySelectorAll('.ly-w')] : [];
+      c = { list, els, p: new Float32Array(els.length).fill(-1), words, wels, ws: new Int8Array(wels.length).fill(-1) };
       this.lineChars.set(i, c);
     }
     return c;
@@ -510,7 +521,7 @@ export class KaraokeView {
     if (i >= 0) for (let k = Math.max(0, i - 3); k <= i; k++) if (k === i || (d.lines[k].end > time + 0.05 && d.format === 'ttml')) act.push(k);
     for (const k of this.active) if (!act.includes(k)) {
       this.lineEls[k]?.classList.remove('on');
-      const c = this.lineChars.get(k); if (c) { c.els.forEach(x => x.style.removeProperty('--p')); c.p.fill(-1); }
+      const c = this.lineChars.get(k); if (c) { c.els.forEach(x => x.style.removeProperty('--p')); c.p.fill(-1); c.wels.forEach(x => x.classList.remove('act', 'done')); c.ws.fill(-1); }
     }
     for (const k of act) if (!this.active.includes(k)) this.lineEls[k]?.classList.add('on');
     this.active = act;
@@ -522,6 +533,12 @@ export class KaraokeView {
         let p = time <= ch.t ? 0 : time >= ch.end ? 1 : (time - ch.t) / (ch.end - ch.t);
         p = Math.round(p * 50) / 50;   // 2 % steps: fewer style writes
         if (c.p[j] !== p) { c.p[j] = p; c.els[j].style.setProperty('--p', p); }
+      }
+      // Word state: 1 = being sung (lifts), 2 = sung.
+      const wm = Math.min(c.words.length, c.wels.length);
+      for (let j = 0; j < wm; j++) {
+        const w = c.words[j], s = time < w.t ? 0 : time < w.end ? 1 : 2;
+        if (c.ws[j] !== s) { c.ws[j] = s; c.wels[j].classList.toggle('act', s === 1); c.wels[j].classList.toggle('done', s === 2); }
       }
     }
   }

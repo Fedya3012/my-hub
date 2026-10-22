@@ -103,3 +103,12 @@
 .ly.ly2 .ly-line.ly-plain { color: color-mix(in srgb, var(--fg) 92%, transparent); transform: none; filter: none; opacity: 1; cursor: default; }
 .ly-mode { white-space: nowrap; font-size: .76rem; padding: 3px 10px; background: rgb(127 127 127 / .22); color: inherit; border: 0; border-radius: 999px; font-weight: 700; }
 .mnp[data-ambient="1"] .ly.ly2, .mnp[data-video="1"] .ly.ly2 { text-shadow: 0 1px 12px rgb(0 0 0 / .5); }
+
+/* Word-synced karaoke: a soft wipe edge (music.css), the word being sung lifts a little, and a word that is
+   held for a long time glows as it fills. */
+.ly.ly2 .ly-line.on .ly-w { display: inline-block; transition: transform .5s cubic-bezier(.2, .8, .2, 1), text-shadow .4s; }
+.ly.ly2 .ly-line.on .ly-w.act { transform: translateY(-.045em); }
+.ly.ly2 .ly-line.on .ly-w.done { transform: translateY(-.02em); }
+.ly.ly2 .ly-line.on .ly-w.ly-long.act .ly-c { text-shadow: 0 0 calc(var(--p, 0) * .35em) color-mix(in srgb, var(--fg) 55%, transparent); }
+.ly.ly2 .ly-line.on.ly-approx .ly-w.act { transform: none; }
+@media (prefers-reduced-motion: reduce) { .ly.ly2 .ly-line.on .ly-w { transition: none; transform: none !important; } }
