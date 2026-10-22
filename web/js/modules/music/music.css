@@ -921,6 +921,7 @@ body[data-posture="cover"]:not(.cover-full) .mnp-bg-a, body[data-posture="cover"
 @media (max-width: 860px), (pointer: coarse) {
   .mdock { background: color-mix(in srgb, var(--surface) 97%, var(--m-acc, var(--accent))); -webkit-backdrop-filter: none; backdrop-filter: none; }
   .mbottom { -webkit-backdrop-filter: none; backdrop-filter: none; background: var(--surface); }
+}
 
 /* ── Minimal chrome (2026-10-22): no boxes around tools; text and plain icons, accent marks state ── */
 .mtool { flex-wrap: nowrap; gap: 4px; min-height: 40px; }
