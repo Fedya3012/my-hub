@@ -1,7 +1,22 @@
 {
-  "app": "0.9.9.0",
-  "released": "2026-10-21",
+  "app": "0.9.9.1",
+  "released": "2026-10-22",
   "changelog": [
+    {
+      "version": "0.9.9.1",
+      "date": "2026-10-22",
+      "notes": [
+        "Cài đặt: trang Thư mục đồng bộ theo màu giao diện đang chọn; chỉ còn một cách kết nối Dropbox / OneDrive",
+        "Cài đặt: lời nhắc đồng bộ và hộp Xoá toàn bộ dữ liệu nhắc tới cả Dropbox và OneDrive",
+        "Cài đặt: trang Thư mục đồng bộ theo màu giao diện đang chọn; chỉ còn một cách kết nối Dropbox / OneDrive",
+        "Cài đặt: lời nhắc đồng bộ và hộp Xoá toàn bộ dữ liệu nhắc tới cả Dropbox và OneDrive",
+        "Dùng tên chính thức Trình phát nhạc trong các hướng dẫn của Cài đặt",
+        "Sách: tab Cài đặt, nguồn Thịnh hành, phông OpenDyslexic, nền Xám, độ ấm, phóng từng khung, xuất ghi chú TXT/PDF",
+        "Trình phát nhạc, Sách: hỗ trợ màn hình gập (bố cục Flex, thẻ trên màn hình ngoài)",
+        "Hiệu năng: bộ nhớ đệm số lần nghe, thư viện nhạc khởi động nhanh hơn, trang chủ Sách nhẹ hơn",
+        "Giao diện: sửa khoảng cách và biểu tượng nút ở trang trống, tên ứng dụng trên thanh điện thoại, sửa các chữ mô tả đồng bộ cũ (WebDAV, pCloud, Google Drive)"
+      ]
+    },
     {
       "version": "0.9.9.0",
       "date": "2026-10-22",
