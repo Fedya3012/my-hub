@@ -85,15 +85,15 @@ export async function episodeList(eps, opts = {}) {
 }
 
 // Click handling for play buttons, menus and timestamps inside `root`.
-export function bindEpisodes(root, { ctx, rerender } = {}) {
+export function bindEpisodes(root, { ctx, rerender, playlistId = null } = {}) {
   const onClick = async (ev) => {
     const p = ev.target.closest('[data-play]');
     if (p) { ev.preventDefault(); const id = p.dataset.play; if (player.ep?.id === id) player.toggle(); else { const e = await store.episode(id); if (e) await player.playEpisode(e); } return; }
     const m = ev.target.closest('[data-menu]');
-    if (m) { ev.preventDefault(); await episodeMenu(m.dataset.menu, { ctx, anchor: m }); rerender?.(); }
+    if (m) { ev.preventDefault(); await episodeMenu(m.dataset.menu, { ctx, anchor: m, playlistId }); rerender?.(); }
   };
   root.addEventListener('click', onClick);
-  onHold(root, '.pc-ep', async (row, e) => { if (e?.target?.closest?.('.pc-grip')) return; await episodeMenu(row.dataset.ep, { ctx }); rerender?.(); });   // long press / right-click = the ⋯ menu
+  onHold(root, '.pc-ep', async (row, e) => { if (e?.target?.closest?.('.pc-grip')) return; await episodeMenu(row.dataset.ep, { ctx, playlistId }); rerender?.(); });   // long press / right-click = the ⋯ menu
   return () => root.removeEventListener('click', onClick);
 }
 
@@ -129,7 +129,7 @@ async function showMenu(kind, key, name) {
   }
 }
 
-export async function episodeMenu(id, { ctx } = {}) {
+export async function episodeMenu(id, { ctx, playlistId = null } = {}) {
   const e = await store.episode(id);
   if (!e) return;
   const dl = await store.isDownloaded(id);
@@ -142,14 +142,15 @@ export async function episodeMenu(id, { ctx } = {}) {
     [e.starred ? 'unstar' : 'star', 'pc-star', e.starred ? 'Bỏ sao' : 'Gắn sao'],
     ...(e.url ? [[dl ? 'undl' : 'dl', dl ? 'pc-trash' : 'download', dl ? 'Xoá bản tải' : 'Tải về máy']] : []),
     ['list', 'pc-plus', 'Thêm vào danh sách…'],
+    ...(playlistId ? [['unlist', 'x', 'Bỏ khỏi danh sách này']] : []),
     ['share', 'link', 'Chia sẻ liên kết'],
     ['show', 'podcast', 'Mở podcast'],
   ];
   const v = await pick(e.title, `<div class="pc-menu">${acts.map(([k, ic, l]) => `<button class="btn ghost" data-v="${k}">${icon(ic)}${l}</button>`).join('')}</div>`);
-  return runAction(v, e, ctx);
+  return runAction(v, e, ctx, { playlistId });
 }
 
-export async function runAction(v, e, ctx) {
+export async function runAction(v, e, ctx, { playlistId = null } = {}) {
   switch (v) {
     case 'play': return player.playEpisode(e);
     case 'next': return store.enqueue(e.id, { next: true }).then(() => toast('Sẽ phát tiếp theo'));
@@ -162,6 +163,7 @@ export async function runAction(v, e, ctx) {
     case 'dl': return tasks.run({ label: 'Tải tập podcast', detail: e.title, cancellable: true }, (t) => store.download(e, t)).then(() => toast('Đã tải về máy')).catch(err => err?.name !== 'AbortError' && toast(err.message, 'error'));
     case 'undl': return store.deleteDownload(e.id);
     case 'list': return pickPlaylist(e);
+    case 'unlist': return playlistId && store.removeFromPlaylist(playlistId, e.id).then(() => toast('Đã bỏ khỏi danh sách'));
     case 'share': { const url = e.link || e.url; try { if (navigator.share) await navigator.share({ title: e.title, url }); else { await navigator.clipboard.writeText(url); toast('Đã chép liên kết'); } } catch { /* cancelled */ } return; }
     case 'show': return ctx?.go ? ctx.go('podcasts/show/' + encodeURIComponent(e.showId)) : (location.hash = 'podcasts/show/' + encodeURIComponent(e.showId));
   }
@@ -171,9 +173,12 @@ async function pickPlaylist(e) {
   const lists = (await store.playlists()).filter(p => p.kind === 'list');
   const v = await pick('Thêm vào danh sách', `<div class="pc-menu">${lists.map(p => `<button class="btn ghost" data-v="${esc(p.id)}">${icon('pc-queue')}${esc(p.name)}</button>`).join('')}<button class="btn" data-v="__new">${icon('pc-plus')}Danh sách mới…</button></div>`);
   if (!v) return;
-  if (v === '__new') { const name = prompt('Tên danh sách'); if (name) await store.savePlaylist({ name, kind: 'list', episodeIds: [e.id] }); }
-  else await store.addToPlaylist(v, e.id);
-  toast('Đã thêm vào danh sách');
+  if (v === '__new') {
+    const name = await askText('Danh sách mới', { placeholder: 'Tên danh sách', ok: 'Tạo' });
+    if (!name) return;
+    await store.savePlaylist({ name, kind: 'list', episodeIds: [e.id] });
+    toast(`Đã tạo “${name}” với tập này`);
+  } else { await store.addToPlaylist(v, e.id); toast('Đã thêm vào danh sách'); }
 }
 
 // Show card (subscriptions grid, search results, charts).
@@ -201,3 +206,15 @@ export function pick(title, html, { collect } = {}) {
     wrap.querySelector('[data-v]')?.focus();
   });
 }
+
+// In-app text question (replaces window.prompt, which blocks the app and looks foreign on Android).
+export async function askText(title, { placeholder = '', value = '', ok = 'Lưu' } = {}) {
+  const wait = pick(title, `<form class="pc-ask" data-ask><input name="t" value="${esc(value)}" placeholder="${esc(placeholder)}" required enterkeyhint="done" autocomplete="off">
+    <div class="row-actions"><button type="button" class="btn ghost" data-close>Huỷ</button><button class="btn primary" data-v="ok">${esc(ok)}</button></div></form>`,
+    { collect: (w) => w.querySelector('[name="t"]').value.trim() });
+  const form = document.querySelector('.modal-wrap:last-of-type [data-ask]');
+  if (form) { form.onsubmit = (e) => { e.preventDefault(); form.querySelector('[data-v="ok"]').click(); }; setTimeout(() => form.t.focus(), 30); }
+  const r = await wait;
+  return r?.data || null;
+}
+

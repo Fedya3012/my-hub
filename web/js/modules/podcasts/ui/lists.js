@@ -23,7 +23,7 @@ export async function render(el, { arg, ctx, go, rerender }) {
     <section class="pc-sec"><header><h2>Đã tải về máy</h2><small class="muted">${dls.length} tập · ${(size / 1e6).toFixed(0)} MB</small><a href="#podcasts/lists/f-downloaded">Xem ›</a></header></section>
     <section class="pc-sec"><header><h2>Dấu trang</h2><small class="muted">${marks.length}</small></header>
       ${marks.length ? `<ul class="pc-marks">${(await Promise.all(marks.slice(0, 30).map(async m => ({ m, e: await store.episode(m.episodeId) })))).filter(x => x.e).map(({ m, e }) => `<li><button data-mark="${esc(m.episodeId)}" data-at="${m.at}">${icon('pc-bookmark')}<b>${fmtClock(m.at)}</b><span>${esc(e.title)}${m.note ? ' — ' + esc(m.note) : ''}</span></button></li>`).join('')}</ul>` : '<p class="muted">Bấm “Đánh dấu” khi đang phát để lưu một khoảnh khắc.</p>'}</section>`;
-  el.querySelector('[data-a="newlist"]').onclick = async () => { const name = prompt('Tên danh sách'); if (name) { await store.savePlaylist({ name, kind: 'list' }); rerender(); } };
+  el.querySelector('[data-a="newlist"]').onclick = async () => { const { askText } = await import('./common.js'); const name = await askText('Danh sách mới', { placeholder: 'Tên danh sách', ok: 'Tạo' }); if (name) { await store.savePlaylist({ name, kind: 'list' }); rerender(); } };
   el.querySelector('[data-a="newsmart"]').onclick = async () => { const id = await editSmart(); if (id) go('lists/' + id); };
   el.addEventListener('click', async (ev) => {
     const b = ev.target.closest('[data-mark]');
@@ -54,7 +54,7 @@ async function detail(el, id, { ctx, go, rerender }) {
   });
   el.querySelector('[data-a="edit"]')?.addEventListener('click', async () => { await editSmart(p); rerender(); });
   el.querySelector('[data-a="del"]')?.addEventListener('click', async () => { if (await confirmBox('Xoá danh sách?', p.name, 'Xoá')) { await store.deletePlaylist(p.id); go('lists'); } });
-  return bindEpisodes(el, { ctx, rerender });
+  return bindEpisodes(el, { ctx, rerender, playlistId: p.kind === 'list' ? p.id : null });
 }
 
 async function editSmart(p = null) {

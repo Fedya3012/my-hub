@@ -124,16 +124,22 @@ export async function refreshAll(task) {
   const list = (await shows()).filter(s => !s.feedUrl.startsWith('local:'));
   let fresh = [];
   task?.update({ total: list.length, done: 0, unit: 'items' });
-  for (const s of list) {
+  await pool(list, 4, async (s) => {
     task?.check();
     task?.update({ detail: s.title });
     try { fresh = fresh.concat((await refresh(s.itemId, { signal: task?.signal })).fresh); }
     catch (e) { if (e?.name === 'AbortError') throw e; console.warn('[podcasts] refresh', s.feedUrl, e); }
     task?.step();
-  }
+  });
   await (await import('../../../core/db.js')).setSetting('podcasts.lastRefresh', now());
   if (fresh.length) bus.emit('podcasts:new', { ids: fresh });
   return fresh.length;
+}
+
+// Run fn over items, n at a time (feeds are slow to fetch one by one; too many at once and hosts throttle).
+export async function pool(items, n, fn) {
+  let i = 0;
+  await Promise.all(Array.from({ length: Math.min(n, items.length) }, async () => { while (i < items.length) await fn(items[i++]); }));
 }
 
 // ── Episodes ────────────────────────────────────────────────────
@@ -227,6 +233,10 @@ export async function savePlaylist(p) {
   await db.pcPlaylists.put(row); changed({}); return row.id;
 }
 export async function deletePlaylist(id) { await db.pcPlaylists.update(id, { deleted: 1 }); changed({}); }
+export async function removeFromPlaylist(pid, id) {
+  const p = await db.pcPlaylists.get(pid);
+  if (p) await db.pcPlaylists.update(pid, { episodeIds: (p.episodeIds || []).filter(x => x !== id) }); changed({});
+}
 export async function addToPlaylist(pid, ids) {
   const p = await db.pcPlaylists.get(pid);
   await db.pcPlaylists.update(pid, { episodeIds: [...new Set([...(p.episodeIds || []), ...[].concat(ids)])] }); changed({});
@@ -261,6 +271,7 @@ export async function bookmarks(episodeId) {
   const list = episodeId ? await db.pcBookmarks.where('episodeId').equals(episodeId).toArray() : await db.pcBookmarks.toArray();
   return list.filter(b => !b.deleted).sort((a, b) => episodeId ? a.at - b.at : b.createdAt - a.createdAt);
 }
+export async function noteBookmark(id, note) { await db.pcBookmarks.update(id, { note }); changed({}); }
 export async function deleteBookmark(id) { await db.pcBookmarks.update(id, { deleted: 1 }); changed({}); }
 
 // ── Search history and suggestions ──────────────────────────────

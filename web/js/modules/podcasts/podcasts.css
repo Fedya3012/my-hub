@@ -375,3 +375,9 @@ body.bk-reader-open[data-audio-source]:not([data-audio-source="podcast"]) .pc-mi
 
 /* Long press / right-click on episodes and shows opens their menu: no native callout or text selection on hold */
 .pc-ep, .pc-show, .pc-result { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+.pc-mark-note { flex: 1; min-width: 0; height: 36px; padding: 0 10px; border: 1px solid transparent; border-radius: 10px; background: rgb(255 255 255 / .06); color: inherit; font: inherit; font-size: .88rem; }
+.pc-mark-note:focus { outline: none; border-color: color-mix(in srgb, var(--pc-accent) 60%, transparent); background: rgb(255 255 255 / .1); }
+.pc-mark-note::placeholder { color: var(--muted); }
+.pc-marks button[data-seek] { width: auto; flex: none; }
+.pc-saved { font-variant-numeric: tabular-nums; opacity: .85; }
+.pc-ask { display: grid; gap: 12px; } .pc-ask input { min-height: 44px; }

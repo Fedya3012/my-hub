@@ -2256,5 +2256,20 @@
  "Nhẹ (chỉ khoảng lặng dài)": "Light (long pauses only)",
  "Vừa": "Medium",
  "Mạnh (cả khoảng ngắt ngắn)": "Strong (short pauses too)",
- "Mục chính của Trình phát nhạc": "Music Player sections"
+ "Mục chính của Trình phát nhạc": "Music Player sections",
+ "Thêm ghi chú…": "Add a note…",
+ "Danh sách mới": "New list",
+ "Tạo": "Create",
+ "Bỏ khỏi danh sách này": "Remove from this list",
+ "Đã bỏ khỏi danh sách": "Removed from the list",
+ "Lưu": "Save",
+ "Huỷ": "Cancel",
+ "Đã lưu dấu trang ở": "Bookmark saved at",
+ "” với tập này": "” with this episode",
+ "feed không đọc được (link hỏng hoặc bị chặn).": "feeds could not be read (broken link or blocked).",
+ "podcast từ OPML.": "podcasts from OPML.",
+ "Điểm tính từ số tập, độ mới (30 ngày), bitrate thật (kích thước tệp / thời lượng, tối đa 192 kbps), có chương và bản chép lời. Nguồn chỉ đọc được từ Apple bị trừ điểm vì không đầy đủ.": "The score counts episodes, freshness (30 days), real bitrate (file size / length, up to 192 kbps), chapters and transcripts. A source read only from Apple loses points because it is incomplete.",
+ "Không đọc được:": "Couldn't read:",
+ "Không đổi được nguồn:": "Couldn't switch source:",
+ "nguồn · đang theo:": "sources · following:"
 }

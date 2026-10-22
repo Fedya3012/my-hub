@@ -47,7 +47,7 @@ export async function render(el, { go, rerender }) {
       </div>
       <div class="pc-np-fx">
         <button class="pc-tog" data-fx="voiceBoost" aria-pressed="${!!get('voiceBoost')}">${icon('pc-boost')}Voice Boost</button>
-        <button class="pc-tog" data-fx="skipSilence" aria-pressed="${!!get('skipSilence')}">${icon('pc-silence')}Bỏ khoảng lặng</button>
+        <button class="pc-tog" data-fx="skipSilence" aria-pressed="${!!get('skipSilence')}">${icon('pc-silence')}Bỏ khoảng lặng<span class="pc-saved" data-saved></span></button>
         <button class="pc-tog" data-k="mark">${icon('pc-bookmark')}Đánh dấu</button>
         <a class="pc-tog" href="#podcasts/queue">${icon('pc-queue')}Hàng chờ</a>
       </div>
@@ -62,7 +62,7 @@ export async function render(el, { go, rerender }) {
     el.querySelectorAll('[data-panel]').forEach(b => b.setAttribute('aria-selected', b.dataset.panel === panel));
     lastCue = -1;
     if (panel === 'chapters') body.innerHTML = chs.length ? `<ol class="pc-chaps">${chs.map((c, i) => `<li><button data-seek="${c.start}" data-ci="${i}">${c.img ? `<img src="${esc(c.img)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}<span>${esc(c.title || 'Chương ' + (i + 1))}</span><small>${fmtClock(c.start)}</small></button></li>`).join('')}</ol>` : '<p class="muted pc-empty">Tập này không có chương.</p>';
-    if (panel === 'marks') body.innerHTML = (marks.length ? `<ul class="pc-marks">${marks.map(m => `<li><button data-seek="${m.at}">${icon('pc-bookmark')}<b>${fmtClock(m.at)}</b><span>${esc(m.note || '')}</span></button><button class="icon-btn" data-delmark="${esc(m.id)}" aria-label="Xoá">${icon('x')}</button></li>`).join('')}</ul>` : '<p class="muted pc-empty">Chưa có dấu trang. Bấm “Đánh dấu” để lưu khoảnh khắc này.</p>');
+    if (panel === 'marks') body.innerHTML = (marks.length ? `<ul class="pc-marks">${marks.map(m => `<li><button data-seek="${m.at}" aria-label="Tới ${fmtClock(m.at)}">${icon('pc-bookmark')}<b>${fmtClock(m.at)}</b></button><input class="pc-mark-note" data-note="${esc(m.id)}" value="${esc(m.note || '')}" placeholder="Thêm ghi chú…" enterkeyhint="done" aria-label="Ghi chú dấu trang ${fmtClock(m.at)}"><button class="icon-btn" data-delmark="${esc(m.id)}" aria-label="Xoá">${icon('x')}</button></li>`).join('')}</ul>` : '<p class="muted pc-empty">Chưa có dấu trang. Bấm “Đánh dấu” để lưu khoảnh khắc này.</p>');
     if (panel === 'notes') body.innerHTML = `<div class="pc-notes">${notesHtml(e.description) || '<p class="muted">Không có ghi chú.</p>'}</div>${(e.persons || []).length ? `<p class="muted">Người tham gia: ${e.persons.map(p => `${esc(p.name)} (${p.role === 'guest' ? 'khách mời' : p.role === 'host' ? 'dẫn' : esc(p.role)})`).join(', ')}</p>` : ''}`;
     if (panel === 'transcript') {
       body.innerHTML = '<p class="muted pc-loading">Đang tải bản chép lời…</p>';
@@ -127,6 +127,8 @@ export async function render(el, { go, rerender }) {
     $('[data-chap]').textContent = c ? ' · ' + c.title : '';
     const left = player.sleepLeft;
     $('[data-sleep]').textContent = left != null ? fmtClock(left) : player.sleep?.endOfEpisode ? 'Hết tập' : player.sleep?.chapterEnd != null ? 'Hết chương' : '';
+    const sv = get('skipSilence') && player.savedEp >= 1 ? ' · −' + fmtClock(player.savedEp) : '';
+    if ($('[data-saved]').textContent !== sv) $('[data-saved]').textContent = sv;
     draw(); paintCue();
   };
   const paintState = () => {
@@ -159,12 +161,13 @@ export async function render(el, { go, rerender }) {
     if (k === 'speed') await speedSheet();
     if (k === 'sleep') await sleepSheet(chs);
     if (k === 'mark') {
+      // Saved at once (no dialog in the way); the note can be typed in the Dấu trang panel right after.
       const at = Math.round(player.time);
-      const note = prompt(`Ghi chú cho dấu trang ở ${fmtClock(at)} (có thể để trống)`, '');
-      if (note === null) return;
-      await store.addBookmark(e, at, note.trim());
+      const id = await store.addBookmark(e, at, '');
       marks.splice(0, marks.length, ...(await store.bookmarks(e.id)));
-      toast('Đã lưu dấu trang'); panel = 'marks'; showPanel(); draw();
+      panel = 'marks'; await showPanel(); draw();
+      body.querySelector(`[data-note="${CSS.escape(id)}"]`)?.focus();
+      toast(`Đã lưu dấu trang ở ${fmtClock(at)}`);
     }
     if (k === 'ai') {
       const blob = await store.downloadedBlob(e.id);
@@ -180,6 +183,13 @@ export async function render(el, { go, rerender }) {
       await episodeMenu(e.id, {});
     }
   });
+
+  body.addEventListener('change', async (ev) => {
+    const n = ev.target.closest('[data-note]'); if (!n) return;
+    await store.noteBookmark(n.dataset.note, n.value.trim());
+    const m = marks.find(x => x.id === n.dataset.note); if (m) m.note = n.value.trim();
+  });
+  body.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' && ev.target.matches('[data-note]')) ev.target.blur(); });
 
   for (const t of ['state', 'episode']) player.addEventListener(t, t === 'episode' ? rerenderSoon : paintState);
   player.addEventListener('time', paint);

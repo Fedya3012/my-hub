@@ -17,7 +17,7 @@ class PodPlayer extends EventTarget {
     super();
     this.el = null; this.ep = null; this.show = null;
     this.ac = null; this.fx = null; this.fxOn = false; this.fxBlocked = false;
-    this.sleep = null; this._untrack = null; this._url = null; this._silent = 0; this._boosted = false;
+    this.sleep = null; this._untrack = null; this._url = null; this._silent = 0; this._boosted = false; this.savedEp = 0;
   }
   _emit(type, detail) { this.dispatchEvent(new CustomEvent(type, { detail })); }
   get playing() { return !!this.el && !this.el.paused; }
@@ -27,6 +27,8 @@ class PodPlayer extends EventTarget {
 
   async init() {
     bus.on('media:play', ({ app }) => { if (app !== 'podcasts' && this.playing) this.pause(); });
+    // Speed changed elsewhere (Cài đặt, the show's own settings, another device): apply it to what is playing.
+    bus.on('podcasts:changed', async ({ showId } = {}) => { if (showId && showId === this.show?.itemId) { this.show = await store.show(showId); this.applyRate(); } });
     // Resume where this account last listened (any device), paused.
     const s = await db.progress.get(SESSION);
     if (s?.episodeId) { const e = await store.episode(s.episodeId); if (e) await this.load(e, { autoplay: false }); }
@@ -35,7 +37,7 @@ class PodPlayer extends EventTarget {
   // ── Loading ───────────────────────────────────────────────────
   async load(e, { autoplay = true, at = null } = {}) {
     this._teardown();
-    this.ep = e; this.show = await store.show(e.showId);
+    this.ep = e; this.show = await store.show(e.showId); this.savedEp = 0;   // seconds Skip silence saved in this episode
     const blob = await store.downloadedBlob(e.id);
     const remote = !blob;
     const wantFx = !!(get('voiceBoost') || get('skipSilence'));
@@ -139,6 +141,10 @@ class PodPlayer extends EventTarget {
     this._emit('state');
   }
 
+  applyRate() {
+    if (this.el) { this.el.defaultPlaybackRate = this.rate; if (!this._boosted) this.el.playbackRate = this.rate; }
+    this._emit('state');
+  }
   async playEpisode(e, opts = {}) {
     if (this.ep?.id === e.id && this.el) { if (opts.at != null) this.seek(opts.at); return this.play(); }
     await store.dequeue(e.id);
@@ -236,9 +242,9 @@ class PodPlayer extends EventTarget {
       // Speech was detected up to ~one poll late, played at the fast rate: step back over it.
       const back = Math.min(0.25, (this._sTimer ? 0.045 : 0.02) * fast);
       const t = el.currentTime - back, b = el.buffered;
-      for (let i = 0; i < b.length; i++) if (t >= b.start(i) && t <= b.end(i)) { el.currentTime = t; this._saved = (this._saved || 0) - back / this.rate; break; }
+      for (let i = 0; i < b.length; i++) if (t >= b.start(i) && t <= b.end(i)) { el.currentTime = t; this._saved = (this._saved || 0) - back / this.rate; this.savedEp -= back / this.rate; break; }
     }
-    if (this._boosted) this._saved = (this._saved || 0) + dt * (el.playbackRate / this.rate - 1);
+    if (this._boosted) { const d = dt * (el.playbackRate / this.rate - 1); this._saved = (this._saved || 0) + d; this.savedEp += d; }
     if ((this._saved || 0) > 5) { const s = this._saved; this._saved = 0; getSetting('podcasts.timeSaved', 0).then(v => setSetting('podcasts.timeSaved', v + s)); }
   }
   async _maybeMarkPlayed() {

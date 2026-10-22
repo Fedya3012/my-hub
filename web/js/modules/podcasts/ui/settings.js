@@ -55,12 +55,12 @@ export async function importAny(files) {
     if (!feeds.length) { toast('Tệp OPML không có podcast nào', 'warn'); continue; }
     let ok = 0;
     await tasks.run({ label: 'Nhập OPML', total: feeds.length, unit: 'items', cancellable: true }, async (t) => {
-      for (const x of feeds) {
+      await store.pool(feeds, 4, async (x) => {
         t.check(); t.update({ detail: x.title || x.feedUrl });
         try { await store.subscribe({ feedUrl: x.feedUrl, title: x.title }, { signal: t.signal }); ok++; } catch (e) { if (e?.name === 'AbortError') throw e; console.warn('[podcasts] opml', x.feedUrl, e); }
         t.step();
-      }
+      });
     }).catch(() => {});
-    toast(`Đã đăng ký ${ok}/${feeds.length} podcast từ OPML`);
+    toast(ok === feeds.length ? `Đã đăng ký ${ok} podcast từ OPML` : `Đã đăng ký ${ok}/${feeds.length} podcast từ OPML. ${feeds.length - ok} feed không đọc được (link hỏng hoặc bị chặn).`, ok === feeds.length ? 'info' : 'warn');
   }
 }

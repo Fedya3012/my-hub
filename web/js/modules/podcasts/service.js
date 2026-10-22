@@ -36,7 +36,7 @@ export async function start(context) {
     B.on('podcasts:play', async ({ episodeId, at }) => { const e = await store.episode(episodeId); if (e) player.playEpisode(e, { at }); }),
     B.on('podcasts:toggle', () => player.toggle()),
   );
-  offs.push(params.on('podcasts', (e) => { if (/\.(voiceBoost|skipSilence)$/.test(e.key)) player.fxChanged(); }));
+  offs.push(params.on('podcasts', (e) => { if (/\.(voiceBoost|skipSilence)$/.test(e.key)) player.fxChanged(); if (/\.speed$/.test(e.key)) player.applyRate(); }));
   for (const t of ['episode', 'state']) { player.addEventListener(t, paintMini); player.addEventListener(t, cover); }
   player.addEventListener('time', paintTime);
   ctx.services.provide('podcasts', {
