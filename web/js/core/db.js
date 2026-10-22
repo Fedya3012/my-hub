@@ -134,6 +134,30 @@ db.version(5).stores({
   ficWriting: 'id, fanficId, day, deviceId, updatedAt',
 });
 
+// Version 6: Podcast (docs/PODCASTS.md). A show is one `items` row (type 'podcast', moduleId 'podcasts') so the
+// Library lists it; episodes are not items (a feed can hold thousands) but their playback position uses `progress`
+// like any item (key = episode id). Ids come from the feed URL and episode guid, so two devices that subscribe to
+// the same feed produce the same rows and sync merges them.
+//   pcShows:       one row per show (key = itemId 'pc:<hash(feedUrl)>'): feed URL, iTunes / Podcast Index ids,
+//                  author, categories, subscribed flag, per-show settings (speed, skip intro/outro, auto-download,
+//                  keep N, notifications), last refresh. Local imports use feedUrl 'local:<name>'.
+//   pcEpisodes:    'ep:<hash(feedUrl|guid)>': title, audio URL, duration, date, season/episode, chapters / transcript
+//                  URLs (Podcasting 2.0), persons (host / guest), played flag, inbox flag, starred.
+//   pcPlaylists:   playlists (kind 'list': episodeIds) and smart filters (kind 'smart': rules); 'up-next' is the queue.
+//   pcBookmarks:   a moment in an episode (seconds), with a note.
+//   pcTranscripts: transcript cues of an episode (source 'feed' or 'ai').
+//   pcSearches:    search history (drives suggestions).
+//   pcDownloads:   episodes saved on this device (blob in `blobs`, never synced: each device downloads its own).
+db.version(6).stores({
+  pcShows: 'itemId, feedUrl, itunesId, piId, subscribed, *categories, updatedAt, deleted',
+  pcEpisodes: 'id, showId, guid, pubDate, played, inbox, starred, [showId+pubDate], updatedAt, deleted',
+  pcPlaylists: 'id, kind, updatedAt, deleted',
+  pcBookmarks: 'id, episodeId, showId, createdAt, updatedAt, deleted',
+  pcTranscripts: 'episodeId, source, updatedAt',
+  pcSearches: 'id, q, at, updatedAt',
+  pcDownloads: 'episodeId, showId, at, size',
+});
+
 export const uid = () =>
   (crypto.randomUUID ? crypto.randomUUID() : 'id-' + Date.now().toString(36) + Math.random().toString(36).slice(2));
 
@@ -143,7 +167,8 @@ export const now = () => Date.now();
 // (installed code versions differ per device) stay local.
 export const SYNCED_TABLES = ['items', 'files', 'links', 'collections', 'themes', 'tracks', 'albums', 'artists', 'plays', 'eqPresets', 'lyrics',
   'books', 'authors', 'series', 'annotations', 'readingSessions', 'readingGoals',
-  'fanfics', 'ficChapters', 'fandoms', 'ficTags', 'ficNotes', 'ficVersions', 'ficWriting'];
+  'fanfics', 'ficChapters', 'fandoms', 'ficTags', 'ficNotes', 'ficVersions', 'ficWriting',
+  'pcShows', 'pcEpisodes', 'pcPlaylists', 'pcBookmarks', 'pcTranscripts', 'pcSearches'];
 // Small, frequently changing tables synced on the fast "live" channel (hub-live.json).
 // They stamp their own updatedAt/deviceId, so they skip the hooks below.
 export const LIVE_TABLES = ['progress', 'devices'];
@@ -234,7 +259,8 @@ export async function exportAll({ includeActivity = true } = {}) {
   const tables = ['items', 'files', 'links', 'collections', 'modules', 'settings', 'themes', 'progress', 'devices',
     'tracks', 'albums', 'artists', 'plays', 'eqPresets', 'lyrics',
     'books', 'authors', 'series', 'annotations', 'readingSessions', 'readingGoals',
-    'fanfics', 'ficChapters', 'fandoms', 'ficTags', 'ficNotes', 'ficVersions', 'ficWriting'];
+    'fanfics', 'ficChapters', 'fandoms', 'ficTags', 'ficNotes', 'ficVersions', 'ficWriting',
+    'pcShows', 'pcEpisodes', 'pcPlaylists', 'pcBookmarks', 'pcTranscripts', 'pcSearches'];
   if (includeActivity) tables.push('activity');
   const data = {};
   for (const t of tables) data[t] = await db.table(t).toArray();

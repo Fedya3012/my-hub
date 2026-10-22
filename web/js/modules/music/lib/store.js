@@ -49,7 +49,7 @@ export async function library() {
   const job = building = (async () => {
     await adoptOrphans();
     const [tracks, items, albums, artists, plays, cols, artRows, contains] = await Promise.all([
-      db.tracks.toArray(), db.items.where('type').anyOf('music', 'podcast').toArray(),
+      db.tracks.toArray(), db.items.where('type').anyOf('music', 'podcast').filter(i => i.moduleId !== 'podcasts').toArray(),   // Podcast app shows are not tracks
       db.albums.toArray(), db.artists.toArray(), playCounts(),
       db.collections.where('moduleId').equals('music').toArray(),
       db.files.where('role').anyOf('artwork', 'artwork-thumb').toArray(),
@@ -257,7 +257,7 @@ async function adoptOrphans() {
   const have = new Set(haveKeys);
   const missing = ids.filter(id => !have.has(id));
   if (!missing.length) return;
-  const items = (await db.items.bulkGet(missing)).filter(i => i && !i.deleted);
+  const items = (await db.items.bulkGet(missing)).filter(i => i && !i.deleted && i.moduleId !== 'podcasts');
   for (const item of items) {
     const file = await db.files.where('itemId').equals(item.id).filter(f => f.role === 'main').first();
     if (!file) continue; // nothing to play yet; adopted once a file is attached

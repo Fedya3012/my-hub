@@ -1,0 +1,121 @@
+// Podcast background service (manifest.service): the player and its mini player, lock screen, periodic refresh and
+// auto-download, the Library drawer block, the cover-screen card and the 'podcasts' service for other apps.
+import './lib/icons.js';
+import { getSetting } from '../../core/db.js';
+import { icon } from '../../core/icons.js';
+import { esc } from '../../core/ui.js';
+import { extend } from '../../core/extensions.js';
+import { tasks } from '../../core/tasks.js';
+import { params } from '../../core/params.js';
+import { definePrefs, get, NAME } from './lib/prefs.js';
+import { player } from './lib/player.js';
+import * as store from './lib/store.js';
+
+let offs = [], css = null, ctx = null, mini = null, timer = null, lastApp = 'podcasts';
+
+export async function start(context) {
+  ctx = context;
+  definePrefs();
+  css = Object.assign(document.createElement('link'), { rel: 'stylesheet', href: new URL('./podcasts.css', import.meta.url).href });
+  document.head.appendChild(css);
+  await player.init();
+  mountMini();
+  const B = ctx.bus, cover = () => B.emit('cover:refresh');
+  offs.push(
+    extend('library.drawer', drawerBlock), extend('cover.cards', coverCard),
+    B.on('media:play', ({ app }) => { lastApp = app; paintMini(); }),
+    // Other apps: bus.emit('podcasts:play', { episodeId }) / ('podcasts:toggle')
+    B.on('podcasts:play', async ({ episodeId, at }) => { const e = await store.episode(episodeId); if (e) player.playEpisode(e, { at }); }),
+    B.on('podcasts:toggle', () => player.toggle()),
+  );
+  offs.push(params.on('podcasts', (e) => { if (/\.(voiceBoost|skipSilence)$/.test(e.key)) player.fxChanged(); }));
+  for (const t of ['episode', 'state']) { player.addEventListener(t, paintMini); player.addEventListener(t, cover); }
+  player.addEventListener('time', paintTime);
+  ctx.services.provide('podcasts', {
+    player, store,
+    play: (id, at) => B.emit('podcasts:play', { episodeId: id, at }),
+    search: async (q) => (await import('./lib/online.js')).search(q),
+    nowPlaying: () => player.ep ? { episode: player.ep, show: player.show, time: player.time, playing: player.playing } : null,
+  });
+  // Check feeds now and then (Cài đặt → Tự kiểm tra tập mới), then auto-download.
+  const every = () => +get('refreshEvery') || 0;
+  const tick = async () => {
+    const m = every(); if (!m || navigator.onLine === false) return;
+    const last = await getSetting('podcasts.lastRefresh', 0);
+    if (Date.now() - last < m * 60000) return;
+    try { await tasks.run({ label: `${NAME}: kiểm tra tập mới`, quiet: true, cancellable: true }, (t) => store.refreshAll(t)); await store.autoDownload(tasks); }
+    catch (e) { if (e?.name !== 'AbortError') console.warn('[podcasts] refresh', e); }
+  };
+  setTimeout(tick, 15000);
+  timer = setInterval(tick, 10 * 60000);
+}
+
+export async function stop() {
+  offs.forEach(f => f()); offs = [];
+  clearInterval(timer); player.pause();
+  mini?.remove(); mini = null; css?.remove();
+  document.body.classList.remove('pc-mini-on');
+}
+
+// ── Mini player (bottom, above the tab bar) ─────────────────────
+function mountMini() {
+  mini = document.createElement('div');
+  mini.className = 'pc-mini'; mini.hidden = true;
+  mini.setAttribute('role', 'region'); mini.setAttribute('aria-label', `${NAME} đang phát`);
+  mini.innerHTML = `<a class="pc-mini-open" href="#podcasts/play"><span class="pc-mini-art"></span><span class="pc-mini-txt"><b></b><small></small></span></a>
+    <button class="icon-btn" data-k="back" aria-label="Lùi">${icon('pc-back')}</button>
+    <button class="pc-mini-play" data-k="toggle" aria-label="Phát">${icon('pc-play')}</button>
+    <button class="icon-btn" data-k="fwd" aria-label="Tới">${icon('pc-fwd')}</button>
+    <i class="pc-mini-bar"><i></i></i>`;
+  mini.addEventListener('click', (e) => { const k = e.target.closest('[data-k]')?.dataset.k; if (k) { e.preventDefault(); player[k](); } });
+  document.body.appendChild(mini);
+  paintMini();
+}
+function paintMini() {
+  if (!mini) return;
+  const e = player.ep, show = !!e && (player.playing || lastApp === 'podcasts');
+  mini.hidden = !show;
+  document.body.classList.toggle('pc-mini-on', show);
+  if (!e) return;
+  const artEl = mini.querySelector('.pc-mini-art');
+  const src = e.image || player.show?.image || '';
+  if (artEl.dataset.src !== src) { artEl.dataset.src = src; artEl.innerHTML = src ? `<img src="${esc(src)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : icon('podcast'); }
+  mini.querySelector('b').textContent = e.title;
+  mini.querySelector('small').textContent = player.show?.title || '';
+  const p = mini.querySelector('.pc-mini-play');
+  p.innerHTML = icon(player.playing ? 'pc-pause' : 'pc-play');
+  p.setAttribute('aria-label', player.playing ? 'Tạm dừng' : 'Phát');
+  paintTime();
+}
+function paintTime() { const b = mini?.querySelector('.pc-mini-bar i'); if (b && player.duration) b.style.width = (player.time / player.duration * 100) + '%'; }
+
+// ── Cover screen (docs/FOLDABLE.md): now playing with big controls ──
+async function coverCard() {
+  const e = player.ep;
+  if (!e) return null;
+  return {
+    id: 'podcasts-now', app: NAME, icon: 'podcast', order: 12, route: 'podcasts/play',
+    title: e.title, sub: `${player.show?.title || ''}${player.sleep ? ' · hẹn giờ ngủ' : ''}`, percent: player.duration ? player.time / player.duration * 100 : 0,
+    actions: [
+      { label: `Lùi ${get('skipBack')}s`, icon: 'pc-back', run: () => player.back() },
+      { label: player.playing ? 'Tạm dừng' : 'Phát', icon: player.playing ? 'pc-pause' : 'pc-play', primary: true, run: () => player.toggle() },
+      { label: `Tới ${get('skipFwd')}s`, icon: 'pc-fwd', run: () => player.fwd() },
+    ],
+  };
+}
+
+// ── Library drawer: a show's latest episodes and "Mở trong Podcast" ──
+async function drawerBlock({ item, el, from }) {
+  if (from === 'podcasts' || item.type !== 'podcast' || item.moduleId !== 'podcasts') return;
+  const s = await store.show(item.id);
+  if (!s) return;
+  const eps = (await store.episodesOf(item.id)).slice(0, 4);
+  const box = document.createElement('div');
+  box.className = 'block pc-ext';
+  box.innerHTML = `<h3>${esc(NAME)}</h3>
+    <p class="muted">${esc(s.author || '')}${s.categories?.length ? ' · ' + esc(s.categories.slice(0, 3).join(', ')) : ''} · ${(await store.episodesOf(item.id)).length} tập</p>
+    <ul class="pc-mini-list">${eps.map(e => `<li><button class="btn ghost" data-ep="${esc(e.id)}">${icon('pc-play')}${esc(e.title)}</button></li>`).join('')}</ul>
+    <div class="row-actions"><a class="btn" href="#podcasts/show/${encodeURIComponent(item.id)}">${icon('podcast')}Mở trong ${esc(NAME)}</a></div>`;
+  box.addEventListener('click', async (ev) => { const b = ev.target.closest('[data-ep]'); if (b) { const e = await store.episode(b.dataset.ep); if (e) player.playEpisode(e); } });
+  el.appendChild(box);
+}

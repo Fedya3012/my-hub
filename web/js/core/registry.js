@@ -7,6 +7,7 @@ import music from '../modules/music/manifest.js';
 import accountPage from '../modules/account/manifest.js';
 import books from '../modules/books/manifest.js';
 import fanfic from '../modules/fanfic/manifest.js';
+import podcasts from '../modules/podcasts/manifest.js';
 import guides from '../modules/guides/manifest.js';
 import { db, now } from './db.js';
 
@@ -16,7 +17,7 @@ export const cmpVer = (a = '0', b = '0') => {
   return 0;
 };
 
-export const MANIFESTS = [library, appManager, settings, music, books, fanfic, guides, accountPage];
+export const MANIFESTS = [library, appManager, settings, music, podcasts, books, fanfic, guides, accountPage];
 
 export const byId = id => MANIFESTS.find(m => m.id === id);
 

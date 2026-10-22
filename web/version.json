@@ -563,7 +563,8 @@
       "js/core/posture.js",
       "js/core/cover.js",
       "js/modules/fanfic/manifest.js",
-      "js/modules/guides/manifest.js"
+      "js/modules/guides/manifest.js",
+      "js/modules/podcasts/manifest.js"
     ]
   },
   "modules": {
@@ -694,6 +695,36 @@
         "Bản đầu tiên: thư viện Bài hát/Album/Nghệ sĩ/Thể loại/Thư mục/Danh sách phát, Cover Flow, Now Playing kiểu bìa/CD/vinyl/cassette, nền ambient, lời karaoke từng chữ.",
         "Audiophile: định dạng, bit depth, sample rate, bitrate, kênh, huy hiệu Hi-Res, đường tín hiệu; giải mã DSD (DSF/DFF), ALAC, AIFF ngay trong app.",
         "EQ tham số + đồ hoạ 10 dải, preset AutoEQ, ReplayGain, gapless, crossfade thông minh, hẹn giờ, tốc độ phát, đồng bộ phiên nghe giữa thiết bị."
+      ]
+    },
+    "podcasts": {
+      "name": "Podcast",
+      "version": "0.1.0",
+      "minApp": "0.9.11.0",
+      "files": [
+        "js/modules/podcasts/index.js",
+        "js/modules/podcasts/lib/icons.js",
+        "js/modules/podcasts/lib/net.js",
+        "js/modules/podcasts/lib/online.js",
+        "js/modules/podcasts/lib/player.js",
+        "js/modules/podcasts/lib/prefs.js",
+        "js/modules/podcasts/lib/rss.js",
+        "js/modules/podcasts/lib/store.js",
+        "js/modules/podcasts/podcasts.css",
+        "js/modules/podcasts/service.js",
+        "js/modules/podcasts/ui/common.js",
+        "js/modules/podcasts/ui/discover.js",
+        "js/modules/podcasts/ui/episode.js",
+        "js/modules/podcasts/ui/home.js",
+        "js/modules/podcasts/ui/lists.js",
+        "js/modules/podcasts/ui/nowplaying.js",
+        "js/modules/podcasts/ui/queue.js",
+        "js/modules/podcasts/ui/settings.js",
+        "js/modules/podcasts/ui/show.js",
+        "js/modules/podcasts/ui/subs.js"
+      ],
+      "changelog": [
+        "Phiên bản đầu: tìm podcast online (Podcast Index, Apple), đăng ký, RSS riêng, Trang chủ, Khám phá, Đang phát với waveform, chép lời, chương, dấu trang; tốc độ 0,5–3×, bỏ khoảng lặng, Voice Boost, hẹn giờ ngủ; hàng chờ, bộ lọc thông minh, tải về, nhập tệp âm thanh / sách nói, OPML."
       ]
     },
     "books": {

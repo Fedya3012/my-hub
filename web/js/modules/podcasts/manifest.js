@@ -1,0 +1,38 @@
+// Podcast: subscribe, search online (Podcast Index + Apple), listen with speed / Smart Speed / Voice Boost / sleep
+// timer, queue and smart filters, downloads, chapters, bookmarks, transcripts (feed or AI). Design: docs/PODCASTS.md.
+export default {
+  id: 'podcasts',
+  name: 'Podcast',
+  version: '0.1.0',
+  status: 'available',
+  icon: 'podcast',
+  route: 'podcasts',
+  order: 22,
+  description: 'Nghe podcast: tìm online (Podcast Index, Apple), đăng ký, RSS riêng, hàng chờ, bộ lọc thông minh, tải về, tốc độ 0,5–3× giữ cao độ, bỏ khoảng lặng, Voice Boost, hẹn giờ ngủ, chương, dấu trang, bản chép lời (AI khi tập không có), nhập tệp âm thanh / sách nói, OPML.',
+  contentTypes: ['podcast'],
+  service: 'service.js',       // player + mini player, lock screen, refresh / auto-download, Library block, cover card
+  reloadOnUpdate: true,
+  openRoute: (item) => 'podcasts/show/' + encodeURIComponent(item.id),
+  files: [
+    'js/modules/podcasts/index.js',
+    'js/modules/podcasts/service.js',
+    'js/modules/podcasts/podcasts.css',
+    'js/modules/podcasts/lib/icons.js',
+    'js/modules/podcasts/lib/net.js',
+    'js/modules/podcasts/lib/online.js',
+    'js/modules/podcasts/lib/player.js',
+    'js/modules/podcasts/lib/prefs.js',
+    'js/modules/podcasts/lib/rss.js',
+    'js/modules/podcasts/lib/store.js',
+    'js/modules/podcasts/ui/common.js',
+    'js/modules/podcasts/ui/discover.js',
+    'js/modules/podcasts/ui/episode.js',
+    'js/modules/podcasts/ui/home.js',
+    'js/modules/podcasts/ui/lists.js',
+    'js/modules/podcasts/ui/nowplaying.js',
+    'js/modules/podcasts/ui/queue.js',
+    'js/modules/podcasts/ui/settings.js',
+    'js/modules/podcasts/ui/show.js',
+    'js/modules/podcasts/ui/subs.js',
+  ],
+};
