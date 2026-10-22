@@ -1,0 +1,27 @@
+<title>My Hub</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="theme-color" content="#ffffff">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Fonts: js/core/skins.js loads only the active skin's families (Vietnamese subset); the mono face is shared. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/account.css">
+<link rel="stylesheet" href="css/native.css">
+<link rel="stylesheet" href="css/foldable.css">
+<div class="app">
+  <header class="appbar" id="appbar"><button class="icon-btn" id="nav-toggle" aria-label="Menu" aria-expanded="false" aria-controls="sidebar"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button><b class="appbar-title" id="appbar-title">My Hub</b></header>
+  <div class="nav-scrim" id="nav-scrim"></div>
+  <nav class="sidebar" id="sidebar" aria-label="Điều hướng">
+    <div class="brand"><b id="app-name">My Hub</b><span id="app-version"></span></div>
+    <div id="nav-links"></div>
+    <div class="sidebar-foot"><a href="#settings" class="storage-badge" id="storage-badge"></a></div>
+  </nav>
+  <main id="view" tabindex="-1"></main>
+  <nav class="tabbar" id="tabbar" aria-label="Điều hướng nhanh"></nav>
+  <div id="dock"></div>
+</div>
+<div class="update-banner" id="update-banner" hidden><span>Đã có phiên bản mới</span><button class="btn small" id="update-go">Xem</button></div>
+<div id="toasts" aria-live="polite"></div>
+<script src="vendor/dexie.min.js"></script>
+<script type="module" src="js/app.js"></script>

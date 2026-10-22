@@ -281,3 +281,11 @@ body[data-posture="cover"]:not(.cover-full) .pc-mini { display: none !important;
 /* Books reader (z-index 800): the mini player sits above it, and hides while another audio source is chosen. */
 body.bk-reader-open .pc-mini { z-index: 850; bottom: calc(64px + var(--sai-bottom, 0px)); }
 body.bk-reader-open[data-audio-source]:not([data-audio-source="podcast"]) .pc-mini { display: none !important; }
+
+/* Source of a podcast (search results and show page) */
+.pc-src { display: grid; gap: 4px; font-size: .85rem; }
+.pc-source { display: inline-flex !important; align-items: center; gap: 5px; color: var(--pc); font-size: .78rem; }
+.pc-source .ic { width: 14px; height: 14px; flex: none; }
+.pc-source.big { display: flex !important; align-items: flex-start; font-size: .88rem; margin: 8px 0; color: var(--muted); }
+.pc-source.big b { color: var(--fg); font-weight: 600; }
+.pc-source.big a { color: var(--pc-accent); overflow-wrap: anywhere; }

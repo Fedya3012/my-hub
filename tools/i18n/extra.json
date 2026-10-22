@@ -2216,5 +2216,19 @@
  "Xoá hàng chờ": "Clear queue",
  "Xoá lịch sử": "Clear history",
  "Xuất OPML": "Export OPML",
- "Podcast của tôi": "My podcasts"
+ "Podcast của tôi": "My podcasts",
+ "Tất cả các nguồn": "All sources",
+ "Nguồn tìm": "Search source",
+ "Nguồn tìm kiếm": "Search source",
+ "Nguồn:": "Source:",
+ "Nguồn nghe": "Source",
+ "Không rõ": "Unknown",
+ "Link RSS trực tiếp": "Direct RSS link",
+ "Tệp trên máy này": "File on this device",
+ "Nguồn tìm kiếm mặc định": "Default search source",
+ "· chỉ Apple Podcasts, thêm khoá Podcast Index trong Cài đặt để tìm rộng hơn": "· Apple Podcasts only, add a Podcast Index key in Settings to search wider",
+ "Chưa có khoá Podcast Index. Nhập key và secret trong Cài đặt của Podcast, hoặc chọn nguồn khác.": "No Podcast Index key yet. Enter the key and secret in Podcast settings, or pick another source.",
+ "· RSS:": "· RSS:",
+ "· Apple ID": "· Apple ID",
+ "· Podcast Index ID": "· Podcast Index ID"
 }

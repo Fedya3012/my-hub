@@ -4,7 +4,7 @@ import { icon } from '../../../core/icons.js';
 import { esc, toast, confirmBox } from '../../../core/ui.js';
 import { tasks } from '../../../core/tasks.js';
 import * as store from '../lib/store.js';
-import { seen } from '../lib/online.js';
+import { seen, sourceNames } from '../lib/online.js';
 import { normFeed } from '../lib/net.js';
 import { get } from '../lib/prefs.js';
 import { art, episodeList, bindEpisodes, notesHtml, stripHtml, pick } from './common.js';
@@ -19,7 +19,7 @@ export async function render(el, { head, arg, go, ctx, rerender }) {
     if (!(await store.show(id))) {
       el.innerHTML = `<p class="muted pc-loading">${icon('podcast')} Đang đọc RSS…</p>`;
       try {
-        const meta = seen.get(arg) || { feedUrl };
+        const meta = seen.get(arg) || { feedUrl, sources: ['rss'] };
         await tasks.run({ label: 'Đọc podcast', detail: meta.title || feedUrl, cancellable: true }, async (t) => store.saveFeed(await store.loadFeed(feedUrl, { itunesId: meta.itunesId, signal: t.signal }), meta));
       } catch (e) {
         if (e?.name !== 'AbortError') el.innerHTML = `<p class="pc-empty">Không đọc được podcast này: ${esc(e.message)}</p>`;
@@ -60,6 +60,7 @@ export async function render(el, { head, arg, go, ctx, rerender }) {
       </div>
     </header>
     ${desc ? `<details class="pc-desc"><summary>${esc(desc.slice(0, 220))}${desc.length > 220 ? '… <b>Xem thêm</b>' : ''}</summary><div>${notesHtml(s.description)}</div></details>` : ''}
+    <p class="pc-source big">${icon('pc-wifi')}<span>Nguồn: <b>${esc(sourceNames(s.sources) || (local ? 'Tệp trên máy này' : 'Link RSS trực tiếp'))}</b>${local ? '' : ` · RSS: <a href="${esc(s.feedUrl)}" target="_blank" rel="noopener">${esc(hostOf(s.feedUrl))}</a>`}${s.itunesId ? ` · Apple ID ${esc(s.itunesId)}` : ''}${s.piId ? ` · Podcast Index ID ${esc(s.piId)}` : ''}</span></p>
     ${s.funding?.length ? `<p class="pc-fund">${icon('pc-star')} Ủng hộ: ${s.funding.map(f => `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.label || 'Ủng hộ')}</a>`).join(' · ')}</p>` : ''}
     ${Object.keys(sets).length ? `<p class="muted pc-sets">${[sets.speed && `Tốc độ ${sets.speed}×`, sets.skipIntro && `Bỏ ${sets.skipIntro}s đầu`, sets.skipOutro && `Bỏ ${sets.skipOutro}s cuối`, sets.autoDownload != null && (sets.autoDownload ? 'Tự tải' : 'Không tự tải')].filter(Boolean).join(' · ')}</p>` : ''}
     <div class="pc-toolbar">
@@ -106,3 +107,5 @@ async function showSettings(s) {
   });
   toast('Đã lưu cài đặt riêng');
 }
+
+const hostOf = (u) => { try { return new URL(u).host; } catch { return u; } };

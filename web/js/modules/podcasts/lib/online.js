@@ -9,6 +9,9 @@ const PI = 'https://api.podcastindex.org/api/1.0';
 // Results seen this session, by feed URL: the preview page of a show found in search keeps its iTunes id and rating.
 export const seen = new Map();
 const keep = (list) => { for (const r of list) if (r.feedUrl) seen.set(r.feedUrl, { ...seen.get(r.feedUrl), ...r }); return list; };
+// Where a result came from; shown on every result and on the show page.
+export const SOURCES = { pi: 'Podcast Index', itunes: 'Apple Podcasts', rss: 'Link RSS trực tiếp' };
+export const sourceNames = (list = []) => list.map(k => SOURCES[k] || k).join(' · ');
 export const hasPodcastIndex = () => !!(get('piKey') && get('piSecret'));
 
 async function sha1(s) {
@@ -28,12 +31,12 @@ async function pi(path, params = {}, signal) {
 const fromPi = (f) => ({
   feedUrl: f.url || f.originalUrl, title: f.title, author: f.author || f.ownerName || '', image: f.artwork || f.image || '',
   description: f.description || '', categories: Object.values(f.categories || {}), episodes: f.episodeCount || null,
-  rating: null, itunesId: f.itunesId || null, piId: f.id || f.feedId || null, language: f.language || '', newest: (f.newestItemPublishTime || f.lastUpdateTime || 0) * 1000, source: 'pi',
+  rating: null, itunesId: f.itunesId || null, piId: f.id || f.feedId || null, language: f.language || '', newest: (f.newestItemPublishTime || f.lastUpdateTime || 0) * 1000, source: 'pi', sources: ['pi'],
 });
 const fromItunes = (r) => ({
   feedUrl: r.feedUrl, title: r.collectionName || r.trackName, author: r.artistName || '', image: r.artworkUrl600 || r.artworkUrl100 || '',
   description: '', categories: (r.genres || []).filter(g => g !== 'Podcasts'), episodes: r.trackCount || null,
-  rating: r.averageUserRating || null, itunesId: r.collectionId || null, piId: null, newest: Date.parse(r.releaseDate) || 0, source: 'itunes',
+  rating: r.averageUserRating || null, itunesId: r.collectionId || null, piId: null, newest: Date.parse(r.releaseDate) || 0, source: 'itunes', sources: ['itunes'],
 });
 
 // iTunes allows CORS on /search and /lookup.
@@ -43,16 +46,17 @@ async function itunes(path, params, signal) {
 }
 
 // Search by show name, host, guest, keyword. kind: 'all' | 'title' | 'person'.
-export async function search(q, { kind = 'all', signal, limit = 40 } = {}) {
+export async function search(q, { kind = 'all', source = 'all', signal, limit = 40 } = {}) {
   q = q.trim();
   if (!q) return [];
+  if (source === 'pi' && !hasPodcastIndex()) throw Object.assign(new Error('Chưa có khoá Podcast Index. Nhập key và secret trong Cài đặt của Podcast, hoặc chọn nguồn khác.'), { code: 'nokey' });
   const jobs = [];
-  if (hasPodcastIndex()) {
+  if (source !== 'itunes' && hasPodcastIndex()) {
     jobs.push(kind === 'person'
       ? pi('/search/byperson', { q, max: limit }, signal).then(j => dedupeEpisodes(j.items || []))
       : pi(kind === 'title' ? '/search/bytitle' : '/search/byterm', { q, max: limit, similar: '' }, signal).then(j => (j.feeds || []).map(fromPi)));
   }
-  jobs.push(itunes('search', { media: 'podcast', term: q, limit, country: get('country') || 'vn', ...(kind === 'person' ? { attribute: 'artistTerm' } : kind === 'title' ? { attribute: 'titleTerm' } : {}) }, signal)
+  if (source !== 'pi') jobs.push(itunes('search', { media: 'podcast', term: q, limit, country: get('country') || 'vn', ...(kind === 'person' ? { attribute: 'artistTerm' } : kind === 'title' ? { attribute: 'titleTerm' } : {}) }, signal)
     .then(j => (j.results || []).filter(r => r.feedUrl).map(fromItunes)));
   const all = await Promise.allSettled(jobs);
   if (all.every(r => r.status === 'rejected')) throw all[0].reason;
@@ -62,7 +66,7 @@ export async function search(q, { kind = 'all', signal, limit = 40 } = {}) {
 // Podcast Index "byperson" returns episodes: turn them into their shows.
 function dedupeEpisodes(items) {
   const m = new Map();
-  for (const e of items) if (!m.has(e.feedUrl)) m.set(e.feedUrl, { feedUrl: e.feedUrl, title: e.feedTitle, author: e.feedAuthor || '', image: e.feedImage || e.image || '', description: '', categories: [], episodes: null, rating: null, itunesId: e.feedItunesId || null, piId: e.feedId, source: 'pi', guestIn: e.title });
+  for (const e of items) if (!m.has(e.feedUrl)) m.set(e.feedUrl, { feedUrl: e.feedUrl, title: e.feedTitle, author: e.feedAuthor || '', image: e.feedImage || e.image || '', description: '', categories: [], episodes: null, rating: null, itunesId: e.feedItunesId || null, piId: e.feedId, source: 'pi', sources: ['pi'], guestIn: e.title });
   return [...m.values()];
 }
 
@@ -74,7 +78,7 @@ function merge(list) {
     if (!r.feedUrl) continue;
     const k = key(r), k2 = 'u' + String(r.feedUrl).replace(/^https?:\/\//, '').replace(/\/$/, '').toLowerCase();
     const old = m.get(k) || m.get(k2);
-    if (old) { for (const [f, v] of Object.entries(r)) if (old[f] == null || old[f] === '' || (Array.isArray(old[f]) && !old[f].length)) old[f] = v; }
+    if (old) { old.sources = [...new Set([...(old.sources || []), ...(r.sources || [])])]; for (const [f, v] of Object.entries(r)) if (f !== 'sources' && (old[f] == null || old[f] === '' || (Array.isArray(old[f]) && !old[f].length))) old[f] = v; }
     else { m.set(k, r); m.set(k2, r); }
   }
   return [...new Set(m.values())];

@@ -48,7 +48,7 @@ export async function saveFeed(parsed, meta = {}, { subscribe = false } = {}) {
     link: s.link || old?.link || '', language: s.language || meta.language || old?.language || '',
     categories: s.categories?.length ? s.categories : meta.categories?.length ? meta.categories : old?.categories || [],
     persons: s.persons || [], funding: s.funding || [], explicit: !!s.explicit, complete: !!s.complete,
-    itunesId: meta.itunesId || old?.itunesId || null, piId: meta.piId || old?.piId || null, rating: meta.rating ?? old?.rating ?? null,
+    sources: [...new Set([...(old?.sources || []), ...(meta.sources || [])])], itunesId: meta.itunesId || old?.itunesId || null, piId: meta.piId || old?.piId || null, rating: meta.rating ?? old?.rating ?? null,
     subscribed: subscribe ? 1 : old?.subscribed || 0, subscribedAt: subscribe && !old?.subscribed ? now() : old?.subscribedAt || null,
     settings: old?.settings || {}, refreshedAt: now(), lastEpisodeAt: Math.max(0, ...parsed.episodes.map(e => e.pubDate || 0)),
     createdAt: old?.createdAt || now(), deleted: 0, partial: !!s.partial,

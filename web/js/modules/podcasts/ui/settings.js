@@ -13,7 +13,7 @@ const GROUPS = [
   ['download', 'Tải về', ['autoDownload', 'autoDownloadWifi', 'autoDownloadCharging', 'keepDownloads', 'autoDelete']],
   ['pc-inbox', 'Tập mới', ['refreshEvery', 'newToQueue']],
   ['pc-transcript', 'Bản chép lời', ['aiTranscript']],
-  ['pc-discover', 'Tìm kiếm online', ['country', 'piKey', 'piSecret', 'corsProxy']],
+  ['pc-discover', 'Tìm kiếm online', ['searchSource', 'country', 'piKey', 'piSecret', 'corsProxy']],
 ];
 
 export async function render(el) {

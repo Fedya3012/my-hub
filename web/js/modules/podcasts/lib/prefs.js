@@ -28,6 +28,7 @@ export function definePrefs() {
       piKey: { type: 'string', default: '', label: 'Podcast Index API key (chỉ lưu trên máy này)' },
       piSecret: { type: 'string', default: '', label: 'Podcast Index API secret (chỉ lưu trên máy này)' },
       corsProxy: { type: 'string', default: '', label: 'Proxy CORS cho bản web (ví dụ https://corsproxy.io/?url=)' },
+      searchSource: { type: 'enum', default: 'all', options: { all: 'Tất cả các nguồn', pi: 'Podcast Index', itunes: 'Apple Podcasts' }, label: 'Nguồn tìm kiếm mặc định' },
       subsView: { type: 'string', default: 'grid', ui: false },
       subsSort: { type: 'string', default: 'recent', ui: false },
       sleepMin: { type: 'number', default: 30, ui: false },

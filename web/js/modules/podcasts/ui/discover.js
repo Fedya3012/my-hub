@@ -4,12 +4,14 @@ import { icon } from '../../../core/icons.js';
 import { esc, toast } from '../../../core/ui.js';
 import { tasks } from '../../../core/tasks.js';
 import * as store from '../lib/store.js';
-import { search, topCharts, trending, CATEGORIES, hasPodcastIndex } from '../lib/online.js';
+import { search, topCharts, trending, CATEGORIES, hasPodcastIndex, SOURCES, sourceNames } from '../lib/online.js';
+import { get, set } from '../lib/prefs.js';
 import { normFeed } from '../lib/net.js';
 import { art, showCard } from './common.js';
 
 const KINDS = [['all', 'Tất cả'], ['title', 'Tên podcast'], ['person', 'Người dẫn / khách mời']];
 let kind = 'all', ctl = null;
+const SRC = [['all', 'Tất cả các nguồn'], ['pi', SOURCES.pi], ['itunes', SOURCES.itunes]];
 
 export async function render(el, { arg, go }) {
   const q = arg && !/^(genre:|charts$|trending$)/.test(arg) ? arg : '';
@@ -20,6 +22,7 @@ export async function render(el, { arg, go }) {
         <button type="submit" class="pc-search-go" aria-label="Tìm">${icon('pc-discover')}</button>
       </form>
       <datalist id="pc-sugg"></datalist>
+      <div class="pc-src"><span class="muted">Nguồn tìm</span><div class="pc-seg" role="radiogroup" aria-label="Nguồn tìm kiếm">${SRC.map(([k, l]) => `<button type="button" role="radio" aria-checked="${(get('searchSource') || 'all') === k}" data-source="${k}">${l}${k === 'pi' && !hasPodcastIndex() ? ' 🔑' : ''}</button>`).join('')}</div></div>
       <div class="pc-seg" role="radiogroup" aria-label="Tìm theo">${KINDS.map(([k, l]) => `<button type="button" role="radio" aria-checked="${k === kind}" data-kind="${k}">${l}</button>`).join('')}</div>
     </div>
     <div data-body></div>`;
@@ -28,6 +31,7 @@ export async function render(el, { arg, go }) {
   form.q.addEventListener('input', fillSugg); fillSugg();
   form.onsubmit = (e) => { e.preventDefault(); const v = form.q.value.trim(); if (v) go('discover/' + encodeURIComponent(v)); };
   el.querySelectorAll('[data-kind]').forEach(b => b.onclick = () => { kind = b.dataset.kind; el.querySelectorAll('[data-kind]').forEach(x => x.setAttribute('aria-checked', x === b)); if (q) results(body, q); });
+  el.querySelectorAll('[data-source]').forEach(btn => btn.onclick = async () => { await set('searchSource', btn.dataset.source); el.querySelectorAll('[data-source]').forEach(x => x.setAttribute('aria-checked', x === btn)); const v = form.q.value.trim(); if (v) results(body, v); });
   body.addEventListener('click', onSubscribeClick);
   if (q) await results(body, q);
   else if (arg?.startsWith('genre:')) await genre(body, arg.slice(6));
@@ -42,9 +46,9 @@ async function results(body, q) {
   // A pasted feed link is subscribed to directly.
   if (/^(https?|feed|itpc|pcast):\/\//i.test(q)) return rssBox(body, q);
   try {
-    const list = await search(q, { kind, signal: ctl.signal });
+    const list = await search(q, { kind, source: get('searchSource') || 'all', signal: ctl.signal });
     const subs = new Set((await store.shows()).map(s => s.feedUrl));
-    body.innerHTML = `<section class="pc-sec"><header><h2>${list.length} kết quả cho “${esc(q)}”</h2><small class="muted">${hasPodcastIndex() ? 'Podcast Index + Apple' : 'Apple Podcasts · thêm khoá Podcast Index trong Cài đặt để tìm rộng hơn'}</small></header>
+    body.innerHTML = `<section class="pc-sec"><header><h2>${list.length} kết quả cho “${esc(q)}”</h2><small class="muted">Nguồn: ${esc(SRC.find(x => x[0] === (get('searchSource') || 'all'))[1])}${(get('searchSource') || 'all') === 'all' && !hasPodcastIndex() ? ' · chỉ Apple Podcasts, thêm khoá Podcast Index trong Cài đặt để tìm rộng hơn' : ''}</small></header>
       ${list.length ? `<ul class="pc-results">${list.map(r => resultRow(r, subs.has(normFeed(r.feedUrl)))).join('')}</ul>` : '<p class="muted pc-empty">Không tìm thấy. Thử từ khoá khác, tìm theo người, hoặc dán link RSS.</p>'}</section>`;
   } catch (e) {
     if (e?.name === 'AbortError') return;
@@ -60,6 +64,7 @@ function resultRow(r, subscribed) {
       <b>${esc(r.title)}</b>
       <small class="muted">${esc(r.author || '')}</small>
       <small class="muted">${[r.episodes ? r.episodes + ' tập' : '', r.categories?.slice(0, 2).join(', '), r.guestIn ? 'Khách mời trong: ' + r.guestIn : ''].filter(Boolean).map(esc).join(' · ')} ${stars}</small>
+      <small class="pc-source">${icon('pc-wifi')}Nguồn: ${esc(sourceNames(r.sources) || 'Không rõ')}</small>
     </a>
     <button class="btn ${subscribed ? '' : 'primary'} pc-sub" data-sub="${esc(r.feedUrl)}" ${subscribed ? 'disabled' : ''}>${icon(subscribed ? 'pc-check' : 'pc-plus')}${subscribed ? 'Đã đăng ký' : 'Đăng ký'}</button>
   </li>`;
@@ -115,7 +120,7 @@ async function genre(body, id) {
 async function rssBox(body, url, fromForm = false) {
   const feedUrl = normFeed(url);
   try {
-    const id = await tasks.run({ label: 'Đăng ký từ link RSS', detail: feedUrl, cancellable: true }, (t) => store.subscribe({ feedUrl }, { signal: t.signal }));
+    const id = await tasks.run({ label: 'Đăng ký từ link RSS', detail: feedUrl, cancellable: true }, (t) => store.subscribe({ feedUrl, sources: ['rss'] }, { signal: t.signal }));
     toast('Đã đăng ký');
     location.hash = 'podcasts/show/' + encodeURIComponent(id);
   } catch (e) {
