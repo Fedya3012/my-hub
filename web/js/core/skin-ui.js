@@ -19,7 +19,7 @@ function card(s, m, on, { follow = false } = {}) {
   const style = [`--p-bg:${pv[0]}`, `--p-sf:${pv[1]}`, `--p-ac:${pv[2]}`, `--p-fg:${pv[3]}`, `--p-ac2:${(s.palette || getSkin(s.extends)?.palette)?.[m]?.['--accent-2'] || pv[2]}`,
     `--p-r:${v['--radius']}`, `--p-font:${v['--font-body']}`, `--p-dfont:${v['--font-display']}`, `--p-glow:${v['--page-glow'] && v['--page-glow'] !== 'none' ? 1 : 0}`].join(';');
   return `<button class="skin-card${on ? ' on' : ''}" role="radio" aria-checked="${on}" data-skin-pick="${follow ? '' : s.id}">
-    <span class="skin-prev" style="${esc(style)}" aria-hidden="true"><span class="sp-art"></span><span class="sp-body"><span class="sp-t">Đường về</span><span class="sp-s">Nhạc · ${esc(s.name)}</span>
+    <span class="skin-prev" style="${esc(style)}" aria-hidden="true"><span class="sp-art"></span><span class="sp-body"><span class="sp-t">Đường về</span><span class="sp-s">Trình phát nhạc · ${esc(s.name)}</span>
       <span class="sp-row"><i></i><i></i><i></i></span><span class="sp-bar"><i></i></span></span></span>
     <b>${follow ? 'Theo skin của app' : esc(s.name)}</b><small>${follow ? 'Dùng skin đang chọn ở Cài đặt' : esc(s.desc || '')}${s.ref && !follow ? `<br><i>Dựa trên: ${esc(s.ref)}</i>` : ''}</small>
     ${s.custom && !follow ? '<span class="pill">Của bạn</span>' : ''}</button>`;

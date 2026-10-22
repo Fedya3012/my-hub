@@ -2,7 +2,7 @@
 import { db, getSetting, setSetting, exportAll, importAll } from '../../core/db.js';
 import { MODES, isDrive } from '../../core/storage/index.js';
 import { tasks } from '../../core/tasks.js';
-import { allThemes, currentTheme, applyTheme, saveCurrentAsTheme, exportTheme, importTheme } from '../../core/theme.js';
+import { allThemes, currentTheme, applyTheme, saveCurrentAsTheme, exportTheme, importTheme, deleteTheme } from '../../core/theme.js';
 import { thisDevice, renameDevice } from '../../core/device.js';
 import { icon } from '../../core/icons.js';
 import { account } from '../../core/account.js';
@@ -109,11 +109,21 @@ async function renderFolders() {
   });
 }
 
+// Re-renders (sync finished, theme picked, account changed) keep the open parameter groups and the scroll position.
 async function render() {
   if (sub === 'folders') return renderFolders();
+  const open = new Set([...root.querySelectorAll('details[open][data-ns]')].map(d => d.dataset.ns));
+  const scroller = document.scrollingElement, top = scroller.scrollTop;
+  await renderPage();
+  root.querySelectorAll('details[data-ns]').forEach(d => { if (open.has(d.dataset.ns)) d.open = true; });
+  if (open.size || top) scroller.scrollTop = top;
+}
+
+async function renderPage() {
   const st = await ctx.storage.status();
   const themes = await allThemes();
   const cur = await currentTheme();
+  const curT = themes.find(t => t.id === cur.id);
   const persisted = await navigator.storage?.persisted?.().catch(() => false);
   const me = await thisDevice();
   const devices = (await db.devices.orderBy('lastSeenAt').reverse().toArray());
@@ -158,7 +168,7 @@ async function render() {
           <dt>Tiến độ nghe/đọc</dt><dd>Đồng bộ vài giây sau mỗi lần dừng · lần cuối ${fmtAgo(liveAt)}</dd>
           ` : ''}
         </dl>
-        <p class="hint">My Hub không tự đặt giới hạn số bài, số tệp hay kích thước tệp. Giới hạn duy nhất là hạn mức của trình duyệt trên máy này ; ứng dụng không thể nới các hạn mức đó, nhưng sẽ cảnh báo khi sắp đầy. Muốn không tốn chỗ: dùng “Thư mục đồng bộ” ở trên, hoặc “Liên kết thư mục (không sao chép)” trong Trình phát nhạc (máy tính).</p>
+        <p class="hint">My Hub không tự đặt giới hạn số bài, số tệp hay kích thước tệp. Giới hạn duy nhất là hạn mức của trình duyệt trên máy này; ứng dụng không thể nới các hạn mức đó, nhưng sẽ cảnh báo khi sắp đầy. Muốn không tốn chỗ: dùng “Thư mục đồng bộ” ở trên, hoặc “Liên kết thư mục (không sao chép)” trong Trình phát nhạc (máy tính).</p>
         ${st.mode !== 'local' ? `<div class="row-actions">
           <button class="btn" data-act="sync" ${conn ? '' : 'disabled'}>${icon('refresh')}Đồng bộ ngay</button>
           <button class="btn" data-act="unlink">Ngừng dùng ${esc(st.cloud.label)} (về Local)</button>
@@ -208,6 +218,7 @@ async function render() {
         <button class="btn" data-act="save-theme">${icon('plus')}Lưu thành theme mới</button>
         <button class="btn" data-act="export-theme">${icon('download')}Xuất theme JSON</button>
         <button class="btn" data-act="import-theme">${icon('upload')}Nhập theme JSON</button>
+        ${curT?.custom ? `<button class="btn danger-ghost" data-act="delete-theme">${icon('trash')}Xoá theme “${esc(curT.name)}”</button>` : ''}
       </div>
     </section>
 
@@ -307,6 +318,10 @@ async function render() {
       actions: [{ label: 'Huỷ', value: null }, { label: 'Lưu', kind: 'primary', value: b => b.querySelector('input').value.trim() }] });
     if (!name) return;
     const t = await saveCurrentAsTheme(name); await applyTheme(t.id); ctx.toast('Đã lưu theme'); render();
+  });
+  on('delete-theme', async () => {
+    if (!(await confirmBox('Xoá theme “' + curT.name + '”?', 'Theme của bạn sẽ bị xoá khỏi máy này. App chuyển về theme Theo hệ thống.', 'Xoá'))) return;
+    await deleteTheme(cur.id); ctx.toast('Đã xoá theme'); render();
   });
   on('export-theme', async () => saveJson(`theme-${cur.id}.json`, await exportTheme(cur.id)));
   on('import-theme', async () => {

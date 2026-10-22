@@ -155,6 +155,22 @@ export async function importTheme(json) {
     k.startsWith('--') && typeof v === 'string' && /^[#\w(),.%\s-]+$/.test(v)));
   const t = { id: 'custom-' + uid().slice(0, 8), name: String(json.theme.name || 'Theme nhập'), base: json.theme.base === 'dark' ? 'dark' : 'light', vars: allowed };
   await db.themes.put(t);
-  await applyTheme(t.id, json.knobs || {});
+  await applyTheme(t.id, cleanKnobs(json.knobs));
   return t;
+}
+// Knobs from an imported file: only known keys with sane values (a broken scale would wreck the layout).
+function cleanKnobs(k = {}) {
+  const out = {};
+  if (typeof k.accent === 'string' && /^#[0-9a-f]{6}$/i.test(k.accent)) out.accent = k.accent;
+  if (Number.isFinite(k.radius)) out.radius = Math.min(28, Math.max(0, k.radius));
+  if (Number.isFinite(k.scale)) out.scale = Math.min(1.3, Math.max(0.85, k.scale));
+  if (k.density === 'compact' || k.density === 'comfortable') out.density = k.density;
+  return out;
+}
+
+// Removes one of the user's own themes; the built-in Auto theme takes over when it was in use.
+export async function deleteTheme(id) {
+  if (!String(id).startsWith('custom-')) return;
+  await db.themes.delete(id);
+  if ((await currentTheme()).id === id) await applyTheme(BUILTIN_THEMES[0].id);
 }
