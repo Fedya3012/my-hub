@@ -6,6 +6,6 @@ export default {
   icon: 'settings',
   route: 'settings',
   order: 99,
-  description: 'Chế độ lưu trữ (Local / GitHub), giao diện, sao lưu JSON.',
+  description: 'Lưu trữ và đồng bộ (Local, GitHub, Dropbox, OneDrive), thư mục đồng bộ, thiết bị, giao diện, thông số dùng chung, sao lưu JSON.',
   files: ['js/modules/settings/index.js', 'js/modules/settings/manifest.js'],
 };

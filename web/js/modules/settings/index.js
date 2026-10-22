@@ -28,22 +28,22 @@ let paramsOff = null;
 // Sub page: Settings → Thư mục đồng bộ (its own page with a back link).
 async function renderFolders() {
   const st = await ctx.storage.status();
-  const card = 'background:#fff;border:1px solid #e3e8ea;border-radius:14px';
-  const btn = 'min-height:44px;padding:0 18px;border-radius:12px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer';
+  const card = 'background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)';
+  const btn = 'min-height:44px;padding:0 18px;border-radius:var(--radius);font-size:15px;font-weight:600;font-family:inherit;cursor:pointer';
   const label = isDrive(st.mode) ? MODES[st.mode].label : '';
   root.innerHTML = `<section class="page" style="max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:14px">
     <div><a class="btn small" href="#settings" aria-label="Quay lại Cài đặt">‹ Cài đặt</a></div>
     <h2 class="section-title" style="margin:0">Thư mục đồng bộ</h2>
     ${isDrive(st.mode) ? `<div style="${card};display:flex;flex-direction:row;align-items:center;gap:12px;padding:14px">
-      <span style="width:40px;height:40px;border-radius:10px;background:#e3f1f2;display:flex;align-items:center;justify-content:center;flex:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0f5f66" stroke-width="1.8" aria-hidden="true"><path d="M7 18a4 4 0 0 1-.6-7.96A5.5 5.5 0 0 1 17 9a4.5 4.5 0 0 1 .5 9z"/></svg></span>
-      <span style="flex:1 1 140px;min-width:0"><span style="display:block;font-size:15px;font-weight:600">${esc(label)}</span><span style="display:block;font-size:12px;color:#2e7d32">${st.cloud.connected ? 'Đã kết nối' : 'Chưa kết nối'}${st.lastSync ? ' · đồng bộ lần cuối ' + esc(fmtAgo(st.lastSync)) : ''}</span></span>
-      <button type="button" data-act="sync-now" style="${btn};padding:0 14px;flex:none;border:0;background:#0f7f88;color:#fff">Đồng bộ ngay</button></div>` : ''}
+      <span style="width:40px;height:40px;border-radius:10px;background:color-mix(in srgb, var(--accent) 14%, transparent);display:flex;align-items:center;justify-content:center;flex:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" aria-hidden="true"><path d="M7 18a4 4 0 0 1-.6-7.96A5.5 5.5 0 0 1 17 9a4.5 4.5 0 0 1 .5 9z"/></svg></span>
+      <span style="flex:1 1 140px;min-width:0"><span style="display:block;font-size:15px;font-weight:600">${esc(label)}</span><span style="display:block;font-size:12px;color:var(--${st.cloud.connected ? 'ok' : 'warn'})">${st.cloud.connected ? 'Đã kết nối' : 'Chưa kết nối'}${st.lastSync ? ' · đồng bộ lần cuối ' + esc(fmtAgo(st.lastSync)) : ''}</span></span>
+      <button type="button" data-act="sync-now" style="${btn};padding:0 14px;flex:none;border:0;background:var(--accent);color:var(--accent-fg)">Đồng bộ ngay</button></div>` : ''}
     <p class="hint" style="margin:0">Tích chọn một hoặc nhiều thư mục trên ổ. Nhạc và sách bên trong được quét, nhập vào thư viện và phát trực tiếp từ ổ, không sao chép vào app. Tệp mới tự cập nhật mỗi lần đồng bộ.</p>
     <div id="folder-picker"></div>
     <div id="fold-progress" style="${card};padding:14px;display:flex;flex-direction:column;gap:10px"></div>
     <div style="display:flex;flex-direction:row;flex-wrap:wrap;gap:10px">
-      <button type="button" data-act="clean" style="flex:1 1 160px;${btn};border:1px solid #cdd7da;background:#fff;color:inherit">Dọn mục đã mất tệp</button>
-      <button type="button" data-act="sync-now" style="flex:1 1 160px;${btn};border:0;background:#0f7f88;color:#fff">Đồng bộ ngay</button>
+      <button type="button" data-act="clean" style="flex:1 1 160px;${btn};border:1px solid var(--line);background:var(--surface);color:inherit">Dọn mục đã mất tệp</button>
+      <button type="button" data-act="sync-now" style="flex:1 1 160px;${btn};border:0;background:var(--accent);color:var(--accent-fg)">Đồng bộ ngay</button>
     </div>
   </section>`;
   const m = await import('../../core/storage/folder-ui.js');
@@ -56,14 +56,14 @@ async function renderFolders() {
 
   // Live progress card: the scan / import task of the folder sync (also visible in the task tray).
   const prog = root.querySelector('#fold-progress');
-  const idle = async () => { const n = (await (await import('../../core/storage/folders.js')).folderList()).length; prog.innerHTML = `<div style="font-size:13px;color:#5b6b70">${n ? 'Đã chọn ' + n + ' thư mục. Bấm “Đồng bộ ngay” để quét và nhập tệp mới.' : 'Chưa chọn thư mục nào.'}</div>`; };
+  const idle = async () => { const n = (await (await import('../../core/storage/folders.js')).folderList()).length; prog.innerHTML = `<div style="font-size:13px;color:var(--muted)">${n ? 'Đã chọn ' + n + ' thư mục. Bấm “Đồng bộ ngay” để quét và nhập tệp mới.' : 'Chưa chọn thư mục nào.'}</div>`; };
   const show = (list) => {
     const t = (list || []).find(x => x.state === 'running' && /^Đang (quét|nhập|dọn)/.test(x.label));
     if (!t) { idle(); return; }
     const pct = t.total ? Math.min(100, Math.round(t.done / t.total * 100)) : null;
-    prog.innerHTML = `<div style="display:flex;justify-content:space-between;font-size:14px"><span style="font-weight:600">${esc(t.label)}</span><span style="color:#5b6b70">${t.total ? t.done + ' / ' + t.total : ''}</span></div>
-      <div style="height:8px;border-radius:99px;background:#e3e8ea;overflow:hidden"><div style="width:${pct == null ? 40 : pct}%;height:100%;background:#0f7f88"></div></div>
-      <div style="font-size:12px;color:#5b6b70">${esc(t.detail || '')}${pct != null ? ' · ' + pct + '%' : ''}</div>`;
+    prog.innerHTML = `<div style="display:flex;justify-content:space-between;font-size:14px"><span style="font-weight:600">${esc(t.label)}</span><span style="color:var(--muted)">${t.total ? t.done + ' / ' + t.total : ''}</span></div>
+      <div style="height:8px;border-radius:99px;background:var(--line);overflow:hidden"><div style="width:${pct == null ? 40 : pct}%;height:100%;background:var(--accent)"></div></div>
+      <div style="font-size:12px;color:var(--muted)">${esc(t.detail || '')}${pct != null ? ' · ' + pct + '%' : ''}</div>`;
   };
   idle();
   offs.push(ctx.bus.on('tasks:changed', show));
@@ -111,8 +111,7 @@ async function render() {
             <strong>${m.label}</strong><span>${m.hint}</span></label>`).join('')}
       </div>
 
-      <p class="hint">Chọn một ô ở trên để kết nối: <b>Dropbox</b> và <b>OneDrive</b> sẽ mở hộp đăng nhập. Đang dùng chế độ này rồi thì bấm “Đổi tài khoản” ở dưới.</p>
-      <div class="row-actions" style="flex-wrap:wrap">${['dropbox', 'onedrive'].map(k => `<button class="btn ${st.mode === k ? 'primary' : ''}" data-connect="${k}">${icon('cloud')}${st.mode === k ? MODES[k].label + ' · đổi tài khoản' : 'Kết nối ' + MODES[k].label}</button>`).join('')}</div>
+      <p class="hint">Chọn một ô ở trên để kết nối: <b>Dropbox</b> và <b>OneDrive</b> sẽ mở hộp đăng nhập. Đang dùng chế độ này rồi thì bấm “Đổi tài khoản” trong bảng bên dưới.</p>
       ${isDrive(st.mode) || st.mode === 'local' ? `<a class="panel" href="#settings/folders" style="display:flex;flex-direction:row;align-items:center;gap:10px;text-decoration:none;color:inherit"><span style="flex:1"><strong style="display:block">Thư mục đồng bộ</strong><span class="hint">${st.mode === 'local' ? 'Chọn thư mục trong máy để nhập nhạc và sách' : 'Chọn thư mục trên ' + esc(MODES[st.mode].label) + ' để nhập nhạc và sách'}</span></span><span aria-hidden="true">›</span></a>` : ''}
       <div class="panel">
         <dl class="kv">
@@ -131,7 +130,7 @@ async function render() {
           <dt>Tiến độ nghe/đọc</dt><dd>Đồng bộ vài giây sau mỗi lần dừng · lần cuối ${fmtAgo(liveAt)}</dd>
           ` : ''}
         </dl>
-        <p class="hint">My Hub không tự đặt giới hạn số bài, số tệp hay kích thước tệp. Giới hạn duy nhất là hạn mức của trình duyệt trên máy này ; ứng dụng không thể nới các hạn mức đó, nhưng sẽ cảnh báo khi sắp đầy. Muốn không tốn chỗ: dùng “Liên kết thư mục (không sao chép)” trong Nhạc (máy tính).</p>
+        <p class="hint">My Hub không tự đặt giới hạn số bài, số tệp hay kích thước tệp. Giới hạn duy nhất là hạn mức của trình duyệt trên máy này ; ứng dụng không thể nới các hạn mức đó, nhưng sẽ cảnh báo khi sắp đầy. Muốn không tốn chỗ: dùng “Thư mục đồng bộ” ở trên, hoặc “Liên kết thư mục (không sao chép)” trong Trình phát nhạc (máy tính).</p>
         ${st.mode !== 'local' ? `<div class="row-actions">
           <button class="btn" data-act="sync" ${conn ? '' : 'disabled'}>${icon('refresh')}Đồng bộ ngay</button>
           <button class="btn" data-act="unlink">Ngừng dùng ${esc(st.cloud.label)} (về Local)</button>
@@ -145,7 +144,7 @@ async function render() {
         <ul class="devices">${devices.map(d => `<li><span class="mod-icon">${icon(d.platform === 'android' || d.platform === 'ios' ? 'device' : 'apps')}</span>
           <span class="dev-main"><strong>${esc(d.name)}</strong>${d.id === me.id ? ' <span class="pill s-core">Máy này</span>' : ''}<span class="muted">Hoạt động ${fmtAgo(d.lastSeenAt)}</span></span>
           ${d.id === me.id ? '<button class="btn small" data-act="rename">Đổi tên</button>' : ''}</li>`).join('')}</ul>
-        <p class="hint">${st.mode === 'local' ? 'Đăng nhập GitHub (chế độ Tài khoản GitHub) để tiến độ (đang nghe tới đâu, đọc tới trang nào) theo bạn sang điện thoại, máy Windows và bản APK.' : 'Dừng nhạc trên một máy, mở app trên máy khác sẽ tiếp tục đúng chỗ đó.'}</p>
+        <p class="hint">${st.mode === 'local' ? 'Kết nối GitHub, Dropbox hoặc OneDrive để tiến độ (đang nghe tới đâu, đọc tới trang nào) theo bạn sang điện thoại, máy Windows và bản APK.' : 'Dừng nhạc trên một máy, mở app trên máy khác sẽ tiếp tục đúng chỗ đó.'}</p>
       </div>
     </section>
 
@@ -205,7 +204,6 @@ async function render() {
     ctx.toast('Chế độ lưu trữ: ' + MODES[r.value].label);
     render();
   });
-  root.querySelectorAll('[data-connect]').forEach(b => b.onclick = async () => { const { useDrive } = await import('../../core/storage/cloud-ui.js'); await useDrive(b.dataset.connect, { reconnect: true }); render(); });
   on('reconnect', async () => { const { useDrive } = await import('../../core/storage/cloud-ui.js'); await useDrive(st.mode, { reconnect: true }); render(); });
   on('persist', async () => { const ok = await ctx.storage.adapters.local.persist(); ctx.toast(ok ? 'Đã bật lưu trữ bền vững' : 'Trình duyệt chưa cho phép', ok ? 'info' : 'warn'); render(); });
   on('rename', async () => {
@@ -286,7 +284,7 @@ async function render() {
     } catch (e) { ctx.toast(e.message, 'error'); }
   });
   on('wipe', async () => {
-    if (!(await confirmBox('Xoá toàn bộ dữ liệu?', 'Mọi mục, liên kết, cài đặt và tệp lưu trên máy này sẽ mất. Dữ liệu đã đồng bộ lên GitHub không bị ảnh hưởng.', 'Xoá hết'))) return;
+    if (!(await confirmBox('Xoá toàn bộ dữ liệu?', 'Mọi mục, liên kết, cài đặt và tệp lưu trên máy này sẽ mất. Dữ liệu đã đồng bộ lên GitHub, Dropbox hoặc OneDrive không bị ảnh hưởng.', 'Xoá hết'))) return;
     const files = await db.files.toArray();
     const t = tasks.start({ label: 'Đang xoá dữ liệu', total: files.length + 1, detail: 'Xoá tệp trên máy…' });
     try {
