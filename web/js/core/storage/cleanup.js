@@ -40,7 +40,7 @@ export async function cleanMissing(moduleId) {
     removed += await pruneOrphans().catch(() => 0);
     const live = new Set((await (await import('./local-folders.js')).localFolders()).map(f => f.id));
     const removedFolder = (f) => !!f.localFolder && !live.has(f.localFolder);
-    const items = (await db.items.filter(i => !i.deleted && (moduleId === 'library' || i.moduleId === moduleId)).toArray());
+    const items = (await db.items.toArray()).filter(i => !i.deleted && (moduleId === 'library' || i.moduleId === moduleId));
     const gone = { music: [], books: [], other: [] };
     for (let n = 0; n < items.length; n++) {
       const i = items[n];

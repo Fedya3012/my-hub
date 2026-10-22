@@ -50,7 +50,7 @@ async function catchUp() {
   running = true;
   try {
     await store.ensureRows();
-    const todo = await db.books.filter(b => b.needsMeta === 1 && !b.deleted).toArray();
+    const todo = (await db.books.toArray()).filter(b => b.needsMeta === 1 && !b.deleted);
     if (!todo.length) return;
     const { readMetaInto } = await import('./ui/importer.js');
     const task = tasks.start({ label: 'Đọc thông tin sách mới', total: todo.length, delay: 800, cancellable: true });

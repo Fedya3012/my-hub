@@ -206,8 +206,11 @@ async function boot() {
     else toast('Chưa có module để mở loại nội dung này. Xem Quản lý ứng dụng.', 'warn');
   });
 
-  await safe(() => startServices(), 'services');
+  // Services (music engine restoring its queue, books catch-up) start alongside the first page
+  // instead of before it: restoring a big music queue no longer delays opening the app.
+  const svc = safe(() => startServices(), 'services');
   await render();
+  await svc;
   await safe(() => renderStorageBadge(), 'badge');
   document.body.classList.add('ready');
   if (storageFull) toast('Bộ nhớ trình duyệt gần đầy: một số thay đổi chưa lưu được. Vào Cài đặt để giải phóng chỗ.', 'warn');

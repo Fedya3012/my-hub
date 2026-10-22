@@ -121,7 +121,7 @@ export function unmount() { disposeList?.(); disposeList = null; offs.forEach(f 
 
 async function refresh() {
   const [items, files, modules, usage, prog, devices, me] = await Promise.all([
-    db.items.filter(i => !i.deleted).toArray(),
+    db.items.toArray().then(r => r.filter(i => !i.deleted)),   // a Dexie .filter() cursor is ~5x slower than one getAll
     db.files.toArray(),
     listModules(),
     ctx.storage.adapters.local.usage(),
@@ -129,7 +129,10 @@ async function refresh() {
   ]);
   const filesBy = new Map();
   for (const f of files) { if (!filesBy.has(f.itemId)) filesBy.set(f.itemId, []); filesBy.get(f.itemId).push(f); }
-  data = { items, filesBy, modules, usage, me,
+  const typeCount = new Map();
+  for (const i of items) typeCount.set(i.type, (typeCount.get(i.type) || 0) + 1);
+  keys = new WeakMap();
+  data = { items, filesBy, modules, usage, me, typeCount,
     progress: new Map(prog.map(p => [p.itemId, p])), devices: new Map(devices.map(d => [d.id, d])) };
   renderStats(); renderContinue(); renderTypeChips(); renderTagOptions(); renderResults();
 }
@@ -153,7 +156,7 @@ function renderStats() {
   const inProg = items.filter(i => i.status === 'in-progress').length;
   const fav = items.filter(i => i.favorite).length;
   const week = items.filter(i => (i.createdAt || 0) > now() - 7 * 864e5).length;
-  const counts = Object.keys(CONTENT_TYPES).map(t => [t, items.filter(i => i.type === t).length]).filter(([, n]) => n);
+  const counts = Object.keys(CONTENT_TYPES).map(t => [t, data.typeCount.get(t) || 0]).filter(([, n]) => n);
   const total = items.length || 1;
   const u = data.usage;
   root.querySelector('#lib-stats').innerHTML = `
@@ -191,9 +194,9 @@ function renderContinue() {
 
 function renderTypeChips() {
   const el = root.querySelector('#lib-types');
-  const types = Object.entries(CONTENT_TYPES).filter(([t]) => data.items.some(i => i.type === t));
+  const types = Object.entries(CONTENT_TYPES).filter(([t]) => data.typeCount.has(t));
   el.innerHTML = [['all', { label: 'Tất cả' }], ...types].map(([t, d]) => {
-    const n = t === 'all' ? data.items.length : data.items.filter(i => i.type === t).length;
+    const n = t === 'all' ? data.items.length : data.typeCount.get(t);
     return `<button class="chip${state.type === t ? ' on' : ''}" aria-pressed="${state.type === t}" data-type="${t}">${t !== 'all' ? `<i class="dot t-${t}"></i>` : ''}${d.label}<span class="num">${n}</span></button>`;
   }).join('');
   el.querySelectorAll('.chip').forEach(b => b.onclick = () => { state.type = b.dataset.type; renderTypeChips(); renderResults(); });
@@ -220,9 +223,13 @@ function filtered() {
     (state.status === 'all' || i.status === state.status) &&
     (!state.fav || i.favorite) &&
     (!state.tag || (i.tags || []).includes(state.tag)) &&
-    (!q || fold([i.title, i.subtitle, ...(i.tags || [])].join(' ')).includes(q))
+    (!q || keyOf(i).includes(q))
   ).sort(SORTS[state.sort][1]);
 }
+
+// Folded search text per item, built once per refresh instead of on every keystroke.
+let keys = new WeakMap();
+const keyOf = (i) => { let k = keys.get(i); if (k === undefined) keys.set(i, k = fold([i.title, i.subtitle, ...(i.tags || [])].join(' '))); return k; };
 
 let disposeList = null;
 function renderResults() {

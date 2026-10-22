@@ -42,12 +42,14 @@ export const changed = (ids = []) => { snapshot.invalidate(); bus.emit('books:ch
 
 // ── Snapshot (everything the pages need, joined once, cached until the next change) ──
 export const snapshot = cached(async () => {
-  const [items, books, authors, series, shelves, files, prog] = await Promise.all([
-    db.items.where('type').equals('book').filter(i => !i.deleted).toArray(),
+  const [items, books, authors, series, shelves, prog] = await Promise.all([
+    db.items.where('type').equals('book').toArray().then(r => r.filter(i => !i.deleted)),   // no Dexie .filter(): a cursor is ~5x slower
     db.books.toArray(), db.authors.toArray(), db.series.toArray(),
-    db.collections.where('moduleId').equals('books').filter(c => !c.deleted).toArray(),
-    db.files.toArray(), db.progress.where('moduleId').equals('books').toArray(),
+    db.collections.where('moduleId').equals('books').toArray().then(r => r.filter(c => !c.deleted)),
+    db.progress.where('moduleId').equals('books').toArray(),
   ]);
+  // Only the books' own files (the files table also holds every music track).
+  const files = items.length ? await db.files.where('itemId').anyOf(items.map(i => i.id)).toArray() : [];
   const bookBy = new Map(books.map(b => [b.itemId, b]));
   const A = new Map(authors.filter(a => !a.deleted).map(a => [a.id, a]));
   const S = new Map(series.filter(s => !s.deleted).map(s => [s.id, s]));
@@ -61,8 +63,15 @@ export const snapshot = cached(async () => {
     list.push(view(item, book, { A, S, P, F }));
   }
   const byId = new Map(list.map(v => [v.id, v]));
-  const authorsList = [...A.values()].map(a => ({ ...a, books: list.filter(v => v.book.authorIds?.includes(a.id)) })).filter(a => a.books.length).sort((x, y) => cmpVi(x.sort || x.name, y.sort || y.name));
-  const seriesList = [...S.values()].map(s => ({ ...s, books: list.filter(v => v.book.seriesId === s.id).sort((x, y) => (x.book.seriesIndex ?? 1e9) - (y.book.seriesIndex ?? 1e9)) })).filter(s => s.books.length).sort((x, y) => cmpVi(x.name, y.name));
+  // Group once (filtering the whole list per author was authors × books).
+  const byAuthor = new Map(), bySeries = new Map();
+  const push = (M, k, v) => { let a = M.get(k); if (!a) M.set(k, a = []); a.push(v); };
+  for (const v of list) {
+    for (const id of new Set(v.book.authorIds || [])) push(byAuthor, id, v);
+    if (v.book.seriesId) push(bySeries, v.book.seriesId, v);
+  }
+  const authorsList = [...A.values()].filter(a => byAuthor.has(a.id)).map(a => ({ ...a, books: byAuthor.get(a.id) })).sort((x, y) => cmpVi(x.sort || x.name, y.sort || y.name));
+  const seriesList = [...S.values()].filter(s => bySeries.has(s.id)).map(s => ({ ...s, books: bySeries.get(s.id).sort((x, y) => (x.book.seriesIndex ?? 1e9) - (y.book.seriesIndex ?? 1e9)) })).sort((x, y) => cmpVi(x.name, y.name));
   return { list, byId, authors: A, series: S, authorsList, seriesList, shelves: shelves.sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || cmpVi(a.name, b.name)) };
 });
 bus.on('progress:pulled', () => snapshot.invalidate());
@@ -214,7 +223,7 @@ export async function removeBooks(ids, { files = true } = {}) {
 // Older installs filed books under the planned 'reader' module, and the Library's own import
 // creates book items without a books row: give every book item a row (run at start, cheap).
 export async function ensureRows() {
-  const items = await db.items.where('type').equals('book').filter(i => !i.deleted).toArray();
+  const items = (await db.items.where('type').equals('book').toArray()).filter(i => !i.deleted);
   const have = new Set(await db.books.toCollection().primaryKeys());
   let n = 0;
   for (const i of items) {
@@ -264,7 +273,7 @@ export async function ensureDefaultShelves() {
 // ── Annotations (highlight | underline | note | bookmark) ────────
 export const annotations = {
   list: (itemId) => db.annotations.where('itemId').equals(itemId).filter(a => !a.deleted).toArray().then(r => r.sort((a, b) => (a.pos ?? 0) - (b.pos ?? 0) || a.createdAt - b.createdAt)),
-  all: () => db.annotations.filter(a => !a.deleted).toArray(),
+  all: () => db.annotations.toArray().then(r => r.filter(a => !a.deleted)),
   async add(row) { const a = { id: uid(), createdAt: now(), deleted: 0, color: 'yellow', ...row }; await db.annotations.put(a); bus.emit('books:annotations', { itemId: a.itemId }); return a; },
   async update(id, patch) { await db.annotations.update(id, patch); const a = await db.annotations.get(id); bus.emit('books:annotations', { itemId: a?.itemId }); },
   async remove(id) { const a = await db.annotations.get(id); await db.annotations.update(id, { deleted: 1 }); bus.emit('books:annotations', { itemId: a?.itemId }); },

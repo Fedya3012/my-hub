@@ -95,8 +95,14 @@ async function render() {
 // Counted per module through the moduleId index (a big music library would not fit in one array).
 async function itemCounts() {
   const mods = await listModules();
-  const counts = await Promise.all(mods.map(m => db.items.where('moduleId').equals(m.id).filter(i => !i.deleted).count()));
-  return Object.fromEntries(mods.map((m, k) => [m.id, counts[k]]));
+  // Index-only counts minus the (few) tombstones: a .filter().count() opened a cursor over every row.
+  const [counts, gone] = await Promise.all([
+    Promise.all(mods.map(m => db.items.where('moduleId').equals(m.id).count())),
+    db.items.where('deleted').equals(1).toArray(),
+  ]);
+  const dead = new Map();
+  for (const i of gone) dead.set(i.moduleId, (dead.get(i.moduleId) || 0) + 1);
+  return Object.fromEntries(mods.map((m, k) => [m.id, counts[k] - (dead.get(m.id) || 0)]));
 }
 
 function modRow(m, i, n, counts, canRollback) {

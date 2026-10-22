@@ -232,9 +232,13 @@ bus.on('item:changed', (e) => { if (e?.source !== 'books') invalidate(); });
 
 // Music items created outside this module (Library "Thêm tệp", samples) get a track row.
 async function adoptOrphans() {
-  const items = await db.items.where('type').anyOf('music', 'podcast').filter(i => !i.deleted).toArray();
-  const have = new Set(await db.tracks.toCollection().primaryKeys());
-  for (const item of items.filter(i => !have.has(i.id))) {
+  // Keys only (cheap); rows are read just for the few items that have no track yet.
+  const [ids, haveKeys] = await Promise.all([db.items.where('type').anyOf('music', 'podcast').primaryKeys(), db.tracks.toCollection().primaryKeys()]);
+  const have = new Set(haveKeys);
+  const missing = ids.filter(id => !have.has(id));
+  if (!missing.length) return;
+  const items = (await db.items.bulkGet(missing)).filter(i => i && !i.deleted);
+  for (const item of items) {
     const file = await db.files.where('itemId').equals(item.id).filter(f => f.role === 'main').first();
     if (!file) continue; // nothing to play yet; adopted once a file is attached
     let meta = null;
