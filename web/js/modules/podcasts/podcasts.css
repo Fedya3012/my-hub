@@ -361,3 +361,14 @@ body.bk-reader-open[data-audio-source]:not([data-audio-source="podcast"]) .pc-mi
 .pc-tog { border-color: transparent; background: rgb(255 255 255 / .06); }
 .pc-tog[aria-pressed="true"] { border-color: color-mix(in srgb, var(--pc-accent) 60%, transparent); }
 @media (prefers-reduced-motion: reduce) { .pc *, .pc-mini * { transition: none !important; animation: none !important; } }
+
+/* Phone polish: tighter top gap above the first section, and bottom tab labels stay on one line. */
+@media (max-width: 860px) {
+  .pc-page > .pc-sec:first-child { margin-top: 4px; }
+  .pc-head { margin-bottom: 0; }
+  .pc-bottom a > span { display: block; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: .6rem; letter-spacing: -.01em; }
+}
+@media (max-width: 860px) {
+  .pc-bottom { padding-inline: 2px; }
+  .pc-bottom a > span { font-size: .56rem; letter-spacing: -.03em; }
+}
