@@ -32,7 +32,9 @@ export async function render(el, { ctx, snap, go }) {
   const week = Array.from({ length: 7 }, (_, i) => { const t = today0 - (6 - i) * dayMs; return { t, on: active.has(t), now: i === 6 }; });
   const hr = new Date().getHours();
   const hello = hr < 11 ? 'Chào buổi sáng' : hr < 18 ? 'Chào buổi chiều' : 'Chào buổi tối';
-  const first = reading[0], others = reading.slice(1);
+  // Home is a summary: at most 12 more books in progress here, the rest via "Xem tất cả" (a long
+  // reading list rendered thousands of nodes and froze the page for seconds on phones).
+  const first = reading[0], others = reading.slice(1, 13);
   const nowBtn = (b) => b.main ? `<button class="btn primary" data-read="${b.id}">${icon('play')}Đọc tiếp</button>` : `<button class="btn" data-prog="${b.id}">${icon('b-edit')}Cập nhật tiến độ</button>`;
   el.innerHTML = `
     <header class="bk-greet"><div><h1>${hello}</h1><p class="muted">${reading.length ? `Bạn đang đọc ${reading.length} cuốn` : 'Chọn một cuốn để bắt đầu'} · ${list.length} sách trong thư viện</p></div>
@@ -60,7 +62,7 @@ export async function render(el, { ctx, snap, go }) {
         <div><b class="num">${yr.want}</b><span>Muốn đọc</span></div>
       </section>
     </div>
-    ${others.length ? `<section class="bk-sec"><h2 class="section-title">${icon('b-scroll')}Cũng đang đọc</h2>
+    ${others.length ? `<section class="bk-sec"><h2 class="section-title">${icon('b-scroll')}Cũng đang đọc${reading.length > 13 ? ` <a class="bk-more" href="#books/library/${encodeURIComponent('status:reading')}">Xem tất cả</a>` : ''}</h2>
       <div class="bk-reading">${others.map(b => `<article class="bk-now" data-id="${b.id}">
         ${coverHtml(b, 'md')}
         <div class="bk-now-b"><b>${esc(b.title)}</b><small>${esc(b.authors.join(', '))}</small>

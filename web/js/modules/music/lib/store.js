@@ -50,7 +50,7 @@ export async function library() {
     await adoptOrphans();
     const [tracks, items, albums, artists, plays, cols, artRows, contains] = await Promise.all([
       db.tracks.toArray(), db.items.where('type').anyOf('music', 'podcast').toArray(),
-      db.albums.toArray(), db.artists.toArray(), db.plays.toArray(),
+      db.albums.toArray(), db.artists.toArray(), playCounts(),
       db.collections.where('moduleId').equals('music').toArray(),
       db.files.where('role').anyOf('artwork', 'artwork-thumb').toArray(),
       db.links.where('relation').equals('contains').toArray(),
@@ -64,13 +64,7 @@ export async function library() {
     const custom = (kind, id) => ART.get(kind + ':' + id)?.id || null;
     const artMode = prefs().art || {};
     const itemMap = new Map(items.map(i => [i.id, i]));
-    const counts = new Map();
-    for (const p of plays) {
-      if (p.skip) continue; // skips are kept for statistics, they are not listens
-      const c = counts.get(p.itemId) || { n: 0, last: 0 };
-      c.n++; c.last = Math.max(c.last, p.at);
-      counts.set(p.itemId, c);
-    }
+    const counts = plays;
     const rule = prefs().hiResRule;
     const T = new Map();
     for (const t of tracks) {
@@ -207,6 +201,32 @@ export async function library() {
     return built;
   })().finally(() => { if (building === job) building = null; });
   return job;
+}
+
+// Listen counts per track. The plays table only grows and is the biggest one read for a rebuild,
+// so the counts are kept between rebuilds and re-read only when its row count changed elsewhere
+// (sync, cleanup). Plays logged here update the cache directly (notePlay).
+let playCache = null;   // { n: rows in db.plays, counts: Map itemId -> { n, last } }
+async function playCounts() {
+  const n = await db.plays.count();
+  if (playCache?.n === n) return playCache.counts;
+  const counts = new Map();
+  for (const p of await db.plays.toArray()) {
+    if (p.skip) continue; // skips are kept for statistics, they are not listens
+    const c = counts.get(p.itemId) || { n: 0, last: 0 };
+    c.n++; c.last = Math.max(c.last, p.at);
+    counts.set(p.itemId, c);
+  }
+  playCache = { n, counts };
+  return counts;
+}
+function notePlay(row) {
+  if (!playCache) return;
+  playCache.n++;
+  if (row.skip) return;
+  const c = playCache.counts.get(row.itemId) || { n: 0, last: 0 };
+  c.n++; c.last = Math.max(c.last, row.at);
+  playCache.counts.set(row.itemId, c);
 }
 
 const stableSmart = (rules, all) => rules?.rules ? evalSmart({ ...rules, sort: rules.sort === 'random' ? 'title' : rules.sort }, all) : [];
@@ -672,8 +692,10 @@ export async function targetsOf(sourceId) {
 export async function logPlay(track, { ms, completed, source }) {
   const dev = await thisDevice();
   markLogged(track.id);
-  await db.plays.put({ id: uid(), itemId: track.id, at: now(), ms: Math.round(ms), completed: completed ? 1 : 0, source: source || null, deviceId: dev.id, ...(track.sample ? { sample: 1 } : {}),
-    ...(track.virtual ? { title: track.title, artist: track.artist, virtual: 1 } : {}) });
+  const row = { id: uid(), itemId: track.id, at: now(), ms: Math.round(ms), completed: completed ? 1 : 0, source: source || null, deviceId: dev.id, ...(track.sample ? { sample: 1 } : {}),
+    ...(track.virtual ? { title: track.title, artist: track.artist, virtual: 1 } : {}) };
+  await db.plays.put(row);
+  notePlay(row);
   await logActivity(track.id, 'music', 'play');
   if (lib?.tracks.has(track.id)) { const t = lib.tracks.get(track.id); t.plays++; t.lastPlayed = now(); }
 }
@@ -758,8 +780,10 @@ export function attachListenLog(player) {
     if (c.heard >= need) return; // counted as a play by the player
     try {
       const dev = await thisDevice();
-      await db.plays.put({ id: uid(), itemId: t.id, at: now(), ms: Math.round(c.heard * 1000), completed: 0, skip: 1, deviceId: dev.id,
-        ...(t.virtual ? { title: t.title, artist: t.artist, virtual: 1 } : {}) });
+      const row = { id: uid(), itemId: t.id, at: now(), ms: Math.round(c.heard * 1000), completed: 0, skip: 1, deviceId: dev.id,
+        ...(t.virtual ? { title: t.title, artist: t.artist, virtual: 1 } : {}) };
+      await db.plays.put(row);
+      notePlay(row);
     } catch { /* ignore */ }
   };
   player.addEventListener('time', () => { if (cur && player.track?.id === cur.id) cur.heard = Math.max(cur.heard, player.listened || 0); });

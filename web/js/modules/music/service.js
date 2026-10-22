@@ -15,6 +15,7 @@ import { artHtml, hydrate } from './lib/art.js';
 import { badges, techLine, fmtTime } from './lib/format.js';
 import { mountDock, unmountDock, showRemote } from './ui/dock.js';
 import { attachParams } from './lib/params-bridge.js';
+import { idle } from '../../core/perf.js';
 
 let offs = [], css = null, ctx = null;
 
@@ -55,6 +56,10 @@ export async function start(context) {
   offs.push(() => player.removeEventListener('track', accent));
   document.addEventListener('keydown', keys);
   offs.push(() => document.removeEventListener('keydown', keys));
+  // Build the music library once the app has settled, so the first visit to Albums / Artists
+  // (or the first play) does not wait for it. One build; later changes rebuild only on demand.
+  const warm = setTimeout(() => idle(() => store.library().catch(() => {}), 4000), 5000);
+  offs.push(() => clearTimeout(warm));
 }
 
 // "Đang phát" card for the cover screen (core/cover.js, docs/FOLDABLE.md).
