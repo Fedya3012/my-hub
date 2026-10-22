@@ -34,12 +34,14 @@ self.addEventListener('message', async (event) => {
   const reply = (data) => event.ports[0]?.postMessage(data);
   if (type === 'SKIP_WAITING') return self.skipWaiting();
   if (type === 'CACHE_MODULE') {
-    const { id, version, files } = event.data;
+    const { id, version, keep, files } = event.data;
     try {
       const c = await caches.open(`hub-mod-${id}-${version}`);
       await c.addAll(files.map(f => new Request(f, { cache: 'reload' })));
+      // Keep the version being replaced too, so App Manager can roll back to it.
+      const wanted = [`hub-mod-${id}-${version}`, `hub-mod-${id}-${keep}`];
       for (const key of await caches.keys()) {
-        if (key.startsWith(`hub-mod-${id}-`) && key !== `hub-mod-${id}-${version}`) await caches.delete(key);
+        if (key.startsWith(`hub-mod-${id}-`) && !wanted.includes(key)) await caches.delete(key);
       }
       reply({ ok: true });
     } catch (e) { reply({ ok: false, error: e.message }); }

@@ -8,6 +8,12 @@ import accountPage from '../modules/account/manifest.js';
 import books from '../modules/books/manifest.js';
 import { db, now } from './db.js';
 
+export const cmpVer = (a = '0', b = '0') => {
+  const pa = String(a).split('.').map(Number), pb = String(b).split('.').map(Number);
+  for (let i = 0; i < 4; i++) if ((pa[i] || 0) !== (pb[i] || 0)) return (pa[i] || 0) - (pb[i] || 0);
+  return 0;
+};
+
 export const MANIFESTS = [library, appManager, settings, music, books, accountPage];
 
 export const byId = id => MANIFESTS.find(m => m.id === id);
@@ -17,7 +23,15 @@ export async function syncModuleRows() {
   const rows = await db.modules.toArray();
   const have = new Set(rows.map(r => r.id));
   for (const m of MANIFESTS) {
-    if (have.has(m.id)) continue;
+    if (have.has(m.id)) {
+      // A new app version ships every module's code with it: a row still on an older version
+      // would only show a phantom "update" in App Manager.
+      const row = rows.find(r => r.id === m.id);
+      if (m.status !== 'planned' && row.installedVersion && cmpVer(m.version, row.installedVersion) > 0) {
+        await db.modules.update(m.id, { installedVersion: m.version, previousVersion: null, updatedAt: now() });
+      }
+      continue;
+    }
     await db.modules.put({
       id: m.id,
       installedVersion: m.status === 'planned' ? null : m.version,

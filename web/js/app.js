@@ -166,7 +166,7 @@ async function boot() {
   window.addEventListener('hashchange', render);
   bus.on('module:toggled', () => { renderNav(); startServices(); });
   bus.on('module:updated', (u) => {
-    toast(`Đã cập nhật ${u.name || u.id} lên ${u.to}`);
+    toast(u.rollback ? `Đã quay lại ${u.name || u.id} v${u.to}` : `Đã cập nhật ${u.name || u.id} lên ${u.to}`);
     // Modules split over many files (manifest.reloadOnUpdate) need a reload: the browser keeps
     // already-imported sub-files in memory. The Service Worker has the new version cached.
     if (byId(u.id)?.reloadOnUpdate) { setTimeout(() => location.reload(), 1200); return; }
@@ -183,7 +183,8 @@ async function boot() {
   bus.on('progress:pulled', () => toast('Đã cập nhật tiến độ từ thiết bị khác'));
   bus.on('sync:error', (e) => { renderStorageBadge(); toast('Đồng bộ lỗi: ' + e.message, 'error'); });
   bus.on('update:shell-ready', () => document.getElementById('update-banner').hidden = false);
-  document.getElementById('update-go').onclick = () => go('apps');
+  bus.on('update:available', () => document.getElementById('update-banner').hidden = false);
+  document.getElementById('update-go').onclick = () => { document.getElementById('update-banner').hidden = true; go('apps'); };
   bus.on('item:open', async ({ item, unhandled }) => {
     if (unhandled) return;
     const ownerId = item.moduleId;
