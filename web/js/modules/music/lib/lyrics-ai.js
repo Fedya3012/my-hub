@@ -87,6 +87,9 @@ async function samples(t) {
     if (!row) throw new Error('Không tìm thấy tệp nhạc');
     blob = row.locations?.local?.kind === 'url' ? await (await fetch(row.locations.local.ref)).blob() : await storage.open(row);
   }
+  return blobSamples(blob);
+}
+async function blobSamples(blob) {
   const AC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
   const probe = new (window.AudioContext || window.webkitAudioContext)();
   let decoded;
@@ -282,4 +285,27 @@ export function autoWordSync(t) {
   })();
   running.set(key, job);
   return job;
+}
+
+// Speech of any audio (Podcast transcripts): [{ start, end, text }] in seconds. Same model, pieces and progress as the
+// lyrics; lang '' lets Whisper detect the language.
+export async function transcribeBlob(blob, { task, lang = '' } = {}) {
+  task?.update({ detail: 'Đang giải mã âm thanh…' });
+  const audio = await blobSamples(blob);
+  const asr = await recognizer(task);
+  const n = Math.ceil(audio.length / (PIECE * RATE));
+  const cues = [];
+  for (let i = 0; i < n; i++) {
+    task?.check();
+    task?.update({ done: i, total: n, unit: 'items', detail: `Đang chép lời · ${Math.round(i / n * 100)}%` });
+    const piece = audio.subarray(i * PIECE * RATE, Math.min(audio.length, (i + 1) * PIECE * RATE));
+    if (piece.length < RATE / 2) continue;
+    const out = await asr(piece, { return_timestamps: true, ...(lang ? { language: lang } : {}), task: 'transcribe' });
+    for (const c of out.chunks || [{ timestamp: [0, PIECE], text: out.text }]) {
+      const text = String(c.text || '').replace(/\s+/g, ' ').trim();
+      if (!text || JUNK.test(text)) continue;
+      cues.push({ start: i * PIECE + (c.timestamp?.[0] || 0), end: i * PIECE + (c.timestamp?.[1] ?? PIECE), text, speaker: '' });
+    }
+  }
+  return cues;
 }

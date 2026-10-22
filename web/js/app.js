@@ -32,7 +32,7 @@ function go(route) {
 const routeHead = () => (location.hash.slice(1) || 'library').split('/')[0];
 const routeRest = () => { const r = location.hash.slice(1).split('/').slice(1).join('/'); try { return decodeURIComponent(r); } catch { return r; } };   // a stray % must not break navigation
 
-const OWN_TABS = ['music', 'books', 'fanfic'];   // apps with their own phone bottom tabs
+const OWN_TABS = ['music', 'podcasts', 'books', 'fanfic'];   // apps with their own phone bottom tabs
 
 async function renderNav() {
   const all = (await listModules()).filter(m => m.route && m.status !== 'planned' && (m.core || m.state.enabled));

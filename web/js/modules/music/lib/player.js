@@ -41,7 +41,12 @@ class Player extends EventTarget {
     this.resolveInfo = null;  // how the current track is being decoded
     const E = this.engine;
     E.addEventListener('time', () => this._onTime());
-    E.addEventListener('state', () => { this._emit('state'); this._mediaState(); });
+    E.addEventListener('state', () => {
+      // Starting to play takes the lock screen back from another app's player (Podcast) and tells it to pause.
+      if (this.playing && !this._wasPlaying) { this._mediaSession(); this._media(); bus.emit('media:play', { app: 'music' }); }
+      this._wasPlaying = this.playing;
+      this._emit('state'); this._mediaState();
+    });
     E.addEventListener('transition', (e) => this._onTransition(e.detail));
     E.addEventListener('ended', () => this._onEnded());
     E.addEventListener('error', (e) => this._onError(e.detail));
