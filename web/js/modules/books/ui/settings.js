@@ -48,8 +48,8 @@ async function drawSources(box) {
       <select data-kind>${Object.entries(KINDS).map(([k, v]) => `<option value="${k}">${esc(v.label)}</option>`).join('')}</select>
       <span data-argbox></span>
       <button class="btn small primary" data-add>${icon('plus')}Thêm nguồn</button>
-    </div>
-    <div class="row-actions"><button class="btn small" data-reset>Về mặc định</button></div>`;
+      <button class="btn small" data-reset>Về mặc định</button>
+    </div>`;
   const kindSel = box.querySelector('[data-kind]');
   const argBox = box.querySelector('[data-argbox]');
   const drawArg = () => {

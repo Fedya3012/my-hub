@@ -337,3 +337,8 @@ body.bk-reader-open #dock .mdock { z-index: 850; }
 .bk-src-act { display: flex; gap: 2px; flex: none; }
 .bk-src-act button { width: 32px; height: 32px; padding: 0; display: grid; place-items: center; }
 .bk-src-add { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+
+/* Source add row: borderless soft fields, reset action pushed to the right */
+.bk-src-add { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
+.bk-src-add select { border: 0; background: var(--soft, rgba(127, 127, 127, 0.12)); border-radius: 999px; padding: 6px 12px; font: inherit; color: inherit; }
+.bk-src-add > [data-reset] { margin-left: auto; }
