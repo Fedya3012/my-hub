@@ -30,10 +30,13 @@ export async function render(el, { ctx, arg, go }) {
   el.innerHTML = `
     <div class="fx-toolbar">
       <label class="search">${icon('search')}<input id="fx-q" type="search" value="${esc(st.q)}" placeholder="Tìm tên, fandom, nhân vật, tag…" autocomplete="off" aria-label="Tìm tác phẩm"></label>
-      <button class="fx-sort" data-sort>${esc(SORTS[sort][0])}</button>
-      <button class="icon-btn${active() ? ' on' : ''}" data-filter aria-label="Bộ lọc">${icon('fx-filter')}${active() ? `<b class="fx-dot num">${active()}</b>` : ''}</button>
-      <button class="icon-btn" data-sel aria-pressed="${st.select}" aria-label="Chọn nhiều">${icon('check')}</button>
-      <button class="btn primary" data-new>${icon('plus')}<span>Truyện mới</span></button>
+      <div class="fx-tools-row">
+        <button class="fx-sort" data-sort aria-label="Sắp xếp">${esc(SORTS[sort][0])}${icon('fx-down')}</button>
+        <span class="sp"></span>
+        <button class="icon-btn${active() ? ' on' : ''}" data-filter aria-label="Bộ lọc">${icon('fx-filter')}${active() ? `<b class="fx-dot num">${active()}</b>` : ''}</button>
+        <button class="icon-btn" data-new aria-label="Truyện mới">${icon('plus')}</button>
+        <button class="icon-btn" data-sel aria-pressed="${st.select}" aria-label="Chọn nhiều">${icon('check')}</button>
+      </div>
     </div>
     <div class="chips fx-chips" role="group" aria-label="Trạng thái">${[['', 'Tất cả'], ...Object.entries(STATUSES)].map(([k, l]) => `<button class="chip${st.f.status === k ? ' on' : ''}" data-st="${k}" aria-pressed="${st.f.status === k}">${l}<span class="num">${k ? snap.list.filter(v => v.status === k).length : snap.list.length}</span></button>`).join('')}</div>
     <div class="fx-selbar" hidden></div>
@@ -57,7 +60,7 @@ export async function render(el, { ctx, arg, go }) {
   const newWork = async () => (await import('./edit.js')).editWork(null, { go });
   $('#fx-q').oninput = debounce((e) => { st.q = e.target.value; draw(); }, 140);
   $('[data-new]').onclick = newWork;
-  $('[data-sort]').onclick = (e) => menu(e.currentTarget, Object.entries(SORTS).map(([k, [l]]) => ({ label: l, icon: k === pref('worksSort') ? 'check' : '', run: async () => { await setPref('worksSort', k); e.target.textContent = l; draw(); } })));
+  $('[data-sort]').onclick = (e) => { const btn = e.currentTarget; menu(btn, Object.entries(SORTS).map(([k, [l]]) => ({ label: l, icon: k === pref('worksSort') ? 'check' : '', run: async () => { await setPref('worksSort', k); btn.firstChild.textContent = l; draw(); } }))); };
   $('[data-filter]').onclick = () => filterSheet(snap, () => { save(st.f); render(el, { ctx, go }); });
   el.querySelectorAll('[data-st]').forEach(b => b.onclick = () => { st.f.status = b.dataset.st; save(st.f); el.querySelectorAll('[data-st]').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', x === b); }); draw(); });
   $('[data-sel]').onclick = (e) => { st.select = !st.select; if (!st.select) st.sel.clear(); e.currentTarget.setAttribute('aria-pressed', st.select); draw(); };

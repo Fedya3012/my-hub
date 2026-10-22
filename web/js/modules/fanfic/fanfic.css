@@ -30,16 +30,24 @@ main#view > section.fx { animation: none; }
   .fx-page { padding-bottom: calc(80px + var(--dock-h, 0px) + env(safe-area-inset-bottom, 0px)); }
 }
 
-/* Minimal toolbar: search, quiet sort text, filter / select icons, one primary button */
-.fx-toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
-.fx-toolbar .search { flex: 1 1 auto; min-width: 0; border-color: transparent; background: var(--surface-2); }
-.fx-sort { border: 0; background: none; color: var(--muted); font: inherit; font-size: .88rem; cursor: pointer; white-space: nowrap; padding: 6px 4px; }
-.fx-sort:hover { color: var(--fg); }
-.fx-toolbar .icon-btn { position: relative; }
+/* Minimal toolbar (same shape as Books / Trình phát nhạc): full-width search, then one quiet row of
+   sort text + icon buttons. No filled buttons in the list chrome. */
+.fx-toolbar { display: grid; gap: 4px; margin-bottom: 4px; }
+.fx-toolbar .search { min-width: 0; border-color: transparent; background: var(--surface-2); border-radius: 999px; min-height: 44px; }
+.fx-toolbar .search input { border: 0; background: none; min-width: 0; flex: 1; }
+.fx-tools-row { display: flex; align-items: center; gap: 2px; }
+.fx-tools-row .sp { flex: 1; }
+.fx-sort { display: inline-flex; align-items: center; gap: 4px; border: 0; background: none; color: var(--muted); font: inherit; font-size: .9rem; cursor: pointer; white-space: nowrap; padding: 8px 10px; border-radius: 8px; }
+.fx-sort .ic { width: 16px; height: 16px; }
+.fx-sort:hover { color: var(--fg); background: var(--surface-2); }
+.fx-toolbar .icon-btn { position: relative; width: 44px; height: 44px; }
 .fx-toolbar .icon-btn.on, .fx-toolbar .icon-btn[aria-pressed="true"] { color: var(--fx); }
-.fx-dot { position: absolute; top: 2px; right: 2px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px; background: var(--fx); color: #fff; font-size: .65rem; display: grid; place-items: center; }
-@media (max-width: 620px) { .fx-toolbar .btn.primary span { display: none; } }
-.fx-chips { margin-bottom: 6px; }
+.fx-dot { position: absolute; top: 4px; right: 4px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px; background: var(--fx); color: #fff; font-size: .65rem; display: grid; place-items: center; }
+@media (min-width: 861px) { .fx-toolbar { grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; } .fx-toolbar .search { min-height: 40px; } }
+.fx-chips { display: flex; gap: 8px; overflow-x: auto; margin: 4px -16px 4px; padding: 2px 16px; scrollbar-width: none; }
+.fx-chips::-webkit-scrollbar { display: none; }
+.fx-chips .chip { flex: none; }
+.fx .result-count { margin: 4px 0 8px; }
 .fx-chips .chip:not(.on) { border-color: transparent; background: var(--surface-2); }
 .fx-filters { display: grid; gap: 8px; }
 .fx-filters .chips { flex-wrap: wrap; }
@@ -88,7 +96,6 @@ main#view > section.fx { animation: none; }
 .fx-spark { display: flex; align-items: end; gap: 3px; height: 40px; }
 .fx-spark i { flex: 1; height: max(3px, var(--h)); background: color-mix(in srgb, var(--fx) 35%, var(--surface-2)); border-radius: 3px; }
 .fx-spark i.hit { background: var(--fx); }
-@media (max-width: 520px) { .fx-desk { grid-template-columns: 1fr; justify-items: center; text-align: center; } .fx-desk-b .row-actions { justify-content: center; } }
 .fx-todo { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .fx-todo li { display: flex; gap: 8px; align-items: center; }
 
@@ -107,7 +114,6 @@ main#view > section.fx { animation: none; }
 .fx-meta { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; margin: 0; font-size: .88rem; }
 .fx-meta dt { color: var(--muted); }
 .fx-meta dd { margin: 0; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
-@media (max-width: 520px) { .fx-meta { grid-template-columns: 1fr; gap: 2px; } .fx-meta dd { margin-bottom: 6px; } }
 .fx-actions .btn.primary { min-width: 140px; }
 .fx-cols { display: grid; gap: 14px; }
 @media (min-width: 1000px) { .fx-cols { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); align-items: start; } }
@@ -253,3 +259,44 @@ body[data-posture="flex"] .fx-writer > .fold-bottom { grid-row: 3; display: flex
 body[data-posture="flex"] .fx-writer .fx-w-tools { justify-content: space-around; border: 0; padding: 12px; }
 body[data-posture="flex"] .fx-writer .fx-w-tools .icon-btn { width: 48px; height: 48px; }
 body[data-posture="flex"] .fx-writer .fx-w-page { padding-bottom: 24px; }
+
+/* Phones (Android): the app bar already names the app, so the page header disappears (as in Books);
+   blurbs get denser, the work page stacks with chapters first and one full-width primary action. */
+@media (max-width: 860px) {
+  .fx-head { display: none; }
+  .fx-page { padding-top: 4px; }
+  .fx-work { padding: 12px; gap: 10px; border-radius: 14px; }
+  .fx-work .fx-sum { -webkit-line-clamp: 2; }
+  .fx-work .fx-tags .fx-tag:nth-child(n+5) { display: none; }
+  .fx-aud { width: 26px; height: 26px; font-size: .72rem; }
+  .fx-hero h1 { font-size: 1.3rem; }
+  .fx-hero-t .fx-aud { width: 34px; height: 34px; }
+  .fx-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .fx-actions .btn.primary { flex: 1 1 100%; min-height: 48px; justify-content: center; }
+  .fx-actions .btn:not(.primary) { flex: 1 1 0; min-width: 0; justify-content: center; }
+  .fx-col { display: flex; flex-direction: column; }
+  .fx-note-kinds { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-inline: -14px; padding-inline: 14px; }
+  .fx-note-kinds .chip { flex: none; }
+  .fx-sumpanel { order: 2; }
+  .fx-panel { padding: 14px; border-radius: 14px; }
+  .fx-detail .fx-cols { display: flex; flex-direction: column; }
+  .fx-meta { font-size: .85rem; gap: 6px 10px; }
+  .fx-meta dt { font-size: .78rem; padding-top: 2px; }
+  .fx-sec-h .section-title { white-space: nowrap; font-size: .95rem; }
+  .fx-sec-h .seg button { min-width: 34px; min-height: 34px; }
+  .fx-cont small { display: block; font-weight: 400; opacity: .85; font-size: .78rem; }
+  .fx-desk { grid-template-columns: auto 1fr; justify-items: start; text-align: left; padding: 14px; gap: 14px; }
+  .fx-ring { width: 96px; }
+  .fx-ring b { font-size: 1.25rem; }
+  .fx-desk-b .row-actions { justify-content: flex-start; }
+  .fx-desk-b .btn.primary { width: 100%; justify-content: center; }
+  .fx-fd-grid { grid-template-columns: 1fr; }
+  .fx-tools { grid-template-columns: 1fr; }
+  .fx-w-bar { gap: 0; padding: 4px; }
+  .fx-w-bar .icon-btn { width: 40px; height: 40px; }
+  .fx-w-count { display: none; }
+  .fx-w-page { padding: 18px 18px 40vh; }
+  .fx-w-tools { justify-content: space-between; padding: 4px 6px calc(4px + env(safe-area-inset-bottom, 0px)); }
+  .fx-w-tools .sp { display: none; }
+  .fx-w-tools .icon-btn { width: 44px; height: 44px; }
+}

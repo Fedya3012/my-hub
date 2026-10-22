@@ -52,7 +52,7 @@ export async function render(el, { ctx, arg: id, go, rerender }) {
     </div>
     <div class="fold-bottom fx-cols">
     <div class="fx-col">
-      ${fic.summary || fic.notesStart ? `<section class="fx-panel">${fic.summary ? `<h2 class="section-title">Tóm tắt</h2><div class="fx-prose">${mdToHtml(fic.summary)}</div>` : ''}${fic.notesStart ? `<h3>Lời tác giả</h3><div class="fx-prose">${mdToHtml(fic.notesStart)}</div>` : ''}</section>` : ''}
+      ${fic.summary || fic.notesStart ? `<section class="fx-panel fx-sumpanel">${fic.summary ? `<h2 class="section-title">Tóm tắt</h2><div class="fx-prose">${mdToHtml(fic.summary)}</div>` : ''}${fic.notesStart ? `<h3>Lời tác giả</h3><div class="fx-prose">${mdToHtml(fic.notesStart)}</div>` : ''}</section>` : ''}
       <section class="fx-panel">
         <div class="fx-sec-h"><h2 class="section-title">${icon('fx-binder')}Chương &amp; cảnh</h2>
           <div class="seg" role="group" aria-label="Kiểu xem"><button data-view="list" aria-pressed="${chView === 'list'}" aria-label="Danh sách">${icon('list')}</button><button data-view="cork" aria-pressed="${chView === 'cork'}" aria-label="Bảng thẻ (corkboard)">${icon('fx-cork')}</button></div>

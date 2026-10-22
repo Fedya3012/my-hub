@@ -29,7 +29,7 @@ export async function render(el, { go }) {
         <p class="muted">${streak ? `🔥 Chuỗi ${streak} ngày viết` : 'Viết vài chữ hôm nay để bắt đầu chuỗi ngày.'}</p>
         <div class="fx-spark" aria-label="14 ngày gần đây">${days.map(([d, w]) => `<i style="--h:${Math.round(w / max * 100)}%" class="${goal && w >= goal ? 'hit' : ''}" title="${d}: ${w} từ"></i>`).join('')}</div>
         <div class="row-actions">
-          ${last ? `<button class="btn primary" data-cont>${icon('quill')}Viết tiếp: ${esc(last.title)}${lastCh ? ` · ${esc(lastCh.title)}` : ''}</button>` : ''}
+          ${last ? `<button class="btn primary fx-cont" data-cont>${icon('quill')}<span>Viết tiếp<small>${esc(last.title)}${lastCh ? ` · ${esc(lastCh.title)}` : ''}</small></span></button>` : ''}
           <button class="btn${last ? '' : ' primary'}" data-new>${icon('plus')}Truyện mới</button>
         </div>
       </div>

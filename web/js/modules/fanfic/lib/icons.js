@@ -29,5 +29,6 @@ registerIcons({
   'fx-break': '<path d="M6 12h.01M12 12h.01M18 12h.01"/>',
   'fx-quote': '<path d="M5 17c0-4 1-7 5-9M14 17c0-4 1-7 5-9"/>',
   'fx-undo': '<path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/>',
+  'fx-down': '<path d="m6 9 6 6 6-6"/>',
   'fx-eye': '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>',
 });
