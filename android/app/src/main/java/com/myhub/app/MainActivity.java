@@ -10,6 +10,7 @@ public class MainActivity extends BridgeActivity {
   @Override
   public void onCreate(Bundle savedInstanceState) {
     registerPlugin(FolderPickerPlugin.class);
+    registerPlugin(PosturePlugin.class);
     super.onCreate(savedInstanceState);
   }
 
