@@ -17,7 +17,7 @@ import { dropFiles } from '../../core/dnd.js';
 import { definePrefs, NAME } from './lib/prefs.js';
 
 export { NAME };
-const TABS = [['', 'pc-home', 'Trang chủ'], ['discover', 'pc-discover', 'Khám phá'], ['queue', 'pc-queue', 'Hàng chờ'], ['subs', 'pc-subs', 'Đăng ký'], ['lists', 'pc-filter', 'Danh sách'], ['settings', 'settings', 'Cài đặt']];
+const TABS = [['', 'pc-home', 'Trang chủ'], ['discover', 'pc-discover', 'Khám phá'], ['queue', 'pc-queue', 'Hàng chờ'], ['subs', 'pc-subs', 'Podcast của tôi'], ['lists', 'pc-filter', 'Danh sách'], ['settings', 'settings', 'Cài đặt']];
 const PAGES = {
   '': () => import('./ui/home.js'), discover: () => import('./ui/discover.js'), preview: () => import('./ui/show.js'), show: () => import('./ui/show.js'),
   episode: () => import('./ui/episode.js'), play: () => import('./ui/nowplaying.js'), queue: () => import('./ui/queue.js'), inbox: () => import('./ui/queue.js'),

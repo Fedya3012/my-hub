@@ -15,7 +15,7 @@ export async function render(el, { rerender }) {
   const sort = get('subsSort') || 'recent', view = get('subsView') || 'grid';
   const sorters = { recent: (a, b) => (b.lastEpisodeAt || 0) - (a.lastEpisodeAt || 0), az: (a, b) => a.title.localeCompare(b.title, 'vi'), added: (a, b) => (b.subscribedAt || 0) - (a.subscribedAt || 0), unplayed: (a, b) => (unplayed.get(b.itemId) || 0) - (unplayed.get(a.itemId) || 0) };
   subs.sort(sorters[sort] || sorters.recent);
-  el.innerHTML = `<section class="pc-sec"><header><h1>Đăng ký <span class="pc-count">${subs.length}</span></h1>
+  el.innerHTML = `<section class="pc-sec"><header><h1>Podcast của tôi <span class="pc-count">${subs.length}</span></h1>
       <div class="row-actions">
         <select data-sort aria-label="Sắp xếp">${[['recent', 'Tập mới nhất'], ['unplayed', 'Nhiều tập mới'], ['added', 'Đăng ký gần đây'], ['az', 'Tên A–Z']].map(([k, l]) => `<option value="${k}" ${sort === k ? 'selected' : ''}>${l}</option>`).join('')}</select>
         <button class="icon-btn" data-a="view" aria-label="${view === 'grid' ? 'Xem dạng danh sách' : 'Xem dạng lưới'}">${icon(view === 'grid' ? 'list' : 'grid')}</button>

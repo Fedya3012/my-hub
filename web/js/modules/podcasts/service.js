@@ -11,7 +11,7 @@ import { definePrefs, get, NAME } from './lib/prefs.js';
 import { player } from './lib/player.js';
 import * as store from './lib/store.js';
 
-let offs = [], css = null, ctx = null, mini = null, timer = null, lastApp = 'podcasts';
+let offs = [], css = null, ctx = null, mini = null, timer = null, lastApp = 'podcasts', nativeOff = null;
 
 export async function start(context) {
   ctx = context;
@@ -54,13 +54,14 @@ export async function start(context) {
     try { await tasks.run({ label: `${NAME}: kiểm tra tập mới`, quiet: true, cancellable: true }, (t) => store.refreshAll(t)); await store.autoDownload(tasks); }
     catch (e) { if (e?.name !== 'AbortError') console.warn('[podcasts] refresh', e); }
   };
+  nativeOff = startNative();
   setTimeout(tick, 15000);
   timer = setInterval(tick, 10 * 60000);
 }
 
 export async function stop() {
   offs.forEach(f => f()); offs = [];
-  clearInterval(timer); player.pause();
+  clearInterval(timer); player.pause(); nativeOff?.();
   mini?.remove(); mini = null; css?.remove();
   document.body.classList.remove('pc-mini-on');
 }
@@ -126,4 +127,33 @@ async function drawerBlock({ item, el, from }) {
     <div class="row-actions"><a class="btn" href="#podcasts/show/${encodeURIComponent(item.id)}">${icon('podcast')}Mở trong ${esc(NAME)}</a></div>`;
   box.addEventListener('click', async (ev) => { const b = ev.target.closest('[data-ep]'); if (b) { const e = await store.episode(b.dataset.ep); if (e) player.playEpisode(e); } });
   el.appendChild(box);
+}
+
+// ── Android: notification, lock screen, Bluetooth / watch / Android Auto transport (NativeMedia plugin) ──
+// The plugin is shared with the Music Player; while Podcast is the app that last started playing, its track and state
+// go to the notification and its commands come here (music/lib/native.js ignores them then).
+function startNative() {
+  const N = window.Capacitor?.isNativePlatform?.() ? window.Capacitor.Plugins?.NativeMedia : null;
+  if (!N) return null;
+  const mine = () => lastApp === 'podcasts' && player.ep;
+  const sendTrack = async () => {
+    if (!mine()) return;
+    const e = player.ep;
+    await N.setTrack({ id: e.id, title: e.title, artist: player.show?.author || '', album: player.show?.title || '', duration: player.duration || e.duration || 0, art: '' }).catch(() => {});
+  };
+  const sendState = () => { if (mine()) N.setState({ playing: player.playing, position: player.time || 0, rate: player.el?.playbackRate || 1 }).catch(() => {}); };
+  let lastT = 0;
+  const onTime = () => { const t = Date.now(); if (t - lastT > 5000) { lastT = t; sendState(); } };
+  const onEpisode = () => { sendTrack(); sendState(); };
+  player.addEventListener('episode', onEpisode); player.addEventListener('state', sendState); player.addEventListener('time', onTime);
+  const h = N.addListener('command', (c) => {
+    if (!mine()) return;
+    if (c.action === 'play') player.play();
+    else if (c.action === 'pause') player.pause();
+    else if (c.action === 'next') player.fwd();
+    else if (c.action === 'prev') player.back();
+    else if (c.action === 'seek') player.seek(+c.position || 0);
+  });
+  const offBus = ctx.bus.on('media:play', ({ app }) => { if (app === 'podcasts') { sendTrack(); sendState(); } });
+  return () => { player.removeEventListener('episode', onEpisode); player.removeEventListener('state', sendState); player.removeEventListener('time', onTime); offBus(); Promise.resolve(h).then(x => x?.remove?.()).catch(() => {}); };
 }

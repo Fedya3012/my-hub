@@ -54,7 +54,11 @@ async function sendTree(N, player) {
   await N.setTree({ tree });
 }
 
+// Podcast shares the same media session: while it is the app that last started playing, its commands are not music's.
+let active = 'music';
+bus.on('media:play', ({ app }) => { active = app; });
 async function command(player, c) {
+  if (active === 'podcasts') return;
   switch (c.action) {
     case 'play': if (!player.playing) await player.toggle(); break;
     case 'pause': player.pause(); break;
