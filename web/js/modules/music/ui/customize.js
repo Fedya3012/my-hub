@@ -91,6 +91,7 @@ export function customizeSheet(onChange, start = 'library') {
 
 const sw = (path, on) => `<button class="switch" role="switch" aria-checked="${!!on}" data-pref="${path}"><i></i></button>`;
 const row = (label, ctl, hint = '') => `<div class="mcus-row"><div><b>${label}</b>${hint ? `<small>${hint}</small>` : ''}</div>${ctl}</div>`;
+const p0 = () => prefs();
 const sel = (path, val, opts, num = false) => `<select data-pref="${path}" ${num ? 'data-num="1"' : ''}>${Object.entries(opts).map(([k, v]) => `<option value="${k}" ${String(k) === String(val) ? 'selected' : ''}>${v}</option>`).join('')}</select>`;
 function fmtOut(path, v) {
   if (path === 'playback.crossfade') return +v ? (+v).toFixed(1) + ' s' : 'Tắt';
@@ -169,6 +170,7 @@ const RENDER = {
       ${row('Engine', sel('playback.engine', b.engine, { auto: `Tự động${isIOS ? ' (iOS: trực tiếp)' : ' (Web Audio)'}`, webaudio: 'Web Audio (EQ, crossfade mượt)', direct: 'Trực tiếp (nhẹ, phát nền tốt trên iOS)' }), `Đang dùng: ${E.mode === 'direct' ? 'trực tiếp' : E.mode === 'webaudio' ? 'Web Audio' : 'chưa khởi động'}`)}
       ${row('Tần số đầu ra', sel('playback.outputRate', b.outputRate, rates, true), E.outputRate ? `Hiện tại ${E.outputRate / 1000} kHz. Trùng tần số với file để tránh chuyển mẫu.` : '')}
       ${canSetSink() ? row('Thiết bị phát', `<button class="btn small" data-act="sinks">${icon('output')}Chọn…</button>`, b.sinkId ? 'Đã chọn thiết bị riêng' : 'Theo hệ thống') : ''}
+      ${window.Capacitor?.Plugins?.UsbAudio ? row('USB DAC (Android)', sel('audio.usbMode', p0().audio?.usbMode || 'off', { off: 'Tắt (theo hệ thống)', match: 'Khớp tần số của bài', bitperfect: 'Bit-perfect (thử nghiệm)' }), 'Android 14 trở lên. Khớp tần số: DAC chạy đúng tần số của bài, không chuyển mẫu. Bit-perfect: DAC nhận nguyên dữ liệu, âm lượng chỉnh trên DAC.') : ''}
       <p class="hint">Trình duyệt không cho phát bit-perfect hay độc quyền thiết bị (exclusive/USB DAC trực tiếp) như app Android gốc. File Hi-Res vẫn được giải mã đủ độ phân giải; âm thanh đi qua bộ trộn float 32-bit của trình duyệt.</p>
       <button class="btn small" data-act="clear-cache">${icon('trash')}Xoá bộ đệm giải mã (DSD/ALAC)</button>`;
   },

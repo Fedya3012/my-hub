@@ -43,6 +43,7 @@ export const DEFAULTS = {
   lyrics: { mode: 'word', online: 0, preferSynced: 1, tr: 1, roman: 1, align: 'left', weight: 800, blur: 1, autoScroll: 1, mini: 1, full: 0, aiAuto: 1, aiModel: 'base', aiLang: '' },
   // Audio path (lib/outputs.js, lib/ambient.js, lib/timers.js): bit-perfect, outputs, timers, ambient mixer.
   audio: {
+    usbMode: 'off',
     bitPerfect: 0, eqAutoProfile: 1,
     out: { mode: 'single', a: { ch: 'stereo', trimL: 0, trimR: 0, gainDb: 0, delayMs: 0 }, b: { sinkId: '', ch: 'stereo', gainDb: 0, delayMs: 0 } },
     sleep: { minutes: 30, fadeSec: 60, slow: 0, tracks: 1, ambient: 1 },

@@ -642,6 +642,8 @@
         "js/modules/music/lib/lyrics-sources.js",
         "js/modules/music/lib/lyrics-ai.js",
         "js/modules/music/lib/qol.js",
+        "js/modules/music/lib/native.js",
+        "js/modules/music/ui/dlna.js",
         "js/modules/music/lib/outputs.js",
         "js/modules/music/lib/timers.js",
         "js/modules/music/lyrics.css",

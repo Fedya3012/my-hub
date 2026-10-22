@@ -21,6 +21,10 @@ let offs = [], css = null, ctx = null;
 
 export async function start(context) {
   ctx = context;
+  // Auto lyrics, Auto DJ / scrobbling and the Android media service run wherever you are in the app.
+  import('./lib/lyrics-ai.js').then(m => m.watch(player)).catch(() => {});
+  import('./lib/qol.js').then(m => m.start(player)).catch(() => {});
+  import('./lib/native.js').then(m => m.start(player)).catch(() => {});
   css = document.createElement('link');
   css.rel = 'stylesheet';
   css.href = new URL('./music.css', import.meta.url).href;
