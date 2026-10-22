@@ -550,3 +550,9 @@ body.mnp-open .task-tray { bottom: calc(16px + var(--sai-bottom)); }
 :is([data-module="settings"], [data-module="app-manager"]) .btn.danger-ghost:hover { background: color-mix(in srgb, var(--danger) 12%, transparent); color: var(--danger); }
 :is([data-module="settings"], [data-module="app-manager"]) select:not(.k) { border-color: transparent; background-color: var(--surface-2); }
 :is([data-module="settings"], [data-module="app-manager"]) .panel { box-shadow: none; }
+/* Settings index: one row per section, each opens its own sub page (#settings/<section>). */
+.set-index { display: flex; flex-direction: column; gap: 10px; }
+.set-link { flex-direction: row; align-items: center; gap: 12px; padding: 14px 16px; text-decoration: none; color: inherit; }
+.set-link > svg { flex: none; color: var(--accent); }
+.set-link > span:nth-child(2) { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.set-link .hint { margin: 0; }

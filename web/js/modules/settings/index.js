@@ -36,8 +36,8 @@ async function renderFolders() {
   const btn = 'min-height:44px;padding:0 18px;border-radius:var(--radius);font-size:15px;font-weight:600;font-family:inherit;cursor:pointer';
   const label = src !== 'local' ? MODES[src].label : '';
   root.innerHTML = `<section class="page" style="max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:14px">
-    <div><a class="btn small" href="#settings" aria-label="Quay lại Cài đặt">‹ Cài đặt</a></div>
-    <h2 class="section-title" style="margin:0">Thư mục đồng bộ</h2>
+    <div><a class="btn small" href="#settings/source" aria-label="Quay lại Thư mục đồng bộ">‹ Thư mục đồng bộ</a></div>
+    <h2 class="section-title" style="margin:0">Chọn thư mục</h2>
     ${src !== 'local' ? `<div style="${card};display:flex;flex-direction:row;align-items:center;gap:12px;padding:14px">
       <span style="width:40px;height:40px;border-radius:10px;background:color-mix(in srgb, var(--accent) 14%, transparent);display:flex;align-items:center;justify-content:center;flex:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" aria-hidden="true"><path d="M7 18a4 4 0 0 1-.6-7.96A5.5 5.5 0 0 1 17 9a4.5 4.5 0 0 1 .5 9z"/></svg></span>
       <span style="flex:1 1 140px;min-width:0"><span style="display:block;font-size:15px;font-weight:600">${esc(label)}</span><span style="display:block;font-size:12px;color:var(--${srcOn ? 'ok' : 'warn'})">${srcOn ? 'Đã kết nối' : 'Chưa kết nối'}</span></span>
@@ -55,7 +55,7 @@ async function renderFolders() {
   </section>`;
   const m = await import('../../core/storage/folder-ui.js');
   const pick = root.querySelector('#folder-picker');
-  if (src !== 'local' && !srcOn) pick.innerHTML = `<p class="hint">Chưa kết nối ${esc(label)}. Quay lại Cài đặt → Thư mục đồng bộ để kết nối.</p>`;
+  if (src !== 'local' && !srcOn) pick.innerHTML = `<p class="hint">Chưa kết nối ${esc(label)}. Quay lại Thư mục đồng bộ để kết nối.</p>`;
   else if (src !== 'local') await m.folderPicker(pick, src, ctx.toast);
   else {
     root.querySelector('.hint').textContent = 'Chọn các thư mục trong máy. App chỉ đọc đúng những thư mục này: nhạc và sách bên trong được quét và thêm vào thư viện. Trên Windows và máy tính, tệp được đọc trực tiếp, không sao chép; trên Android, mỗi tệp mới được sao chép vào app một lần.';
@@ -119,6 +119,16 @@ async function render() {
   if (open.size || top) scroller.scrollTop = top;
 }
 
+// Sections of the Settings page, each opened as its own sub page: [icon, title, one-line summary].
+const SECS = {
+  sync: ['database', 'Tài khoản đồng bộ', (st) => MODES[st.mode].label],
+  source: ['library', 'Thư mục đồng bộ', (st, src) => src === 'local' ? 'Thư mục trong máy' : 'Thư mục trên ' + MODES[src].label],
+  devices: ['device', 'Thiết bị dùng chung thư viện', () => 'Tên máy này, các máy đang dùng'],
+  appearance: ['palette', 'Giao diện', () => 'Ngôn ngữ, skin, theme, màu nhấn, cỡ chữ'],
+  params: ['grid', 'Thông số dùng chung', () => 'Thông số của từng ứng dụng, trạng thái hiện tại'],
+  backup: ['download', 'Sao lưu dữ liệu', () => 'Xuất, nhập JSON, xoá dữ liệu'],
+};
+
 async function renderPage() {
   const st = await ctx.storage.status();
   const themes = await allThemes();
@@ -135,11 +145,12 @@ async function renderPage() {
 
   root.innerHTML = `
   <section class="page settings">
-    <header class="page-head"><div class="app-title"><p class="eyebrow">Tuỳ chỉnh</p><h1>Cài đặt</h1></div></header>
-
+    ${SECS[sub] ? `<div><a class="btn small" href="#settings" aria-label="Quay lại Cài đặt">‹ Cài đặt</a></div>`
+      : `<header class="page-head"><div class="app-title"><p class="eyebrow">Tuỳ chỉnh</p><h1>Cài đặt</h1></div></header>
     ${accountSummary()}
+    <nav class="set-index" aria-label="Các mục cài đặt">${Object.entries(SECS).map(([k, [ic, t, d]]) => `<a class="panel set-link" href="#settings/${k}">${icon(ic)}<span><strong>${t}</strong><span class="hint">${d(st, fsrc)}</span></span><span aria-hidden="true">›</span></a>`).join('')}</nav>`}
 
-    <section class="set-block">
+    <section class="set-block" data-sec="sync">
       <h2 class="section-title">${icon('database')}Tài khoản đồng bộ</h2>
       <p class="hint">Nơi thư viện, cài đặt và tiến độ nghe/đọc được đồng bộ giữa các máy. Tách riêng với nơi lấy thư mục nhạc và sách (mục Thư mục đồng bộ bên dưới): ví dụ đồng bộ bằng GitHub nhưng lấy nhạc từ Dropbox, hoặc dùng Dropbox cho cả hai.</p>
       <div class="mode-cards" role="radiogroup" aria-label="Tài khoản đồng bộ">
@@ -176,7 +187,7 @@ async function renderPage() {
       </div>
     </section>
 
-    <section class="set-block">
+    <section class="set-block" data-sec="source">
       <h2 class="section-title">${icon('library')}Thư mục đồng bộ</h2>
       <p class="hint">Nơi lấy nhạc và sách: thư mục trong máy, hoặc thư mục trên Dropbox / OneDrive. Không phụ thuộc vào tài khoản đồng bộ ở trên.</p>
       <div class="mode-cards" role="radiogroup" aria-label="Nơi lấy thư mục đồng bộ">
@@ -189,7 +200,7 @@ async function renderPage() {
       <a class="panel" href="#settings/folders" style="display:flex;flex-direction:row;align-items:center;gap:10px;text-decoration:none;color:inherit"><span style="flex:1"><strong style="display:block">Chọn thư mục, đồng bộ, tạm dừng, huỷ</strong><span class="hint">${fsrc === 'local' ? 'Thư mục trong máy' : 'Thư mục trên ' + esc(MODES[fsrc].label)}${fsrc !== 'local' && drives[fsrc].connected() ? ` · <button type="button" class="btn small" data-act="src-reconnect">Đổi tài khoản ${esc(MODES[fsrc].label)}</button>` : ''}</span></span><span aria-hidden="true">›</span></a>
     </section>
 
-    <section class="set-block">
+    <section class="set-block" data-sec="devices">
       <h2 class="section-title">${icon('device')}Thiết bị dùng chung thư viện</h2>
       <div class="panel">
         <ul class="devices">${devices.map(d => `<li><span class="mod-icon">${icon(d.platform === 'android' || d.platform === 'ios' ? 'device' : 'apps')}</span>
@@ -199,7 +210,7 @@ async function renderPage() {
       </div>
     </section>
 
-    <section class="set-block">
+    <section class="set-block" data-sec="appearance">
       <h2 class="section-title">${icon('palette')}Giao diện</h2>
       <div class="panel"><label>Ngôn ngữ<select id="k-lang" data-i18n="off">${LANGS.map(l => `<option value="${l.id}"${l.id === lang ? ' selected' : ''}>${l.label}</option>`).join('')}</select></label></div>
       ${await skinSectionHtml()}
@@ -222,9 +233,9 @@ async function renderPage() {
       </div>
     </section>
 
-    ${paramsSectionHtml()}
+    <div data-sec="params">${paramsSectionHtml()}</div>
 
-    <section class="set-block">
+    <section class="set-block" data-sec="backup">
       <h2 class="section-title">${icon('download')}Sao lưu dữ liệu</h2>
       <div class="panel">
         <p>Xuất toàn bộ thư viện, liên kết, bộ sưu tập, module và cài đặt thành một tệp JSON. Tệp nội dung (nhạc, sách…) không nằm trong JSON.</p>
@@ -237,6 +248,8 @@ async function renderPage() {
     </section>
   </section>`;
 
+  // Main page = account card + index of the sections; #settings/<section> shows one section (all stay in the DOM so their handlers bind).
+  root.querySelectorAll('[data-sec]').forEach(el => { el.hidden = el.dataset.sec !== sub; });
   const $ = (s) => root.querySelector(s);
   paramsOff?.(); paramsOff = bindParams(root, ctx.toast);
   const on = (act, fn) => root.querySelector(`[data-act="${act}"]`)?.addEventListener('click', fn);

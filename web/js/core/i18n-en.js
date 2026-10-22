@@ -198,7 +198,7 @@ export default {"(Google cấp quyền theo từng giờ). Bấm một lần đ�
 "Chỉ trên máy":"This Device Only",
 "Chọn danh sách phát hoặc album sẽ phát khi mở “":"Choose the playlist or album to play when opening “",
 "Chọn thiết bị khác…":"Choose Another Device…",
-"Chọn thư mục":"Choose Folder",
+"Chọn thư mục":"Choose folders",
 "Chọn thư mục (sao chép vào app)…":"Choose Folder (copy into app)…",
 "Chọn tệp":"Choose File",
 "Chọn tệp .json":"Choose .json File",
@@ -2435,4 +2435,10 @@ export default {"(Google cấp quyền theo từng giờ). Bấm một lần đ�
 "Xoá các mục đã nhập…":"Removing imported items…",
 "Xoá theme":"Delete theme",
 "Theme của bạn sẽ bị xoá khỏi máy này. App chuyển về theme Theo hệ thống.":"Your theme will be removed from this device. The app switches to the Follow system theme.",
-"Đã xoá theme":"Theme deleted"};
+"Đã xoá theme":"Theme deleted",
+"Tên máy này, các máy đang dùng":"This device's name, devices in use",
+"Ngôn ngữ, skin, theme, màu nhấn, cỡ chữ":"Language, skin, theme, accent colour, text size",
+"Thông số của từng ứng dụng, trạng thái hiện tại":"Each app's parameters, current state",
+"Xuất, nhập JSON, xoá dữ liệu":"Export, import JSON, erase data",
+"Quay lại Thư mục đồng bộ để kết nối.":"Go back to Sync folders to connect.",
+"Các mục cài đặt":"Settings sections"};
