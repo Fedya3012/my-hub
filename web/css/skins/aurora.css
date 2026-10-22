@@ -12,3 +12,10 @@
   :scope .chip.on, :scope .chip[aria-pressed="true"] { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: var(--accent-fg); border-color: transparent; }
   :scope .mdock { background: color-mix(in srgb, var(--surface) 60%, transparent); }
 }
+
+/* Phones: no live blur under the scrolling page (it was re-computed on every scroll frame). */
+@media (max-width: 860px), (pointer: coarse) {
+  @scope ([data-skin-base="aurora"]) to ([data-skin-base]:not([data-skin-base="aurora"])) {
+    :scope .sidebar, :scope .tabbar { -webkit-backdrop-filter: none; backdrop-filter: none; background: var(--surface); }
+  }
+}

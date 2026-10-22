@@ -63,15 +63,16 @@
 .icon-btn.big .ic { width: 28px; height: 28px; } .icon-btn.big { width: 52px; height: 52px; }
 
 /* ── Dock (mini player) ────────────────── */
+/* Updated several times a second (time, mini lyrics): contained so those updates never re-lay out the page. */
 .mdock { position: fixed; z-index: 25; display: flex; align-items: center; gap: 6px; color: var(--fg);
   left: max(8px, var(--sai-left)); right: max(8px, var(--sai-right)); bottom: calc(8px + var(--sai-bottom));
   padding: 6px 8px 6px 6px; border-radius: calc(var(--radius) + 4px); overflow: hidden;
   background: color-mix(in srgb, var(--surface) 82%, transparent); backdrop-filter: blur(18px) saturate(1.4); -webkit-backdrop-filter: blur(18px) saturate(1.4);
-  border: 1px solid var(--line); box-shadow: 0 8px 30px rgb(0 0 0 / .18); }
+  border: 1px solid var(--line); box-shadow: 0 8px 30px rgb(0 0 0 / .18); contain: layout paint style; }
 .mdock::before { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, color-mix(in srgb, var(--m-acc) 20%, transparent), transparent 70%); pointer-events: none; }
 .mdock > * { position: relative; }
 .mdock-line { position: absolute !important; left: 0; right: 0; bottom: 0; height: 2px; background: color-mix(in srgb, var(--fg) 8%, transparent); }
-.mdock-line i { display: block; height: 100%; width: 0; background: var(--m-acc); }
+.mdock-line i { display: block; height: 100%; width: 100%; transform: scaleX(0); transform-origin: left; will-change: transform; background: var(--m-acc); }
 .mdock-now { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; background: none; border: 0; padding: 0; color: inherit; text-align: left; cursor: pointer; font: inherit; }
 .mdock-meta { display: flex; flex-direction: column; min-width: 0; gap: 1px; }
 .mdock-t { font-weight: 600; font-size: .92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -914,3 +915,10 @@ body.m-has-bottom.has-dock main#view { padding-bottom: calc(var(--dock-h, 0px) +
   body[data-posture="flex"] .mnp-info { justify-content: center; overflow-y: auto; }
 }
 body[data-posture="cover"]:not(.cover-full) .mnp-bg-a, body[data-posture="cover"]:not(.cover-full) .mnp-bg-b { animation-play-state: paused; }
+
+/* Phones: a blurred bar over a scrolling page is re-blurred on every scroll frame, which made scrolling the music
+   pages stutter on Android. Solid bars there; the blur stays on desktop. */
+@media (max-width: 860px), (pointer: coarse) {
+  .mdock { background: color-mix(in srgb, var(--surface) 97%, var(--m-acc, var(--accent))); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .mbottom { -webkit-backdrop-filter: none; backdrop-filter: none; background: var(--surface); }
+}

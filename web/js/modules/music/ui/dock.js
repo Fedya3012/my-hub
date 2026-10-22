@@ -136,7 +136,7 @@ function state() {
 function time() {
   if (!el || el.hidden) return;
   const d = player.duration, t = player.time, p = d ? t / d : 0;
-  el.querySelector('.mdock-line i')?.style.setProperty('width', (p * 100).toFixed(2) + '%');
+  el.querySelector('.mdock-line i')?.style.setProperty('transform', `scaleX(${p.toFixed(4)})`);   // no layout per tick
   if (seeking) return;
   const s = el.querySelector('[data-seek]');
   if (s) { s.value = Math.round(p * 1000); s.style.setProperty('--v', (p * 100) + '%'); }
