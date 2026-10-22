@@ -50,19 +50,25 @@ async function loadRecognizer(task, key) {
     for (const [a, b] of files.values()) { done += a; total += b; }
     task.update({ done, total, unit: 'bytes', detail: `Đang tải mô hình nhận dạng giọng hát (${AI_MODELS[mk].label}, chỉ lần đầu)…` });
   };
-  // Some ONNX Runtime builds fail to optimise the 8-bit Whisper decoder ("Can't create a session …
-  // TransposeDQWeightsForMatMulNBits … Missing required scale"). That comes from a graph optimisation, so the
-  // same model is retried with optimisations off, then as full-precision weights as a last resort.
+  // Some ONNX Runtime builds cannot create a session for the 8-bit Whisper decoder ("Can't create a session …
+  // TransposeDQWeightsForMatMulNBits … Missing required scale"). The same model is retried with graph
+  // optimisations off, then without any quantised file (full precision, a bigger download), then as 4-bit.
+  // Whatever the first error says, every way is tried before giving up.
+  const FP32 = { encoder_model: 'fp32', decoder_model_merged: 'fp32', decoder_model: 'fp32', decoder_with_past_model: 'fp32' };
   const tries = [
     { dtype: 'q8' },
     { dtype: 'q8', session_options: { graphOptimizationLevel: 'disabled' } },
-    { dtype: 'fp32' },
+    { dtype: FP32 },
+    { dtype: FP32, session_options: { graphOptimizationLevel: 'disabled' } },
+    { dtype: 'q4' },
   ];
   let err = null;
+  const errs = [];
   for (const opt of tries) {
     try { asr = await T.pipeline('automatic-speech-recognition', mid, { device: 'wasm', progress_callback, ...opt }); err = null; break; }
-    catch (e) { err = e; asr = null; if (!/session|MatMulNBits|DequantizeLinear|scale/i.test(String(e?.message || e))) break; console.warn('[lyrics-ai] model load failed, retrying', opt, e); }
+    catch (e) { err = e; asr = null; errs.push(String(e?.message || e).split('\n')[0].slice(0, 160)); console.warn('[lyrics-ai] model load failed, trying the next way', opt, e); }
   }
+  if (err && errs.length > 1) err = new Error(`Không nạp được mô hình nhận dạng giọng hát (đã thử ${errs.length} cách). Lỗi đầu: ${errs[0]}`);
   if (err) { modelFailed = key; throw err; }
   modelFailed = '';
   asrKey = key;
