@@ -3378,4 +3378,9 @@ export default {"(Google cấp quyền theo từng giờ). Bấm một lần đ�
 "mục có tiến trình":"items with progress",
 "Chưa có tiến trình nào.":"No progress yet.",
 "Đưa vị trí đã đọc, nghe, xem về từ đầu trên mọi thiết bị. Trạng thái của sách về “Muốn đọc”. Lịch sử, thống kê, đánh dấu, ghi chú và tệp vẫn giữ nguyên.":"Puts the place you read, listened to or watched back at the start on every device. Books go back to “Want to read”. History, stats, highlights, notes and files stay.",
-"về trạng thái chưa bắt đầu trên mọi thiết bị. Lịch sử và thống kê vẫn giữ.":"go back to not started on every device. History and stats stay."};
+"về trạng thái chưa bắt đầu trên mọi thiết bị. Lịch sử và thống kê vẫn giữ.":"go back to not started on every device. History and stats stay.",
+"Nghe khi đọc":"Listen while reading",
+"Âm thanh khi đọc":"Audio while reading",
+"Âm thanh khi đọc: ":"Audio while reading: ",
+"Chưa có gì để phát":"Nothing to play yet",
+"Podcast":"Podcasts"};

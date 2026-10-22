@@ -61,6 +61,7 @@ export async function openReader(root, id, { ctx, onClose }) {
       <button class="icon-btn" data-a="bookmark" aria-label="Dấu trang">${icon('b-bookmark')}</button>
       <button class="icon-btn" data-a="settings" aria-label="Tuỳ chỉnh hiển thị">${icon('b-font')}</button>
       <button class="icon-btn" data-a="tts" aria-label="Đọc to">${icon('b-speak')}</button>
+      <button class="icon-btn bk-ra-btn" data-a="audio" aria-label="Âm thanh khi đọc" aria-haspopup="menu" hidden>${icon('music')}</button>
       ${b.fanfic ? `<button class="icon-btn" data-a="fic-edit" aria-label="Sửa chương này trong Xưởng Viết">${icon('quill')}</button>` : ''}
       <button class="icon-btn" data-a="panelzoom" aria-label="Phóng từng ô" aria-pressed="false" hidden>${icon('b-panel')}</button>
     </header>
@@ -194,6 +195,7 @@ export async function openReader(root, id, { ctx, onClose }) {
     $('[data-a="bookmark"]').innerHTML = icon(hit ? 'b-bookmark' : 'b-bookmark-fill');
   };
   $('[data-a="bookmark"]').onclick = toggleBookmark;
+  import('./audio-switch.js').then(m => m.audioSwitch($('[data-a="audio"]'))).then(off => { if (closed) off(); else offs.push(off); }).catch(e => console.warn('[reader] audio', e));
   $('[data-a="tts"]').onclick = () => tts.on ? tts.stop() : tts.start();
   // Fanfic: jump to Xưởng Viết at the chapter being read (reading progress stays synced on the shared item).
   $('[data-a="fic-edit"]')?.addEventListener('click', () => { const i = last?.index ?? null; close(); ctx.services.get('fanfic')?.edit(id, i); });

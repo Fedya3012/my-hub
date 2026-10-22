@@ -50,6 +50,14 @@ export async function start(context) {
     B.on('theme:changed', accent),
     extend('library.drawer', drawerBlock),
     extend('cover.cards', coverCard),
+    // "Nghe khi đọc" switch in the Books reader (books/reader/audio-switch.js).
+    extend('audio.sources', () => ({
+      id: 'music', name: 'Trình phát nhạc', icon: 'music',
+      hasMedia: () => !!player.track, playing: () => !!player.playing,
+      title: () => player.track ? [player.track.title, player.track.artist].filter(Boolean).join(' · ') : '',
+      play: () => { if (!player.playing) player.toggle(); }, pause: () => player.pause(),
+      onChange: (cb) => { player.addEventListener('state', cb); player.addEventListener('track', cb); return () => { player.removeEventListener('state', cb); player.removeEventListener('track', cb); }; },
+    })),
   );
   // Quick View on the cover screen: rebuilt on a new track or play/pause, not on every time tick (battery).
   const coverSoon = () => B.emit('cover:refresh');
