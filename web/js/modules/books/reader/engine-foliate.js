@@ -2,7 +2,7 @@
 // (TXT / MD / HTML / PDF reflow, through text-book.js). Locations are EPUB CFIs.
 // Common engine interface (also implemented by engine-pdf.js):
 //   open(host, source, { lastLocation, prefs }) · toc · goTo(loc) · goToFraction(f) · next() · prev()
-//   onRelocate(fn({ fraction, loc, label, page, total, tocLabel, chapterFraction }))
+//   onRelocate(fn({ fraction, loc, label, page, total, tocLabel, chapterFraction, index }))
 //   onSelect(fn({ text, loc, label, rect, clear })) · onAnnotation(fn(loc)) · addAnnotation(a) · removeAnnotation(a)
 //   search(query, onHit) · clearSearch() · applyPrefs(p) · tts { start() next() stop() } · destroy()
 import { vendor } from '../lib/formats.js';
@@ -64,7 +64,7 @@ export async function open(host, source, { lastLocation = null, prefs, rtl = fal
     relocateFn(lastOut = {
       fraction: d.fraction ?? 0, loc: d.cfi, page: d.location ? d.location.current + 1 : null, total,
       label: d.pageItem ? `Trang ${d.pageItem.label}` : total ? `Vị trí ${d.location.current + 1} / ${total}` : `${Math.round((d.fraction || 0) * 100)}%`,
-      tocLabel: d.tocItem?.label?.trim() || '', chapterFraction: d.section ? (d.section.current + 1) / (d.section.total || 1) : null,
+      tocLabel: d.tocItem?.label?.trim() || '', chapterFraction: d.section ? (d.section.current + 1) / (d.section.total || 1) : null, index: d.index ?? null,
     });
   });
   view.addEventListener('create-overlay', (e) => {

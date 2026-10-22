@@ -26,15 +26,17 @@ export const FORMATS = {
   djvu: { label: 'DjVu', engine: null, phase2: 'Trình đọc DjVu sẽ có ở giai đoạn 2.' },
   docx: { label: 'DOCX', engine: null, phase2: 'Đọc DOCX (chuyển sang dạng sách) sẽ có ở giai đoạn 2.' },
   paper: { label: 'Sách giấy', engine: null },
+  // Written in Xưởng Viết: no file, the reader asks the 'fanfic' service for the published chapters.
+  fanfic: { label: 'Fanfic', engine: 'fanfic' },
 };
-export const BOOK_EXT = Object.keys(FORMATS).filter(k => k !== 'paper');
+export const BOOK_EXT = Object.keys(FORMATS).filter(k => k !== 'paper' && k !== 'fanfic');
 export const ACCEPT = BOOK_EXT.map(e => '.' + e).join(',') + ',.fb2.zip';
 
 export function formatOf(name = '') {
   const n = name.toLowerCase();
   if (n.endsWith('.fb2.zip')) return 'fbz';
   const ext = n.split('.').pop();
-  return FORMATS[ext] && ext !== 'paper' ? ext : '';
+  return FORMATS[ext] && ext !== 'paper' && ext !== 'fanfic' ? ext : '';
 }
 export const isBookFile = (f) => !!formatOf(f.name);
 export const engineOf = (fmt) => FORMATS[fmt]?.engine || null;

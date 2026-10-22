@@ -62,7 +62,7 @@ export async function render(el, { ctx, snap }) {
 
 const safe = (s) => String(s || '').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80);
 function organize(snap) {
-  const rows = snap.all.list.filter(b => b.main).map(b => {
+  const rows = snap.all.list.filter(b => b.main && !b.main.virtual).map(b => {
     const ext = b.main.name.match(/\.(fb2\.zip|[^.]+)$/i)?.[0] || '';
     const name = [safe(b.authors[0] || 'Không rõ tác giả'), b.series ? safe(b.series) : null, `${b.seriesIndex != null ? String(b.seriesIndex).padStart(2, '0') + ' - ' : ''}${safe(b.title)}${ext}`].filter(Boolean).join('/');
     return { b, from: b.main.name, to: name };

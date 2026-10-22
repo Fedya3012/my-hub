@@ -106,6 +106,34 @@ db.version(4).stores({
   readingGoals: 'id, year, updatedAt',
 });
 
+// Version 5: Xưởng Viết (docs/FANFIC.md). A fanfic is one `items` row (type 'fanfic', moduleId 'fanfic') so the
+// Library lists it; the writing detail lives here. Reading happens in Books: "Xuất bản vào Thư viện" gives the
+// fanfic a `books` row (format 'fanfic', same key) and the Books reader builds the book from the published chapters.
+//   fanfics:     one row per fanfic item (key = itemId): origin (mine = written here | saved = someone else's work
+//                imported to track), fandoms, AO3 audience rating / warnings / categories, relationship and character
+//                tag ids, status (draft|wip|complete|hiatus|abandoned), summary + beginning/end notes, fic series,
+//                word goals, published flag. Freeform tags stay in items.tags (shared with the Library filters).
+//   ficChapters: chapters and scenes (parentId = chapter for a scene) in binder order (`order`, a float so drag and
+//                drop moves one row); Markdown body, synopsis (corkboard card), label, status, per-chapter goal,
+//                and the published copy (pubTitle / pubBody / pubAt) that Books reads.
+//   fandoms:     ids from the normalised name ('fd:harry-potter') so two devices produce one row; the canon
+//                in Books (bookIds = Books item ids, bookSeriesIds = Books series ids) links them both ways.
+//   ficTags:     characters and relationships, scoped to a fandom ('ch:<fandom>:<name>', 'rl:<fandom>:<a/b>').
+//   ficNotes:    character profiles, plot, research, world, ideas, todos (done, due), per fanfic or per fandom.
+//   ficVersions: snapshots of a chapter (manual, automatic before a big change, or at publish).
+//   ficWriting:  words written per day, fanfic and device (id 'YYYY-MM-DD|fanficId|deviceId': no sync conflicts)
+//                -> daily goal, streaks, writing stats.
+// Fic series reuse `collections` (kind 'fic-series', moduleId 'fanfic').
+db.version(5).stores({
+  fanfics: 'itemId, origin, *fandomIds, *characterIds, *relationshipIds, seriesId, status, audience, published, updatedAt, deleted',
+  ficChapters: 'id, fanficId, parentId, order, status, updatedAt, deleted',
+  fandoms: 'id, name, *bookIds, *bookSeriesIds, updatedAt, deleted',
+  ficTags: 'id, kind, fandomId, name, updatedAt, deleted',
+  ficNotes: 'id, fanficId, fandomId, kind, tagId, updatedAt, deleted',
+  ficVersions: 'id, fanficId, chapterId, kind, createdAt, updatedAt',
+  ficWriting: 'id, fanficId, day, deviceId, updatedAt',
+});
+
 export const uid = () =>
   (crypto.randomUUID ? crypto.randomUUID() : 'id-' + Date.now().toString(36) + Math.random().toString(36).slice(2));
 
@@ -114,7 +142,8 @@ export const now = () => Date.now();
 // Tables whose changes are synced to GitHub. activity (high volume) and modules
 // (installed code versions differ per device) stay local.
 export const SYNCED_TABLES = ['items', 'files', 'links', 'collections', 'themes', 'tracks', 'albums', 'artists', 'plays', 'eqPresets', 'lyrics',
-  'books', 'authors', 'series', 'annotations', 'readingSessions', 'readingGoals'];
+  'books', 'authors', 'series', 'annotations', 'readingSessions', 'readingGoals',
+  'fanfics', 'ficChapters', 'fandoms', 'ficTags', 'ficNotes', 'ficVersions', 'ficWriting'];
 // Small, frequently changing tables synced on the fast "live" channel (hub-live.json).
 // They stamp their own updatedAt/deviceId, so they skip the hooks below.
 export const LIVE_TABLES = ['progress', 'devices'];
@@ -200,7 +229,8 @@ export async function relatedItems(itemId) {
 export async function exportAll({ includeActivity = true } = {}) {
   const tables = ['items', 'files', 'links', 'collections', 'modules', 'settings', 'themes', 'progress', 'devices',
     'tracks', 'albums', 'artists', 'plays', 'eqPresets', 'lyrics',
-    'books', 'authors', 'series', 'annotations', 'readingSessions', 'readingGoals'];
+    'books', 'authors', 'series', 'annotations', 'readingSessions', 'readingGoals',
+    'fanfics', 'ficChapters', 'fandoms', 'ficTags', 'ficNotes', 'ficVersions', 'ficWriting'];
   if (includeActivity) tables.push('activity');
   const data = {};
   for (const t of tables) data[t] = await db.table(t).toArray();

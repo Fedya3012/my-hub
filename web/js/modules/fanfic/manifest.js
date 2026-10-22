@@ -1,0 +1,36 @@
+// Xưởng Viết (Writer Studio): write, upload and manage fanfic (chapters, scenes, snapshots, notes, fandoms, AO3-style
+// tags, goals). Reading happens in Books: a published fanfic is a "book" there. Design notes: docs/FANFIC.md.
+export default {
+  id: 'fanfic',
+  name: 'Xưởng Viết',
+  version: '0.1.0',
+  status: 'available',
+  icon: 'quill',
+  route: 'fanfic',
+  order: 25,
+  description: 'Viết và quản lý fanfic: fandom, nhân vật, cặp đôi, tag, xếp hạng và cảnh báo kiểu AO3; chương và cảnh kéo thả, trình viết tập trung (Markdown), phiên bản, ghi chú nhân vật/cốt truyện/tư liệu, mục tiêu số từ; xuất bản sang Sách để đọc.',
+  contentTypes: ['fanfic'],
+  service: 'service.js',       // params, Library + Books page block, 'fanfic' service (Books reader), cover card
+  reloadOnUpdate: true,
+  // Published: read in Books. Not yet: open the work page to write.
+  openRoute: (item) => item.meta?.published ? 'books/read/' + item.id : 'fanfic/work/' + item.id,
+  files: [
+    'js/modules/fanfic/index.js',
+    'js/modules/fanfic/service.js',
+    'js/modules/fanfic/fanfic.css',
+    'js/modules/fanfic/lib/icons.js',
+    'js/modules/fanfic/lib/io.js',
+    'js/modules/fanfic/lib/prefs.js',
+    'js/modules/fanfic/lib/store.js',
+    'js/modules/fanfic/lib/text.js',
+    'js/modules/fanfic/lib/vocab.js',
+    'js/modules/fanfic/ui/common.js',
+    'js/modules/fanfic/ui/edit.js',
+    'js/modules/fanfic/ui/fandoms.js',
+    'js/modules/fanfic/ui/home.js',
+    'js/modules/fanfic/ui/tools.js',
+    'js/modules/fanfic/ui/work.js',
+    'js/modules/fanfic/ui/works.js',
+    'js/modules/fanfic/ui/writer.js',
+  ],
+};

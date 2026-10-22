@@ -43,10 +43,11 @@ export const changed = (ids = []) => { snapshot.invalidate(); bus.emit('books:ch
 // ── Snapshot (everything the pages need, joined once, cached until the next change) ──
 export const snapshot = cached(async () => {
   const [items, books, authors, series, shelves, prog] = await Promise.all([
-    db.items.where('type').equals('book').toArray().then(r => r.filter(i => !i.deleted)),   // no Dexie .filter(): a cursor is ~5x slower
+    // Fanfics published from Xưởng Viết are read here too: they have a books row with format 'fanfic' (docs/FANFIC.md).
+    db.items.where('type').anyOf('book', 'fanfic').toArray().then(r => r.filter(i => !i.deleted)),   // no Dexie .filter(): a cursor is ~5x slower
     db.books.toArray(), db.authors.toArray(), db.series.toArray(),
     db.collections.where('moduleId').equals('books').toArray().then(r => r.filter(c => !c.deleted)),
-    db.progress.where('moduleId').equals('books').toArray(),
+    db.progress.where('moduleId').anyOf('books', 'fanfic').toArray(),
   ]);
   // Only the books' own files (the files table also holds every music track).
   const files = items.length ? await db.files.where('itemId').anyOf(items.map(i => i.id)).toArray() : [];
@@ -78,11 +79,13 @@ bus.on('progress:pulled', () => snapshot.invalidate());
 bus.on('progress:changed', (p) => { if (p?.moduleId === 'books') snapshot.invalidate(); });
 bus.on('sync:done', () => snapshot.invalidate());
 bus.on('item:changed', (e) => { if (e?.source !== 'books') snapshot.invalidate(); });
+bus.on('fanfic:changed', () => snapshot.invalidate());
 
 // One joined object per book, used by every page.
 export function view(item, book, { A, S, P, F }) {
   const files = F.get(item.id) || [];
-  const main = files.find(f => f.role === 'main') || null;
+  // A fanfic has no file: the reader builds it from Xưởng Viết's published chapters (virtual main file).
+  const main = item.type === 'fanfic' ? { id: 'fanfic:' + item.id, virtual: 'fanfic', name: item.title + '.fanfic' } : files.find(f => f.role === 'main') || null;
   const cover = files.find(f => f.role === 'cover') || null;
   const p = P.get(item.id) || null;
   const authors = (book.authorIds || []).map(id => A.get(id)?.name).filter(Boolean);
@@ -91,7 +94,7 @@ export function view(item, book, { A, S, P, F }) {
     series: book.seriesId ? S.get(book.seriesId)?.name || '' : '', seriesIndex: book.seriesIndex ?? null,
     status: book.status || 'want', rating: book.rating || 0, format: book.format || (main ? formatOf(main.name) : book.physical ? 'paper' : ''),
     main, cover, files, progress: p, percent: book.status === 'finished' ? 100 : Math.round(p?.percent || book.manualPercent || 0),
-    pages: book.pages || 0, favorite: !!item.favorite, tags: item.tags || [],
+    pages: book.pages || 0, favorite: !!item.favorite, tags: item.tags || [], fanfic: item.type === 'fanfic',
   };
 }
 
@@ -213,6 +216,13 @@ export async function setStatus(id, status, extra = {}) { await updateBook(id, {
 
 export async function removeBooks(ids, { files = true } = {}) {
   for (const id of ids) {
+    const it = await db.items.get(id);
+    if (it?.type === 'fanfic') {
+      await db.books.update(id, { deleted: 1 });
+      await db.fanfics.update(id, { published: 0 });
+      await db.items.update(id, { meta: { ...(it.meta || {}), published: 0 } });
+      continue;
+    }
     if (files) for (const f of await db.files.where('itemId').equals(id).toArray()) await storage.removeFile(f).catch(() => {});
     await softDeleteItem(id);
     await db.books.update(id, { deleted: 1 });

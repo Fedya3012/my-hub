@@ -61,6 +61,7 @@ export async function openReader(root, id, { ctx, onClose }) {
       <button class="icon-btn" data-a="bookmark" aria-label="Dấu trang">${icon('b-bookmark')}</button>
       <button class="icon-btn" data-a="settings" aria-label="Tuỳ chỉnh hiển thị">${icon('b-font')}</button>
       <button class="icon-btn" data-a="tts" aria-label="Đọc to">${icon('b-speak')}</button>
+      ${b.fanfic ? `<button class="icon-btn" data-a="fic-edit" aria-label="Sửa chương này trong Xưởng Viết">${icon('quill')}</button>` : ''}
       <button class="icon-btn" data-a="panelzoom" aria-label="Phóng từng ô" aria-pressed="false" hidden>${icon('b-panel')}</button>
     </header>
     <div class="bk-r-host"><div class="bk-r-loading">Đang mở sách…</div></div>
@@ -86,10 +87,16 @@ export async function openReader(root, id, { ctx, onClose }) {
   const gotoNote = sessionStorage.getItem('hub.books.goto'); sessionStorage.removeItem('hub.books.goto');
   let last = { fraction: saved?.percent ? saved.percent / 100 : 0, loc: saved?.loc || null, label: saved?.label || '' };
   try {
-    const blob = await storage.open(b.main);
-    const file = asNamedFile(blob, b.main.name);
+    const blob = b.main.virtual ? null : await storage.open(b.main);
+    const file = blob && asNamedFile(blob, b.main.name);
     const mod = eng === 'pdf' && prefs.pdfMode !== 'reflow' ? await import('./engine-pdf.js') : await import('./engine-foliate.js');
     let source = file;
+    // Fanfic from Xưởng Viết: built from its published chapters (service 'fanfic', docs/FANFIC.md).
+    if (eng === 'fanfic') {
+      const fic = await (ctx.services.get('fanfic') || await ctx.services.when('fanfic', 3000))?.book(id);
+      if (!fic?.chapters.length) throw new Error('Truyện chưa có chương nào được xuất bản. Mở Xưởng Viết để xuất bản.');
+      source = (await import('./text-book.js')).makeTextBook(fic);
+    }
     if (eng === 'text') source = await (await import('./text-book.js')).bookFromText(file, { name: b.main.name, title: b.title, author: b.authors[0] });
     if (eng === 'pdf' && prefs.pdfMode === 'reflow') {
       const t = tasks.start({ label: 'Dàn lại chữ PDF', unit: 'percent', delay: 500 });
@@ -186,6 +193,8 @@ export async function openReader(root, id, { ctx, onClose }) {
     $('[data-a="bookmark"]').innerHTML = icon(hit ? 'b-bookmark' : 'b-bookmark-fill');
   };
   $('[data-a="tts"]').onclick = () => tts.on ? tts.stop() : tts.start();
+  // Fanfic: jump to Xưởng Viết at the chapter being read (reading progress stays synced on the shared item).
+  $('[data-a="fic-edit"]')?.addEventListener('click', () => { const i = last?.index ?? null; close(); ctx.services.get('fanfic')?.edit(id, i); });
   $('[data-a="finish"]').onclick = async () => { await store.setStatus(id, 'finished'); b.status = 'finished'; $('.bk-r-end').hidden = true; toast('Chúc mừng! Đã đọc xong 🎉'); };
   $('[data-a="end-x"]').onclick = () => { $('.bk-r-end').hidden = true; };
   $('[data-a="panel-x"]').onclick = hidePanel;

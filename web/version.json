@@ -705,7 +705,6 @@
         "vendor/foliate/view.js",
         "vendor/pdfjs/pdf.min.js",
         "vendor/pdfjs/pdf.worker.min.js",
-        
         "js/modules/books/ui/settings.js",
         "js/modules/books/ui/trending.js",
         "js/modules/books/lib/trend-sources.js",
@@ -729,6 +728,33 @@
             "Bản đầu tiên: thư viện, trình đọc, theo dõi, thống kê, mục tiêu, nhập/xuất"
           ]
         }
+      ]
+    },
+    "fanfic": {
+      "name": "Xưởng Viết",
+      "version": "0.1.0",
+      "minApp": "0.9.9.1",
+      "files": [
+        "js/modules/fanfic/index.js",
+        "js/modules/fanfic/service.js",
+        "js/modules/fanfic/fanfic.css",
+        "js/modules/fanfic/lib/icons.js",
+        "js/modules/fanfic/lib/io.js",
+        "js/modules/fanfic/lib/prefs.js",
+        "js/modules/fanfic/lib/store.js",
+        "js/modules/fanfic/lib/text.js",
+        "js/modules/fanfic/lib/vocab.js",
+        "js/modules/fanfic/ui/common.js",
+        "js/modules/fanfic/ui/edit.js",
+        "js/modules/fanfic/ui/fandoms.js",
+        "js/modules/fanfic/ui/home.js",
+        "js/modules/fanfic/ui/tools.js",
+        "js/modules/fanfic/ui/work.js",
+        "js/modules/fanfic/ui/works.js",
+        "js/modules/fanfic/ui/writer.js"
+      ],
+      "changelog": [
+        "Phiên bản đầu: viết và quản lý fanfic, fandom, tag kiểu AO3, chương và cảnh kéo thả, trình viết tập trung, phiên bản, ghi chú, mục tiêu số từ; xuất bản sang Sách để đọc."
       ]
     },
     "account": {
