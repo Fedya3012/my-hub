@@ -14,7 +14,10 @@ import { saveLyrics, loadLyrics } from './lyrics-sources.js';
 import { parseLyrics, toModel, toLrc } from './lyrics.js';
 import { mainFile } from './store.js';
 
-const LIB = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1/dist/transformers.min.js';
+// The library and the "Cân bằng" (whisper-base) model ship with the app (web/vendor): nothing is fetched for them.
+// "Nhanh" and "Chính xác" are downloaded from Hugging Face the first time they are picked.
+const LIB = new URL('../../../../vendor/transformers/transformers.min.js', import.meta.url).href;
+const LOCAL_MODELS = new URL('../../../../vendor/whisper/', import.meta.url).href;
 export const AI_MODELS = {
   tiny: { id: 'onnx-community/whisper-tiny', label: 'Nhanh', size: '≈ 40 MB' },
   base: { id: 'onnx-community/whisper-base', label: 'Cân bằng', size: '≈ 80 MB' },
@@ -30,7 +33,7 @@ const consented = () => Y().aiConsent === 1;
 export const autoOn = () => Y().aiAuto !== 0 && consented();
 export async function ensureConsent() {
   if (consented()) return true;
-  const ok = await confirmBox('Tạo lời bằng AI', 'Lần đầu app sẽ tải thư viện nhận dạng giọng hát (từ cdn.jsdelivr.net) và mô hình Whisper (khoảng 80 MB, từ huggingface.co), rồi chạy ngay trên máy. Âm thanh không rời khỏi máy. Tiếp tục?', 'Tải và dùng', 'primary');
+  const ok = await confirmBox('Tạo lời bằng AI', 'Thư viện nhận dạng giọng hát và mô hình “Cân bằng” đã có sẵn trong app, chạy ngay trên máy; âm thanh không rời khỏi máy. Mô hình “Nhanh” hoặc “Chính xác” sẽ tải thêm từ huggingface.co khi bạn chọn. Tiếp tục?', 'Dùng', 'primary');
   if (ok) await setPref('lyrics.aiConsent', 1);
   return !!ok;
 }
@@ -54,7 +57,8 @@ async function loadRecognizer(task, key) {
   let T;
   try { T = await import(LIB); }
   catch (e) { modelFailed = mk; throw new Error('Không tải được thư viện nhận dạng giọng hát (cần kết nối mạng)'); }
-  T.env.allowLocalModels = false;
+  T.env.allowLocalModels = true;
+  T.env.localModelPath = LOCAL_MODELS;
   // WebView Android không cho import() từ blob: → để ORT nạp .mjs/.wasm trực tiếp từ CDN, một luồng, không proxy worker
   try {
     T.env.useWasmCache = false;
