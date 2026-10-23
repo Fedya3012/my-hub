@@ -196,6 +196,13 @@ export async function transcribe(t, { task, model = modelKey(), vocal = vocalOn(
 }
 
 const running = new Map();
+// The model sits in the worker's WebAssembly memory (80 MB to 1 GB). Once nothing is running it is let go after a
+// minute, so a phone is not left holding it (the system closes the app when memory runs out).
+let relT = 0;
+function releaseSoon() {
+  clearTimeout(relT);
+  relT = setTimeout(() => { if (!running.size && worker) { worker.terminate(); worker = null; asr = null; asrKey = ''; waits.clear(); } }, 60_000);
+}
 // Makes and saves lyrics for t, with a progress task. → the saved row, or null (nothing sung / cancelled).
 export function generate(t, { quiet = false, model = modelKey(), vocal = vocalOn() } = {}) {
   if (running.has(t.id)) return running.get(t.id);
@@ -216,7 +223,7 @@ export function generate(t, { quiet = false, model = modelKey(), vocal = vocalOn
       if (task.cancelled || e?.name === 'AbortError') return null;
       task.fail(e);
       throw e;
-    } finally { running.delete(t.id); }
+    } finally { running.delete(t.id); releaseSoon(); }
   })();
   running.set(t.id, job);
   return job;
@@ -234,6 +241,9 @@ export function watch(player) {
     const t = player.track;
     if (!t || !autoOn()) return;
     timer = setTimeout(async () => {
+      // On a phone the automatic mode only uses the small bundled models and short songs: decoding a long song and a
+      // 250 MB to 1 GB model together is what gets the app closed for memory.
+      if ((t.duration || 0) > 600 || (matchMedia('(pointer: coarse)').matches && !['tiny', 'base'].includes(modelKey()))) return;
       if (player.track?.id !== t.id || !player.playing || running.size || modelFailed === modelKey() || (!asr && !navigator.onLine)) return;
       if ((await getSetting(MISS, {}))?.[t.id]) return;
       if (await loadLyrics(t, { allowOnline: !!Y().online })) return;
@@ -350,7 +360,7 @@ export function autoWordSync(t, { model = modelKey(), vocal = vocalOn() } = {}) 
     } catch (e) {
       if (task.cancelled || e?.name === 'AbortError') return null;
       task.fail(e); throw e;
-    } finally { running.delete(key); }
+    } finally { running.delete(key); releaseSoon(); }
   })();
   running.set(key, job);
   return job;

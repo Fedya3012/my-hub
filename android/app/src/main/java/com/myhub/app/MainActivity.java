@@ -4,7 +4,11 @@ import android.os.Bundle;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
+import android.os.SystemClock;
+import android.webkit.RenderProcessGoneDetail;
+import android.webkit.WebView;
 import com.getcapacitor.BridgeActivity;
+import com.getcapacitor.WebViewListener;
 
 public class MainActivity extends BridgeActivity {
   @Override
@@ -14,7 +18,21 @@ public class MainActivity extends BridgeActivity {
     registerPlugin(DlnaPlugin.class);
     registerPlugin(UsbAudioPlugin.class);
     super.onCreate(savedInstanceState);
+    // When the system takes the page's memory back (render process gone), the app used to close. Start the page again
+    // instead; if that keeps failing within seconds, close like before rather than loop.
+    getBridge().addWebViewListener(new WebViewListener() {
+      @Override
+      public boolean onRenderProcessGone(WebView webView, RenderProcessGoneDetail detail) {
+        long now = SystemClock.elapsedRealtime();
+        if (now - lastRestart < 10_000) { runOnUiThread(() -> finish()); return true; }
+        lastRestart = now;
+        runOnUiThread(() -> recreate());
+        return true;
+      }
+    });
   }
+
+  private static long lastRestart = -100_000;
 
   // Hide the system navigation bar while the app is in use; a swipe from the bottom edge shows it briefly.
   private void hideNavigationBar() {

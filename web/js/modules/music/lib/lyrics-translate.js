@@ -58,7 +58,15 @@ function startWorker() {
 }
 function callWorker(msg) {
   worker ||= startWorker();
-  return new Promise((res, rej) => { const id = ++seq; waits.set(id, { res, rej }); worker.postMessage({ id, ...msg }); });
+  const p = new Promise((res, rej) => { const id = ++seq; waits.set(id, { res, rej }); worker.postMessage({ id, ...msg }); });
+  p.catch(() => {}).finally(releaseSoon);
+  return p;
+}
+// A minute after the last call the model is let go (WebAssembly memory), so a phone is not left holding it.
+let relT = 0;
+function releaseSoon() {
+  clearTimeout(relT);
+  relT = setTimeout(() => { if (worker && !waits.size) { worker.terminate(); worker = null; loadedId = ''; } }, 60_000);
 }
 // Loads a model into the worker (once); the first error of every way tried is reported when all of them fail.
 async function loadModel(mid, task, label, { pipeline = 'translation', tries } = {}) {
