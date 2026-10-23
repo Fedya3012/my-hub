@@ -52,7 +52,10 @@ export function notesHtml(h) {
 export const tsToSec = (m) => m.split(':').map(Number).reduce((a, b) => a * 60 + b, 0);
 
 // Artwork with an initial-letter fallback in a colour made from the title.
+// Apple artwork URLs carry their size (…/100x100bb.jpg): ask for 600px so covers stay sharp on dense phone screens.
+const sharp = (u) => /mzstatic\.com\/.*\/\d+x\d+(bb|ss|cc)?\.(jpg|png|webp)$/i.test(u || '') ? u.replace(/\/\d+x\d+(bb|ss|cc)?\.(jpg|png|webp)$/i, '/600x600bb.$2') : u;
 export function art(src, title = '', cls = '') {
+  src = sharp(src);
   const hue = parseInt(hash(title || 'x').slice(0, 4), 36) % 360;
   const fb = `<span class="pc-art-fb" style="--h:${hue}">${esc((title || '?').trim().slice(0, 1).toUpperCase())}</span>`;
   return `<span class="pc-art ${cls}">${fb}${src ? `<img src="${esc(src)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}</span>`;

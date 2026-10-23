@@ -24,7 +24,7 @@ main#view > section.pc { animation: none; }
   .pc-head { margin-bottom: 8px; }
   .pc-bottom { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
     padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px)); background: var(--surface); border-top: 1px solid var(--line); }
-  .pc-bottom a { display: grid; justify-items: center; gap: 2px; padding: 4px 0; color: var(--muted); text-decoration: none; font-size: .64rem; border-radius: 10px; }
+  .pc-bottom a { display: grid; justify-items: center; align-content: start; gap: 2px; padding: 4px 0; color: var(--muted); text-decoration: none; font-size: .64rem; border-radius: 10px; }
   .pc-bottom a .ic { width: 22px; height: 22px; }
   .pc-bottom a.on { color: var(--pc-accent); }
   .pc-bottom a.on .ic { stroke-width: 2.4; }
@@ -366,11 +366,11 @@ body.bk-reader-open[data-audio-source]:not([data-audio-source="podcast"]) .pc-mi
 @media (max-width: 860px) {
   .pc-page > .pc-sec:first-child { margin-top: 4px; }
   .pc-head { margin-bottom: 0; }
-  .pc-bottom a > span { display: block; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: .6rem; letter-spacing: -.01em; }
+  .pc-bottom a > span { display: block; max-width: 100%; text-align: center; white-space: normal; overflow-wrap: anywhere; font-size: .7rem; line-height: 1.12; letter-spacing: 0; }
 }
 @media (max-width: 860px) {
   .pc-bottom { padding-inline: 2px; }
-  .pc-bottom a > span { font-size: .56rem; letter-spacing: -.03em; }
+  .pc-bottom a > span { font-size: .7rem; letter-spacing: 0; }   /* never below ~11px: smaller text turns to mush on phones */
 }
 
 /* Long press / right-click on episodes and shows opens their menu: no native callout or text selection on hold */
@@ -399,11 +399,15 @@ body.bk-reader-open[data-audio-source]:not([data-audio-source="podcast"]) .pc-mi
 @media (max-width: 860px) {
   /* Bottom bar sits on the real safe area (Capacitor fills --sai-bottom; env() can be 0 in the WebView). */
   .pc-bottom { padding-bottom: calc(6px + var(--sai-bottom, env(safe-area-inset-bottom, 0px))); }
-  .pc-bottom a { font-size: .66rem; line-height: 1.15; }
+  .pc-bottom a { font-size: .7rem; line-height: 1.15; letter-spacing: 0; }
   .pc-bottom a .ic { width: 22px; height: 22px; stroke-width: 1.9; }
   .pc-page { padding-bottom: calc(150px + var(--sai-bottom, env(safe-area-inset-bottom, 0px))); }
   /* The sync/task card used to cover the bottom bar. */
   body.pc-has-bottom .task-tray { bottom: calc(76px + var(--dock-h, 0px) + var(--sai-bottom, 0px)); }
   /* The page title is already in the app bar on phones. */
   .pc-head .eyebrow { display: none; }
+}
+@media (max-width: 860px) {
+  .pc-bottom a { font-weight: 500; padding-inline: 1px; }
+  .pc-bottom a.on { font-weight: 600; }
 }
