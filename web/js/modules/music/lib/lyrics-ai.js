@@ -21,7 +21,10 @@ export const AI_MODELS = {
   tiny: { id: 'onnx-community/whisper-tiny', label: 'Nhanh', size: '≈ 40 MB' },
   base: { id: 'onnx-community/whisper-base', label: 'Cân bằng', size: '≈ 80 MB' },
   small: { id: 'onnx-community/whisper-small', label: 'Chính xác', size: '≈ 250 MB' },
+  // Not shipped with the app: downloaded from Hugging Face the first time it is picked (4-bit weights), then kept by the browser.
+  turbo: { id: 'onnx-community/whisper-large-v3-turbo', label: 'Cao cấp', size: '≈ 800 MB', remote: true },
 };
+export const modelName = (k) => (AI_MODELS[k] ? `Whisper ${{ tiny: 'Tiny', base: 'Base', small: 'Small', turbo: 'Large v3 Turbo' }[k]} (${AI_MODELS[k].label})` : String(k || ''));
 const RATE = 16000, PIECE = 28;
 const MISS = 'music.lyricsAiMiss';
 
@@ -30,21 +33,30 @@ const Y = () => prefs().lyrics || {};
 // inside the page, so nothing is fetched before the person agrees once (ensureConsent). Automatic mode waits for it.
 const consented = () => Y().aiConsent === 1;
 export const autoOn = () => Y().aiAuto !== 0 && consented();
-export async function ensureConsent() {
-  if (consented()) return true;
-  const ok = await confirmBox('Tạo lời bằng AI', 'Thư viện và các mô hình nhận dạng giọng hát đã có sẵn trong app, chạy ngay trên máy, không tải gì từ mạng; âm thanh không rời khỏi máy. Tiếp tục?', 'Dùng', 'primary');
-  if (ok) await setPref('lyrics.aiConsent', 1);
-  return !!ok;
+export async function ensureConsent(model = '') {
+  if (!consented()) {
+    const ok = await confirmBox('Tạo lời bằng AI', 'Thư viện và các mô hình nhận dạng giọng hát đã có sẵn trong app, chạy ngay trên máy, không tải gì từ mạng; âm thanh không rời khỏi máy. Tiếp tục?', 'Dùng', 'primary');
+    if (!ok) return false;
+    await setPref('lyrics.aiConsent', 1);
+  }
+  // The big model is not in the app: say so once before its first download.
+  if (AI_MODELS[model]?.remote && Y().aiRemoteOk !== 1) {
+    const ok = await confirmBox('Mô hình cao cấp', `Whisper Large v3 Turbo sẽ được tải một lần từ huggingface.co (${AI_MODELS.turbo.size}), cần nhiều RAM và chạy chậm hơn trên điện thoại. Lời bài hát và âm thanh vẫn không rời khỏi máy. Tải?`, 'Tải', 'primary');
+    if (!ok) return false;
+    await setPref('lyrics.aiRemoteOk', 1);
+  }
+  return true;
 }
 const modelKey = () => (AI_MODELS[Y().aiModel] ? Y().aiModel : 'base');
+const vocalOn = () => Y().aiVocal === 1;
 
 let asr = null, asrKey = '', loading = null;
 window.addEventListener('online', () => { modelFailed = ''; });
 let modelFailed = '';   // model that could not be loaded: automatic mode stops retrying it on every song (manual still can)
 // One model load at a time: two songs asking together share it (and its error) instead of loading twice.
 // words: the "_timestamped" export of the same model, which can also give each word its own time.
-function recognizer(task, words = false) {
-  const key = modelKey() + (words ? ':w' : '');
+function recognizer(task, words = false, mk = modelKey()) {
+  const key = mk + (words ? ':w' : '');
   if (asr && asrKey === key) return Promise.resolve(asr);
   if (loading?.key === key) return loading.p;
   const p = loadRecognizer(task, key).finally(() => { if (loading?.p === p) loading = null; });
@@ -77,20 +89,29 @@ function callWorker(msg, transfer = []) {
 // The page keeps its own copy of the audio (pieces are views of one big buffer), the worker gets a transferred slice.
 const runAsr = (audio, opts) => { const a = audio.slice(); return callWorker({ type: 'run', audio: a, opts }, [a.buffer]).then(r => r.result); };
 
+const used = new Map();   // recognizer key → model that really loaded (Turbo has no word-timing export: Small stands in)
 async function loadRecognizer(task, key) {
-  const [mk, w] = key.split(':'), mid = AI_MODELS[mk].id + (w ? '_timestamped' : '');
+  const [mk, w] = key.split(':');
   const files = new Map();
+  let label = AI_MODELS[mk].label;
   onLoadProgress = (p) => {
     files.set(p.file, [p.loaded, p.total]);
     let done = 0, total = 0;
     for (const [x, y] of files.values()) { done += x; total += y; }
-    task?.update({ done, total, unit: 'bytes', detail: `Đang nạp mô hình nhận dạng giọng hát (${AI_MODELS[mk].label})…` });
+    task?.update({ done, total, unit: 'bytes', detail: `Đang nạp mô hình nhận dạng giọng hát (${label})…` });
   };
   // Some ONNX Runtime builds cannot create a session for the 8-bit Whisper decoder; the same file is retried with
-  // graph optimisations off. All models ship with the app, so no other file is ever downloaded.
-  const tries = [{ dtype: 'q8' }, { dtype: 'q8', session_options: { graphOptimizationLevel: 'disabled' } }];
+  // graph optimisations off. Models that ship with the app never download anything; the remote one tries 4-bit first.
+  const q8 = [{ dtype: 'q8' }, { dtype: 'q8', session_options: { graphOptimizationLevel: 'disabled' } }];
+  const load = (m) => callWorker({ type: 'load', lib: LIB, local: LOCAL_MODELS, wasm: LIB.slice(0, LIB.lastIndexOf('/') + 1), mid: AI_MODELS[m].id + (w ? '_timestamped' : ''), remote: !!AI_MODELS[m].remote, tries: AI_MODELS[m].remote ? [{ dtype: 'q4' }, { dtype: 'q4', session_options: { graphOptimizationLevel: 'disabled' } }, ...q8] : q8 });
+  let eff = mk;
   try {
-    await callWorker({ type: 'load', lib: LIB, local: LOCAL_MODELS, wasm: LIB.slice(0, LIB.lastIndexOf('/') + 1), mid, tries });
+    try { await load(mk); }
+    catch (e) {
+      if (!(AI_MODELS[mk].remote && w)) throw e;
+      eff = 'small'; label = AI_MODELS.small.label;   // no word-timing export of the big model: the bundled Small does the word times
+      await load('small');
+    }
   } catch (e) {
     modelFailed = mk;
     const errs = e.errs?.length ? e.errs : [e.message];
@@ -98,12 +119,13 @@ async function loadRecognizer(task, key) {
   } finally { onLoadProgress = null; }
   modelFailed = '';
   asrKey = key;
+  used.set(key, eff);
   asr = runAsr;
   return asr;
 }
 
 // The song's audio as 16 kHz mono samples (what Whisper expects).
-async function samples(t) {
+async function samples(t, { vocal = false, task } = {}) {
   let blob = null;
   if (t.id === (await import('./player.js')).player.track?.id) {
     const src = (await import('./player.js')).player.engine?.el?.src;
@@ -114,17 +136,22 @@ async function samples(t) {
     if (!row) throw new Error('Không tìm thấy tệp nhạc');
     blob = row.locations?.local?.kind === 'url' ? await (await fetch(row.locations.local.ref)).blob() : await storage.open(row);
   }
-  return blobSamples(blob);
+  return blobSamples(blob, { vocal, task });
 }
-async function blobSamples(blob) {
+async function blobSamples(blob, { vocal = false, task } = {}) {
   const AC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
   const probe = new (window.AudioContext || window.webkitAudioContext)();
   let decoded;
   try { decoded = await probe.decodeAudioData(await blob.arrayBuffer()); } finally { probe.close?.(); }
-  const off = new AC(1, Math.ceil(decoded.duration * RATE), RATE);
+  const stereo = vocal && decoded.numberOfChannels > 1;
+  const off = new AC(stereo ? 2 : 1, Math.ceil(decoded.duration * RATE), RATE);
   const src = off.createBufferSource();
   src.buffer = decoded; src.connect(off.destination); src.start();
-  return (await off.startRendering()).getChannelData(0);
+  const buf = await off.startRendering();
+  if (!vocal) return buf.getChannelData(0);
+  task?.update({ detail: 'Đang tách giọng hát khỏi nhạc nền…' });
+  const { isolateVocals } = await import('./vocal.js');
+  return isolateVocals(buf.getChannelData(0), stereo ? buf.getChannelData(1) : null, RATE, { onProgress: () => task?.check() });
 }
 
 // Whisper often "hears" captions in instrumental parts; those are not lyrics.
@@ -132,9 +159,9 @@ const JUNK = /^[\s[(♪*#.…-]*(music|nhạc|instrumental|applause|vỗ tay|♪
 const stamp = (s) => { const m = Math.floor(s / 60), x = s - m * 60; return `[${String(m).padStart(2, '0')}:${x.toFixed(2).padStart(5, '0')}]`; };
 
 // → LRC text, or '' when no singing was heard.
-export async function transcribe(t, { task } = {}) {
-  const audio = await samples(t);
-  const asr = await recognizer(task);
+export async function transcribe(t, { task, model = modelKey(), vocal = vocalOn() } = {}) {
+  const audio = await samples(t, { vocal, task });
+  const asr = await recognizer(task, false, model);
   const n = Math.ceil(audio.length / (PIECE * RATE));
   const lines = [];
   let last = '';
@@ -156,19 +183,19 @@ export async function transcribe(t, { task } = {}) {
 
 const running = new Map();
 // Makes and saves lyrics for t, with a progress task. → the saved row, or null (nothing sung / cancelled).
-export function generate(t, { quiet = false } = {}) {
+export function generate(t, { quiet = false, model = modelKey(), vocal = vocalOn() } = {}) {
   if (running.has(t.id)) return running.get(t.id);
   const job = (async () => {
-    if (!(await ensureConsent())) { running.delete(t.id); return null; }
+    if (!(await ensureConsent(model))) { running.delete(t.id); return null; }
     const task = tasks.start({ label: `Đang tạo lời: ${t.title || 'bài hát'}`, cancellable: true, quiet, delay: quiet ? 0 : 300 });
     try {
-      const text = await transcribe(t, { task });
+      const text = await transcribe(t, { task, model, vocal });
       if (!text) {
         const m = (await getSetting(MISS, {})) || {}; m[t.id] = Date.now(); await setSetting(MISS, m);
         task.finish('Không nghe thấy lời hát trong bài này');
         return null;
       }
-      await saveLyrics(t, { text, source: 'ai', offset: 0, updatedAt: Date.now() });
+      await saveLyrics(t, { text, source: 'ai', offset: 0, updatedAt: Date.now(), aiGen: { model: used.get(model) || model, vocal, at: Date.now() } });
       task.finish(`Đã tạo lời cho “${t.title || 'bài hát'}”`);
       return db.lyrics.get(t.id);
     } catch (e) {
@@ -199,7 +226,6 @@ export function watch(player) {
       generate(t).catch(() => {});
     }, 4000);
   });
-  bus.on('music:prefs', (p) => { if (String(p?.path).startsWith('lyrics.ai')) if (asrKey.split(':')[0] !== modelKey()) asr = null; });
 }
 
 // ── Word sync: give every word of the existing lyrics its own time, from the singing ──────────────
@@ -237,9 +263,9 @@ function align(lyr, heard) {
   return out;
 }
 
-async function heardWords(t, task) {
-  const audio = await samples(t);
-  const asr = await recognizer(task, true);
+async function heardWords(t, task, model, vocal) {
+  const audio = await samples(t, { vocal, task });
+  const asr = await recognizer(task, true, model);
   const n = Math.ceil(audio.length / (PIECE * RATE));
   const out = [];
   for (let i = 0; i < n; i++) {
@@ -257,18 +283,18 @@ async function heardWords(t, task) {
 }
 
 // Word-syncs the saved lyrics of t. → { matched, total } after saving, or null (cancelled / too few matched).
-export function autoWordSync(t) {
+export function autoWordSync(t, { model = modelKey(), vocal = vocalOn() } = {}) {
   const key = 'w:' + t.id;
   if (running.has(key)) return running.get(key);
   const job = (async () => {
-    if (!(await ensureConsent())) { running.delete(key); return null; }
+    if (!(await ensureConsent(model))) { running.delete(key); return null; }
     const row = await db.lyrics.get(t.id);
     const parsed = row?.text && parseLyrics(row.text, t.duration || 0);
     if (!parsed?.lines.some(l => l.text)) throw new Error('Bài này chưa có lời để đồng bộ');
     const lines = toModel(parsed);
     const task = tasks.start({ label: `Đang đồng bộ từng chữ: ${t.title || 'bài hát'}`, cancellable: true, delay: 300 });
     try {
-      const heard = await heardWords(t, task);
+      const heard = await heardWords(t, task, model, vocal);
       task.update({ detail: 'Đang khớp chữ với lời…' });
       const flat = [];
       lines.forEach((l, li) => {
@@ -304,7 +330,7 @@ export function autoWordSync(t) {
         if (l.t == null) l.t = ws[0].t;
         l.wend = Math.min(ws.at(-1).end, lines[li + 1]?.t ?? Infinity);
       });
-      await saveLyrics(t, { text: toLrc(lines, { words: true, tr: true }), offset: 0, updatedAt: Date.now() });
+      await saveLyrics(t, { text: toLrc(lines, { words: true, tr: true }), offset: 0, updatedAt: Date.now(), aiWords: { model: used.get(model + ':w') || model, vocal, matched, total: flat.length, at: Date.now() } });
       task.finish(`Đã đồng bộ từng chữ: khớp ${matched}/${flat.length} chữ`);
       return { matched, total: flat.length };
     } catch (e) {

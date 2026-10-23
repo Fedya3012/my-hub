@@ -37,9 +37,9 @@ const customCache = {
   },
 };
 
-async function load({ lib, local, wasm, mid, tries }) {
+async function load({ lib, local, wasm, mid, tries, remote }) {
   T ||= await import(lib);
-  T.env.allowLocalModels = true;
+  T.env.allowLocalModels = !remote;   // models that ship with the app are read from the app; the big one only from Hugging Face
   T.env.localModelPath = local;
   T.env.useCustomCache = true;
   T.env.customCache = customCache;

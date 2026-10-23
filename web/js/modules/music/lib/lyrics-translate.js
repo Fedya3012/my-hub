@@ -112,7 +112,7 @@ export function translateLyrics(t) {
         await new Promise(r => setTimeout(r, 0));
       }
       const trText = parsed.synced ? lines.map((l, i) => fmt(l.t) + out[i]).join('\n') : out.join('\n');
-      await saveLyrics(t, { trText, trSource: 'ai', trLang: tgt });
+      await saveLyrics(t, { trText, trSource: 'ai', trLang: tgt, trInfo: { name: nllb ? 'NLLB-200 600M (Chính xác)' : `Opus-MT ${src}-${tgt} (Nhanh)`, src: TR_LANGS[src].replace('Tiếng ', ''), tgt: TR_LANGS[tgt].replace('Tiếng ', ''), at: Date.now() } });
       await setPref('lyrics.tr', 1);
       task.finish(`Đã dịch lời “${t.title || 'bài hát'}” sang ${TR_LANGS[tgt].toLowerCase()}`);
       return trText;

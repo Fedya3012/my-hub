@@ -15,7 +15,7 @@ import { loadLyrics, SOURCE_LABEL } from '../lib/lyrics-sources.js';
 import { prefs, setPref } from '../lib/prefs.js';
 import { attachFx, preblur } from './np-fx.js';
 import { applyScope } from '../../../core/theme.js';
-import { aiTranslate } from './translate-menu.js';
+import { aiTranslate, aiPick, aiMarks } from './ai-menu.js';
 import { menu, infoSheet, queuePanel, sleepSheet, speedSheet, trackMenu, starsHtml, linkPicker } from './sheets.js';
 
 const ART = { cover: ['square', 'Bìa'], cd: ['disc', 'CD'], vinyl: ['vinyl', 'Vinyl'], cassette: ['cassette', 'Cassette'] };
@@ -487,9 +487,7 @@ function showLyrics(t, ly) {
   box.querySelector('[data-ly-edit]')?.addEventListener('click', () => editLy(t));
   box.querySelector('[data-ly-online]')?.addEventListener('click', async () => { await setPref('lyrics.online', 1); toast('Đang tìm lời trên LRCLIB…'); renderLyrics(t, np); });
   box.querySelector('[data-ly-ai]')?.addEventListener('click', async (e) => {
-    e.currentTarget.disabled = true;
-    const { generate } = await import('../lib/lyrics-ai.js');
-    generate(t).then(r => { if (np && player.track?.id === t.id) renderLyrics(t, np); }, () => { e.currentTarget.disabled = false; });
+    aiPick(t, 'gen', { anchor: e.currentTarget, onDone: () => { if (np && player.track?.id === t.id) renderLyrics(t, np); } });
   });
   if (!parsed) return;
   const hasTr = parsed.lines.some(l => l.tr || l.roman);
@@ -533,7 +531,8 @@ function showLyrics(t, ly) {
     act: async () => { await setPref('lyrics.mode', k); renderLyrics(t, np); } })), { title: 'Chế độ lời' });
 }
 
-function lyricsStyleMenu(anchor) {
+async function lyricsStyleMenu(anchor) {
+  const mk = await aiMarks(player.track).catch(() => ({}));
   const Y = prefs().lyrics || {}, S = prefs().np.lyricsSize;
   const set = async (k, v) => { await setPref(k, v); applyLyPrefs(); np?.karaoke.recenter(); };
   const ck = (on) => on ? ' ✓' : '';
@@ -554,21 +553,19 @@ function lyricsStyleMenu(anchor) {
     '-',
     { icon: 'globe', label: Y.online ? 'Tắt tìm lời trực tuyến (LRCLIB)' : 'Bật tìm lời trực tuyến (LRCLIB)', act: async () => { await set('lyrics.online', Y.online ? 0 : 1); if (!Y.online && np) renderLyrics(player.track, np); } },
     '-',
-    player.track && { icon: 'lyrics', label: 'Tự đồng bộ từng chữ (AI)', act: () => aiWordSync(player.track) },
-    player.track && { icon: 'translate', label: 'Dịch lời bằng AI', act: () => aiTranslate(player.track) },
+    player.track && { icon: 'lyrics', label: 'Tự đồng bộ từng chữ (AI)', desc: mk.words?.desc, on: !!mk.words, act: () => aiPick(player.track, 'sync', { onDone: () => np && renderLyrics(player.track, np) }) },
+    player.track && { icon: 'translate', label: 'Dịch lời bằng AI', desc: mk.tr?.desc, on: !!mk.tr, act: () => aiTranslate(player.track, null, () => np && renderLyrics(player.track, np)) },
+    player.track && mk.gen && { icon: 'lyrics', label: 'Lời do AI tạo', desc: mk.gen.desc, on: true, act: () => aiPick(player.track, 'gen', { onDone: () => np && renderLyrics(player.track, np) }) },
+    { icon: 'lyrics', label: Y.aiVocal === 1 ? 'Tách giọng hát khi nghe: đang bật' : 'Tách giọng hát khi nghe: đang tắt', act: () => set('lyrics.aiVocal', Y.aiVocal === 1 ? 0 : 1) },
     ...Object.entries({ vi: 'Tiếng Việt', en: 'Tiếng Anh', ja: 'Tiếng Nhật', ko: 'Tiếng Hàn', zh: 'Tiếng Trung', fr: 'Tiếng Pháp', es: 'Tiếng Tây Ban Nha', de: 'Tiếng Đức' }).map(([k, v]) => ({ icon: 'translate', label: 'Dịch sang: ' + v + ck((Y.trLang || 'vi') === k), act: () => set('lyrics.trLang', k) })),
     { icon: 'lyrics', label: Y.aiAuto !== 0 ? 'Tắt tự tạo lời khi không có (AI)' : 'Tự tạo lời khi không có (AI)', act: () => set('lyrics.aiAuto', Y.aiAuto !== 0 ? 0 : 1) },
-    ...Object.entries({ tiny: 'Nhanh · ≈ 40 MB', base: 'Cân bằng · ≈ 80 MB', small: 'Chính xác · ≈ 250 MB' }).map(([k, v]) => ({ icon: 'lyrics', label: 'Mô hình AI: ' + v + ck((Y.aiModel || 'base') === k), act: () => set('lyrics.aiModel', k) })),
+    ...Object.entries({ tiny: 'Nhanh · ≈ 40 MB', base: 'Cân bằng · ≈ 80 MB', small: 'Chính xác · ≈ 250 MB', turbo: 'Cao cấp · tải thêm ≈ 800 MB' }).map(([k, v]) => ({ icon: 'lyrics', label: 'Mô hình AI: ' + v + ck((Y.aiModel || 'base') === k), act: () => set('lyrics.aiModel', k) })),
     ...[['', 'Tự nhận ngôn ngữ'], ['vi', 'Tiếng Việt'], ['en', 'Tiếng Anh'], ['ja', 'Tiếng Nhật'], ['ko', 'Tiếng Hàn'], ['zh', 'Tiếng Trung']].map(([k, v]) => ({ icon: 'translate', label: 'Ngôn ngữ AI: ' + v + ck((Y.aiLang || '') === k), act: () => set('lyrics.aiLang', k) })),
   ], { title: 'Kiểu chữ lời' });
 }
 
-async function aiWordSync(t) {
-  const { autoWordSync } = await import('../lib/lyrics-ai.js');
-  autoWordSync(t).catch(e => toast(e.message || 'Không đồng bộ được', 'warn'));
-}
-
-function lyricLineMenu(L, i, lineEl) {
+async function lyricLineMenu(L, i, lineEl) {
+  const mk = await aiMarks(player.track).catch(() => ({}));
   const text = [L.text, L.bg?.text && `(${L.bg.text})`, L.tr].filter(Boolean).join('\n');
   const t = player.track;
   const copy = (s) => navigator.clipboard?.writeText(s).then(() => toast('Đã sao chép'), () => toast('Không sao chép được', 'warn'));
@@ -578,8 +575,9 @@ function lyricLineMenu(L, i, lineEl) {
     navigator.share && { icon: 'share', label: 'Chia sẻ dòng…', act: () => navigator.share({ text: `“${L.text}”\n— ${t?.title || ''}${t?.artist ? ' · ' + t.artist : ''}` }).catch(() => {}) },
     { icon: 'copy', label: 'Sao chép toàn bộ lời', act: () => copy(np.karaoke.data.lines.map(x => x.text).join('\n')) },
     { icon: 'edit', label: 'Sửa / đồng bộ lời', act: () => editLy(t) },
-    { icon: 'lyrics', label: 'Tự đồng bộ từng chữ (AI)', act: () => aiWordSync(t) },
-    { icon: 'translate', label: 'Dịch lời bằng AI', act: () => aiTranslate(t) },
+    { icon: 'lyrics', label: 'Tự đồng bộ từng chữ (AI)', desc: mk.words?.desc, on: !!mk.words, act: () => aiPick(t, 'sync', { onDone: () => np && renderLyrics(t, np) }) },
+    { icon: 'translate', label: 'Dịch lời bằng AI', desc: mk.tr?.desc, on: !!mk.tr, act: () => aiTranslate(t, null, () => np && renderLyrics(t, np)) },
+    mk.gen && { icon: 'lyrics', label: 'Lời do AI tạo', desc: mk.gen.desc, on: true, act: () => aiPick(t, 'gen', { onDone: () => np && renderLyrics(t, np) }) },
   ], { title: 'Dòng lời' });
 }
 

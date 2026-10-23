@@ -8,7 +8,7 @@ import { bus } from '../../../core/bus.js';
 import { db } from '../../../core/db.js';
 import { player } from '../lib/player.js';
 import { parseLyrics, toLrc, toTtml, toSrt, toModel, lyricsKind, mergeTranslation, ensureLyricsCss } from '../lib/lyrics.js';
-import { aiTranslate } from './translate-menu.js';
+import { aiTranslate } from './ai-menu.js';
 import { saveLyrics, searchLrclib, rowFromLrclib, SOURCE_LABEL } from '../lib/lyrics-sources.js';
 import { fmtTime } from '../lib/format.js';
 import { sheet } from './sheets.js';
