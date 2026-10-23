@@ -1,7 +1,14 @@
 {
-  "app": "0.9.20.0",
+  "app": "0.9.20.1",
   "released": "2026-10-23",
   "changelog": [
+    {
+      "version": "0.9.20.1",
+      "date": "2026-10-23",
+      "notes": [
+        "Trình phát nhạc: dịch lời tự chuyển sang Qwen 0.5B, rồi NLLB, khi Qwen 1.5B không tải được"
+      ]
+    },
     {
       "version": "0.9.20.0",
       "date": "2026-10-23",
