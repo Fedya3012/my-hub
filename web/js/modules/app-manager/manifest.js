@@ -1,7 +1,7 @@
 export default {
   id: 'app-manager',
   name: 'Quản lý ứng dụng',
-  version: '0.1.0',
+  version: '0.1.1',
   core: true,
   icon: 'apps',
   route: 'apps',
