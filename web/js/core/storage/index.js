@@ -309,8 +309,14 @@ export const storage = {
   // pull snapshot 0–30 %, merge 30–50 %, push 50–100 %. Cancel is safe:
   // the DB merge is one transaction.
   _running: null,
+  // A conflict (another device wrote first) is not an error: read again and merge, up to three times.
   sync(opts) {
-    if (!this._running) this._running = this._sync(opts).finally(() => { this._running = null; });
+    if (!this._running) this._running = (async () => {
+      for (let n = 1; ; n++) {
+        try { return await this._sync(opts); }
+        catch (e) { if (e?.code !== 'conflict' || n >= 3) throw e; await new Promise(r => setTimeout(r, 800 * n)); }
+      }
+    })().finally(() => { this._running = null; });
     return this._running;
   },
   async _sync({ quiet = false } = {}) {
@@ -374,6 +380,7 @@ export const storage = {
     } catch (e) {
       if (task.cancelled || e?.name === 'AbortError') { bus.emit('sync:cancelled'); return { cancelled: true }; }
       if (!navigator.onLine) { task.finish('Mất mạng, sẽ đồng bộ tiếp khi có mạng'); bus.emit('sync:cancelled'); return { skipped: 'offline' }; }
+      if (e?.code === 'conflict') { task.finish('Máy khác vừa cập nhật, đang đồng bộ lại…'); throw e; }
       task.fail(e);
       throw e;
     } finally { this.taskId = null; }
@@ -520,7 +527,7 @@ storage.syncLive = async function ({ quiet = false } = {}) {
   if ((await this.mode()) === 'local' || !cloudReady() || !navigator.onLine) return { skipped: true };
   if (!cloud().connected()) { if (!ACCOUNT_MODES.has(activeMode)) return { skipped: 'not-connected' }; try { await accountToken(); } catch { return { skipped: 'not-connected' }; } }
   if (liveBusy) return liveBusy;
-  liveBusy = (async () => {
+  const liveOnce = async () => {
     await touchDevice();
     const remote = await cloud().readSnapshot('hub-live.json');
     // Sign-out requests ({ deviceId | '*': when }): newest per device.
@@ -540,6 +547,13 @@ storage.syncLive = async function ({ quiet = false } = {}) {
     await setSetting('sync.liveAt', now());
     if (pulled && !quiet) bus.emit('progress:pulled', { pulled });
     return { pulled };
+  };
+  // Another device wrote the live file first: read it again and merge (up to three tries).
+  liveBusy = (async () => {
+    for (let n = 1; ; n++) {
+      try { return await liveOnce(); }
+      catch (e) { if (e?.code !== 'conflict' || n >= 3) throw e; await new Promise(r => setTimeout(r, 800 * n)); }
+    }
   })().finally(() => { liveBusy = null; });
   return liveBusy;
 };
