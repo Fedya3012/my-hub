@@ -49,7 +49,9 @@ export function tr(s) {
   if (t) {
     const exact = table.get(t.replace(/\s+/g, ' '));
     if (exact !== undefined) out = s.replace(t, exact);
-    else if (/[^\x00-\x7f]/.test(t) || /[a-zA-Z]/.test(t)) {
+    // Long text (guides, show notes, descriptions) is never one of the app's own phrases, and running the big
+    // alternation over it froze the page for minutes: only short strings go through the phrase regex.
+    else if (t.length <= 160 && (/[^\x00-\x7f]/.test(t) || /[a-zA-Z]/.test(t))) {
       // Single words ("bài", "lần") are only safe next to a number ("5 bài"); inside a sentence
       // they would produce a half-translated mix, so the sentence stays Vietnamese instead.
       const num = /\d/.test(t);

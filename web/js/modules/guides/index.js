@@ -20,7 +20,7 @@ export async function mount(el, ctx, rest = '') {
     </aside>
     <div class="gd-main">
       <div class="gd-top"><button type="button" class="gd-btn gd-open" data-act="show" aria-label="Mở mục lục">☰ Mục lục</button><span class="gd-cur"></span></div>
-      <article class="gd-body"></article>
+      <article class="gd-body" data-i18n="off"></article>
     </div></section>`;
   root.querySelector('[data-act="hide"]').onclick = () => toggle(true);
   root.querySelector('[data-act="show"]').onclick = () => toggle(false);

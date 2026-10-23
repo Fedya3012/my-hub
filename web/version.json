@@ -934,7 +934,7 @@
     },
     "guides": {
       "name": "Hướng dẫn sử dụng",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "minApp": "0.9.9.1",
       "files": [
         "js/modules/guides/content.js",
