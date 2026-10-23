@@ -8,20 +8,28 @@ import { tasks } from '../tasks.js';
 
 export const MUSIC = /\.(mp3|flac|m4a|m4b|mp4|aac|alac|ogg|oga|opus|wav|wave|aif|aiff|aifc|wv|ape|dsf|dff|wma)$/i;
 
-// Where the chosen folders live, separate from the sync account (storage.mode): 'local' (this device) or a drive
-// that can list folders. E.g. signed in with GitHub for the library while the folders come from Dropbox.
-// Unset: follows the sync account when that is a drive, otherwise 'local'.
-export async function folderSource() {
+// Where the chosen folders live, separate from the sync account (storage.mode): 'local' (this device) and / or one
+// drive that can list folders. Both can be on at once, e.g. books from Dropbox and music from this device: each
+// chosen folder says which app it feeds. Unset: follows the sync account when that is a drive, otherwise 'local'.
+export async function folderSources() {
+  const raw = await getSetting('sync.folderSources', null);
+  if (Array.isArray(raw)) {
+    const ok = [...new Set(raw)].filter(k => k === 'local' || canPickFolders(k));
+    if (ok.length) return ok.filter((k, i) => k === 'local' || ok.findIndex(x => x !== 'local') === i);
+  }
   const s = await getSetting('sync.folderSource', null);
-  if (s === 'local' || (s && canPickFolders(s))) return s;
+  if (s === 'local' || (s && canPickFolders(s))) return [s];
   const m = await storage.mode();
-  return isDrive(m) && canPickFolders(m) ? m : 'local';
+  return [isDrive(m) && canPickFolders(m) ? m : 'local'];
 }
+// The drive among the sources (at most one), or null.
+export const driveSource = async () => (await folderSources()).find(k => k !== 'local') || null;
 // Leaving a drive drops its folder list (its paths belong to the old drive); imported entries stay.
-export async function setFolderSource(src) {
-  const cur = await folderSource();
-  if (cur !== src && cur !== 'local') { await setSetting('sync.folders', []); await setSetting('sync.folderDone', {}); }
-  await setSetting('sync.folderSource', src);
+export async function setFolderSources(list) {
+  const next = [...new Set(list)].filter(k => k === 'local' || canPickFolders(k));
+  const cur = await driveSource();
+  if (cur && !next.includes(cur)) { await setSetting('sync.folders', []); await setSetting('sync.folderDone', {}); }
+  await setSetting('sync.folderSources', next.length ? next : ['local']);
 }
 
 export const folderList = async () => (await getSetting('sync.folders', [])) || [];
@@ -86,8 +94,8 @@ async function removeRows(gone) {
 // Linked files outside every chosen folder (the folder was unticked, or deleted and then dropped from the list):
 // look each one up in its parent folder on the drive and remove those that are gone.
 export async function pruneOrphans() {
-  const mode = await folderSource();
-  const d = drives[mode];
+  const mode = await driveSource();
+  const d = mode && drives[mode];
   if (!d?.listDir || !d.connected() || !navigator.onLine) return 0;
   const folders = await folderList();
   const rows = await db.files.filter(f => f.linked && f.locations?.[mode]?.key && !folders.some(fo => inFolder(f.locations[mode].key.toLowerCase(), fo.toLowerCase()))).toArray();
@@ -124,15 +132,17 @@ export const resumeFolderSync = () => setSetting('sync.folderPaused', false);
 export async function cancelFolderSync() {
   await pauseFolderSync();
   return tasks.run({ label: 'Đang huỷ đồng bộ thư mục', detail: 'Xoá các mục đã nhập…' }, async () => {
-    const mode = await folderSource();
-    let rows;
-    if (mode === 'local') {
+    const sources = await folderSources();
+    let rows = [];
+    if (sources.includes('local')) {
       const ids = new Set((await (await import('./local-folders.js')).localFolders()).map(f => f.id));
       rows = await db.files.filter(f => !!f.localFolder && ids.has(f.localFolder)).toArray();
       await setSetting('sync.localDone', {});
-    } else {
+    }
+    const mode = sources.find(k => k !== 'local');
+    if (mode) {
       const folders = (await folderList()).map(f => f.toLowerCase());
-      rows = await db.files.filter(f => f.linked && f.locations?.[mode]?.key && folders.some(fo => inFolder(f.locations[mode].key.toLowerCase(), fo))).toArray();
+      rows = rows.concat(await db.files.filter(f => f.linked && f.locations?.[mode]?.key && folders.some(fo => inFolder(f.locations[mode].key.toLowerCase(), fo))).toArray());
       await setSetting('sync.folderDone', {});
     }
     return { removed: await removeRows(rows) };
@@ -150,9 +160,25 @@ export async function syncFolders(opts = {}) {
   try { return await p; } finally { if (current === p) current = null; active.clear(); }
 }
 
+// Runs every chosen source (this device and / or the drive) and adds up the results.
 async function runSync({ pruneOnly = false } = {}) {
-  const mode = await folderSource();
-  if (mode === 'local') return pruneOnly ? { added: 0, failed: [], removed: 0, missing: [] } : (await import('./local-folders.js')).scanLocal(track);
+  const sources = await folderSources();
+  const out = { added: 0, failed: [], removed: 0, missing: [] };
+  const skipped = [];
+  for (const mode of sources) {
+    const r = mode === 'local'
+      ? (pruneOnly ? { added: 0, failed: [], removed: 0, missing: [] } : await (await import('./local-folders.js')).scanLocal(track))
+      : await runDrive(mode, { pruneOnly });
+    if (r.skipped) skipped.push(r.skipped);
+    out.added += r.added || 0; out.removed += r.removed || 0;
+    out.failed.push(...(r.failed || [])); out.missing.push(...(r.missing || []));
+  }
+  // Nothing ran at all: say why (all sources skipped); otherwise the totals.
+  if (skipped.length === sources.length) out.skipped = skipped[0];
+  return out;
+}
+
+async function runDrive(mode, { pruneOnly = false } = {}) {
   const d = drives[mode];
   if (!d || !d.listDir) return { skipped: 'no-folders' };
   if (!d.connected() || !navigator.onLine) return { skipped: 'offline' };

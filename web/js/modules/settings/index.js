@@ -39,20 +39,24 @@ async function renderFolders() {
   const st = await ctx.storage.status();
   const F = await import('../../core/storage/folders.js');
   const { drives } = await import('../../core/storage/index.js');
-  const src = await F.folderSource();
-  const srcOn = src !== 'local' && drives[src].connected();
+  const sources = await F.folderSources();
+  const src = sources.find(k => k !== 'local') || null, hasLocal = sources.includes('local');
+  const srcOn = !!src && drives[src].connected();
   const card = 'background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)';
   const btn = 'min-height:44px;padding:0 18px;border-radius:var(--radius);font-size:15px;font-weight:600;font-family:inherit;cursor:pointer';
-  const label = src !== 'local' ? MODES[src].label : '';
+  const label = src ? MODES[src].label : '';
   root.innerHTML = `<section class="page" style="max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:14px">
     <div><a class="btn small" href="#settings/source" aria-label="Quay lại Thư mục đồng bộ">‹ Thư mục đồng bộ</a></div>
     <h2 class="section-title" style="margin:0">Chọn thư mục</h2>
-    ${src !== 'local' ? `<div style="${card};display:flex;flex-direction:row;align-items:center;gap:12px;padding:14px">
+    ${src ? `<div style="${card};display:flex;flex-direction:row;align-items:center;gap:12px;padding:14px">
       <span style="width:40px;height:40px;border-radius:10px;background:color-mix(in srgb, var(--accent) 14%, transparent);display:flex;align-items:center;justify-content:center;flex:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" aria-hidden="true"><path d="M7 18a4 4 0 0 1-.6-7.96A5.5 5.5 0 0 1 17 9a4.5 4.5 0 0 1 .5 9z"/></svg></span>
       <span style="flex:1 1 140px;min-width:0"><span style="display:block;font-size:15px;font-weight:600">${esc(label)}</span><span style="display:block;font-size:12px;color:var(--${srcOn ? 'ok' : 'warn'})">${srcOn ? 'Đã kết nối' : 'Chưa kết nối'}</span></span>
       <button type="button" data-act="sync-now" style="${btn};padding:0 14px;flex:none;border:0;background:var(--accent);color:var(--accent-fg)">Đồng bộ ngay</button></div>` : ''}
-    <p class="hint" style="margin:0">Tích chọn một hoặc nhiều thư mục trên ổ. Nhạc và sách bên trong được quét, nhập vào thư viện và phát trực tiếp từ ổ, không sao chép vào app. Tệp mới tự cập nhật mỗi lần đồng bộ.</p>
-    <div id="folder-picker"></div>
+    ${src ? `<p class="hint" style="margin:0">Tích chọn một hoặc nhiều thư mục trên ${esc(label)}. Nhạc và sách bên trong được quét, nhập vào thư viện và phát trực tiếp từ ổ, không sao chép vào app. Tệp mới tự cập nhật mỗi lần đồng bộ. Mỗi thư mục chọn nhập nhạc, sách hoặc cả hai.</p>
+    <div id="folder-picker"></div>` : ''}
+    ${hasLocal ? `<h3 class="section-title" style="margin:6px 0 0;font-size:16px">Thư mục trong máy</h3>
+    <p class="hint" style="margin:0">Chọn các thư mục trong máy. App chỉ đọc đúng những thư mục này: nhạc và sách bên trong được quét và thêm vào thư viện. Trên Windows và máy tính, tệp được đọc trực tiếp, không sao chép; trên Android, mỗi tệp mới được sao chép vào app một lần. Mỗi thư mục chọn nhập nhạc, sách hoặc cả hai.</p>
+    <div id="local-picker"></div>` : ''}
     <div id="fold-progress" style="${card};padding:14px;display:flex;flex-direction:column;gap:10px"></div>
     <div class="row-actions" style="display:flex;flex-direction:row;flex-wrap:wrap;gap:4px;align-items:center">
       <button type="button" class="btn" data-act="pause">Tạm dừng</button>
@@ -64,18 +68,16 @@ async function renderFolders() {
   </section>`;
   const m = await import('../../core/storage/folder-ui.js');
   const pick = root.querySelector('#folder-picker');
-  if (src !== 'local' && !srcOn) pick.innerHTML = `<p class="hint">Chưa kết nối ${esc(label)}. Quay lại Thư mục đồng bộ để kết nối.</p>`;
-  else if (src !== 'local') await m.folderPicker(pick, src, ctx.toast);
-  else {
-    root.querySelector('.hint').textContent = 'Chọn các thư mục trong máy. App chỉ đọc đúng những thư mục này: nhạc và sách bên trong được quét và thêm vào thư viện. Trên Windows và máy tính, tệp được đọc trực tiếp, không sao chép; trên Android, mỗi tệp mới được sao chép vào app một lần.';
-    await (await import('../../core/storage/local-folders.js')).localFolderPicker(pick, ctx.toast);
-  }
+  const lpick = root.querySelector('#local-picker');
+  if (src && !srcOn) pick.innerHTML = `<p class="hint">Chưa kết nối ${esc(label)}. Quay lại Thư mục đồng bộ để kết nối.</p>`;
+  else if (src) await m.folderPicker(pick, src, ctx.toast);
+  if (hasLocal) await (await import('../../core/storage/local-folders.js')).localFolderPicker(lpick, ctx.toast);
 
   // Live progress card: the scan / import task of the folder sync (also visible in the task tray).
   const prog = root.querySelector('#fold-progress');
   const pauseBtn = root.querySelector('[data-act="pause"]');
   const idle = async () => {
-    const n = src === 'local' ? (await (await import('../../core/storage/local-folders.js')).localFolders()).length : (await F.folderList()).length;
+    const n = (hasLocal ? (await (await import('../../core/storage/local-folders.js')).localFolders()).length : 0) + (src ? (await F.folderList()).length : 0);
     const paused = await F.folderPaused();
     pauseBtn.disabled = paused;
     // Nothing chosen yet: the picker already says so, and sync/pause/cancel have nothing to act on.
@@ -98,7 +100,7 @@ async function renderFolders() {
   pageOffs.push(ctx.bus.on('tasks:changed', show));
   // The pickers re-render after a folder is added or removed: refresh the count and the buttons.
   const mo = new MutationObserver(debounceIdle());
-  mo.observe(pick, { childList: true, subtree: true });
+  for (const el of [pick, lpick]) if (el) mo.observe(el, { childList: true, subtree: true });
   pageOffs.push(() => mo.disconnect());
   function debounceIdle() { let t; return () => { clearTimeout(t); t = setTimeout(() => root.isConnected && idle(), 250); }; }
 
@@ -141,7 +143,7 @@ async function render() {
 // Sections of the Settings page, each opened as its own sub page: [icon, title, one-line summary].
 const SECS = {
   sync: ['database', 'Tài khoản đồng bộ', (st) => MODES[st.mode].label],
-  source: ['library', 'Thư mục đồng bộ', (st, src) => src === 'local' ? 'Thư mục trong máy' : 'Thư mục trên ' + MODES[src].label],
+  source: ['library', 'Thư mục đồng bộ', (st, src) => src.map(k => k === 'local' ? 'Thư mục trong máy' : 'Thư mục trên ' + MODES[k].label).join(' + ')],
   devices: ['device', 'Thiết bị dùng chung thư viện', () => 'Tên máy này, các máy đang dùng'],
   appearance: ['palette', 'Giao diện', () => 'Ngôn ngữ, skin, theme, màu nhấn, cỡ chữ'],
   params: ['grid', 'Thông số dùng chung', () => 'Thông số của từng ứng dụng, trạng thái hiện tại'],
@@ -161,7 +163,8 @@ async function renderPage() {
   const conn = st.cloud.signedIn;
   const F = await import('../../core/storage/folders.js');
   const { drives } = await import('../../core/storage/index.js');
-  const fsrc = await F.folderSource();
+  const fsrcs = await F.folderSources();
+  const fdrive = fsrcs.find(k => k !== 'local') || null;
 
   // Items with a saved position, per app (the virtual rows such as the Music queue have a ":" in their id).
   const live = (await db.progress.toArray()).filter(p => !String(p.itemId).includes(':') && p.state !== 'reset' && (p.position > 0 || p.state === 'finished'));
@@ -173,7 +176,7 @@ async function renderPage() {
     ${SECS[sub] ? `<div><a class="btn small" href="#settings" aria-label="Quay lại Cài đặt">‹ Cài đặt</a></div>`
       : `<header class="page-head"><div class="app-title"><p class="eyebrow">Tuỳ chỉnh</p><h1>Cài đặt</h1></div></header>
     ${accountSummary()}
-    <nav class="set-index" aria-label="Các mục cài đặt">${Object.entries(SECS).map(([k, [ic, t, d]]) => `<a class="panel set-link" href="#settings/${k}">${icon(ic)}<span><strong>${t}</strong><span class="hint">${d(st, fsrc)}</span></span><span aria-hidden="true">›</span></a>`).join('')}</nav>`}
+    <nav class="set-index" aria-label="Các mục cài đặt">${Object.entries(SECS).map(([k, [ic, t, d]]) => `<a class="panel set-link" href="#settings/${k}">${icon(ic)}<span><strong>${t}</strong><span class="hint">${d(st, fsrcs)}</span></span><span aria-hidden="true">›</span></a>`).join('')}</nav>`}
 
     <section class="set-block" data-sec="sync">
       <h2 class="section-title">${icon('database')}Tài khoản đồng bộ</h2>
@@ -220,15 +223,15 @@ async function renderPage() {
 
     <section class="set-block" data-sec="source">
       <h2 class="section-title">${icon('library')}Thư mục đồng bộ</h2>
-      <p class="hint">Nơi lấy nhạc và sách: thư mục trong máy, hoặc thư mục trên Dropbox / OneDrive. Không phụ thuộc vào tài khoản đồng bộ ở trên.</p>
-      <div class="mode-cards" role="radiogroup" aria-label="Nơi lấy thư mục đồng bộ">
+      <p class="hint">Nơi lấy nhạc và sách: thư mục trong máy và / hoặc thư mục trên Dropbox / OneDrive. Bật cả hai được, ví dụ sách từ Dropbox còn nhạc trong máy: mỗi thư mục tự chọn nhập nhạc hay sách. Không phụ thuộc vào tài khoản đồng bộ ở trên.</p>
+      <div class="mode-cards" role="group" aria-label="Nơi lấy thư mục đồng bộ">
         ${[['local', 'Trong máy', 'Thư mục trên thiết bị này.']].concat(Object.keys(drives).filter(F.canPickFolders).map(k => [k, MODES[k].label, drives[k].connected() ? 'Đã kết nối' : 'Chưa kết nối, chọn để đăng nhập'])).map(([k, l, h]) => `
-          <label class="mode-card${fsrc === k ? ' on' : ''}">
-            <input type="radio" name="folder-src" value="${k}" ${fsrc === k ? 'checked' : ''}>
+          <label class="mode-card${fsrcs.includes(k) ? ' on' : ''}">
+            <input type="checkbox" name="folder-src" value="${k}" ${fsrcs.includes(k) ? 'checked' : ''}>
             <span class="mode-icon">${icon(k === 'local' ? 'device' : 'cloud')}</span>
             <strong>${esc(l)}</strong><span>${esc(h)}</span></label>`).join('')}
       </div>
-      <a class="panel" href="#settings/folders" style="display:flex;flex-direction:row;align-items:center;gap:10px;text-decoration:none;color:inherit"><span style="flex:1"><strong style="display:block">Chọn thư mục, đồng bộ, tạm dừng, huỷ</strong><span class="hint">${fsrc === 'local' ? 'Thư mục trong máy' : 'Thư mục trên ' + esc(MODES[fsrc].label)}${fsrc !== 'local' && drives[fsrc].connected() ? ` · <button type="button" class="btn small" data-act="src-reconnect">Đổi tài khoản ${esc(MODES[fsrc].label)}</button>` : ''}</span></span><span aria-hidden="true">›</span></a>
+      <a class="panel" href="#settings/folders" style="display:flex;flex-direction:row;align-items:center;gap:10px;text-decoration:none;color:inherit"><span style="flex:1"><strong style="display:block">Chọn thư mục, đồng bộ, tạm dừng, huỷ</strong><span class="hint">${fsrcs.map(k => k === 'local' ? 'Thư mục trong máy' : 'Thư mục trên ' + esc(MODES[k].label)).join(' + ')}${fdrive && drives[fdrive].connected() ? ` · <button type="button" class="btn small" data-act="src-reconnect">Đổi tài khoản ${esc(MODES[fdrive].label)}</button>` : ''}</span></span><span aria-hidden="true">›</span></a>
     </section>
 
     <section class="set-block" data-sec="devices">
@@ -327,17 +330,29 @@ async function renderPage() {
   // Folder source: connecting a drive here only signs in to it, the sync account above stays as it is.
   root.querySelectorAll('input[name="folder-src"]').forEach(r => r.onchange = async () => {
     const k = r.value;
-    if (k !== fsrc && fsrc !== 'local' && (await F.folderList()).length
-      && !(await confirmBox('Đổi nơi lấy thư mục?', 'Danh sách thư mục đã chọn trên ' + MODES[fsrc].label + ' sẽ được bỏ chọn. Bài nhạc, sách đã nhập vẫn giữ trong thư viện.', 'Đổi'))) { render(); return; }
-    if (k !== 'local' && !drives[k].connected()) {
-      const { connectForm } = await import('../../core/storage/cloud-ui.js');
-      if (!(await connectForm(k))) { render(); return; }
+    let next = new Set(fsrcs);
+    if (!r.checked) {
+      if (next.size === 1) { ctx.toast('Cần giữ ít nhất một nơi lấy thư mục', 'warn'); render(); return; }
+      if (k !== 'local' && (await F.folderList()).length
+        && !(await confirmBox('Bỏ ' + MODES[k].label + '?', 'Danh sách thư mục đã chọn trên ' + MODES[k].label + ' sẽ được bỏ chọn. Bài nhạc, sách đã nhập vẫn giữ trong thư viện.', 'Bỏ'))) { render(); return; }
+      next.delete(k);
+    } else {
+      if (k !== 'local' && !drives[k].connected()) {
+        const { connectForm } = await import('../../core/storage/cloud-ui.js');
+        if (!(await connectForm(k))) { render(); return; }
+      }
+      // One drive at a time: picking another drive replaces the current one (its folder list is dropped).
+      if (k !== 'local' && fdrive && fdrive !== k) {
+        if ((await F.folderList()).length && !(await confirmBox('Đổi ổ lấy thư mục?', 'Danh sách thư mục đã chọn trên ' + MODES[fdrive].label + ' sẽ được bỏ chọn. Bài nhạc, sách đã nhập vẫn giữ trong thư viện.', 'Đổi'))) { render(); return; }
+        next.delete(fdrive);
+      }
+      next.add(k);
     }
-    await F.setFolderSource(k);
-    ctx.toast('Thư mục đồng bộ lấy từ: ' + (k === 'local' ? 'Trong máy' : MODES[k].label));
+    await F.setFolderSources([...next]);
+    ctx.toast('Thư mục đồng bộ lấy từ: ' + [...next].map(x => x === 'local' ? 'Trong máy' : MODES[x].label).join(' + '));
     render();
   });
-  on('src-reconnect', async (e) => { e.preventDefault(); e.stopPropagation(); const { connectForm } = await import('../../core/storage/cloud-ui.js'); if (await connectForm(fsrc)) render(); });
+  on('src-reconnect', async (e) => { e.preventDefault(); e.stopPropagation(); const { connectForm } = await import('../../core/storage/cloud-ui.js'); if (await connectForm(fdrive)) render(); });
   on('reconnect', async () => { const { useDrive } = await import('../../core/storage/cloud-ui.js'); await useDrive(st.mode, { reconnect: true }); render(); });
   on('persist', async () => { const ok = await ctx.storage.adapters.local.persist(); ctx.toast(ok ? 'Đã bật lưu trữ bền vững' : 'Trình duyệt chưa cho phép', ok ? 'info' : 'warn'); render(); });
   on('rename', async () => {
