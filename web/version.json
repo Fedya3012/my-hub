@@ -1,7 +1,19 @@
 {
-  "app": "0.9.12.0",
-  "released": "2026-10-22",
+  "app": "0.9.13.0",
+  "released": "2026-10-23",
   "changelog": [
+    {
+      "version": "0.9.13.0",
+      "date": "2026-10-23",
+      "notes": [
+        "Lõi: bộ nhớ đệm offline hoạt động trở lại (sửa lỗi một tệp bị liệt kê hai lần khiến Service Worker không cài được từ 0.9.10.0)",
+        "Bảo mật: script trong sách không chạy được; khoá ListenBrainz và Podcast Index không còn nằm trong bản sao lưu JSON; OPML chỉ nhận liên kết http hoặc https; ứng dụng Windows chỉ mở trang của chính nó",
+        "Bảo mật: chỉ các thành phần đáng tin mới truy cập được dịch vụ phát nhạc trên Android; tải mô hình lời AI lần đầu phải được xác nhận",
+        "Cài đặt: đăng xuất trên thiết bị này giữ nguyên dữ liệu; xoá toàn bộ dữ liệu cũng xoá token; sao lưu tự động trên Android đã tắt",
+        "Podcast: menu giữ hoặc chuột phải cho tập và kênh; bỏ qua im lặng chính xác hơn; Khám phá và Trang chủ làm mới sau khi đăng ký; sửa tràn chữ trên Android khi chữ hệ thống lớn",
+        "Sách: đóng trình đọc khi sách thiếu tệp không còn lỗi"
+      ]
+    },
     {
       "version": "0.9.12.0",
       "date": "2026-10-22",
@@ -577,7 +589,6 @@
       "css/foldable.css",
       "js/core/posture.js",
       "js/core/cover.js",
-      "js/modules/fanfic/manifest.js",
       "js/modules/guides/manifest.js",
       "js/modules/podcasts/manifest.js"
     ]
@@ -633,7 +644,7 @@
     },
     "music": {
       "name": "Trình phát nhạc",
-      "version": "0.7.1",
+      "version": "0.7.2",
       "minApp": "0.3.0",
       "files": [
         "js/modules/music/index.js",
@@ -714,7 +725,7 @@
     },
     "podcasts": {
       "name": "Podcast",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "minApp": "0.9.11.0",
       "files": [
         "js/modules/podcasts/index.js",
@@ -744,7 +755,7 @@
     },
     "books": {
       "name": "Sách",
-      "version": "0.1.2",
+      "version": "0.1.3",
       "minApp": "0.9.0.0",
       "files": [
         "js/modules/books/index.js",
