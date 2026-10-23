@@ -20,9 +20,10 @@ import { local } from './local.js';
 import { github } from './github.js';
 import { dropbox } from './dropbox.js';
 import { onedrive } from './onedrive.js';
+import { googledrive } from './googledrive.js';
 
 // Cloud drives that also hold the files. The adapter in use follows the storage mode.
-export const drives = { dropbox, onedrive };
+export const drives = { dropbox, onedrive, googledrive };
 let activeMode = 'local';
 // Where the library snapshot and progress live: the signed-in GitHub account, or the chosen drive.
 const cloud = () => drives[activeMode] || github;
@@ -34,6 +35,7 @@ export const MODES = {
   github: { label: 'Tài khoản GitHub', hint: 'Đăng nhập GitHub (dán token): thư viện và tiến độ đồng bộ qua một kho riêng tư của bạn. Tệp nhạc/sách ở lại trên từng máy.' },
   dropbox: { label: 'Dropbox', hint: 'Đăng nhập Dropbox một lần: thư viện, tiến độ và cả tệp nhạc/sách đồng bộ qua thư mục riêng của app. Máy khác tải tệp về khi cần.' },
   onedrive: { label: 'OneDrive', hint: 'Đăng nhập OneDrive: thư viện, tiến độ và cả tệp nhạc/sách đồng bộ qua thư mục riêng của app (Apps/…). Máy khác tải tệp về khi cần.' },
+  googledrive: { label: 'Google Drive', hint: 'Đăng nhập Google: thư viện, tiến độ và cả tệp nhạc/sách đồng bộ qua thư mục ẩn riêng của app trên Google Drive. Máy khác tải tệp về khi cần.' },
 };
 export const isDrive = (m) => m in drives;
 
