@@ -4,8 +4,11 @@
 // and draggable stamps; undo / redo; a translation track; LRCLIB search; export to every format.
 import { icon } from '../../../core/icons.js';
 import { esc, toast } from '../../../core/ui.js';
+import { bus } from '../../../core/bus.js';
+import { db } from '../../../core/db.js';
 import { player } from '../lib/player.js';
 import { parseLyrics, toLrc, toTtml, toSrt, toModel, lyricsKind, mergeTranslation, ensureLyricsCss } from '../lib/lyrics.js';
+import { aiTranslate } from './translate-menu.js';
 import { saveLyrics, searchLrclib, rowFromLrclib, SOURCE_LABEL } from '../lib/lyrics-sources.js';
 import { fmtTime } from '../lib/format.js';
 import { sheet } from './sheets.js';
@@ -50,7 +53,7 @@ export async function editLyrics(t, onDone) {
   const { db } = await import('../../../core/db.js');
   const cur = await db.lyrics.get(t.id);
   const canTags = await tagWriter(t);
-  const s = sheet({ title: 'Lời bài hát', wide: true, cls: 'mly-sheet', onClose: () => cleanup(), body: `<div class="mly-edit">
+  const s = sheet({ title: 'Lời bài hát', wide: true, cls: 'mly-sheet', onClose: () => { offTr?.(); cleanup(); }, body: `<div class="mly-edit">
     <div class="seg small mly-tabs" role="tablist">
       <button data-tab="text" aria-pressed="true">Văn bản</button><button data-tab="sync" aria-pressed="false">Đồng bộ</button>
       <button data-tab="tr" aria-pressed="false">Bản dịch</button><button data-tab="online" aria-pressed="false">Tìm trực tuyến</button></div>
@@ -187,13 +190,13 @@ export async function editLyrics(t, onDone) {
     trTa.value = lines.map(l => l.tr || '').join('\n').replace(/\n+$/, '');
   });
 
-  $('[data-aitr]').onclick = async () => {
-    try {
-      const { translateLyrics } = await import('../lib/lyrics-translate.js');
-      const r = await translateLyrics(t);
-      if (r) { trTa.value = r; dirtyText = true; loadModel(); drawTr(); }
-    } catch (e) { toast(e.message || 'Không dịch được', 'warn'); }
-  };
+  $('[data-aitr]').onclick = (e) => aiTranslate(t, e.currentTarget);
+  // The AI translation is saved by lyrics-translate.js: bring it into this editor when it arrives.
+  const offTr = bus.on('music:lyrics', async ({ id }) => {
+    if (id !== t.id || !s.el.isConnected) return;
+    const r = await db.lyrics.get(t.id);
+    if (r?.trText && r.trText !== trTa.value) { trTa.value = r.trText; dirtyText = true; loadModel(); drawTr(); }
+  });
 
   // ── Online search ──
   $('[data-search]').onsubmit = async (e) => {

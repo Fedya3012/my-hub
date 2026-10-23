@@ -713,6 +713,7 @@
         "js/modules/music/ui/dock.js",
         "js/modules/music/ui/nowplaying.js",
         "js/modules/music/ui/sheets.js",
+        "js/modules/music/ui/translate-menu.js",
         "js/modules/music/ui/eq-panel.js",
         "js/modules/music/ui/coverflow.js",
         "js/modules/music/ui/editor.js",

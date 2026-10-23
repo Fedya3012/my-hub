@@ -15,6 +15,7 @@ import { loadLyrics, SOURCE_LABEL } from '../lib/lyrics-sources.js';
 import { prefs, setPref } from '../lib/prefs.js';
 import { attachFx, preblur } from './np-fx.js';
 import { applyScope } from '../../../core/theme.js';
+import { aiTranslate } from './translate-menu.js';
 import { menu, infoSheet, queuePanel, sleepSheet, speedSheet, trackMenu, starsHtml, linkPicker } from './sheets.js';
 
 const ART = { cover: ['square', 'Bìa'], cd: ['disc', 'CD'], vinyl: ['vinyl', 'Vinyl'], cassette: ['cassette', 'Cassette'] };
@@ -555,7 +556,6 @@ function lyricsStyleMenu(anchor) {
     '-',
     player.track && { icon: 'lyrics', label: 'Tự đồng bộ từng chữ (AI)', act: () => aiWordSync(player.track) },
     player.track && { icon: 'translate', label: 'Dịch lời bằng AI', act: () => aiTranslate(player.track) },
-    ...[['fast', 'Nhanh · ≈ 80 MB'], ['best', 'Chính xác · ≈ 600 MB']].map(([k, v]) => ({ icon: 'translate', label: 'Mô hình dịch: ' + v + ck((Y.trModel || 'fast') === k), act: () => set('lyrics.trModel', k) })),
     ...Object.entries({ vi: 'Tiếng Việt', en: 'Tiếng Anh', ja: 'Tiếng Nhật', ko: 'Tiếng Hàn', zh: 'Tiếng Trung', fr: 'Tiếng Pháp', es: 'Tiếng Tây Ban Nha', de: 'Tiếng Đức' }).map(([k, v]) => ({ icon: 'translate', label: 'Dịch sang: ' + v + ck((Y.trLang || 'vi') === k), act: () => set('lyrics.trLang', k) })),
     { icon: 'lyrics', label: Y.aiAuto !== 0 ? 'Tắt tự tạo lời khi không có (AI)' : 'Tự tạo lời khi không có (AI)', act: () => set('lyrics.aiAuto', Y.aiAuto !== 0 ? 0 : 1) },
     ...Object.entries({ tiny: 'Nhanh · ≈ 40 MB', base: 'Cân bằng · ≈ 80 MB', small: 'Chính xác · ≈ 250 MB' }).map(([k, v]) => ({ icon: 'lyrics', label: 'Mô hình AI: ' + v + ck((Y.aiModel || 'base') === k), act: () => set('lyrics.aiModel', k) })),
@@ -563,10 +563,6 @@ function lyricsStyleMenu(anchor) {
   ], { title: 'Kiểu chữ lời' });
 }
 
-async function aiTranslate(t) {
-  const { translateLyrics } = await import('../lib/lyrics-translate.js');
-  translateLyrics(t).catch(e => toast(e.message || 'Không dịch được', 'warn'));
-}
 async function aiWordSync(t) {
   const { autoWordSync } = await import('../lib/lyrics-ai.js');
   autoWordSync(t).catch(e => toast(e.message || 'Không đồng bộ được', 'warn'));

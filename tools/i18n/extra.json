@@ -2343,5 +2343,7 @@
  "Đổi ổ lấy thư mục?": "Switch the drive?",
  ". Mỗi thư mục chọn nhập nhạc, sách hoặc cả hai.": ". Each folder chooses music, books or both.",
  " Mỗi thư mục chọn nhập nhạc, sách hoặc cả hai.": " Each folder chooses music, books or both.",
- "Nơi lấy nhạc và sách: thư mục trong máy và / hoặc thư mục trên Dropbox / OneDrive. Bật cả hai được, ví dụ sách từ Dropbox còn nhạc trong máy: mỗi thư mục tự chọn nhập nhạc hay sách. Không phụ thuộc vào tài khoản đồng bộ ở trên.": "Where music and books come from: folders on this device and / or folders on Dropbox / OneDrive. Both can be on, e.g. books from Dropbox and music from this device: each folder chooses music or books. Independent of the sync account above."
+ "Nơi lấy nhạc và sách: thư mục trong máy và / hoặc thư mục trên Dropbox / OneDrive. Bật cả hai được, ví dụ sách từ Dropbox còn nhạc trong máy: mỗi thư mục tự chọn nhập nhạc hay sách. Không phụ thuộc vào tài khoản đồng bộ ở trên.": "Where music and books come from: folders on this device and / or folders on Dropbox / OneDrive. Both can be on, e.g. books from Dropbox and music from this device: each folder chooses music or books. Independent of the sync account above.",
+ "Dịch nhanh": "Fast translation",
+ "Dịch chính xác": "Accurate translation"
 }
