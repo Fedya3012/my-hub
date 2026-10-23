@@ -146,7 +146,8 @@ function renderTray() {
     trayEl.className = 'task-tray';
     trayEl.setAttribute('aria-label', 'Tác vụ đang chạy');
     trayEl.addEventListener('click', (e) => {
-      const b = e.target.closest('button');
+      // With the pointer captured by the tray (mouse drag), the click lands on the tray itself, not on the bubble button.
+      const b = e.target.closest('button') || (minimized ? trayEl.querySelector('[data-restore]') : null);
       if (!b) return;
       if (b.dataset.minimize != null) { setMinimized(true); return; }
       if (b.dataset.restore != null) { if (trayEl._dragged) { trayEl._dragged = false; return; } setMinimized(false); trayEl.querySelector('[data-minimize]')?.focus(); return; }
@@ -266,13 +267,12 @@ function bindBubbleDrag(el) {
     if (!minimized || !e.target.closest('.task-bubble')) return;
     const r = el.getBoundingClientRect();
     st = { id: e.pointerId, dx: e.clientX - r.left, dy: e.clientY - r.top, x0: e.clientX, y0: e.clientY, moved: false };
-    try { el.setPointerCapture(e.pointerId); } catch { /* ignore */ }
     addEventListener('pointermove', move); addEventListener('pointerup', end); addEventListener('pointercancel', end);
   });
   const move = (e) => {
     if (!st || e.pointerId !== st.id) return;
     if (!st.moved && Math.hypot(e.clientX - st.x0, e.clientY - st.y0) < 6) return;
-    if (!st.moved) { st.moved = true; el.classList.add('dragging'); }
+    if (!st.moved) { st.moved = true; el.classList.add('dragging'); try { el.setPointerCapture(e.pointerId); } catch { /* ignore */ } }
     Object.assign(el.style, { left: (e.clientX - st.dx) + 'px', top: (e.clientY - st.dy) + 'px', right: 'auto', bottom: 'auto' });
   };
   const end = (e) => {
