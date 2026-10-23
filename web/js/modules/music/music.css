@@ -960,3 +960,10 @@ body[data-posture="cover"]:not(.cover-full) .mnp-bg-a, body[data-posture="cover"
    of its grid cell and left the lower part of the screen empty. */
 .mnp-queue { min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 10px; }
 .mnp-queue > .mq-head, .mnp-queue > .mq { flex: 0 0 auto; }
+
+/* Lyrics toolbar can fold down to one handle (chevron) so it never hides the lyrics */
+.ly-fold .ic { transition: transform .2s var(--ease-out, ease); }
+.ly-tools.folded { padding: 0; background: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.ly-tools.folded > :not(.ly-fold) { display: none; }
+.ly-tools.folded .ly-fold { margin-left: auto; background: color-mix(in srgb, var(--np-bg, var(--bg)) 55%, transparent); border-radius: 999px; opacity: .85; }
+.ly-tools.folded .ly-fold .ic { transform: rotate(180deg); }

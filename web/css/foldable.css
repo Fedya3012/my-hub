@@ -32,6 +32,8 @@
     bottom: calc(var(--tabbar-h) + 14px + var(--sai-bottom)); min-height: 52px; padding: 0 18px; border-radius: 999px;
     box-shadow: 0 8px 24px rgb(0 0 0 / .22); }
   body.has-dock:not(.own-tabs) .page-head .head-actions .btn.primary { bottom: calc(var(--tabbar-h) + var(--dock-h, 0px) + 22px + var(--sai-bottom)); }
+  /* Quản lý ứng dụng: "Kiểm tra cập nhật" stays in the page header (a floating button covered the app cards). */
+  body:not(.own-tabs) [data-module="app-manager"] .page-head .head-actions .btn.primary { position: static; min-height: 40px; padding: 0 16px; box-shadow: none; }
 }
 
 /* ── Flex Mode: content above the crease, controls below ───────────────── */

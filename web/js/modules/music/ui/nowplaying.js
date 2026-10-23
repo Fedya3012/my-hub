@@ -504,8 +504,19 @@ function showLyrics(t, ly) {
     ${hasTr ? `<button class="icon-btn sm" data-ly-tr aria-pressed="${!!prefs().lyrics?.tr}" aria-label="Hiện bản dịch / phiên âm" title="Bản dịch">${icon('translate')}</button>` : ''}
     <button class="icon-btn sm" data-ly-set aria-label="Kiểu chữ lời" title="Kiểu chữ">${icon('text-size')}</button>
     <button class="icon-btn sm" data-ly-full aria-pressed="${!!np.lyFull}" aria-label="Lời toàn màn hình" title="Toàn màn hình">${icon('fullscreen')}</button>
-    <button class="icon-btn sm" data-ly-e aria-label="Sửa / đồng bộ lời" title="Sửa lời">${icon('edit')}</button>`;
+    <button class="icon-btn sm" data-ly-e aria-label="Sửa / đồng bộ lời" title="Sửa lời">${icon('edit')}</button>
+    <button class="icon-btn sm ly-fold" data-ly-fold aria-label="Thu gọn thanh công cụ lời" title="Thu gọn / mở rộng">${icon('minimize')}</button>`;
   box.prepend(tools);
+  // Fold the toolbar down to a single handle so it stops covering the lyrics; the choice is remembered.
+  const foldKey = 'music.lyToolsFolded';
+  const fold = (on) => {
+    tools.classList.toggle('folded', on);
+    const f = tools.querySelector('[data-ly-fold]');
+    f.setAttribute('aria-expanded', !on); f.setAttribute('aria-label', on ? 'Mở rộng thanh công cụ lời' : 'Thu gọn thanh công cụ lời');
+    try { localStorage.setItem(foldKey, on ? '1' : ''); } catch { /* private mode */ }
+  };
+  tools.querySelector('[data-ly-fold]').onclick = () => fold(!tools.classList.contains('folded'));
+  try { if (localStorage.getItem(foldKey)) fold(true); } catch { /* private mode */ }
   const B = (k) => tools.querySelector(`[data-ly-${k}]`);
   B('e').onclick = () => editLy(t);
   const showOff = () => { const v = tools.querySelector('.ly-off-v'); if (v) v.textContent = (np.lyOffset > 0 ? '+' : np.lyOffset < 0 ? '−' : '') + Math.abs(np.lyOffset).toFixed(1).replace('.', ',') + 's'; };
