@@ -7,7 +7,7 @@
 // The result is saved as a translation track (LRC with the same stamps as the lyrics, or plain lines) in
 // row.trText with trSource 'ai', so it shows under each line exactly like an imported translation.
 import { tasks } from '../../../core/tasks.js';
-import { confirmBox } from '../../../core/ui.js';
+import { confirmBox, toast } from '../../../core/ui.js';
 import { prefs, setPref } from './prefs.js';
 import { loadLyrics, saveLyrics } from './lyrics-sources.js';
 import { parseLyrics } from './lyrics.js';
@@ -15,6 +15,7 @@ import { parseLyrics } from './lyrics.js';
 export const TR_LANGS = { vi: 'Tiếng Việt', en: 'Tiếng Anh', ja: 'Tiếng Nhật', ko: 'Tiếng Hàn', zh: 'Tiếng Trung', fr: 'Tiếng Pháp', es: 'Tiếng Tây Ban Nha', de: 'Tiếng Đức' };
 export const TR_MODELS = { fast: { label: 'Nhanh', size: '≈ 600 MB' }, best: { label: 'Chính xác', size: '≈ 1 GB' } };
 const LLM = 'onnx-community/Qwen2.5-1.5B-Instruct';
+const LLM_SMALL = 'onnx-community/Qwen2.5-0.5B-Instruct';
 const NLLB = { id: 'Xenova/nllb-200-distilled-600M', code: { vi: 'vie_Latn', en: 'eng_Latn', ja: 'jpn_Jpan', ko: 'kor_Hang', zh: 'zho_Hans', fr: 'fra_Latn', es: 'spa_Latn', de: 'deu_Latn', el: 'ell_Grek', ru: 'rus_Cyrl', th: 'tha_Thai', ar: 'arb_Arab', he: 'heb_Hebr', hi: 'hin_Deva' } };
 // The script of one line tells its language when it is not Latin (lyrics often mix languages).
 const SCRIPT = [[/[\u0370-\u03FF]/, 'el'], [/[\u0400-\u04FF]/, 'ru'], [/[\u0E00-\u0E7F]/, 'th'], [/[\u0600-\u06FF]/, 'ar'], [/[\u0590-\u05FF]/, 'he'], [/[\u0900-\u097F]/, 'hi'], [/[\uAC00-\uD7AF]/, 'ko'], [/[\u3040-\u30FF]/, 'ja'], [/[\u4E00-\u9FFF]/, 'zh']];
@@ -80,7 +81,7 @@ async function loadModel(mid, task, label, { pipeline = 'translation', tries } =
   };
   tries ||= [{}, { dtype: 'fp32' }, { dtype: 'q8', session_options: { graphOptimizationLevel: 'disabled' } }];
   try { await callWorker({ type: 'load', lib: LIB, wasm: LIB.slice(0, LIB.lastIndexOf('/') + 1), mid, tries, task: pipeline }); loadedId = mid; }
-  catch (e) { throw new Error(`Không nạp được mô hình dịch ${mid.split('/')[1]}${e.errs?.length ? ' — ' + e.errs[0] : ''}`); }
+  catch (e) { throw new Error(`Không nạp được mô hình dịch ${mid.split('/')[1]}${e.errs?.length ? ' — ' + (/^\d+$/.test(String(e.errs[0]).trim()) ? 'thiết bị không đủ bộ nhớ' : e.errs[0]) : ''}`); }
   finally { onLoadProgress = null; }
 }
 
@@ -178,14 +179,23 @@ export function translateLyrics(t) {
       if (src === tgt) { task.finish(`Lời đã bằng ${TR_LANGS[tgt].toLowerCase()}, không cần dịch`); return null; }
       const texts = lines.map(l => l.text);
       let out, name;
-      if (modelKey() === 'best') {
-        await loadModel(LLM, task, TR_MODELS.best.label, { pipeline: 'text-generation', tries: [{ dtype: 'q4' }, { dtype: 'q4', session_options: { graphOptimizationLevel: 'disabled' } }, { dtype: 'q8' }] });
-        out = await llmLines(texts, tgt, task, [t.title, t.artist].filter(Boolean).join(' – '));
-        name = 'Qwen2.5 1.5B (Chính xác)';
-      } else {
-        await loadModel(NLLB.id, task, TR_MODELS.fast.label);
-        out = await nllbLines(texts, src, tgt, task);
-        name = 'NLLB-200 600M (Nhanh)';
+      const ctx = [t.title, t.artist].filter(Boolean).join(' – ');
+      const llmTries = [{ dtype: 'q4' }, { dtype: 'q4', session_options: { graphOptimizationLevel: 'disabled' } }, { dtype: 'q8' }];
+      // Phones often run out of wasm memory on the 1.5B model, so step down to 0.5B, then NLLB.
+      const plan = modelKey() === 'best'
+        ? [[LLM, 'Qwen2.5 1.5B (Chính xác)'], [LLM_SMALL, 'Qwen2.5 0.5B (Chính xác, bản nhẹ)'], [NLLB.id, 'NLLB-200 600M (Nhanh)']]
+        : [[NLLB.id, 'NLLB-200 600M (Nhanh)']];
+      for (let i = 0; i < plan.length; i++) {
+        const [mid, label] = plan[i], llm = mid !== NLLB.id;
+        try {
+          await loadModel(mid, task, llm ? TR_MODELS.best.label : TR_MODELS.fast.label, llm ? { pipeline: 'text-generation', tries: llmTries } : {});
+        } catch (e) {
+          if (task.cancelled || i === plan.length - 1) throw e;
+          toast(`Không nạp được ${label.split(' (')[0]} (có thể thiếu bộ nhớ), chuyển sang ${plan[i + 1][1].split(' (')[0]}`, 'warn');
+          continue;
+        }
+        out = llm ? await llmLines(texts, tgt, task, ctx) : await nllbLines(texts, src, tgt, task);
+        name = label; break;
       }
       if (!out) return null;
       const trText = parsed.synced ? lines.map((l, i) => fmt(l.t) + out[i]).join('\n') : out.join('\n');
