@@ -877,7 +877,9 @@
         "js/modules/guides/img/xuong-viet-ban-viet.webp",
         "js/modules/guides/img/xuong-viet-them-nhap.webp",
         "js/modules/guides/img/xuong-viet-truyen-moi.webp",
-        "js/modules/guides/index.js"
+        "js/modules/guides/index.js",
+        "js/modules/guides/img/podcast-kham-pha.webp",
+        "js/modules/guides/img/podcast-trang-chu.webp"
       ],
       "changelog": []
     }

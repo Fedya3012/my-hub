@@ -34,4 +34,5 @@ Mỗi bản phát hành có hai tệp Windows trên https://github.com/Fedya3012
 
 - Đủ codec nhạc: AAC, FLAC, Opus, ALAC…
 - Đọc thẳng thư mục nhạc và sách trên ổ cứng, không sao chép (xem [Đồng bộ](20-dong-bo.md)).
+- Phát nhạc **bit-perfect** qua **WASAPI Exclusive**: vào **Trình phát nhạc → Cài đặt**, mục **Engine**, chọn **WASAPI Exclusive (bit-perfect, Windows)** (xem [Trình phát nhạc](32-trinh-phat-nhac.md)).
 - Tự cập nhật, chạy được khi không có mạng.

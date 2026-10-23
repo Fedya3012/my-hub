@@ -8,7 +8,7 @@
 
 ## Số phiên bản
 
-Dạng `x.y.z.w`, ví dụ `0.9.9.1`:
+Dạng `x.y.z.w`, ví dụ `0.9.12.0`:
 
 | Số | Tăng khi |
 |---|---|

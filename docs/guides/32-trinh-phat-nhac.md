@@ -25,7 +25,7 @@ Khi nhập, bảng **Đang thêm nhạc** hiện tiến trình, xong thì báo s
 - **Cover Flow** các album: vuốt ngang, bấm **Phát album**.
 - Thống kê nhanh: số bài, album, nghệ sĩ, tổng thời lượng, số bài Hi-Res, tỷ lệ định dạng.
 - Lối tắt: Yêu thích, Hi-Res, Nghe nhiều nhất, Mới thêm, Chưa nghe.
-- Thanh mục: **Trang chủ**, **Âm nhạc** (bài hát, album, nghệ sĩ, thể loại, thư mục, danh sách phát), **Mới**, **Thống kê**, **Cài đặt**.
+- Thanh mục: **Trang chủ**, **Âm nhạc** (bài hát, album, nghệ sĩ, thể loại, thư mục, danh sách phát), **Mới**, **Thống kê**, **Cài đặt**. Trên máy tính, các mục là một hàng nút ở trên cùng; **Âm nhạc** mở lại đúng mục bạn xem lần trước (Album, Nghệ sĩ…).
 
 ![Trình phát nhạc đang phát trên máy tính](img/nhac-dang-phat.webp)
 
@@ -38,7 +38,26 @@ Khi nhập, bảng **Đang thêm nhạc** hiện tiến trình, xong thì báo s
 ## Lời bài hát
 
 - Lời `.lrc` cùng tên tệp được nhập tự động.
+- Bài chưa có lời: bật **Tự tạo lời khi không có (AI)**; app nghe bài hát và tạo lời ngay trên máy (lần đầu tải mô hình AI, cần mạng).
+- Lời đã có nhưng chỉ theo dòng: **Tự đồng bộ từng chữ (AI)** canh thời gian cho từng chữ để chạy karaoke **Đồng bộ từng chữ**.
 - Trong tab **Lời**: chạm một dòng để tua tới đó, chỉnh cỡ chữ, sửa lời, chấm nhịp lại; có **Bản dịch** và **Tìm trực tuyến**.
+
+## Nghe liên tục
+
+- **Auto DJ** (**Cài đặt** của Trình phát nhạc): hết hàng chờ thì tự thêm bài tương tự (cùng nghệ sĩ, thể loại, thời kỳ).
+- **Hàng chờ tạm**: phát nhanh một nhóm bài mà không xoá hàng chờ đang có; xong thì quay lại hàng chờ cũ.
+- **Crossfade**, **Crossfade thông minh**, **Gapless**: chuyển bài mượt hoặc liền mạch.
+- **Tài khoản ListenBrainz**: dán token để ghi lại lịch sử nghe (scrobble).
+
+## Phát ra đâu
+
+| Cách | Ở đâu | Ghi chú |
+|---|---|---|
+| **Thiết bị phát** | Cài đặt của Trình phát nhạc | Chọn loa, tai nghe, DAC (máy tính) |
+| **WASAPI Exclusive (bit-perfect, Windows)** | Cài đặt → **Engine** | Gửi thẳng tín hiệu gốc tới DAC, không qua bộ trộn của Windows |
+| **USB DAC (Android)** | Cài đặt của Trình phát nhạc | Xuất thẳng ra DAC cắm cổng USB |
+| Loa / TV trong mạng (DLNA / UPnP, Chromecast) | Nút phát tới thiết bị ở Now Playing | Điện thoại thành điều khiển từ xa |
+| Android Auto, thông báo, màn hình khoá | Tự có trên app Android | Nhạc vẫn phát khi tắt màn hình |
 
 ## Gắn nhạc với sách và fanfic
 

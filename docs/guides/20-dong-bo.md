@@ -1,6 +1,6 @@
 # Đồng bộ: tài khoản và thư mục
 
-Trong **Cài đặt** có hai lựa chọn riêng, không phụ thuộc nhau:
+Trang **Cài đặt** là một danh sách mục, bấm mục nào thì mở trang riêng của mục đó. Hai mục liên quan tới đồng bộ là hai lựa chọn riêng, không phụ thuộc nhau:
 
 - **Tài khoản đồng bộ**: nơi thư viện, cài đặt và tiến độ nghe/đọc/viết đi giữa các máy.
 - **Thư mục đồng bộ**: nơi app lấy nhạc và sách (thư mục trong máy, hoặc thư mục trên Dropbox / OneDrive).
@@ -20,7 +20,7 @@ Ví dụ hay dùng: đồng bộ bằng **GitHub** nhưng lấy nhạc từ **Dr
 | **Dropbox** | Thư viện, tiến độ và cả tệp, trong thư mục riêng của app | Tự tải lên; máy khác tải về khi mở |
 | **OneDrive** | Như Dropbox, trong `Apps/…` | Như Dropbox |
 
-Cách bật: **Cài đặt → Tài khoản đồng bộ**, bấm vào một ô.
+Cách bật: **Cài đặt → Tài khoản đồng bộ** (mở trang riêng), bấm vào một ô.
 
 ### Đăng nhập GitHub
 
@@ -78,6 +78,8 @@ App hỏi **Máy này đã có dữ liệu**:
 | Dropbox / OneDrive | Không. Nhạc phát thẳng từ ổ; sách được tải về khi mở |
 | Trong máy, trên Windows | Không. Đọc thẳng từ ổ cứng |
 | Trong máy, trên Android | Có, mỗi tệp mới được sao chép vào app một lần |
+
+Thư mục đồng bộ chỉ đi **một chiều**: app đọc tệp từ thư mục, không bao giờ tải tệp đó lên tài khoản đồng bộ. Ví dụ nhạc lấy từ Dropbox sẽ không bị chép thêm một bản lên OneDrive.
 
 ## Tạm dừng, huỷ, dọn
 

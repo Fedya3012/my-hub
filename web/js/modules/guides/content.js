@@ -78,7 +78,7 @@ export const PAGES = [
     "level": 2
    }
   ],
-  "html": "\n<h2 data-sec=\"chon-tep-nao\">Chọn tệp nào</h2>\n<p>Mỗi bản phát hành có hai tệp Windows trên <a href=\"https://github.com/Fedya3012/my-hub/releases/latest\" target=\"_blank\" rel=\"noopener\">https://github.com/Fedya3012/my-hub/releases/latest</a></p>\n<div class=\"gd-tw\"><table>\n<thead>\n<tr>\n<th>Tệp</th>\n<th>Dùng khi</th>\n<th>Cập nhật</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><code>MyHub-x.y.z.w-x64-Setup.exe</code></td>\n<td>Dùng hằng ngày (<strong>nên chọn</strong>)</td>\n<td>Tự tải bản mới ở nền, hỏi <strong>Khởi động lại ngay</strong> hoặc <strong>Để sau</strong></td>\n</tr>\n<tr>\n<td><code>MyHub-x.y.z.w-portable.exe</code></td>\n<td>Chạy không cần cài, ví dụ từ USB</td>\n<td>Không tự cập nhật: chỉ báo <strong>Có phiên bản mới</strong>, bấm <strong>Mở trang tải</strong> để tải tay</td>\n</tr>\n</tbody>\n</table></div>\n<h2 data-sec=\"cai-ban-setup\">Cài bản Setup</h2>\n<ol>\n<li>Mở trang Releases ở trên, mục <strong>Assets</strong>, tải <code>MyHub-…-x64-Setup.exe</code>.</li>\n<li>Chạy tệp vừa tải.</li>\n<li>Windows SmartScreen có thể báo <strong>\"Windows protected your PC\"</strong> vì app chưa mua chứng chỉ ký số. Bấm <strong>More info</strong>, rồi <strong>Run anyway</strong>.</li>\n<li>App tự cài và mở ra. Lối tắt <strong>My Hub</strong> có ở Start menu và màn hình nền.</li>\n</ol>\n<h2 data-sec=\"cap-nhat\">Cập nhật</h2>\n<ul>\n<li>Mỗi lần mở, bản Setup tự hỏi GitHub có bản mới không, rồi tải ở nền.</li>\n<li>Tải xong, hộp thoại <strong>Đã tải xong phiên bản …</strong> hiện ra:</li>\n<li><strong>Khởi động lại ngay</strong>: app đóng, cài bản mới, mở lại.</li>\n<li><strong>Để sau</strong>: bản mới được cài khi bạn đóng app.</li>\n<li>Muốn kiểm tra ngay: <strong>Quản lý ứng dụng → Kiểm tra cập nhật</strong>, rồi <strong>Cập nhật</strong>.</li>\n<li>Nếu hiện <strong>Không tự cập nhật được</strong>: bấm <strong>Mở trang tải</strong>, tải bản Setup mới và chạy đè lên. Dữ liệu giữ nguyên.</li>\n</ul>\n<h2 data-sec=\"ban-portable\">Bản portable</h2>\n<ul>\n<li>Chạy thẳng tệp <code>.exe</code>, không cần cài. Dữ liệu vẫn lưu trong máy, giống bản Setup.</li>\n<li>Có bản mới thì app hiện <strong>Có phiên bản mới</strong>. Bấm <strong>Mở trang tải</strong>, tải bản portable mới và dùng tệp đó thay tệp cũ.</li>\n</ul>\n<h2 data-sec=\"vi-sao-nen-dung-app-windows-thay-vi-trinh-duyet\">Vì sao nên dùng app Windows thay vì trình duyệt</h2>\n<ul>\n<li>Đủ codec nhạc: AAC, FLAC, Opus, ALAC…</li>\n<li>Đọc thẳng thư mục nhạc và sách trên ổ cứng, không sao chép (xem <a href=\"#guides/dong-bo\">Đồng bộ</a>).</li>\n<li>Tự cập nhật, chạy được khi không có mạng.</li>\n</ul>"
+  "html": "\n<h2 data-sec=\"chon-tep-nao\">Chọn tệp nào</h2>\n<p>Mỗi bản phát hành có hai tệp Windows trên <a href=\"https://github.com/Fedya3012/my-hub/releases/latest\" target=\"_blank\" rel=\"noopener\">https://github.com/Fedya3012/my-hub/releases/latest</a></p>\n<div class=\"gd-tw\"><table>\n<thead>\n<tr>\n<th>Tệp</th>\n<th>Dùng khi</th>\n<th>Cập nhật</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><code>MyHub-x.y.z.w-x64-Setup.exe</code></td>\n<td>Dùng hằng ngày (<strong>nên chọn</strong>)</td>\n<td>Tự tải bản mới ở nền, hỏi <strong>Khởi động lại ngay</strong> hoặc <strong>Để sau</strong></td>\n</tr>\n<tr>\n<td><code>MyHub-x.y.z.w-portable.exe</code></td>\n<td>Chạy không cần cài, ví dụ từ USB</td>\n<td>Không tự cập nhật: chỉ báo <strong>Có phiên bản mới</strong>, bấm <strong>Mở trang tải</strong> để tải tay</td>\n</tr>\n</tbody>\n</table></div>\n<h2 data-sec=\"cai-ban-setup\">Cài bản Setup</h2>\n<ol>\n<li>Mở trang Releases ở trên, mục <strong>Assets</strong>, tải <code>MyHub-…-x64-Setup.exe</code>.</li>\n<li>Chạy tệp vừa tải.</li>\n<li>Windows SmartScreen có thể báo <strong>\"Windows protected your PC\"</strong> vì app chưa mua chứng chỉ ký số. Bấm <strong>More info</strong>, rồi <strong>Run anyway</strong>.</li>\n<li>App tự cài và mở ra. Lối tắt <strong>My Hub</strong> có ở Start menu và màn hình nền.</li>\n</ol>\n<h2 data-sec=\"cap-nhat\">Cập nhật</h2>\n<ul>\n<li>Mỗi lần mở, bản Setup tự hỏi GitHub có bản mới không, rồi tải ở nền.</li>\n<li>Tải xong, hộp thoại <strong>Đã tải xong phiên bản …</strong> hiện ra:</li>\n<li><strong>Khởi động lại ngay</strong>: app đóng, cài bản mới, mở lại.</li>\n<li><strong>Để sau</strong>: bản mới được cài khi bạn đóng app.</li>\n<li>Muốn kiểm tra ngay: <strong>Quản lý ứng dụng → Kiểm tra cập nhật</strong>, rồi <strong>Cập nhật</strong>.</li>\n<li>Nếu hiện <strong>Không tự cập nhật được</strong>: bấm <strong>Mở trang tải</strong>, tải bản Setup mới và chạy đè lên. Dữ liệu giữ nguyên.</li>\n</ul>\n<h2 data-sec=\"ban-portable\">Bản portable</h2>\n<ul>\n<li>Chạy thẳng tệp <code>.exe</code>, không cần cài. Dữ liệu vẫn lưu trong máy, giống bản Setup.</li>\n<li>Có bản mới thì app hiện <strong>Có phiên bản mới</strong>. Bấm <strong>Mở trang tải</strong>, tải bản portable mới và dùng tệp đó thay tệp cũ.</li>\n</ul>\n<h2 data-sec=\"vi-sao-nen-dung-app-windows-thay-vi-trinh-duyet\">Vì sao nên dùng app Windows thay vì trình duyệt</h2>\n<ul>\n<li>Đủ codec nhạc: AAC, FLAC, Opus, ALAC…</li>\n<li>Đọc thẳng thư mục nhạc và sách trên ổ cứng, không sao chép (xem <a href=\"#guides/dong-bo\">Đồng bộ</a>).</li>\n<li>Phát nhạc <strong>bit-perfect</strong> qua <strong>WASAPI Exclusive</strong>: vào <strong>Trình phát nhạc → Cài đặt</strong>, mục <strong>Engine</strong>, chọn <strong>WASAPI Exclusive (bit-perfect, Windows)</strong> (xem <a href=\"#guides/trinh-phat-nhac\">Trình phát nhạc</a>).</li>\n<li>Tự cập nhật, chạy được khi không có mạng.</li>\n</ul>"
  },
  {
   "id": "dong-bo",
@@ -154,7 +154,7 @@ export const PAGES = [
     "level": 2
    }
   ],
-  "html": "\n<p>Trong <strong>Cài đặt</strong> có hai lựa chọn riêng, không phụ thuộc nhau:</p>\n<ul>\n<li><strong>Tài khoản đồng bộ</strong>: nơi thư viện, cài đặt và tiến độ nghe/đọc/viết đi giữa các máy.</li>\n<li><strong>Thư mục đồng bộ</strong>: nơi app lấy nhạc và sách (thư mục trong máy, hoặc thư mục trên Dropbox / OneDrive).</li>\n</ul>\n<p>Ví dụ hay dùng: đồng bộ bằng <strong>GitHub</strong> nhưng lấy nhạc từ <strong>Dropbox</strong>; hoặc dùng <strong>Dropbox</strong> cho cả hai.</p>\n<figure><img data-src=\"cai-dat-tai-khoan.webp\" alt=\"Cài đặt → Tài khoản đồng bộ trên điện thoại\"><figcaption>Cài đặt → Tài khoản đồng bộ trên điện thoại</figcaption></figure>\n\n<h2 data-sec=\"tai-khoan-dong-bo\">Tài khoản đồng bộ</h2>\n<h3 data-sec=\"bon-che-do\">Bốn chế độ</h3>\n<div class=\"gd-tw\"><table>\n<thead>\n<tr>\n<th>Chế độ</th>\n<th>Đồng bộ gì</th>\n<th>Tệp nhạc/sách</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><strong>Chỉ trên máy</strong></td>\n<td>Không đồng bộ, không cần mạng, không cần tài khoản</td>\n<td>Ở lại máy này</td>\n</tr>\n<tr>\n<td><strong>Tài khoản GitHub</strong></td>\n<td>Thư viện, cài đặt, tiến độ, qua kho riêng tư <code>my-hub-data</code> của bạn</td>\n<td>Ở lại từng máy, không tải lên</td>\n</tr>\n<tr>\n<td><strong>Dropbox</strong></td>\n<td>Thư viện, tiến độ và cả tệp, trong thư mục riêng của app</td>\n<td>Tự tải lên; máy khác tải về khi mở</td>\n</tr>\n<tr>\n<td><strong>OneDrive</strong></td>\n<td>Như Dropbox, trong <code>Apps/…</code></td>\n<td>Như Dropbox</td>\n</tr>\n</tbody>\n</table></div>\n<p>Cách bật: <strong>Cài đặt → Tài khoản đồng bộ</strong>, bấm vào một ô.</p>\n<h3 data-sec=\"dang-nhap-github\">Đăng nhập GitHub</h3>\n<ol>\n<li>Bấm ô <strong>Tài khoản GitHub</strong>, hoặc vào trang <strong>Tài khoản → Đăng nhập bằng GitHub</strong>.</li>\n<li>App mở trang tạo token của GitHub. Giữ ô <code>repo</code> đã tích, bấm <strong>Generate token</strong>.</li>\n<li>Sao chép chuỗi bắt đầu bằng <code>ghp_…</code>, dán vào app.</li>\n<li>App tự tạo kho riêng tư <code>my-hub-data</code> và đồng bộ lần đầu.</li>\n<li>Trên máy khác, làm lại đúng các bước trên với <strong>cùng tài khoản GitHub</strong>.</li>\n</ol>\n<figure><img data-src=\"tai-khoan.webp\" alt=\"Trang Tài khoản\"><figcaption>Trang Tài khoản</figcaption></figure>\n\n<h3 data-sec=\"ket-noi-dropbox\">Kết nối Dropbox</h3>\n<ol>\n<li>Bấm ô <strong>Dropbox</strong>. Hộp <strong>Kết nối Dropbox</strong> mở ra.</li>\n<li>Nếu app hỏi <strong>App key</strong>: dán App key của app Dropbox của bạn (tạo một lần ở <a href=\"https://www.dropbox.com/developers/apps\" target=\"_blank\" rel=\"noopener\">https://www.dropbox.com/developers/apps</a>, loại <em>Scoped access</em> + <em>App folder</em>, bật quyền <code>files.content.read</code> và <code>files.content.write</code>).</li>\n<li>Bấm <strong>Kết nối</strong>. Trang Dropbox mở ra, bấm <strong>Allow</strong>.</li>\n<li>Dropbox hiện một mã. Sao chép, dán vào ô <strong>Mã Dropbox</strong> trong app.</li>\n</ol>\n<h3 data-sec=\"ket-noi-onedrive\">Kết nối OneDrive</h3>\n<ol>\n<li>Bấm ô <strong>OneDrive</strong>. Hộp <strong>Kết nối OneDrive</strong> mở ra.</li>\n<li>Nếu app hỏi <strong>Client ID</strong>: dán Application (client) ID của app Microsoft Entra của bạn.</li>\n<li>Bấm <strong>Kết nối</strong>, đăng nhập Microsoft và cho phép.</li>\n<li>Trình duyệt chuyển tới một <strong>trang trắng</strong>. Sao chép cả địa chỉ trên thanh địa chỉ, dán vào ô <strong>Địa chỉ trang trắng (hoặc mã)</strong>.</li>\n</ol>\n<h3 data-sec=\"khi-ca-may-va-tai-khoan-deu-da-co-du-lieu\">Khi cả máy và tài khoản đều đã có dữ liệu</h3>\n<p>App hỏi <strong>Máy này đã có dữ liệu</strong>:</p>\n<ul>\n<li><strong>Gộp</strong> (nên chọn): giữ cả hai, bản sửa mới hơn thắng.</li>\n<li><strong>Dùng dữ liệu của …</strong>: bỏ dữ liệu trên máy, lấy toàn bộ từ tài khoản.</li>\n<li><strong>Để sau</strong>: chưa đồng bộ.</li>\n</ul>\n<h3 data-sec=\"khi-nao-app-dong-bo\">Khi nào app đồng bộ</h3>\n<ul>\n<li>Khi mở app, khi có mạng trở lại, khoảng 8 giây sau mỗi thay đổi, và mỗi 2 phút khi app đang mở.</li>\n<li>Tiến độ nghe/đọc đi riêng, nhanh hơn: vài giây sau mỗi lần dừng. Mở máy khác là nghe/đọc tiếp đúng chỗ.</li>\n<li>Bảng bên dưới các ô có: <strong>Đồng bộ ngay</strong>, <strong>Đổi tài khoản</strong>, <strong>Ngừng dùng … (về Local)</strong>, <strong>Xoá dữ liệu trên …</strong>.</li>\n</ul>\n<h2 data-sec=\"thu-muc-dong-bo-nhac-va-sach\">Thư mục đồng bộ (nhạc và sách)</h2>\n<ol>\n<li><strong>Cài đặt → Thư mục đồng bộ</strong>, chọn nơi lấy: <strong>Trong máy</strong>, <strong>Dropbox</strong> hoặc <strong>OneDrive</strong>. Chọn một ổ chưa kết nối thì app mở hộp đăng nhập ổ đó; tài khoản đồng bộ không đổi.</li>\n<li>Bấm <strong>Chọn thư mục, đồng bộ, tạm dừng, huỷ</strong>.</li>\n<li>Với ổ đám mây: tích một hoặc nhiều thư mục trong cây thư mục. Với <strong>Trong máy</strong>: bấm <strong>Thêm thư mục trong máy…</strong>.</li>\n<li>Mỗi thư mục có thể chọn app nhận tệp: <strong>Trình phát nhạc</strong>, <strong>Sách</strong>, hoặc cả hai.</li>\n<li>Bấm <strong>Đồng bộ ngay</strong>. Thẻ tiến trình hiện đang quét hay đang nhập, bao nhiêu tệp, bao nhiêu phần trăm.</li>\n<li>Lần sau chỉ tệp mới được nhập. Tệp mới trong thư mục cũng tự vào thư viện mỗi lần đồng bộ.</li>\n</ol>\n<figure><img data-src=\"thu-muc-dong-bo.webp\" alt=\"Trang Thư mục đồng bộ\"><figcaption>Trang Thư mục đồng bộ</figcaption></figure>\n\n<h3 data-sec=\"tep-duoc-xu-ly-the-nao\">Tệp được xử lý thế nào</h3>\n<div class=\"gd-tw\"><table>\n<thead>\n<tr>\n<th>Nguồn</th>\n<th>Có sao chép vào app không</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>Dropbox / OneDrive</td>\n<td>Không. Nhạc phát thẳng từ ổ; sách được tải về khi mở</td>\n</tr>\n<tr>\n<td>Trong máy, trên Windows</td>\n<td>Không. Đọc thẳng từ ổ cứng</td>\n</tr>\n<tr>\n<td>Trong máy, trên Android</td>\n<td>Có, mỗi tệp mới được sao chép vào app một lần</td>\n</tr>\n</tbody>\n</table></div>\n<h2 data-sec=\"tam-dung-huy-don\">Tạm dừng, huỷ, dọn</h2>\n<ul>\n<li><strong>Tạm dừng</strong>: dừng lượt đang chạy, giữ nguyên những gì đã nhập. App không tự đồng bộ thư mục nữa cho tới khi bạn bấm <strong>Đồng bộ ngay</strong>, lúc đó tiếp tục từ chỗ đã dừng.</li>\n<li><strong>Huỷ đồng bộ</strong>: dừng và <strong>xoá khỏi thư viện</strong> mọi bài nhạc, sách đã nhập từ các thư mục đã chọn, đặt lại tiến trình từ đầu. Tệp gốc trên ổ hoặc trong máy không bị đụng tới. Danh sách thư mục vẫn giữ, bấm <strong>Đồng bộ ngay</strong> để làm lại.</li>\n<li><strong>Dọn mục đã mất tệp</strong>: xoá khỏi thư viện những mục mà tệp gốc đã bị xoá.</li>\n<li>Mọi tác vụ dài (đồng bộ, tải lên, tải về) cũng hiện ở <strong>khay tác vụ</strong> góc màn hình, có nút huỷ từng tác vụ và tốc độ, thời gian còn lại.</li>\n</ul>\n<h2 data-sec=\"meo\">Mẹo</h2>\n<ul>\n<li>Token và mã kết nối chỉ nằm trên từng máy, không vào bản sao lưu JSON. Máy mới phải đăng nhập lại.</li>\n<li>Dùng GitHub mà muốn có nhạc trên điện thoại: chọn <strong>Thư mục đồng bộ</strong> là Dropbox hoặc OneDrive.</li>\n<li>Bấm <strong>Yêu cầu lưu trữ bền vững</strong> trong Cài đặt để trình duyệt không tự xoá dữ liệu khi máy đầy.</li>\n</ul>"
+  "html": "\n<p>Trang <strong>Cài đặt</strong> là một danh sách mục, bấm mục nào thì mở trang riêng của mục đó. Hai mục liên quan tới đồng bộ là hai lựa chọn riêng, không phụ thuộc nhau:</p>\n<ul>\n<li><strong>Tài khoản đồng bộ</strong>: nơi thư viện, cài đặt và tiến độ nghe/đọc/viết đi giữa các máy.</li>\n<li><strong>Thư mục đồng bộ</strong>: nơi app lấy nhạc và sách (thư mục trong máy, hoặc thư mục trên Dropbox / OneDrive).</li>\n</ul>\n<p>Ví dụ hay dùng: đồng bộ bằng <strong>GitHub</strong> nhưng lấy nhạc từ <strong>Dropbox</strong>; hoặc dùng <strong>Dropbox</strong> cho cả hai.</p>\n<figure><img data-src=\"cai-dat-tai-khoan.webp\" alt=\"Cài đặt → Tài khoản đồng bộ trên điện thoại\"><figcaption>Cài đặt → Tài khoản đồng bộ trên điện thoại</figcaption></figure>\n\n<h2 data-sec=\"tai-khoan-dong-bo\">Tài khoản đồng bộ</h2>\n<h3 data-sec=\"bon-che-do\">Bốn chế độ</h3>\n<div class=\"gd-tw\"><table>\n<thead>\n<tr>\n<th>Chế độ</th>\n<th>Đồng bộ gì</th>\n<th>Tệp nhạc/sách</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><strong>Chỉ trên máy</strong></td>\n<td>Không đồng bộ, không cần mạng, không cần tài khoản</td>\n<td>Ở lại máy này</td>\n</tr>\n<tr>\n<td><strong>Tài khoản GitHub</strong></td>\n<td>Thư viện, cài đặt, tiến độ, qua kho riêng tư <code>my-hub-data</code> của bạn</td>\n<td>Ở lại từng máy, không tải lên</td>\n</tr>\n<tr>\n<td><strong>Dropbox</strong></td>\n<td>Thư viện, tiến độ và cả tệp, trong thư mục riêng của app</td>\n<td>Tự tải lên; máy khác tải về khi mở</td>\n</tr>\n<tr>\n<td><strong>OneDrive</strong></td>\n<td>Như Dropbox, trong <code>Apps/…</code></td>\n<td>Như Dropbox</td>\n</tr>\n</tbody>\n</table></div>\n<p>Cách bật: <strong>Cài đặt → Tài khoản đồng bộ</strong> (mở trang riêng), bấm vào một ô.</p>\n<h3 data-sec=\"dang-nhap-github\">Đăng nhập GitHub</h3>\n<ol>\n<li>Bấm ô <strong>Tài khoản GitHub</strong>, hoặc vào trang <strong>Tài khoản → Đăng nhập bằng GitHub</strong>.</li>\n<li>App mở trang tạo token của GitHub. Giữ ô <code>repo</code> đã tích, bấm <strong>Generate token</strong>.</li>\n<li>Sao chép chuỗi bắt đầu bằng <code>ghp_…</code>, dán vào app.</li>\n<li>App tự tạo kho riêng tư <code>my-hub-data</code> và đồng bộ lần đầu.</li>\n<li>Trên máy khác, làm lại đúng các bước trên với <strong>cùng tài khoản GitHub</strong>.</li>\n</ol>\n<figure><img data-src=\"tai-khoan.webp\" alt=\"Trang Tài khoản\"><figcaption>Trang Tài khoản</figcaption></figure>\n\n<h3 data-sec=\"ket-noi-dropbox\">Kết nối Dropbox</h3>\n<ol>\n<li>Bấm ô <strong>Dropbox</strong>. Hộp <strong>Kết nối Dropbox</strong> mở ra.</li>\n<li>Nếu app hỏi <strong>App key</strong>: dán App key của app Dropbox của bạn (tạo một lần ở <a href=\"https://www.dropbox.com/developers/apps\" target=\"_blank\" rel=\"noopener\">https://www.dropbox.com/developers/apps</a>, loại <em>Scoped access</em> + <em>App folder</em>, bật quyền <code>files.content.read</code> và <code>files.content.write</code>).</li>\n<li>Bấm <strong>Kết nối</strong>. Trang Dropbox mở ra, bấm <strong>Allow</strong>.</li>\n<li>Dropbox hiện một mã. Sao chép, dán vào ô <strong>Mã Dropbox</strong> trong app.</li>\n</ol>\n<h3 data-sec=\"ket-noi-onedrive\">Kết nối OneDrive</h3>\n<ol>\n<li>Bấm ô <strong>OneDrive</strong>. Hộp <strong>Kết nối OneDrive</strong> mở ra.</li>\n<li>Nếu app hỏi <strong>Client ID</strong>: dán Application (client) ID của app Microsoft Entra của bạn.</li>\n<li>Bấm <strong>Kết nối</strong>, đăng nhập Microsoft và cho phép.</li>\n<li>Trình duyệt chuyển tới một <strong>trang trắng</strong>. Sao chép cả địa chỉ trên thanh địa chỉ, dán vào ô <strong>Địa chỉ trang trắng (hoặc mã)</strong>.</li>\n</ol>\n<h3 data-sec=\"khi-ca-may-va-tai-khoan-deu-da-co-du-lieu\">Khi cả máy và tài khoản đều đã có dữ liệu</h3>\n<p>App hỏi <strong>Máy này đã có dữ liệu</strong>:</p>\n<ul>\n<li><strong>Gộp</strong> (nên chọn): giữ cả hai, bản sửa mới hơn thắng.</li>\n<li><strong>Dùng dữ liệu của …</strong>: bỏ dữ liệu trên máy, lấy toàn bộ từ tài khoản.</li>\n<li><strong>Để sau</strong>: chưa đồng bộ.</li>\n</ul>\n<h3 data-sec=\"khi-nao-app-dong-bo\">Khi nào app đồng bộ</h3>\n<ul>\n<li>Khi mở app, khi có mạng trở lại, khoảng 8 giây sau mỗi thay đổi, và mỗi 2 phút khi app đang mở.</li>\n<li>Tiến độ nghe/đọc đi riêng, nhanh hơn: vài giây sau mỗi lần dừng. Mở máy khác là nghe/đọc tiếp đúng chỗ.</li>\n<li>Bảng bên dưới các ô có: <strong>Đồng bộ ngay</strong>, <strong>Đổi tài khoản</strong>, <strong>Ngừng dùng … (về Local)</strong>, <strong>Xoá dữ liệu trên …</strong>.</li>\n</ul>\n<h2 data-sec=\"thu-muc-dong-bo-nhac-va-sach\">Thư mục đồng bộ (nhạc và sách)</h2>\n<ol>\n<li><strong>Cài đặt → Thư mục đồng bộ</strong>, chọn nơi lấy: <strong>Trong máy</strong>, <strong>Dropbox</strong> hoặc <strong>OneDrive</strong>. Chọn một ổ chưa kết nối thì app mở hộp đăng nhập ổ đó; tài khoản đồng bộ không đổi.</li>\n<li>Bấm <strong>Chọn thư mục, đồng bộ, tạm dừng, huỷ</strong>.</li>\n<li>Với ổ đám mây: tích một hoặc nhiều thư mục trong cây thư mục. Với <strong>Trong máy</strong>: bấm <strong>Thêm thư mục trong máy…</strong>.</li>\n<li>Mỗi thư mục có thể chọn app nhận tệp: <strong>Trình phát nhạc</strong>, <strong>Sách</strong>, hoặc cả hai.</li>\n<li>Bấm <strong>Đồng bộ ngay</strong>. Thẻ tiến trình hiện đang quét hay đang nhập, bao nhiêu tệp, bao nhiêu phần trăm.</li>\n<li>Lần sau chỉ tệp mới được nhập. Tệp mới trong thư mục cũng tự vào thư viện mỗi lần đồng bộ.</li>\n</ol>\n<figure><img data-src=\"thu-muc-dong-bo.webp\" alt=\"Trang Thư mục đồng bộ\"><figcaption>Trang Thư mục đồng bộ</figcaption></figure>\n\n<h3 data-sec=\"tep-duoc-xu-ly-the-nao\">Tệp được xử lý thế nào</h3>\n<div class=\"gd-tw\"><table>\n<thead>\n<tr>\n<th>Nguồn</th>\n<th>Có sao chép vào app không</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>Dropbox / OneDrive</td>\n<td>Không. Nhạc phát thẳng từ ổ; sách được tải về khi mở</td>\n</tr>\n<tr>\n<td>Trong máy, trên Windows</td>\n<td>Không. Đọc thẳng từ ổ cứng</td>\n</tr>\n<tr>\n<td>Trong máy, trên Android</td>\n<td>Có, mỗi tệp mới được sao chép vào app một lần</td>\n</tr>\n</tbody>\n</table></div>\n<p>Thư mục đồng bộ chỉ đi <strong>một chiều</strong>: app đọc tệp từ thư mục, không bao giờ tải tệp đó lên tài khoản đồng bộ. Ví dụ nhạc lấy từ Dropbox sẽ không bị chép thêm một bản lên OneDrive.</p>\n<h2 data-sec=\"tam-dung-huy-don\">Tạm dừng, huỷ, dọn</h2>\n<ul>\n<li><strong>Tạm dừng</strong>: dừng lượt đang chạy, giữ nguyên những gì đã nhập. App không tự đồng bộ thư mục nữa cho tới khi bạn bấm <strong>Đồng bộ ngay</strong>, lúc đó tiếp tục từ chỗ đã dừng.</li>\n<li><strong>Huỷ đồng bộ</strong>: dừng và <strong>xoá khỏi thư viện</strong> mọi bài nhạc, sách đã nhập từ các thư mục đã chọn, đặt lại tiến trình từ đầu. Tệp gốc trên ổ hoặc trong máy không bị đụng tới. Danh sách thư mục vẫn giữ, bấm <strong>Đồng bộ ngay</strong> để làm lại.</li>\n<li><strong>Dọn mục đã mất tệp</strong>: xoá khỏi thư viện những mục mà tệp gốc đã bị xoá.</li>\n<li>Mọi tác vụ dài (đồng bộ, tải lên, tải về) cũng hiện ở <strong>khay tác vụ</strong> góc màn hình, có nút huỷ từng tác vụ và tốc độ, thời gian còn lại.</li>\n</ul>\n<h2 data-sec=\"meo\">Mẹo</h2>\n<ul>\n<li>Token và mã kết nối chỉ nằm trên từng máy, không vào bản sao lưu JSON. Máy mới phải đăng nhập lại.</li>\n<li>Dùng GitHub mà muốn có nhạc trên điện thoại: chọn <strong>Thư mục đồng bộ</strong> là Dropbox hoặc OneDrive.</li>\n<li>Bấm <strong>Yêu cầu lưu trữ bền vững</strong> trong Cài đặt để trình duyệt không tự xoá dữ liệu khi máy đầy.</li>\n</ul>"
  },
  {
   "id": "thu-vien",
@@ -182,13 +182,19 @@ export const PAGES = [
     "level": 2
    },
    {
-    "id": "don-du-lieu-thu-vien",
+    "id": "dat-lai-tien-trinh",
     "num": "3.1.4",
+    "title": "Đặt lại tiến trình",
+    "level": 2
+   },
+   {
+    "id": "don-du-lieu-thu-vien",
+    "num": "3.1.5",
     "title": "Dọn dữ liệu Thư viện",
     "level": 2
    }
   ],
-  "html": "\n<p><strong>Thư viện</strong> là trang chủ của My Hub: gom mọi nội dung từ các app (nhạc, sách, fanfic…) vào một chỗ để tìm, lọc và mở nhanh.</p>\n<figure><img data-src=\"thu-vien.webp\" alt=\"Thư viện trên máy tính\"><figcaption>Thư viện trên máy tính</figcaption></figure>\n\n<h2 data-sec=\"cac-phan-tren-trang\">Các phần trên trang</h2>\n<ul>\n<li><strong>Thẻ thống kê</strong>: Tổng nội dung, Đang dở, Yêu thích, Dung lượng trên máy, Theo loại.</li>\n<li><strong>Ô tìm kiếm</strong>: tìm theo tên, tác giả, thẻ. Phím tắt <code>/</code> trên máy tính.</li>\n<li><strong>Chip loại</strong>: Tất cả, Nhạc, Sách, Fanfic… bấm để lọc.</li>\n<li><strong>Bộ lọc</strong>: Mọi trạng thái, Mọi thẻ, Yêu thích, sắp xếp (Mới cập nhật…), chuyển lưới / danh sách.</li>\n<li><strong>Tiếp tục</strong>: những mục đang dở, xếp theo lần dừng gần nhất trên mọi máy, ghi rõ dừng ở máy nào.</li>\n</ul>\n<p>Lựa chọn lọc được nhớ lại khi bạn quay lại, kể cả sau khi khởi động lại app.</p>\n<h2 data-sec=\"them-noi-dung\">Thêm nội dung</h2>\n<ul>\n<li><strong>Thêm mục</strong>: tạo một mục mới bằng tay.</li>\n<li><strong>Nhập tệp</strong>: chọn tệp từ máy; app tự giao cho đúng app (nhạc cho <strong>Trình phát nhạc</strong>, sách cho <strong>Sách</strong>).</li>\n<li>Hoặc thêm trong từng app, hoặc dùng <strong>Thư mục đồng bộ</strong> (xem <a href=\"#guides/dong-bo\">Đồng bộ</a>).</li>\n</ul>\n<h2 data-sec=\"ngan-chi-tiet\">Ngăn chi tiết</h2>\n<p>Bấm một mục để mở ngăn chi tiết: thông tin, thẻ, yêu thích, và các khối của app khác. Ví dụ với sách có khối <strong>Nhạc nền</strong> của <strong>Trình phát nhạc</strong> để gắn danh sách phát tự phát khi đọc; với fanfic có fandom, xếp hạng và nút sửa trong <strong>Xưởng Viết</strong>.</p>\n<h2 data-sec=\"don-du-lieu-thu-vien\">Dọn dữ liệu Thư viện</h2>\n<p>Nút <strong>Dọn dữ liệu Thư viện</strong> xoá các mục hỏng hoặc đã mất tệp. App luôn hỏi lại trước khi xoá.</p>"
+  "html": "\n<p><strong>Thư viện</strong> là trang chủ của My Hub: gom mọi nội dung từ các app (nhạc, sách, fanfic…) vào một chỗ để tìm, lọc và mở nhanh.</p>\n<figure><img data-src=\"thu-vien.webp\" alt=\"Thư viện trên máy tính\"><figcaption>Thư viện trên máy tính</figcaption></figure>\n\n<h2 data-sec=\"cac-phan-tren-trang\">Các phần trên trang</h2>\n<ul>\n<li><strong>Thẻ thống kê</strong>: Tổng nội dung, Đang dở, Yêu thích, Dung lượng trên máy, Theo loại.</li>\n<li><strong>Ô tìm kiếm</strong>: tìm theo tên, tác giả, thẻ. Phím tắt <code>/</code> trên máy tính.</li>\n<li><strong>Chip loại</strong>: Tất cả, Nhạc, Sách, Fanfic… bấm để lọc.</li>\n<li><strong>Bộ lọc</strong>: Mọi trạng thái, Mọi thẻ, Yêu thích, sắp xếp (Mới cập nhật…), chuyển lưới / danh sách.</li>\n<li><strong>Tiếp tục</strong>: những mục đang dở, xếp theo lần dừng gần nhất trên mọi máy, ghi rõ dừng ở máy nào.</li>\n</ul>\n<p>Lựa chọn lọc được nhớ lại khi bạn quay lại, kể cả sau khi khởi động lại app.</p>\n<h2 data-sec=\"them-noi-dung\">Thêm nội dung</h2>\n<ul>\n<li><strong>Thêm mục</strong>: tạo một mục mới bằng tay.</li>\n<li><strong>Nhập tệp</strong>: chọn tệp từ máy; app tự giao cho đúng app (nhạc cho <strong>Trình phát nhạc</strong>, sách cho <strong>Sách</strong>).</li>\n<li>Hoặc thêm trong từng app, hoặc dùng <strong>Thư mục đồng bộ</strong> (xem <a href=\"#guides/dong-bo\">Đồng bộ</a>).</li>\n</ul>\n<h2 data-sec=\"ngan-chi-tiet\">Ngăn chi tiết</h2>\n<p>Bấm một mục để mở ngăn chi tiết: thông tin, thẻ, yêu thích, và các khối của app khác. Ví dụ với sách có khối <strong>Nhạc nền</strong> của <strong>Trình phát nhạc</strong> để gắn danh sách phát tự phát khi đọc; với fanfic có fandom, xếp hạng và nút sửa trong <strong>Xưởng Viết</strong>.</p>\n<h2 data-sec=\"dat-lai-tien-trinh\">Đặt lại tiến trình</h2>\n<p>Trong ngăn chi tiết của một mục đang dở, nút <strong>Đặt lại tiến trình</strong> đưa mục đó về lại từ đầu (chưa đọc, chưa nghe). Muốn đặt lại cả một app hoặc tất cả, dùng <strong>Cài đặt → Đặt lại tiến trình</strong> (xem <a href=\"#guides/cai-dat\">Cài đặt</a>).</p>\n<h2 data-sec=\"don-du-lieu-thu-vien\">Dọn dữ liệu Thư viện</h2>\n<p>Nút <strong>Dọn dữ liệu Thư viện</strong> xoá các mục hỏng hoặc đã mất tệp. App luôn hỏi lại trước khi xoá.</p>"
  },
  {
   "id": "quan-ly-ung-dung",
@@ -250,26 +256,38 @@ export const PAGES = [
     "level": 2
    },
    {
-    "id": "gan-nhac-voi-sach-va-fanfic",
+    "id": "nghe-lien-tuc",
     "num": "3.3.5",
+    "title": "Nghe liên tục",
+    "level": 2
+   },
+   {
+    "id": "phat-ra-dau",
+    "num": "3.3.6",
+    "title": "Phát ra đâu",
+    "level": 2
+   },
+   {
+    "id": "gan-nhac-voi-sach-va-fanfic",
+    "num": "3.3.7",
     "title": "Gắn nhạc với sách và fanfic",
     "level": 2
    },
    {
     "id": "nghe-tiep-tren-may-khac",
-    "num": "3.3.6",
+    "num": "3.3.8",
     "title": "Nghe tiếp trên máy khác",
     "level": 2
    }
   ],
-  "html": "\n<p>Nghe nhạc và podcast với thông tin chất lượng chi tiết (Hi-Res, lossless), lời karaoke, EQ và đồng bộ chỗ đang nghe giữa các máy.</p>\n<h2 data-sec=\"them-nhac\">Thêm nhạc</h2>\n<p>Lần đầu mở, thư viện nhạc trống và có ba nút:</p>\n<ul>\n<li><strong>Chọn tệp nhạc</strong>: chọn một hoặc nhiều tệp.</li>\n<li><strong>Chọn thư mục</strong>: nhập cả thư mục.</li>\n<li><strong>Duyệt thư mục (không nhập)</strong>: nghe thẳng từ thư mục trên máy mà không thêm vào thư viện (máy tính).</li>\n</ul>\n<figure><img data-src=\"nhac-trong.webp\" alt=\"Thư viện nhạc khi còn trống\"><figcaption>Thư viện nhạc khi còn trống</figcaption></figure>\n\n<p>Khi nhập, bảng <strong>Đang thêm nhạc</strong> hiện tiến trình, xong thì báo số bài đã thêm. Ảnh bìa, lời <code>.lrc</code> cùng tên và ReplayGain được đọc tự động.</p>\n<figure><img data-src=\"nhac-dang-them.webp\" alt=\"Đang thêm nhạc\"><figcaption>Đang thêm nhạc</figcaption></figure>\n\n<p>Định dạng: FLAC, ALAC, WAV, AIFF, DSD (DSF/DFF), MP3, AAC/M4A, Opus, Vorbis. WavPack, APE vẫn nhập được nhưng chưa phát.</p>\n<blockquote>\n<p>Muốn tự cập nhật nhạc từ một thư mục (trong máy, Dropbox, OneDrive), dùng <strong>Cài đặt → Thư mục đồng bộ</strong> (xem <a href=\"#guides/dong-bo\">Đồng bộ</a>).</p>\n</blockquote>\n<h2 data-sec=\"trang-chu-nhac\">Trang chủ nhạc</h2>\n<ul>\n<li><strong>Cover Flow</strong> các album: vuốt ngang, bấm <strong>Phát album</strong>.</li>\n<li>Thống kê nhanh: số bài, album, nghệ sĩ, tổng thời lượng, số bài Hi-Res, tỷ lệ định dạng.</li>\n<li>Lối tắt: Yêu thích, Hi-Res, Nghe nhiều nhất, Mới thêm, Chưa nghe.</li>\n<li>Thanh mục: <strong>Trang chủ</strong>, <strong>Âm nhạc</strong> (bài hát, album, nghệ sĩ, thể loại, thư mục, danh sách phát), <strong>Mới</strong>, <strong>Thống kê</strong>, <strong>Cài đặt</strong>.</li>\n</ul>\n<figure><img data-src=\"nhac-dang-phat.webp\" alt=\"Trình phát nhạc đang phát trên máy tính\"><figcaption>Trình phát nhạc đang phát trên máy tính</figcaption></figure>\n\n<h2 data-sec=\"thanh-phat-va-now-playing\">Thanh phát và Now Playing</h2>\n<ul>\n<li>Thanh phát ở đáy: bài đang phát, định dạng (ví dụ <code>MP3 321k</code>), ngẫu nhiên, lùi, phát/dừng, tới, lặp, thanh thời gian.</li>\n<li>Các nút bên phải: <strong>Lời</strong>, <strong>Hàng chờ</strong>, <strong>EQ</strong>, đường tín hiệu, <strong>hẹn giờ ngủ</strong>, âm lượng.</li>\n<li>Bấm vào bìa (hoặc vuốt lên trên điện thoại) để mở <strong>Now Playing</strong> toàn màn hình: bìa phẳng / CD / vinyl / cassette, lời karaoke chạy theo từng chữ, video nền sau lời.</li>\n</ul>\n<h2 data-sec=\"loi-bai-hat\">Lời bài hát</h2>\n<ul>\n<li>Lời <code>.lrc</code> cùng tên tệp được nhập tự động.</li>\n<li>Trong tab <strong>Lời</strong>: chạm một dòng để tua tới đó, chỉnh cỡ chữ, sửa lời, chấm nhịp lại; có <strong>Bản dịch</strong> và <strong>Tìm trực tuyến</strong>.</li>\n</ul>\n<h2 data-sec=\"gan-nhac-voi-sach-va-fanfic\">Gắn nhạc với sách và fanfic</h2>\n<p>Trong ngăn chi tiết của một cuốn sách hoặc fanfic, khối <strong>Nhạc nền</strong> cho phép gắn bài, album, nghệ sĩ hoặc danh sách phát. Mở sách là nhạc tự phát.</p>\n<h2 data-sec=\"nghe-tiep-tren-may-khac\">Nghe tiếp trên máy khác</h2>\n<p>Khi bật một <strong>Tài khoản đồng bộ</strong>, chỗ đang nghe và hàng chờ được đẩy lên vài giây sau khi dừng. Mở máy khác là nghe tiếp đúng chỗ.</p>"
+  "html": "\n<p>Nghe nhạc và podcast với thông tin chất lượng chi tiết (Hi-Res, lossless), lời karaoke, EQ và đồng bộ chỗ đang nghe giữa các máy.</p>\n<h2 data-sec=\"them-nhac\">Thêm nhạc</h2>\n<p>Lần đầu mở, thư viện nhạc trống và có ba nút:</p>\n<ul>\n<li><strong>Chọn tệp nhạc</strong>: chọn một hoặc nhiều tệp.</li>\n<li><strong>Chọn thư mục</strong>: nhập cả thư mục.</li>\n<li><strong>Duyệt thư mục (không nhập)</strong>: nghe thẳng từ thư mục trên máy mà không thêm vào thư viện (máy tính).</li>\n</ul>\n<figure><img data-src=\"nhac-trong.webp\" alt=\"Thư viện nhạc khi còn trống\"><figcaption>Thư viện nhạc khi còn trống</figcaption></figure>\n\n<p>Khi nhập, bảng <strong>Đang thêm nhạc</strong> hiện tiến trình, xong thì báo số bài đã thêm. Ảnh bìa, lời <code>.lrc</code> cùng tên và ReplayGain được đọc tự động.</p>\n<figure><img data-src=\"nhac-dang-them.webp\" alt=\"Đang thêm nhạc\"><figcaption>Đang thêm nhạc</figcaption></figure>\n\n<p>Định dạng: FLAC, ALAC, WAV, AIFF, DSD (DSF/DFF), MP3, AAC/M4A, Opus, Vorbis. WavPack, APE vẫn nhập được nhưng chưa phát.</p>\n<blockquote>\n<p>Muốn tự cập nhật nhạc từ một thư mục (trong máy, Dropbox, OneDrive), dùng <strong>Cài đặt → Thư mục đồng bộ</strong> (xem <a href=\"#guides/dong-bo\">Đồng bộ</a>).</p>\n</blockquote>\n<h2 data-sec=\"trang-chu-nhac\">Trang chủ nhạc</h2>\n<ul>\n<li><strong>Cover Flow</strong> các album: vuốt ngang, bấm <strong>Phát album</strong>.</li>\n<li>Thống kê nhanh: số bài, album, nghệ sĩ, tổng thời lượng, số bài Hi-Res, tỷ lệ định dạng.</li>\n<li>Lối tắt: Yêu thích, Hi-Res, Nghe nhiều nhất, Mới thêm, Chưa nghe.</li>\n<li>Thanh mục: <strong>Trang chủ</strong>, <strong>Âm nhạc</strong> (bài hát, album, nghệ sĩ, thể loại, thư mục, danh sách phát), <strong>Mới</strong>, <strong>Thống kê</strong>, <strong>Cài đặt</strong>. Trên máy tính, các mục là một hàng nút ở trên cùng; <strong>Âm nhạc</strong> mở lại đúng mục bạn xem lần trước (Album, Nghệ sĩ…).</li>\n</ul>\n<figure><img data-src=\"nhac-dang-phat.webp\" alt=\"Trình phát nhạc đang phát trên máy tính\"><figcaption>Trình phát nhạc đang phát trên máy tính</figcaption></figure>\n\n<h2 data-sec=\"thanh-phat-va-now-playing\">Thanh phát và Now Playing</h2>\n<ul>\n<li>Thanh phát ở đáy: bài đang phát, định dạng (ví dụ <code>MP3 321k</code>), ngẫu nhiên, lùi, phát/dừng, tới, lặp, thanh thời gian.</li>\n<li>Các nút bên phải: <strong>Lời</strong>, <strong>Hàng chờ</strong>, <strong>EQ</strong>, đường tín hiệu, <strong>hẹn giờ ngủ</strong>, âm lượng.</li>\n<li>Bấm vào bìa (hoặc vuốt lên trên điện thoại) để mở <strong>Now Playing</strong> toàn màn hình: bìa phẳng / CD / vinyl / cassette, lời karaoke chạy theo từng chữ, video nền sau lời.</li>\n</ul>\n<h2 data-sec=\"loi-bai-hat\">Lời bài hát</h2>\n<ul>\n<li>Lời <code>.lrc</code> cùng tên tệp được nhập tự động.</li>\n<li>Bài chưa có lời: bật <strong>Tự tạo lời khi không có (AI)</strong>; app nghe bài hát và tạo lời ngay trên máy (lần đầu tải mô hình AI, cần mạng).</li>\n<li>Lời đã có nhưng chỉ theo dòng: <strong>Tự đồng bộ từng chữ (AI)</strong> canh thời gian cho từng chữ để chạy karaoke <strong>Đồng bộ từng chữ</strong>.</li>\n<li>Trong tab <strong>Lời</strong>: chạm một dòng để tua tới đó, chỉnh cỡ chữ, sửa lời, chấm nhịp lại; có <strong>Bản dịch</strong> và <strong>Tìm trực tuyến</strong>.</li>\n</ul>\n<h2 data-sec=\"nghe-lien-tuc\">Nghe liên tục</h2>\n<ul>\n<li><strong>Auto DJ</strong> (<strong>Cài đặt</strong> của Trình phát nhạc): hết hàng chờ thì tự thêm bài tương tự (cùng nghệ sĩ, thể loại, thời kỳ).</li>\n<li><strong>Hàng chờ tạm</strong>: phát nhanh một nhóm bài mà không xoá hàng chờ đang có; xong thì quay lại hàng chờ cũ.</li>\n<li><strong>Crossfade</strong>, <strong>Crossfade thông minh</strong>, <strong>Gapless</strong>: chuyển bài mượt hoặc liền mạch.</li>\n<li><strong>Tài khoản ListenBrainz</strong>: dán token để ghi lại lịch sử nghe (scrobble).</li>\n</ul>\n<h2 data-sec=\"phat-ra-dau\">Phát ra đâu</h2>\n<div class=\"gd-tw\"><table>\n<thead>\n<tr>\n<th>Cách</th>\n<th>Ở đâu</th>\n<th>Ghi chú</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><strong>Thiết bị phát</strong></td>\n<td>Cài đặt của Trình phát nhạc</td>\n<td>Chọn loa, tai nghe, DAC (máy tính)</td>\n</tr>\n<tr>\n<td><strong>WASAPI Exclusive (bit-perfect, Windows)</strong></td>\n<td>Cài đặt → <strong>Engine</strong></td>\n<td>Gửi thẳng tín hiệu gốc tới DAC, không qua bộ trộn của Windows</td>\n</tr>\n<tr>\n<td><strong>USB DAC (Android)</strong></td>\n<td>Cài đặt của Trình phát nhạc</td>\n<td>Xuất thẳng ra DAC cắm cổng USB</td>\n</tr>\n<tr>\n<td>Loa / TV trong mạng (DLNA / UPnP, Chromecast)</td>\n<td>Nút phát tới thiết bị ở Now Playing</td>\n<td>Điện thoại thành điều khiển từ xa</td>\n</tr>\n<tr>\n<td>Android Auto, thông báo, màn hình khoá</td>\n<td>Tự có trên app Android</td>\n<td>Nhạc vẫn phát khi tắt màn hình</td>\n</tr>\n</tbody>\n</table></div>\n<h2 data-sec=\"gan-nhac-voi-sach-va-fanfic\">Gắn nhạc với sách và fanfic</h2>\n<p>Trong ngăn chi tiết của một cuốn sách hoặc fanfic, khối <strong>Nhạc nền</strong> cho phép gắn bài, album, nghệ sĩ hoặc danh sách phát. Mở sách là nhạc tự phát.</p>\n<h2 data-sec=\"nghe-tiep-tren-may-khac\">Nghe tiếp trên máy khác</h2>\n<p>Khi bật một <strong>Tài khoản đồng bộ</strong>, chỗ đang nghe và hàng chờ được đẩy lên vài giây sau khi dừng. Mở máy khác là nghe tiếp đúng chỗ.</p>"
  },
  {
-  "id": "sach",
+  "id": "podcast",
   "num": "3.4",
   "group": "Ứng dụng",
-  "label": "Sách",
-  "title": "Sách",
+  "label": "Podcast",
+  "title": "Podcast",
   "sections": [
    {
     "id": "cac-muc",
@@ -278,84 +296,148 @@ export const PAGES = [
     "level": 2
    },
    {
-    "id": "them-sach",
+    "id": "tim-va-dang-ky",
     "num": "3.4.2",
+    "title": "Tìm và đăng ký",
+    "level": 2
+   },
+   {
+    "id": "mot-podcast-co-nhieu-nguon",
+    "num": "3.4.2.1",
+    "title": "Một podcast có nhiều nguồn",
+    "level": 3
+   },
+   {
+    "id": "nghe",
+    "num": "3.4.3",
+    "title": "Nghe",
+    "level": 2
+   },
+   {
+    "id": "tai-ve-va-nhap",
+    "num": "3.4.4",
+    "title": "Tải về và nhập",
+    "level": 2
+   },
+   {
+    "id": "thao-tac-nhanh",
+    "num": "3.4.5",
+    "title": "Thao tác nhanh",
+    "level": 2
+   },
+   {
+    "id": "nghe-khi-doc-sach",
+    "num": "3.4.6",
+    "title": "Nghe khi đọc sách",
+    "level": 2
+   }
+  ],
+  "html": "\n<p>Tìm, đăng ký và nghe podcast. App lưu chỗ đang nghe, tải tập về để nghe khi không có mạng, và đồng bộ sang máy khác.</p>\n<figure><img data-src=\"podcast-trang-chu.webp\" alt=\"Trang chủ Podcast\"><figcaption>Trang chủ Podcast</figcaption></figure>\n\n<h2 data-sec=\"cac-muc\">Các mục</h2>\n<p><strong>Trang chủ</strong>, <strong>Khám phá</strong>, <strong>Hàng chờ</strong>, <strong>Podcast của tôi</strong>, <strong>Danh sách</strong>, <strong>Cài đặt</strong>.</p>\n<ul>\n<li><strong>Trang chủ</strong>: ô tìm nhanh, thể loại, <strong>Tập mới</strong> của các podcast đã đăng ký, <strong>Top podcast tuần này</strong>; khi đã nghe hoặc tải thì có thêm <strong>Nghe tiếp</strong> và <strong>Đã tải về máy</strong>. Chưa đăng ký gì thì có nút <strong>Khám phá</strong> và <strong>Nhập tệp / OPML</strong>.</li>\n<li><strong>Khám phá</strong>: tìm podcast online, <strong>Thể loại</strong>, <strong>Bảng xếp hạng</strong> (Top Apple, Thịnh hành), <strong>Gợi ý cho bạn</strong>.</li>\n<li><strong>Hàng chờ</strong>: các tập sẽ phát tiếp; kéo thả để đổi thứ tự.</li>\n<li><strong>Podcast của tôi</strong>: mọi podcast đã đăng ký.</li>\n<li><strong>Danh sách</strong>: danh sách riêng và <strong>Bộ lọc thông minh</strong> (ví dụ các tập chưa nghe dưới 30 phút).</li>\n</ul>\n<h2 data-sec=\"tim-va-dang-ky\">Tìm và đăng ký</h2>\n<ol>\n<li>Vào <strong>Khám phá</strong>, gõ tên podcast vào ô tìm.</li>\n<li>Chọn <strong>Nguồn tìm</strong>: <strong>Tất cả các nguồn</strong>, <strong>Podcast Index</strong> hoặc <strong>Apple Podcasts</strong>; có thể tìm theo <strong>Tên podcast</strong> hoặc <strong>Người dẫn / khách mời</strong>. Mỗi kết quả ghi rõ nguồn.</li>\n<li>Bấm vào podcast để xem trang của nó, rồi bấm <strong>Đăng ký</strong>.</li>\n<li>Có link RSS riêng (ví dụ podcast trả phí): dùng <strong>Thêm bằng link RSS</strong>.</li>\n</ol>\n<figure><img data-src=\"podcast-kham-pha.webp\" alt=\"Khám phá podcast\"><figcaption>Khám phá podcast</figcaption></figure>\n\n<blockquote>\n<p>Podcast Index cần một khoá miễn phí. Điền khoá và secret ở <strong>Podcast → Cài đặt</strong>. Không có khoá thì vẫn tìm được qua Apple.</p>\n</blockquote>\n<h3 data-sec=\"mot-podcast-co-nhieu-nguon\">Một podcast có nhiều nguồn</h3>\n<p>Nếu một podcast có ở nhiều nơi, trang podcast có mục <strong>Nguồn của podcast này</strong>: so sánh số tập, độ mới, chất lượng âm thanh, có chương hay bản chép lời không. Bấm <strong>Theo nguồn này</strong> để đổi nguồn theo dõi.</p>\n<h2 data-sec=\"nghe\">Nghe</h2>\n<ul>\n<li>Bấm một tập để phát. Mini player hiện ở đáy; chạm vào để mở màn hình <strong>Đang phát</strong>.</li>\n<li><strong>Tốc độ phát</strong> từ 0,5× tới 3×, giọng không bị méo.</li>\n<li><strong>Bỏ khoảng lặng</strong> (Skip silence) và <strong>Voice Boost</strong> cho giọng nói rõ hơn.</li>\n<li><strong>Hẹn giờ ngủ</strong>: theo phút, hết tập, hoặc hết chương.</li>\n<li><strong>Chương</strong>, <strong>Dấu trang</strong>, <strong>Ghi chú tập</strong> và <strong>Bản chép lời</strong> (lấy từ feed; tập không có thì app tạo bằng AI).</li>\n<li>Trên Android: điều khiển ở thông báo, màn hình khoá và tai nghe Bluetooth.</li>\n<li><strong>Trình phát nhạc</strong> và <strong>Podcast</strong> tự dừng nhau: bật cái này thì cái kia tạm dừng.</li>\n</ul>\n<h2 data-sec=\"tai-ve-va-nhap\">Tải về và nhập</h2>\n<ul>\n<li>Bấm <strong>Tải về</strong> ở một tập để nghe khi không có mạng. Tệp tải về chỉ nằm trên máy đó, không đồng bộ.</li>\n<li><strong>Nhập tệp âm thanh</strong>: thêm tệp audio hoặc sách nói có sẵn trên máy.</li>\n<li><strong>Nhập OPML</strong>: chuyển danh sách đăng ký từ app podcast khác sang.</li>\n</ul>\n<h2 data-sec=\"thao-tac-nhanh\">Thao tác nhanh</h2>\n<p>Nhấn giữ (điện thoại) hoặc chuột phải (máy tính) vào một tập hay một podcast để mở menu: thêm vào hàng chờ, đánh dấu đã nghe, gắn sao, tải về, huỷ đăng ký.</p>\n<h2 data-sec=\"nghe-khi-doc-sach\">Nghe khi đọc sách</h2>\n<p>Trong trình đọc của <strong>Sách</strong>, nút <strong>Nghe khi đọc</strong> cho chọn <strong>Trình phát nhạc</strong> hoặc <strong>Podcast</strong>. Mini player nổi gọn phía trên trang sách.</p>"
+ },
+ {
+  "id": "sach",
+  "num": "3.5",
+  "group": "Ứng dụng",
+  "label": "Sách",
+  "title": "Sách",
+  "sections": [
+   {
+    "id": "cac-muc",
+    "num": "3.5.1",
+    "title": "Các mục",
+    "level": 2
+   },
+   {
+    "id": "them-sach",
+    "num": "3.5.2",
     "title": "Thêm sách",
     "level": 2
    },
    {
     "id": "doc",
-    "num": "3.4.3",
+    "num": "3.5.3",
     "title": "Đọc",
     "level": 2
    },
    {
+    "id": "nghe-khi-doc",
+    "num": "3.5.3.1",
+    "title": "Nghe khi đọc",
+    "level": 3
+   },
+   {
+    "id": "doc-lai-tu-dau",
+    "num": "3.5.3.2",
+    "title": "Đọc lại từ đầu",
+    "level": 3
+   },
+   {
     "id": "theo-doi-viec-doc",
-    "num": "3.4.4",
+    "num": "3.5.4",
     "title": "Theo dõi việc đọc",
     "level": 2
    },
    {
     "id": "tim-kiem-nang-cao",
-    "num": "3.4.5",
+    "num": "3.5.5",
     "title": "Tìm kiếm nâng cao",
     "level": 2
    },
    {
     "id": "dong-bo-tep-sach",
-    "num": "3.4.6",
+    "num": "3.5.6",
     "title": "Đồng bộ tệp sách",
     "level": 2
    }
   ],
-  "html": "\n<p>Quản lý thư viện sách, đọc sách và theo dõi việc đọc.</p>\n<figure><img data-src=\"sach-trang-chu.webp\" alt=\"Trang chủ Sách khi chưa có sách\"><figcaption>Trang chủ Sách khi chưa có sách</figcaption></figure>\n\n<h2 data-sec=\"cac-muc\">Các mục</h2>\n<p><strong>Trang chủ</strong>, <strong>Thư viện</strong>, <strong>Thịnh hành</strong>, <strong>Kệ sách</strong>, <strong>Tác giả</strong>, <strong>Bộ sách</strong>, <strong>Thống kê</strong>, <strong>Mục tiêu</strong>, <strong>Thêm &amp; nhập</strong>, <strong>Cài đặt</strong>. Trên điện thoại, thanh dưới có năm mục chính và <strong>Thêm</strong> cho phần còn lại.</p>\n<h2 data-sec=\"them-sach\">Thêm sách</h2>\n<ul>\n<li><strong>Thêm tệp sách</strong>: chọn một hoặc nhiều tệp.</li>\n<li><strong>Thêm cả thư mục</strong>: nhập mọi sách trong thư mục (có thể kéo thả cả thư mục vào cửa sổ).</li>\n<li><strong>Sách giấy (ISBN)</strong>: nhập ISBN hoặc tên sách để thêm sách in, chỉ để theo dõi.</li>\n<li><strong>Nhập Goodreads / StoryGraph</strong>: nhập danh sách sách đã đọc từ tệp xuất của hai trang này.</li>\n<li>Hoặc dùng <strong>Thư mục đồng bộ</strong> để tự nhập sách từ máy, Dropbox, OneDrive (xem <a href=\"#guides/dong-bo\">Đồng bộ</a>).</li>\n</ul>\n<figure><img data-src=\"sach-them-nhap.webp\" alt=\"Thêm & nhập trong Sách\"><figcaption>Thêm & nhập trong Sách</figcaption></figure>\n\n<div class=\"gd-tw\"><table>\n<thead>\n<tr>\n<th>Đọc được</th>\n<th>Nhập và theo dõi, chưa đọc được</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>EPUB, MOBI, AZW/AZW3, FB2, CBZ, PDF, TXT, MD, HTML</td>\n<td>CBR, CB7, DjVu, DOCX</td>\n</tr>\n</tbody>\n</table></div>\n<h2 data-sec=\"doc\">Đọc</h2>\n<ol>\n<li>Bấm một cuốn để mở trang sách, rồi bấm đọc.</li>\n<li>Chạm giữa màn hình để hiện thanh công cụ: mục lục, cỡ chữ, phông, giao diện, chế độ cuộn hay lật trang.</li>\n<li>Chọn chữ để <strong>đánh dấu</strong>, <strong>gạch chân</strong>, <strong>ghi chú</strong>; thêm <strong>dấu trang</strong> ở góc.</li>\n<li>PDF có ba chế độ: cuộn, theo trang (hai trang trên màn hình rộng), dàn lại chữ.</li>\n<li>Vị trí đọc tự lưu và đồng bộ, mở máy khác là đọc tiếp đúng trang.</li>\n</ol>\n<p>Nếu sách có <strong>Nhạc nền</strong> gắn sẵn, <strong>Trình phát nhạc</strong> tự phát khi bạn mở sách.</p>\n<h2 data-sec=\"theo-doi-viec-doc\">Theo dõi việc đọc</h2>\n<ul>\n<li><strong>Trạng thái</strong>: muốn đọc, đang đọc, đã đọc, bỏ dở, tạm dừng.</li>\n<li>Chấm điểm nửa sao, nhận xét, ghi chú riêng, tâm trạng, nhịp truyện, cảnh báo nội dung.</li>\n<li><strong>Kệ sách</strong>: kệ thường, hoặc kệ thông minh tự lọc theo điều kiện.</li>\n<li><strong>Thống kê</strong> và <strong>Mục tiêu</strong>: số sách, số trang, thời gian đọc, tốc độ đọc, mục tiêu theo năm/tháng.</li>\n</ul>\n<h2 data-sec=\"tim-kiem-nang-cao\">Tìm kiếm nâng cao</h2>\n<div class=\"gd-tw\"><table>\n<thead>\n<tr>\n<th>Gõ</th>\n<th>Tìm</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><code>author:Nguyễn</code></td>\n<td>Sách của tác giả có \"Nguyễn\"</td>\n</tr>\n<tr>\n<td><code>tag:fantasy</code></td>\n<td>Sách có thẻ fantasy</td>\n</tr>\n<tr>\n<td><code>rating:&gt;=4</code></td>\n<td>Từ 4 sao trở lên</td>\n</tr>\n<tr>\n<td><code>status:reading</code></td>\n<td>Đang đọc</td>\n</tr>\n<tr>\n<td><code>-tag:horror</code></td>\n<td>Bỏ sách có thẻ horror</td>\n</tr>\n</tbody>\n</table></div>\n<h2 data-sec=\"dong-bo-tep-sach\">Đồng bộ tệp sách</h2>\n<ul>\n<li><strong>GitHub</strong>: thông tin, tiến độ, ghi chú đồng bộ; tệp sách ở lại từng máy. Thêm cùng tệp trên máy kia thì app tự ghép theo tên và kích thước.</li>\n<li><strong>Dropbox / OneDrive</strong>: tệp cũng được đồng bộ, máy khác tải về khi mở.</li>\n</ul>"
+  "html": "\n<p>Quản lý thư viện sách, đọc sách và theo dõi việc đọc.</p>\n<figure><img data-src=\"sach-trang-chu.webp\" alt=\"Trang chủ Sách khi chưa có sách\"><figcaption>Trang chủ Sách khi chưa có sách</figcaption></figure>\n\n<h2 data-sec=\"cac-muc\">Các mục</h2>\n<p><strong>Trang chủ</strong>, <strong>Thư viện</strong>, <strong>Thịnh hành</strong>, <strong>Kệ sách</strong>, <strong>Tác giả</strong>, <strong>Bộ sách</strong>, <strong>Thống kê</strong>, <strong>Mục tiêu</strong>, <strong>Thêm &amp; nhập</strong>, <strong>Cài đặt</strong>. Trên điện thoại, thanh dưới có năm mục chính và <strong>Thêm</strong> cho phần còn lại.</p>\n<h2 data-sec=\"them-sach\">Thêm sách</h2>\n<ul>\n<li><strong>Thêm tệp sách</strong>: chọn một hoặc nhiều tệp.</li>\n<li><strong>Thêm cả thư mục</strong>: nhập mọi sách trong thư mục (có thể kéo thả cả thư mục vào cửa sổ).</li>\n<li><strong>Sách giấy (ISBN)</strong>: nhập ISBN hoặc tên sách để thêm sách in, chỉ để theo dõi.</li>\n<li><strong>Nhập Goodreads / StoryGraph</strong>: nhập danh sách sách đã đọc từ tệp xuất của hai trang này.</li>\n<li>Hoặc dùng <strong>Thư mục đồng bộ</strong> để tự nhập sách từ máy, Dropbox, OneDrive (xem <a href=\"#guides/dong-bo\">Đồng bộ</a>).</li>\n</ul>\n<figure><img data-src=\"sach-them-nhap.webp\" alt=\"Thêm & nhập trong Sách\"><figcaption>Thêm & nhập trong Sách</figcaption></figure>\n\n<div class=\"gd-tw\"><table>\n<thead>\n<tr>\n<th>Đọc được</th>\n<th>Nhập và theo dõi, chưa đọc được</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>EPUB, MOBI, AZW/AZW3, FB2, CBZ, PDF, TXT, MD, HTML</td>\n<td>CBR, CB7, DjVu, DOCX</td>\n</tr>\n</tbody>\n</table></div>\n<h2 data-sec=\"doc\">Đọc</h2>\n<ol>\n<li>Bấm một cuốn để mở trang sách, rồi bấm đọc.</li>\n<li>Chạm giữa màn hình để hiện thanh công cụ: mục lục, cỡ chữ, phông, giao diện, chế độ cuộn hay lật trang.</li>\n<li>Chọn chữ để <strong>đánh dấu</strong>, <strong>gạch chân</strong>, <strong>ghi chú</strong>; thêm <strong>dấu trang</strong> ở góc.</li>\n<li>PDF có ba chế độ: cuộn, theo trang (hai trang trên màn hình rộng), dàn lại chữ.</li>\n<li>Vị trí đọc tự lưu và đồng bộ, mở máy khác là đọc tiếp đúng trang.</li>\n</ol>\n<p>Nếu sách có <strong>Nhạc nền</strong> gắn sẵn, <strong>Trình phát nhạc</strong> tự phát khi bạn mở sách.</p>\n<h3 data-sec=\"nghe-khi-doc\">Nghe khi đọc</h3>\n<p>Trong trình đọc, bấm <strong>Nghe khi đọc</strong> rồi chọn <strong>Trình phát nhạc</strong> hoặc <strong>Podcast</strong>. Một mini player nhỏ nổi phía trên trang sách; các bảng của Trình phát nhạc (lời, hàng chờ, EQ, hẹn giờ) mở ngay trên trình đọc mà không phải rời sách.</p>\n<h3 data-sec=\"doc-lai-tu-dau\">Đọc lại từ đầu</h3>\n<p>Ở trang sách, <strong>Đặt lại tiến trình</strong> đưa vị trí đọc về đầu sách (trên mọi máy).</p>\n<h2 data-sec=\"theo-doi-viec-doc\">Theo dõi việc đọc</h2>\n<ul>\n<li><strong>Trạng thái</strong>: muốn đọc, đang đọc, đã đọc, bỏ dở, tạm dừng.</li>\n<li>Chấm điểm nửa sao, nhận xét, ghi chú riêng, tâm trạng, nhịp truyện, cảnh báo nội dung.</li>\n<li><strong>Kệ sách</strong>: kệ thường, hoặc kệ thông minh tự lọc theo điều kiện.</li>\n<li><strong>Thống kê</strong> và <strong>Mục tiêu</strong>: số sách, số trang, thời gian đọc, tốc độ đọc, mục tiêu theo năm/tháng.</li>\n</ul>\n<h2 data-sec=\"tim-kiem-nang-cao\">Tìm kiếm nâng cao</h2>\n<div class=\"gd-tw\"><table>\n<thead>\n<tr>\n<th>Gõ</th>\n<th>Tìm</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><code>author:Nguyễn</code></td>\n<td>Sách của tác giả có \"Nguyễn\"</td>\n</tr>\n<tr>\n<td><code>tag:fantasy</code></td>\n<td>Sách có thẻ fantasy</td>\n</tr>\n<tr>\n<td><code>rating:&gt;=4</code></td>\n<td>Từ 4 sao trở lên</td>\n</tr>\n<tr>\n<td><code>status:reading</code></td>\n<td>Đang đọc</td>\n</tr>\n<tr>\n<td><code>-tag:horror</code></td>\n<td>Bỏ sách có thẻ horror</td>\n</tr>\n</tbody>\n</table></div>\n<h2 data-sec=\"dong-bo-tep-sach\">Đồng bộ tệp sách</h2>\n<ul>\n<li><strong>GitHub</strong>: thông tin, tiến độ, ghi chú đồng bộ; tệp sách ở lại từng máy. Thêm cùng tệp trên máy kia thì app tự ghép theo tên và kích thước.</li>\n<li><strong>Dropbox / OneDrive</strong>: tệp cũng được đồng bộ, máy khác tải về khi mở.</li>\n</ul>"
  },
  {
   "id": "xuong-viet",
-  "num": "3.5",
+  "num": "3.6",
   "group": "Ứng dụng",
   "label": "Xưởng Viết",
   "title": "Xưởng Viết",
   "sections": [
    {
     "id": "ban-viet",
-    "num": "3.5.1",
+    "num": "3.6.1",
     "title": "Bàn viết",
     "level": 2
    },
    {
     "id": "tao-truyen-moi",
-    "num": "3.5.2",
+    "num": "3.6.2",
     "title": "Tạo truyện mới",
     "level": 2
    },
    {
     "id": "nhap-truyen",
-    "num": "3.5.3",
+    "num": "3.6.3",
     "title": "Nhập truyện",
     "level": 2
    },
    {
     "id": "trinh-viet",
-    "num": "3.5.4",
+    "num": "3.6.4",
     "title": "Trình viết",
     "level": 2
    },
    {
     "id": "doc-trong-sach",
-    "num": "3.5.5",
+    "num": "3.6.5",
     "title": "Đọc trong Sách",
     "level": 2
    },
    {
     "id": "xuat-tep",
-    "num": "3.5.6",
+    "num": "3.6.6",
     "title": "Xuất tệp",
     "level": 2
    },
    {
     "id": "fandom-va-sach-goc",
-    "num": "3.5.7",
+    "num": "3.6.7",
     "title": "Fandom và sách gốc",
     "level": 2
    }
@@ -364,31 +446,37 @@ export const PAGES = [
  },
  {
   "id": "cai-dat",
-  "num": "3.6",
+  "num": "3.7",
   "group": "Ứng dụng",
   "label": "Cài đặt",
   "title": "Cài đặt",
   "sections": [
    {
-    "id": "cac-phan",
-    "num": "3.6.1",
-    "title": "Các phần",
+    "id": "cac-muc",
+    "num": "3.7.1",
+    "title": "Các mục",
     "level": 2
    },
    {
     "id": "sao-luu-va-khoi-phuc",
-    "num": "3.6.2",
+    "num": "3.7.2",
     "title": "Sao lưu và khôi phục",
     "level": 2
    },
    {
+    "id": "dat-lai-tien-trinh",
+    "num": "3.7.3",
+    "title": "Đặt lại tiến trình",
+    "level": 2
+   },
+   {
     "id": "chong-bi-xoa-du-lieu",
-    "num": "3.6.3",
+    "num": "3.7.4",
     "title": "Chống bị xoá dữ liệu",
     "level": 2
    }
   ],
-  "html": "\n<figure><img data-src=\"cai-dat.webp\" alt=\"Cài đặt trên máy tính\"><figcaption>Cài đặt trên máy tính</figcaption></figure>\n\n<h2 data-sec=\"cac-phan\">Các phần</h2>\n<div class=\"gd-tw\"><table>\n<thead>\n<tr>\n<th>Phần</th>\n<th>Làm gì</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><strong>Tài khoản</strong></td>\n<td>Đăng nhập để đồng bộ, xem máy đang dùng</td>\n</tr>\n<tr>\n<td><strong>Tài khoản đồng bộ</strong></td>\n<td>Chọn Chỉ trên máy / GitHub / Dropbox / OneDrive (xem <a href=\"#guides/dong-bo\">Đồng bộ</a>)</td>\n</tr>\n<tr>\n<td><strong>Thư mục đồng bộ</strong></td>\n<td>Chọn nơi lấy nhạc và sách, tạm dừng, huỷ</td>\n</tr>\n<tr>\n<td><strong>Thiết bị</strong></td>\n<td>Danh sách máy dùng chung, đổi tên máy, đăng xuất từ xa</td>\n</tr>\n<tr>\n<td><strong>Giao diện</strong></td>\n<td>Chủ đề màu, skin, ngôn ngữ (Tiếng Việt / English)</td>\n</tr>\n<tr>\n<td><strong>Tham số</strong></td>\n<td>Tuỳ chọn chung và của từng app (Sách &amp; trình đọc, Trình phát nhạc…)</td>\n</tr>\n<tr>\n<td><strong>Sao lưu dữ liệu</strong></td>\n<td>Xuất toàn bộ thư viện ra tệp JSON, hoặc nhập lại từ tệp đó</td>\n</tr>\n</tbody>\n</table></div>\n<h2 data-sec=\"sao-luu-va-khoi-phuc\">Sao lưu và khôi phục</h2>\n<ol>\n<li><strong>Cài đặt → Sao lưu dữ liệu</strong>, bấm xuất. App lưu một tệp JSON.</li>\n<li>Trên máy khác (hoặc sau khi cài lại), bấm nhập và chọn tệp đó.</li>\n</ol>\n<p>Tệp JSON chứa thư viện, tiến độ, ghi chú, truyện; không chứa tệp nhạc/sách và không chứa token đăng nhập.</p>\n<h2 data-sec=\"chong-bi-xoa-du-lieu\">Chống bị xoá dữ liệu</h2>\n<p>Bấm <strong>Yêu cầu lưu trữ bền vững</strong> để trình duyệt không tự xoá dữ liệu khi máy sắp đầy. Thanh <strong>Đã dùng trên máy</strong> cho biết dung lượng còn lại.</p>"
+  "html": "\n<figure><img data-src=\"cai-dat.webp\" alt=\"Cài đặt trên máy tính\"><figcaption>Cài đặt trên máy tính</figcaption></figure>\n\n<h2 data-sec=\"cac-muc\">Các mục</h2>\n<p>Trang <strong>Cài đặt</strong> đầu tiên là thẻ <strong>Tài khoản</strong> và một danh sách mục. Bấm một mục để mở trang riêng của nó; nút <strong>‹ Cài đặt</strong> để quay lại.</p>\n<div class=\"gd-tw\"><table>\n<thead>\n<tr>\n<th>Mục</th>\n<th>Làm gì</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><strong>Tài khoản đồng bộ</strong></td>\n<td>Chọn Chỉ trên máy / GitHub / Dropbox / OneDrive (xem <a href=\"#guides/dong-bo\">Đồng bộ</a>)</td>\n</tr>\n<tr>\n<td><strong>Thư mục đồng bộ</strong></td>\n<td>Chọn nơi lấy nhạc và sách, tạm dừng, huỷ</td>\n</tr>\n<tr>\n<td><strong>Thiết bị dùng chung thư viện</strong></td>\n<td>Tên máy này, các máy đang dùng, đăng xuất từ xa</td>\n</tr>\n<tr>\n<td><strong>Giao diện</strong></td>\n<td>Ngôn ngữ (Tiếng Việt / English), skin, theme, màu nhấn, cỡ chữ</td>\n</tr>\n<tr>\n<td><strong>Thông số dùng chung</strong></td>\n<td>Thông số của từng ứng dụng, trạng thái hiện tại</td>\n</tr>\n<tr>\n<td><strong>Đặt lại tiến trình</strong></td>\n<td>Đưa việc đọc, nghe, xem về lại từ đầu: theo từng ứng dụng hoặc tất cả</td>\n</tr>\n<tr>\n<td><strong>Sao lưu dữ liệu</strong></td>\n<td>Xuất, nhập JSON, xoá dữ liệu</td>\n</tr>\n</tbody>\n</table></div>\n<h2 data-sec=\"sao-luu-va-khoi-phuc\">Sao lưu và khôi phục</h2>\n<ol>\n<li><strong>Cài đặt → Sao lưu dữ liệu</strong>, bấm xuất. App lưu một tệp JSON.</li>\n<li>Trên máy khác (hoặc sau khi cài lại), bấm nhập và chọn tệp đó.</li>\n</ol>\n<p>Tệp JSON chứa thư viện, tiến độ, ghi chú, truyện; không chứa tệp nhạc/sách và không chứa token đăng nhập.</p>\n<h2 data-sec=\"dat-lai-tien-trinh\">Đặt lại tiến trình</h2>\n<p><strong>Cài đặt → Đặt lại tiến trình</strong> liệt kê từng ứng dụng có mục đang dở (ví dụ Sách 3 mục, Podcast 5 mục). Bấm <strong>Đặt lại tiến trình</strong> ở một dòng, hoặc đặt lại tất cả. App luôn hỏi lại trước khi làm. Nội dung không bị xoá, chỉ vị trí đọc/nghe về đầu.</p>\n<h2 data-sec=\"chong-bi-xoa-du-lieu\">Chống bị xoá dữ liệu</h2>\n<p>Bấm <strong>Yêu cầu lưu trữ bền vững</strong> để trình duyệt không tự xoá dữ liệu khi máy sắp đầy. Thanh <strong>Đã dùng trên máy</strong> cho biết dung lượng còn lại.</p>"
  },
  {
   "id": "phat-hanh",
@@ -422,6 +510,6 @@ export const PAGES = [
     "level": 2
    }
   ],
-  "html": "\n<h2 data-sec=\"quy-tac\">Quy tắc</h2>\n<ul>\n<li>Mọi yêu cầu (thêm, bỏ, sửa) ở các thread được làm và đẩy lên <code>main</code>, nhưng <strong>chưa phát hành</strong>. Số phiên bản giữ nguyên, điện thoại và máy tính chưa nhận gì.</li>\n<li>Thread <strong>Nhật ký phiên bản / Changelog</strong> giữ danh sách \"Chưa phát hành\".</li>\n<li>Khi bạn nói <strong>\"cập nhật\"</strong> trong thread Changelog, mọi thay đổi tới lúc đó được phát hành <strong>cùng một lần</strong>. Có thể nói luôn số phiên bản, ví dụ \"cập nhật 0.9.10.0\".</li>\n</ul>\n<h2 data-sec=\"so-phien-ban\">Số phiên bản</h2>\n<p>Dạng <code>x.y.z.w</code>, ví dụ <code>0.9.9.1</code>:</p>\n<div class=\"gd-tw\"><table>\n<thead>\n<tr>\n<th>Số</th>\n<th>Tăng khi</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>x</td>\n<td>Thay đổi rất lớn</td>\n</tr>\n<tr>\n<td>y</td>\n<td>Thêm app hoặc tính năng lớn</td>\n</tr>\n<tr>\n<td>z</td>\n<td>Thêm tính năng nhỏ</td>\n</tr>\n<tr>\n<td>w</td>\n<td>Sửa lỗi, chỉnh nhỏ</td>\n</tr>\n</tbody>\n</table></div>\n<h2 data-sec=\"sau-khi-ban-noi-cap-nhat\">Sau khi bạn nói \"cập nhật\"</h2>\n<ol>\n<li>Claude tăng <code>APP_VERSION</code>, ghi changelog, đẩy lên <code>main</code>.</li>\n<li>GitHub Actions build trong khoảng 10 đến 15 phút, rồi tạo Release <code>v&lt;phiên bản&gt;</code> gồm:</li>\n<li><code>MyHub-&lt;phiên bản&gt;.apk</code> (Android)</li>\n<li><code>MyHub-&lt;phiên bản&gt;-x64-Setup.exe</code> (Windows, tự cập nhật)</li>\n<li><code>MyHub-&lt;phiên bản&gt;-portable.exe</code> (Windows, không cài)</li>\n<li>Nhận bản mới:</li>\n<li>Android: Obtainium báo, bấm <strong>Update</strong> (xem <a href=\"#guides/android\">Android</a>).</li>\n<li>Windows Setup: tự tải và hỏi khởi động lại (xem <a href=\"#guides/windows\">Windows</a>).</li>\n</ol>\n<h2 data-sec=\"theo-doi\">Theo dõi</h2>\n<ul>\n<li>Các bản đã phát hành: <a href=\"https://github.com/Fedya3012/my-hub/releases\" target=\"_blank\" rel=\"noopener\">https://github.com/Fedya3012/my-hub/releases</a></li>\n<li>Tiến trình build: tab <strong>Actions</strong> của repo; dấu xanh là xong, dấu đỏ là lỗi (Claude sẽ sửa).</li>\n<li>Khoá ký Android cố định, không bao giờ đổi. Đổi khoá thì phải gỡ app và cài lại.</li>\n</ul>"
+  "html": "\n<h2 data-sec=\"quy-tac\">Quy tắc</h2>\n<ul>\n<li>Mọi yêu cầu (thêm, bỏ, sửa) ở các thread được làm và đẩy lên <code>main</code>, nhưng <strong>chưa phát hành</strong>. Số phiên bản giữ nguyên, điện thoại và máy tính chưa nhận gì.</li>\n<li>Thread <strong>Nhật ký phiên bản / Changelog</strong> giữ danh sách \"Chưa phát hành\".</li>\n<li>Khi bạn nói <strong>\"cập nhật\"</strong> trong thread Changelog, mọi thay đổi tới lúc đó được phát hành <strong>cùng một lần</strong>. Có thể nói luôn số phiên bản, ví dụ \"cập nhật 0.9.10.0\".</li>\n</ul>\n<h2 data-sec=\"so-phien-ban\">Số phiên bản</h2>\n<p>Dạng <code>x.y.z.w</code>, ví dụ <code>0.9.12.0</code>:</p>\n<div class=\"gd-tw\"><table>\n<thead>\n<tr>\n<th>Số</th>\n<th>Tăng khi</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>x</td>\n<td>Thay đổi rất lớn</td>\n</tr>\n<tr>\n<td>y</td>\n<td>Thêm app hoặc tính năng lớn</td>\n</tr>\n<tr>\n<td>z</td>\n<td>Thêm tính năng nhỏ</td>\n</tr>\n<tr>\n<td>w</td>\n<td>Sửa lỗi, chỉnh nhỏ</td>\n</tr>\n</tbody>\n</table></div>\n<h2 data-sec=\"sau-khi-ban-noi-cap-nhat\">Sau khi bạn nói \"cập nhật\"</h2>\n<ol>\n<li>Claude tăng <code>APP_VERSION</code>, ghi changelog, đẩy lên <code>main</code>.</li>\n<li>GitHub Actions build trong khoảng 10 đến 15 phút, rồi tạo Release <code>v&lt;phiên bản&gt;</code> gồm:</li>\n<li><code>MyHub-&lt;phiên bản&gt;.apk</code> (Android)</li>\n<li><code>MyHub-&lt;phiên bản&gt;-x64-Setup.exe</code> (Windows, tự cập nhật)</li>\n<li><code>MyHub-&lt;phiên bản&gt;-portable.exe</code> (Windows, không cài)</li>\n<li>Nhận bản mới:</li>\n<li>Android: Obtainium báo, bấm <strong>Update</strong> (xem <a href=\"#guides/android\">Android</a>).</li>\n<li>Windows Setup: tự tải và hỏi khởi động lại (xem <a href=\"#guides/windows\">Windows</a>).</li>\n</ol>\n<h2 data-sec=\"theo-doi\">Theo dõi</h2>\n<ul>\n<li>Các bản đã phát hành: <a href=\"https://github.com/Fedya3012/my-hub/releases\" target=\"_blank\" rel=\"noopener\">https://github.com/Fedya3012/my-hub/releases</a></li>\n<li>Tiến trình build: tab <strong>Actions</strong> của repo; dấu xanh là xong, dấu đỏ là lỗi (Claude sẽ sửa).</li>\n<li>Khoá ký Android cố định, không bao giờ đổi. Đổi khoá thì phải gỡ app và cài lại.</li>\n</ul>"
  }
 ];

@@ -10,12 +10,13 @@ Hướng dẫn cho người dùng. Mở bản đẹp có hình và mục lục: 
    1. [Thư viện](30-thu-vien.md)
    2. [Quản lý ứng dụng](31-quan-ly-ung-dung.md)
    3. [Trình phát nhạc](32-trinh-phat-nhac.md)
-   4. [Sách](33-sach.md)
-   5. [Xưởng Viết](34-xuong-viet.md)
-   6. [Cài đặt](35-cai-dat.md)
+   4. [Podcast](33-podcast.md)
+   5. [Sách](34-sach.md)
+   6. [Xưởng Viết](35-xuong-viet.md)
+   7. [Cài đặt](36-cai-dat.md)
 4. [Phát hành phiên bản mới](40-phat-hanh.md)
 
 Thêm app mới: tạo `3x-<tên>.md`, thêm vào danh sách trên và vào `PAGES` trong `/mnt/project-files/guides/build.py`.
-Cập nhật lần cuối: 2026-10-22, theo app 0.9.9.1.
+Cập nhật lần cuối: 2026-10-23, theo app 0.9.12.0.
 
 Trong app: mục **Hướng dẫn sử dụng** trên thanh bên (module `guides`). Sau khi sửa `.md` hoặc ảnh: `python3 tools/build-guides.py && node tools/sync-versions.js`.

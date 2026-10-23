@@ -15,9 +15,10 @@ PAGES = [  # (group, file, page id, label)
   ('Ứng dụng', '30-thu-vien', 'thu-vien', 'Thư viện'),
   ('Ứng dụng', '31-quan-ly-ung-dung', 'quan-ly-ung-dung', 'Quản lý ứng dụng'),
   ('Ứng dụng', '32-trinh-phat-nhac', 'trinh-phat-nhac', 'Trình phát nhạc'),
-  ('Ứng dụng', '33-sach', 'sach', 'Sách'),
-  ('Ứng dụng', '34-xuong-viet', 'xuong-viet', 'Xưởng Viết'),
-  ('Ứng dụng', '35-cai-dat', 'cai-dat', 'Cài đặt'),
+  ('Ứng dụng', '33-podcast', 'podcast', 'Podcast'),
+  ('Ứng dụng', '34-sach', 'sach', 'Sách'),
+  ('Ứng dụng', '35-xuong-viet', 'xuong-viet', 'Xưởng Viết'),
+  ('Ứng dụng', '36-cai-dat', 'cai-dat', 'Cài đặt'),
   (None, '40-phat-hanh', 'phat-hanh', 'Phát hành'),
 ]
 fid = {f + '.md': pid for _, f, pid, _ in PAGES}

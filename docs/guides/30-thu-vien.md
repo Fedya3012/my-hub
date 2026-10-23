@@ -24,6 +24,10 @@ Lựa chọn lọc được nhớ lại khi bạn quay lại, kể cả sau khi 
 
 Bấm một mục để mở ngăn chi tiết: thông tin, thẻ, yêu thích, và các khối của app khác. Ví dụ với sách có khối **Nhạc nền** của **Trình phát nhạc** để gắn danh sách phát tự phát khi đọc; với fanfic có fandom, xếp hạng và nút sửa trong **Xưởng Viết**.
 
+## Đặt lại tiến trình
+
+Trong ngăn chi tiết của một mục đang dở, nút **Đặt lại tiến trình** đưa mục đó về lại từ đầu (chưa đọc, chưa nghe). Muốn đặt lại cả một app hoặc tất cả, dùng **Cài đặt → Đặt lại tiến trình** (xem [Cài đặt](36-cai-dat.md)).
+
 ## Dọn dữ liệu Thư viện
 
 Nút **Dọn dữ liệu Thư viện** xoá các mục hỏng hoặc đã mất tệp. App luôn hỏi lại trước khi xoá.

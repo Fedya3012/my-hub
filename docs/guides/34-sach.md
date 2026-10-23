@@ -32,6 +32,14 @@ Quản lý thư viện sách, đọc sách và theo dõi việc đọc.
 
 Nếu sách có **Nhạc nền** gắn sẵn, **Trình phát nhạc** tự phát khi bạn mở sách.
 
+### Nghe khi đọc
+
+Trong trình đọc, bấm **Nghe khi đọc** rồi chọn **Trình phát nhạc** hoặc **Podcast**. Một mini player nhỏ nổi phía trên trang sách; các bảng của Trình phát nhạc (lời, hàng chờ, EQ, hẹn giờ) mở ngay trên trình đọc mà không phải rời sách.
+
+### Đọc lại từ đầu
+
+Ở trang sách, **Đặt lại tiến trình** đưa vị trí đọc về đầu sách (trên mọi máy).
+
 ## Theo dõi việc đọc
 
 - **Trạng thái**: muốn đọc, đang đọc, đã đọc, bỏ dở, tạm dừng.
