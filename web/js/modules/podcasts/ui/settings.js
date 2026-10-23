@@ -20,7 +20,7 @@ export async function render(el) {
   el.innerHTML = `<div class="stack pc-settings">
     <h2 class="section-title">${icon('settings')}Cài đặt ${esc(NAME)}</h2>
     ${GROUPS.map(([ic, title, keys]) => `<details class="panel prm-ns" open><summary>${icon(ic)}<b>${esc(title)}</b></summary>${namespaceHtml('podcasts', keys)}
-      ${title === 'Tìm kiếm online' ? '<p class="hint">Podcast Index miễn phí: đăng ký khoá ở <a href="https://api.podcastindex.org/signup" target="_blank" rel="noopener">api.podcastindex.org</a>. Không có khoá vẫn tìm được qua Apple Podcasts. Khoá chỉ lưu trên máy này, không đồng bộ.</p>' : ''}</details>`).join('')}
+      ${title === 'Tìm kiếm online' ? '<p class="hint">Podcast Index miễn phí: đăng ký khoá ở <a href="https://api.podcastindex.org/signup" target="_blank" rel="noopener">api.podcastindex.org</a>. Không có khoá vẫn tìm được qua Apple Podcasts. Khoá chỉ lưu trên máy này, không đồng bộ.</p><p class="hint">Proxy CORS chỉ cần cho bản web. Nếu đặt, máy chủ proxy sẽ thấy link mọi feed và tập bạn mở, kể cả feed riêng có mã truy cập trong link. Chỉ dùng proxy bạn tin tưởng; app Windows và Android không cần proxy.</p>' : ''}</details>`).join('')}
     <details class="panel prm-ns" open><summary>${icon('pc-upload')}<b>Tệp và dữ liệu</b></summary>
       <div class="row-actions" style="flex-wrap:wrap">
         <label class="btn">${icon('pc-upload')}Nhập tệp âm thanh / sách nói<input type="file" accept="audio/*,.m4b,.mp3,.m4a,.opus,.ogg,.flac,.wav" multiple hidden data-audio></label>

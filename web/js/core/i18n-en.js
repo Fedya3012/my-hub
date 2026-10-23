@@ -3706,4 +3706,5 @@ export default {"(Google cấp quyền theo từng giờ). Bấm một lần đ�
 "Điểm tính từ số tập, độ mới (30 ngày), bitrate thật (kích thước tệp / thời lượng, tối đa 192 kbps), có chương và bản chép lời. Nguồn chỉ đọc được từ Apple bị trừ điểm vì không đầy đủ.":"The score counts episodes, freshness (30 days), real bitrate (file size / length, up to 192 kbps), chapters and transcripts. A source read only from Apple loses points because it is incomplete.",
 "Không đọc được:":"Couldn't read:",
 "Không đổi được nguồn:":"Couldn't switch source:",
-"nguồn · đang theo:":"sources · following:"};
+"nguồn · đang theo:":"sources · following:",
+"Proxy CORS chỉ cần cho bản web. Nếu đặt, máy chủ proxy sẽ thấy link mọi feed và tập bạn mở, kể cả feed riêng có mã truy cập trong link. Chỉ dùng proxy bạn tin tưởng; app Windows và Android không cần proxy.":"The CORS proxy is only needed for the web version. If you set one, the proxy server sees the link of every feed and episode you open, including private feeds with an access token in the link. Only use a proxy you trust; the Windows and Android apps don't need one."};
