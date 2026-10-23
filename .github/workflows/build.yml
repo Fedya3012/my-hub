@@ -25,7 +25,7 @@ jobs:
       code: ${{ steps.v.outputs.code }}
       release: ${{ steps.tag.outputs.release }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - id: v
         run: node scripts/sync-version.js
       - id: tag
@@ -43,8 +43,8 @@ jobs:
     needs: version
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -57,7 +57,7 @@ jobs:
       - run: python -m ziglang cc -target x86_64-windows-gnu -O2 -o build/native/xs-audio.exe native/xs-audio/xs-audio.c -lole32
       # File names carry the real x.y.z.w version (package.json holds a semver mapping of it).
       - run: npx electron-builder --win --publish never "-c.nsis.artifactName=MyHub-${{ needs.version.outputs.version }}-x64-Setup.exe" "-c.portable.artifactName=MyHub-${{ needs.version.outputs.version }}-portable.exe"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: windows
           path: |
@@ -70,12 +70,12 @@ jobs:
     needs: version
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 21
@@ -109,7 +109,7 @@ jobs:
           else
             cp app/build/outputs/apk/debug/app-debug.apk ../dist/MyHub-${{ needs.version.outputs.version }}-debug.apk
           fi
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: android
           path: dist/*.apk
@@ -120,8 +120,8 @@ jobs:
     if: needs.version.outputs.release == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v6
         with:
           path: dist
           merge-multiple: true
