@@ -319,6 +319,68 @@ export const storage = {
     })().finally(() => { this._running = null; });
     return this._running;
   },
+  // Incremental sync (My Hub account): pull only the rows written since the last sync, merge them like the
+  // snapshot, then push only this device's queued changes. The first run (or "Gộp") pushes everything once.
+  async _syncRows(task, signal, part) {
+    const c = cloud();
+    const since = await getSetting('sync.rowsSeq', 0);
+    const { rows, seq } = await c.pullRows(since, { signal, onProgress: part(0, 30) });
+    task.check();
+    task.update({ done: 30, detail: 'Đang gộp dữ liệu…' });
+    const lastQ = (await db.syncQueue.orderBy('seq').last())?.seq || 0;
+    const byTable = {}, remoteTombs = {};
+    for (const r of rows) {
+      if (r.deleted) (remoteTombs[r.tbl] ||= {})[r.id] = r.updatedAt;
+      else if (SYNCED_TABLES.includes(r.tbl)) (byTable[r.tbl] ||= []).push(r.data);
+    }
+    const tombs = mergeTombstones(remoteTombs, await pendingDeletes(lastQ));
+    let pulled = 0;
+    const changedAll = {}, removedAll = {};
+    for (let i = 0; i < SYNCED_TABLES.length; i++) {
+      const t = SYNCED_TABLES[i];
+      const { changed, removed } = await mergeTable(t, byTable[t], tombs[t]);
+      changedAll[t] = changed; removedAll[t] = removed; pulled += changed.length + removed.length;
+      task.update({ done: 30 + (i + 1) / SYNCED_TABLES.length * 15 });
+    }
+    task.check();
+    for (const id of removedAll.files || []) { const f = await db.files.get(id); if (f?.locations?.local) await local.remove(f.locations.local).catch(() => {}); }
+    await withoutSyncHooks(() => db.transaction('rw', SYNCED_TABLES.map(t => db.table(t)), async () => {
+      for (const t of SYNCED_TABLES) {
+        const rs = await stillNewer(t, changedAll[t]);
+        if (rs.length) await db.table(t).bulkPut(rs);
+        if (removedAll[t].length) await db.table(t).bulkDelete(removedAll[t]);
+      }
+    }));
+
+    // What to send: everything on the first run, otherwise the rows queued since the last sync.
+    const full = !(await getSetting('sync.rowsInit', false)) || (await getSetting('sync.fullPushNeeded', false));
+    const out = new Map();
+    const strip = (t, r) => {
+      if (t !== 'files' || !r.locations?.local) return r;
+      const { local: _mine, ...rest } = r.locations;   // where the bytes are on this device never travels
+      return { ...r, locations: rest };
+    };
+    const add = (t, r) => { const kp = db.table(t).schema.primKey.keyPath; out.set(tkey(t, r[kp]), { tbl: t, id: String(r[kp]), data: strip(t, r), updatedAt: r.updatedAt || 0 }); };
+    if (full) {
+      for (const t of SYNCED_TABLES) for (const r of await db.table(t).toArray()) add(t, r);
+      for (const [t, m] of Object.entries(tombs)) for (const [id, at] of Object.entries(m)) out.set(tkey(t, id), { tbl: t, id, deleted: true, updatedAt: at });
+    } else {
+      const q = await db.syncQueue.where('seq').belowOrEqual(lastQ).toArray();
+      for (const e of q) {
+        if (!SYNCED_TABLES.includes(e.entity)) continue;
+        if (e.op === 'delete') { out.set(tkey(e.entity, e.entityId), { tbl: e.entity, id: String(e.entityId), deleted: true, updatedAt: e.createdAt || now() }); continue; }
+        const r = await db.table(e.entity).get(e.entityId);
+        if (r) add(e.entity, r);
+      }
+    }
+    task.update({ done: 50, detail: pulled ? `Đã nhận ${pulled} thay đổi · đang đẩy ${out.size} bản ghi lên ${c.label}…` : out.size ? `Đang đẩy ${out.size} bản ghi lên ${c.label}…` : 'Không có thay đổi để đẩy' });
+    if (out.size) await c.pushRows([...out.values()], { signal, onProgress: part(50, 40) });
+    await db.syncQueue.where('seq').belowOrEqual(lastQ).delete();   // changes made during the sync go next time
+    await setSetting('sync.rowsSeq', seq);
+    await setSetting('sync.rowsInit', true);
+    await setSetting('sync.fullPushNeeded', false);
+    return pulled;
+  },
   async _sync({ quiet = false } = {}) {
     const mode = await this.mode();
     if (mode === 'local') return { skipped: 'local' };
@@ -335,50 +397,53 @@ export const storage = {
     const signal = task.signal;
     const part = (from, span) => (d, n) => task.update({ done: from + (n ? Math.min(1, d / n) * span : 0) });
     try {
-      const remote = await cloud().readSnapshot('hub-db.json', { signal, onProgress: part(0, 30) });
-      task.check();
-      task.update({ done: 30, detail: 'Đang gộp dữ liệu…' });
-      const lastQ = (await db.syncQueue.orderBy('seq').last())?.seq || 0;
-      // Nothing changed here and the drive file is the version this device wrote or merged last: no merge to do.
-      if (!lastQ && remote.id && remote.id === this._lastRid && !(await getSetting('sync.fullPushNeeded', false))) {
-        task.update({ done: 90, detail: 'Đang đồng bộ tiến độ…' });
-        const live = await this.syncLive({ quiet: true });
-        if (live.signedOut) { task.finish('Thiết bị đã được đăng xuất'); return { signedOut: true }; }
-        await setSetting('sync.lastAt', now());
-        task.finish('Không có thay đổi');
-        bus.emit('sync:done', { pulled: live.pulled || 0, uploaded: 0 });
-        return { pulled: live.pulled || 0, uploaded: 0 };
-      }
-      const tombs = mergeTombstones(remote.data?.tombstones, await pendingDeletes(lastQ));
-      const merged = {};
       let pulled = 0;
-      const changedAll = {}, removedAll = {};
-      for (let i = 0; i < SYNCED_TABLES.length; i++) {
-        const t = SYNCED_TABLES[i];
-        const { all, changed, removed } = await mergeTable(t, remote.data?.tables?.[t], tombs[t]);
-        merged[t] = all; changedAll[t] = changed; removedAll[t] = removed; pulled += changed.length + removed.length;
-        task.update({ done: 30 + (i + 1) / SYNCED_TABLES.length * 15 });
-      }
-      task.check();
-      // Local file bytes of files deleted on another device.
-      for (const id of removedAll.files || []) { const f = await db.files.get(id); if (f?.locations?.local) await local.remove(f.locations.local).catch(() => {}); }
-      await withoutSyncHooks(() => db.transaction('rw', SYNCED_TABLES.map(t => db.table(t)), async () => {
-        for (const t of SYNCED_TABLES) {
-          const rows = await stillNewer(t, changedAll[t]);
-          if (rows.length) await db.table(t).bulkPut(rows);
-          if (removedAll[t].length) await db.table(t).bulkDelete(removedAll[t]);
+      if (cloud().incremental) pulled = await this._syncRows(task, signal, part);
+      else {
+        const remote = await cloud().readSnapshot('hub-db.json', { signal, onProgress: part(0, 30) });
+        task.check();
+        task.update({ done: 30, detail: 'Đang gộp dữ liệu…' });
+        const lastQ = (await db.syncQueue.orderBy('seq').last())?.seq || 0;
+        // Nothing changed here and the drive file is the version this device wrote or merged last: no merge to do.
+        if (!lastQ && remote.id && remote.id === this._lastRid && !(await getSetting('sync.fullPushNeeded', false))) {
+          task.update({ done: 90, detail: 'Đang đồng bộ tiến độ…' });
+          const live = await this.syncLive({ quiet: true });
+          if (live.signedOut) { task.finish('Thiết bị đã được đăng xuất'); return { signedOut: true }; }
+          await setSetting('sync.lastAt', now());
+          task.finish('Không có thay đổi');
+          bus.emit('sync:done', { pulled: live.pulled || 0, uploaded: 0 });
+          return { pulled: live.pulled || 0, uploaded: 0 };
         }
-      }));
-      // Nothing to push (no local change queued, the drive already holds every row and tombstone): skip
-      // re-uploading the whole snapshot, which happened on every 2-minute sync before.
-      const same = !lastQ && remote.data && !(await getSetting('sync.fullPushNeeded', false))
-        && SYNCED_TABLES.every(t => (remote.data.tables?.[t]?.length || 0) === merged[t].length && !changedAll[t].length && !removedAll[t].length)
-        && JSON.stringify(Object.keys(tombs).map(t => [t, Object.keys(tombs[t] || {}).length])) === JSON.stringify(Object.keys(tombs).map(t => [t, Object.keys(remote.data.tombstones?.[t] || {}).length]));
-      task.update({ done: 50, detail: pulled ? `Đã nhận ${pulled} thay đổi · đang đẩy dữ liệu lên ${cloud().label}…` : `Đang đẩy dữ liệu lên ${cloud().label}…` });
-      const wrote = same ? null : await cloud().writeSnapshot(remote.id, { format: 'my-hub-snapshot', schema: db.verno, at: new Date().toISOString(), tables: merged, tombstones: tombs }, 'hub-db.json', { signal, onProgress: part(50, 40) });
-      this._lastRid = wrote?.id || remote.id || null;
-      await db.syncQueue.where('seq').belowOrEqual(lastQ).delete();   // changes made during the sync go next time
-      await setSetting('sync.fullPushNeeded', false);
+        const tombs = mergeTombstones(remote.data?.tombstones, await pendingDeletes(lastQ));
+        const merged = {};
+        const changedAll = {}, removedAll = {};
+        for (let i = 0; i < SYNCED_TABLES.length; i++) {
+          const t = SYNCED_TABLES[i];
+          const { all, changed, removed } = await mergeTable(t, remote.data?.tables?.[t], tombs[t]);
+          merged[t] = all; changedAll[t] = changed; removedAll[t] = removed; pulled += changed.length + removed.length;
+          task.update({ done: 30 + (i + 1) / SYNCED_TABLES.length * 15 });
+        }
+        task.check();
+        // Local file bytes of files deleted on another device.
+        for (const id of removedAll.files || []) { const f = await db.files.get(id); if (f?.locations?.local) await local.remove(f.locations.local).catch(() => {}); }
+        await withoutSyncHooks(() => db.transaction('rw', SYNCED_TABLES.map(t => db.table(t)), async () => {
+          for (const t of SYNCED_TABLES) {
+            const rows = await stillNewer(t, changedAll[t]);
+            if (rows.length) await db.table(t).bulkPut(rows);
+            if (removedAll[t].length) await db.table(t).bulkDelete(removedAll[t]);
+          }
+        }));
+        // Nothing to push (no local change queued, the drive already holds every row and tombstone): skip
+        // re-uploading the whole snapshot, which happened on every 2-minute sync before.
+        const same = !lastQ && remote.data && !(await getSetting('sync.fullPushNeeded', false))
+          && SYNCED_TABLES.every(t => (remote.data.tables?.[t]?.length || 0) === merged[t].length && !changedAll[t].length && !removedAll[t].length)
+          && JSON.stringify(Object.keys(tombs).map(t => [t, Object.keys(tombs[t] || {}).length])) === JSON.stringify(Object.keys(tombs).map(t => [t, Object.keys(remote.data.tombstones?.[t] || {}).length]));
+        task.update({ done: 50, detail: pulled ? `Đã nhận ${pulled} thay đổi · đang đẩy dữ liệu lên ${cloud().label}…` : `Đang đẩy dữ liệu lên ${cloud().label}…` });
+        const wrote = same ? null : await cloud().writeSnapshot(remote.id, { format: 'my-hub-snapshot', schema: db.verno, at: new Date().toISOString(), tables: merged, tombstones: tombs }, 'hub-db.json', { signal, onProgress: part(50, 40) });
+        this._lastRid = wrote?.id || remote.id || null;
+        await db.syncQueue.where('seq').belowOrEqual(lastQ).delete();   // changes made during the sync go next time
+        await setSetting('sync.fullPushNeeded', false);
+      }
 
       task.update({ done: 90, detail: 'Đang đồng bộ tiến độ…' });
       const live = await this.syncLive({ quiet: true });
@@ -458,6 +523,7 @@ export const storage = {
   },
   // "Gộp": the next sync merges everything (newer wins) and uploads this device's files.
   async mergeLocal() {
+    await setSetting('sync.rowsSeq', 0);   // read the account's rows from the start
     await setSetting('sync.fullPushNeeded', true);
   },
   // "Dùng dữ liệu của tài khoản": replace this device's library with the snapshot.
@@ -487,6 +553,8 @@ export const storage = {
         await db.syncQueue.clear();
         await db.devices.put(me);
       }));
+      await setSetting('sync.rowsSeq', 0);
+      await setSetting('sync.rowsInit', true);
       await setSetting('sync.fullPushNeeded', false);
       task.finish(`Đã lấy ${Object.values(remote.data?.tables || {}).reduce((s, r) => s + (r?.length || 0), 0)} bản ghi`);
       bus.emit('sync:done', { pulled: 0, uploaded: 0 });
@@ -526,7 +594,7 @@ export const storage = {
   // Local copies stay on this device.
   async deleteCloudData() {
     const task = tasks.start({ label: 'Đang xoá dữ liệu trên ' + cloud().label, detail: 'Đang xoá…', unit: 'items' });
-    try { const n = await cloud().deleteAll(); await db.syncQueue.clear(); task.finish(`Đã xoá ${n} tệp dữ liệu`); return n; }
+    try { const n = await cloud().deleteAll(); await db.syncQueue.clear(); await setSetting('sync.rowsSeq', 0); await setSetting('sync.rowsInit', false); task.finish(`Đã xoá ${n} tệp dữ liệu`); return n; }
     catch (e) { task.fail(e); throw e; }
   },
 };
