@@ -25,7 +25,8 @@ const MSG = {
   'Invalid login credentials': 'Email hoặc mật khẩu không đúng.',
   'Email not confirmed': 'Email chưa được xác nhận. Hãy bấm link trong email xác nhận rồi đăng nhập lại.',
   'User already registered': 'Email này đã có tài khoản. Hãy đăng nhập.',
-  'Password should be at least 10 characters.': 'Mật khẩu cần ít nhất 10 ký tự.',
+  'Password should be at least': 'Mật khẩu chưa đủ mạnh: cần ít nhất 10 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt.',
+  'Password should contain': 'Mật khẩu chưa đủ mạnh: cần ít nhất 10 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt.',
   'For security purposes, you can only request this after': 'Vừa gửi yêu cầu, hãy đợi một lát rồi thử lại.',
 };
 async function call(path, { method = 'POST', body, token, signal } = {}) {

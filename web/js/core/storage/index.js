@@ -434,7 +434,7 @@ export const storage = {
   },
   // Does the account already hold a library? (hub-db.json in the repo)
   async remoteHasData(mode = activeMode) {
-    const r = await (drives[mode] || github).readSnapshot('hub-db.json');
+    const r = await (drives[mode] || (mode === 'supabase' ? supabase : github)).readSnapshot('hub-db.json');
     return !!r.data && Object.values(r.data.tables || {}).some(rows => rows?.length);
   },
   // "Gộp": the next sync merges everything (newer wins) and uploads this device's files.

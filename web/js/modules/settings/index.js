@@ -7,7 +7,7 @@ import { thisDevice, renameDevice } from '../../core/device.js';
 import { icon } from '../../core/icons.js';
 import { account } from '../../core/account.js';
 import { supa } from '../../core/supabase.js';
-import { supabaseDialog } from '../../core/supabase-ui.js';
+import { supabaseDialog, afterSupabaseSignIn } from '../../core/supabase-ui.js';
 import { accountSummary, afterSignIn } from '../../core/account-ui.js';
 import { esc, h, modal, confirmBox, saveJson, pickJson, fmtBytes, fmtAgo } from '../../core/ui.js';
 import { skinSectionHtml, bindSkins } from '../../core/skin-ui.js';
@@ -299,8 +299,7 @@ async function renderPage() {
   root.querySelectorAll('input[name="storage-mode"]').forEach(r => r.onchange = async () => {
     if (r.value === 'supabase') {   // My Hub account: sign in first, then sync this device with it
       if (!supa.signedIn && !(await supabaseDialog())) { render(); return; }
-      await ctx.storage.setMode('supabase');
-      ctx.storage.sync().catch(e => ctx.toast(e.message, 'error'));
+      await afterSupabaseSignIn();
       ctx.toast('Chế độ lưu trữ: ' + MODES.supabase.label);
       render();
       return;
@@ -363,8 +362,7 @@ async function renderPage() {
   });
   on('supa-in', async () => {
     if (!(await supabaseDialog())) return render();
-    await ctx.storage.setMode('supabase');
-    ctx.storage.sync().catch(e => ctx.toast(e.message, 'error'));
+    await afterSupabaseSignIn();
     render();
   });
   on('supa-out', async () => {
