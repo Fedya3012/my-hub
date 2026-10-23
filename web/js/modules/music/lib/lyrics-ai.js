@@ -55,6 +55,16 @@ async function loadRecognizer(task, key) {
   try { T = await import(LIB); }
   catch (e) { modelFailed = mk; throw new Error('Không tải được thư viện nhận dạng giọng hát (cần kết nối mạng)'); }
   T.env.allowLocalModels = false;
+  // WebView Android không cho import() từ blob: → để ORT nạp .mjs/.wasm trực tiếp từ CDN, một luồng, không proxy worker
+  try {
+    T.env.useWasmCache = false;
+    const wa = T.env.backends?.onnx?.wasm;
+    if (wa) {
+      wa.proxy = false;
+      if (!(navigator.crossOriginIsolated)) wa.numThreads = 1;
+      wa.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.26.0-dev.20260416-b7804b056c/dist/';
+    }
+  } catch {}
   const files = new Map();
   const progress_callback = (p) => {
     if (p.status !== 'progress' || !p.total) return;
