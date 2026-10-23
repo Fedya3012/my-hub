@@ -1,7 +1,19 @@
 {
-  "app": "0.9.15.0",
+  "app": "0.9.16.0",
   "released": "2026-10-23",
   "changelog": [
+    {
+      "version": "0.9.16.0",
+      "date": "2026-10-23",
+      "notes": [
+        "Trình phát nhạc: lời bài hát AI nhận diện bằng Whisper chạy trong Web Worker, kèm các mô hình tiny, base và small đi cùng ứng dụng",
+        "Trình phát nhạc: dịch lời bài hát bằng mô hình mở (Opus-MT, NLLB) trong menu và trình sửa lời",
+        "Trình phát nhạc: thanh tab trên máy tính đồng bộ kiểu với Sách; nút nổi gọn hơn",
+        "Đồng bộ: thiết bị này và ổ đám mây có thể dùng cùng lúc, chọn theo từng thư mục; xung đột được đọc lại và gộp",
+        "Thanh tác vụ: menu ⋯ cho từng tác vụ (dừng, tắt đồng bộ, bỏ qua)",
+        "Giao diện: không còn chữ nhỏ hơn 10.5px; Writer Studio bỏ các trang cũ khi chuyển tab nhanh"
+      ]
+    },
     {
       "version": "0.9.15.0",
       "date": "2026-10-23",
@@ -665,7 +677,7 @@
     },
     "music": {
       "name": "Trình phát nhạc",
-      "version": "0.7.3",
+      "version": "0.7.4",
       "minApp": "0.3.0",
       "files": [
         "js/modules/music/index.js",
