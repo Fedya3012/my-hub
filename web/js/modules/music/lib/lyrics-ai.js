@@ -14,14 +14,15 @@ import { saveLyrics, loadLyrics } from './lyrics-sources.js';
 import { parseLyrics, toModel, toLrc } from './lyrics.js';
 import { mainFile } from './store.js';
 
-// The library and the three models (whisper tiny, base, small) ship with the app (web/vendor): nothing is fetched.
+// The library and the Base model ship with the app (web/vendor); Tiny, Small and Turbo are downloaded from Hugging Face
+// the first time they are picked (progress shown) and kept by the browser, so they work offline afterwards.
 const LIB = new URL('../../../../vendor/transformers/transformers.min.js', import.meta.url).href;
 const LOCAL_MODELS = new URL('../../../../vendor/whisper/', import.meta.url).href;
 export const AI_MODELS = {
-  tiny: { id: 'onnx-community/whisper-tiny', label: 'Nhanh', size: '≈ 40 MB' },
+  tiny: { id: 'onnx-community/whisper-tiny', label: 'Nhanh', size: '≈ 40 MB', remote: true },
   base: { id: 'onnx-community/whisper-base', label: 'Cân bằng', size: '≈ 80 MB' },
-  small: { id: 'onnx-community/whisper-small', label: 'Chính xác', size: '≈ 250 MB' },
-  // Not shipped with the app: downloaded from Hugging Face the first time it is picked (4-bit weights), then kept by the browser.
+  small: { id: 'onnx-community/whisper-small', label: 'Chính xác', size: '≈ 250 MB', remote: true },
+  // 4-bit weights; the others download their 8-bit files.
   turbo: { id: 'onnx-community/whisper-large-v3-turbo', label: 'Cao cấp', size: '≈ 800 MB', remote: true },
 };
 export const modelName = (k) => (AI_MODELS[k] ? `Whisper ${{ tiny: 'Tiny', base: 'Base', small: 'Small', turbo: 'Large v3 Turbo' }[k]} (${AI_MODELS[k].label})` : String(k || ''));
@@ -39,11 +40,15 @@ export async function ensureConsent(model = '') {
     if (!ok) return false;
     await setPref('lyrics.aiConsent', 1);
   }
-  // The big model is not in the app: say so once before its first download.
-  if (AI_MODELS[model]?.remote && Y().aiRemoteOk !== 1) {
-    const ok = await confirmBox('Mô hình cao cấp', `Whisper Large v3 Turbo sẽ được tải một lần từ huggingface.co (${AI_MODELS.turbo.size}), cần nhiều RAM và chạy chậm hơn trên điện thoại. Lời bài hát và âm thanh vẫn không rời khỏi máy. Tải?`, 'Tải', 'primary');
-    if (!ok) return false;
-    await setPref('lyrics.aiRemoteOk', 1);
+  // Only Base is in the app: say so once per model before its first download.
+  const M = AI_MODELS[model];
+  if (M?.remote) {
+    const got = Y().aiRemoteOk || {};
+    if (!got[model]) {
+      const ok = await confirmBox(`Mô hình ${M.label.toLowerCase()}`, `${modelName(model)} sẽ được tải một lần từ huggingface.co (${M.size}) rồi dùng được cả khi không có mạng${model === 'turbo' ? '; cần nhiều RAM và chạy chậm hơn trên điện thoại' : ''}. Lời bài hát và âm thanh vẫn không rời khỏi máy. Tải?`, 'Tải', 'primary');
+      if (!ok) return false;
+      await setPref('lyrics.aiRemoteOk', { ...got, [model]: 1 });
+    }
   }
   return true;
 }
@@ -103,14 +108,14 @@ async function loadRecognizer(task, key) {
   // Some ONNX Runtime builds cannot create a session for the 8-bit Whisper decoder; the same file is retried with
   // graph optimisations off. Models that ship with the app never download anything; the remote one tries 4-bit first.
   const q8 = [{ dtype: 'q8' }, { dtype: 'q8', session_options: { graphOptimizationLevel: 'disabled' } }];
-  const load = (m) => callWorker({ type: 'load', lib: LIB, local: LOCAL_MODELS, wasm: LIB.slice(0, LIB.lastIndexOf('/') + 1), mid: AI_MODELS[m].id + (w ? '_timestamped' : ''), remote: !!AI_MODELS[m].remote, tries: AI_MODELS[m].remote ? [{ dtype: 'q4' }, { dtype: 'q4', session_options: { graphOptimizationLevel: 'disabled' } }, ...q8] : q8 });
+  const load = (m) => callWorker({ type: 'load', lib: LIB, local: LOCAL_MODELS, wasm: LIB.slice(0, LIB.lastIndexOf('/') + 1), mid: AI_MODELS[m].id + (w ? '_timestamped' : ''), remote: !!AI_MODELS[m].remote, tries: m === 'turbo' ? [{ dtype: 'q4' }, { dtype: 'q4', session_options: { graphOptimizationLevel: 'disabled' } }, ...q8] : q8 });
   let eff = mk;
   try {
     try { await load(mk); }
     catch (e) {
       if (!(AI_MODELS[mk].remote && w)) throw e;
-      eff = 'small'; label = AI_MODELS.small.label;   // no word-timing export of the big model: the bundled Small does the word times
-      await load('small');
+      eff = 'base'; label = AI_MODELS.base.label;   // no word-timing export of the big model: the bundled Base does the word times
+      await load('base');
     }
   } catch (e) {
     modelFailed = mk;

@@ -2366,5 +2366,9 @@
  "Đặt lại lời": "Reset lyrics",
  "Lời do AI tạo cho bài này sẽ bị xoá.": "The AI-made lyrics for this song will be deleted.",
  "Bỏ đồng bộ từng chữ và bản dịch do AI, đưa lời về như trước khi dùng AI?": "Remove the AI word sync and translation and put the lyrics back as before AI?",
- "Đã đặt lại lời về như ban đầu": "Lyrics reset to original"
+ "Đã đặt lại lời về như ban đầu": "Lyrics reset to original",
+ "Rất nhanh, chính xác vừa, tải thêm ≈ 40 MB": "Very fast, fair accuracy, extra ≈ 40 MB download",
+ "Cân bằng, ≈ 80 MB (có sẵn trong app)": "Balanced, ≈ 80 MB (built into the app)",
+ "Chính xác, tải thêm ≈ 250 MB": "Accurate, extra ≈ 250 MB download",
+ "Tải": "Download"
 }

@@ -1,6 +1,6 @@
 // Whisper (transformers.js + ONNX Runtime wasm) in a Web Worker, so listening and the UI never wait for the
 // model: lyrics-ai.js sends 28-second pieces of audio and gets the text back. The library and the models ship
-// with the app (web/vendor/transformers, web/vendor/whisper); nothing is fetched from the network.
+// with the app (web/vendor/transformers, web/vendor/whisper = Base); the other models come from Hugging Face once.
 //   load { lib, local, wasm, mid, tries }  → { ok } (progress messages { progress } while it loads)
 //   run  { audio, opts }                   → { result }
 let T = null, asr = null;

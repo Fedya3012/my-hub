@@ -7,7 +7,7 @@ import { parseLyrics, toModel, toLrc } from '../lib/lyrics.js';
 import { db } from '../../../core/db.js';
 import { prefs, setPref } from '../lib/prefs.js';
 
-const MODEL_DESC = { tiny: 'Rất nhanh, chính xác vừa, ≈ 40 MB (có sẵn)', base: 'Cân bằng, ≈ 80 MB (có sẵn)', small: 'Chính xác, ≈ 250 MB (có sẵn)', turbo: 'Cao cấp, chính xác nhất, chậm và nặng, tải thêm ≈ 800 MB' };
+const MODEL_DESC = { tiny: 'Rất nhanh, chính xác vừa, tải thêm ≈ 40 MB', base: 'Cân bằng, ≈ 80 MB (có sẵn trong app)', small: 'Chính xác, tải thêm ≈ 250 MB', turbo: 'Cao cấp, chính xác nhất, chậm và nặng, tải thêm ≈ 800 MB' };
 
 export async function aiPick(t, kind, { anchor = null, onDone } = {}) {
   const ai = await import('../lib/lyrics-ai.js');
