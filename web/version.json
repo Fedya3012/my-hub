@@ -1,7 +1,16 @@
 {
-  "app": "0.9.17.1",
+  "app": "0.9.18.0",
   "released": "2026-10-23",
   "changelog": [
+    {
+      "version": "0.9.18.0",
+      "date": "2026-10-23",
+      "notes": [
+        "Trình phát nhạc: tùy chọn Whisper Large v3 Turbo cho lời bài hát AI, tách giọng hát, chọn mô hình cho từng bài",
+        "Trình phát nhạc: khi dịch lời bằng AI, chọn nhanh hoặc chính xác mỗi lần",
+        "Đồng bộ: không còn đơ ứng dụng khi thư viện lớn; bỏ qua bước gộp khi không có thay đổi"
+      ]
+    },
     {
       "version": "0.9.17.1",
       "date": "2026-10-23",
@@ -692,7 +701,7 @@
     },
     "music": {
       "name": "Trình phát nhạc",
-      "version": "0.7.4",
+      "version": "0.7.5",
       "minApp": "0.3.0",
       "files": [
         "js/modules/music/index.js",
