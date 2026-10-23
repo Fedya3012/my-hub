@@ -26,7 +26,7 @@ function serve() {
     let rel = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
     if (rel.endsWith('/')) rel += 'index.html';
     const file = path.normalize(path.join(WEB, rel));
-    if (!file.startsWith(WEB)) { res.writeHead(403); return res.end(); }
+    if (!file.startsWith(WEB + path.sep)) { res.writeHead(403); return res.end(); }   // a sibling folder named web… must not pass
     fs.stat(file, (err, st) => {
       if (err || !st.isFile()) { res.writeHead(404); return res.end('Not found'); }
       const type = TYPES[path.extname(file).toLowerCase()] || 'application/octet-stream';
@@ -46,6 +46,11 @@ function serve() {
   });
 }
 
+const APP_ORIGIN = `http://localhost:${PORT}`;
+const fromApp = (url) => { try { return new URL(url).origin === APP_ORIGIN; } catch { return false; } };
+// IPC answers only the app's own page (not a frame or page from elsewhere).
+const fromAppFrame = (e) => fromApp(e.senderFrame?.url || '');
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 1280, height: 820, minWidth: 360, minHeight: 560,
@@ -62,13 +67,21 @@ function createWindow() {
     if (/^https?:/.test(url)) shell.openExternal(url);
     return { action: 'deny' };
   });
+  // The window only ever shows the app: a link that would navigate it to another site opens in the browser instead,
+  // so no outside page gets the hubDesktop bridge (preload.js).
+  win.webContents.on('will-navigate', (e, url) => {
+    if (fromApp(url)) return;
+    e.preventDefault();
+    if (/^https?:/.test(url)) shell.openExternal(url);
+  });
   win.loadURL(`http://localhost:${PORT}/#library`);
 }
 
 // Cloud drives (Dropbox, OneDrive token): some providers send no CORS headers, so the page asks the main
 // process to make the request (no CORS there). Only http(s) and only the methods the app uses.
 function setupHttp() {
-  ipcMain.handle('hub:http', async (_e, { url, method = 'GET', headers = {}, body = null }) => {
+  ipcMain.handle('hub:http', async (e, { url, method = 'GET', headers = {}, body = null }) => {
+    if (!fromAppFrame(e)) throw new Error('Không được phép');
     if (!/^https?:\/\//i.test(url) || !['GET', 'PUT', 'DELETE', 'POST', 'HEAD'].includes(method)) throw new Error('Yêu cầu không hợp lệ');
     const res = await net.fetch(url, { method, headers, body: body == null ? undefined : (typeof body === 'string' ? body : Buffer.from(body)), bypassCustomProtocolHandlers: true });
     const buf = method === 'HEAD' ? new ArrayBuffer(0) : await res.arrayBuffer();
@@ -94,12 +107,14 @@ function setupExclusive() {
     return proc;
   };
   ipcMain.handle('hub:xs-available', () => process.platform === 'win32' && fs.existsSync(exe));
-  ipcMain.handle('hub:xs', (_e, line) => {
+  ipcMain.handle('hub:xs', (e, line) => {
+    if (!fromAppFrame(e)) throw new Error('Không được phép');
     if (typeof line !== 'string' || /[\r\n]/.test(line)) throw new Error('Lệnh không hợp lệ');
     start().stdin.write(line + '\n');
   });
   // Song → temp file named by key (track id + size). The last few are kept so going back is instant.
-  ipcMain.handle('hub:xs-file', async (_e, { key, data }) => {
+  ipcMain.handle('hub:xs-file', async (e, { key, data }) => {
+    if (!fromAppFrame(e)) throw new Error('Không được phép');
     await fs.promises.mkdir(dir, { recursive: true });
     const file = path.join(dir, String(key).replace(/[^\w.-]/g, '_'));
     if (data) await fs.promises.writeFile(file, Buffer.from(data));

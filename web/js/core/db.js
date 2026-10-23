@@ -254,6 +254,23 @@ export async function relatedItems(itemId) {
     .filter(r => r.item && !r.item.deleted);
 }
 
+// Keys and passwords kept in settings rows stay on this device: a backup file leaves them out, and importing a
+// backup keeps this device's own values. [setting key, path inside its value]
+const SECRET_SETTINGS = [['music.prefs', ['qol', 'lbToken']], ['params.podcasts', ['piKey']], ['params.podcasts', ['piSecret']]];
+function withSecretsFrom(row, source) {
+  const paths = SECRET_SETTINGS.filter(([k]) => k === row?.key).map(([, p]) => p);
+  if (!paths.length || !row.value || typeof row.value !== 'object') return row;
+  const value = structuredClone(row.value);
+  for (const p of paths) {
+    let to = value, from = source;
+    for (const k of p.slice(0, -1)) { to = to?.[k]; from = from?.[k]; }
+    if (!to || typeof to !== 'object') continue;
+    const last = p[p.length - 1];
+    if (from && typeof from === 'object' && last in from) to[last] = from[last]; else delete to[last];
+  }
+  return { ...row, value };
+}
+
 // Full backup as plain JSON (blobs excluded — they are files, not data).
 export async function exportAll({ includeActivity = true } = {}) {
   const tables = ['items', 'files', 'links', 'collections', 'modules', 'settings', 'themes', 'progress', 'devices',
@@ -264,6 +281,7 @@ export async function exportAll({ includeActivity = true } = {}) {
   if (includeActivity) tables.push('activity');
   const data = {};
   for (const t of tables) data[t] = await db.table(t).toArray();
+  data.settings = data.settings.map(r => withSecretsFrom(r, null));
   return { format: 'my-hub-backup', schema: db.verno, exportedAt: new Date().toISOString(), data };
 }
 
@@ -275,7 +293,11 @@ export async function importAll(backup, { mode = 'merge' } = {}) {
   const DEVICE_TABLES = new Set(['devices', 'modules', 'syncQueue']);
   const deviceKey = (k) => /^(device\.|storage\.|sync\.|account\.|cloud)/.test(String(k));
   const tables = Object.keys(backup.data).filter(t => !DEVICE_TABLES.has(t) && db.tables.some(x => x.name === t));
-  if (backup.data.settings) backup = { ...backup, data: { ...backup.data, settings: backup.data.settings.filter(r => !deviceKey(r.key)) } };
+  if (backup.data.settings) {
+    const mine = new Map((await db.settings.bulkGet([...new Set(SECRET_SETTINGS.map(([k]) => k))])).filter(Boolean).map(r => [r.key, r.value]));
+    const settings = backup.data.settings.filter(r => r && !deviceKey(r.key)).map(r => withSecretsFrom(r, mine.get(r.key)));
+    backup = { ...backup, data: { ...backup.data, settings } };
+  }
   let count = 0;
   // Imported records keep their own updatedAt/rev; the whole DB is marked for a full sync instead.
   await withoutSyncHooks(() => db.transaction('rw', tables.map(t => db.table(t)), async () => {

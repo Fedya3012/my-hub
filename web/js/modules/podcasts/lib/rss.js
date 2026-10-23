@@ -106,7 +106,8 @@ export const parseChapters = (j) => (j?.chapters || []).filter(c => c.toc !== fa
 // OPML import / export (the standard way to move subscriptions between podcast apps).
 export function parseOpml(xml) {
   const doc = new DOMParser().parseFromString(xml, 'application/xml');
-  return [...doc.querySelectorAll('outline[xmlUrl], outline[xmlurl]')].map(o => ({ title: o.getAttribute('title') || o.getAttribute('text') || '', feedUrl: o.getAttribute('xmlUrl') || o.getAttribute('xmlurl') }));
+  return [...doc.querySelectorAll('outline[xmlUrl], outline[xmlurl]')].map(o => ({ title: o.getAttribute('title') || o.getAttribute('text') || '', feedUrl: web(o.getAttribute('xmlUrl') || o.getAttribute('xmlurl')) }))
+    .filter(f => f.feedUrl);   // only http(s) feeds: a file: or javascript: address in someone else's OPML is skipped
 }
 export function toOpml(shows) {
   const e = (s) => String(s || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));

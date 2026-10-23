@@ -47,6 +47,13 @@ export async function open(host, source, { lastLocation = null, prefs, rtl = fal
   const { makeBook } = await import(vendor('foliate/view.js'));
   const { Overlayer } = await import(vendor('foliate/overlayer.js'));
   const book = typeof source?.sections === 'object' ? source : await makeBook(source);
+  // Book pages run in a same-origin iframe (foliate needs allow-scripts there for its events), so a script in a
+  // book could read this app's storage. The iframes carry a csp attribute (vendor paginator / fixed-layout);
+  // EPUB pages also get the same policy as a meta tag, for browsers without that attribute.
+  book.transformTarget?.addEventListener('data', ({ detail }) => {
+    if (!/html/.test(detail.type)) return;
+    detail.data = Promise.resolve(detail.data).then(s => String(s).replace(/<head(\s[^>]*)?>/i, (m) => `${m}<meta http-equiv="Content-Security-Policy" content="script-src 'none'; object-src 'none'"/>`));
+  });
   if (rtl && book.rendition?.layout === 'pre-paginated') book.dir = 'rtl';
   const view = document.createElement('foliate-view');
   host.append(view);
