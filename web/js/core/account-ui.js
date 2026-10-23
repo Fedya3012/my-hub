@@ -27,7 +27,7 @@ export function avatar(u = account.user, cls = '') {
   const name = account.displayName(u);
   const ch = (name.trim()[0] || '?').toUpperCase();
   const img = u?.picture && navigator.onLine
-    ? `<img src="${esc(u.picture)}" alt="" referrerpolicy="no-referrer" loading="lazy" onerror="this.remove()">` : '';
+    ? `<img src="${esc(u.picture)}" alt="" referrerpolicy="no-referrer" loading="lazy" data-drop-on-error>` : '';
   return `<span class="acct-avatar ${cls}" aria-hidden="true">${esc(ch)}${img}</span>`;
 }
 
