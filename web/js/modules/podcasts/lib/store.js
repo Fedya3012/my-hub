@@ -14,6 +14,13 @@ export const LOCAL_SHOW = 'pc:local';
 export const showIdOf = (feedUrl) => feedUrl === 'local:' ? LOCAL_SHOW : 'pc:' + hash(normFeed(feedUrl).replace(/^https?:\/\//, '').toLowerCase());
 export const episodeIdOf = (showId, guid) => 'ep:' + hash(showId + '|' + guid);
 const changed = (what = {}) => bus.emit('podcasts:changed', what);
+// Imported audio files (the "Tệp âm thanh của tôi" show) live on one device only, but their rows sync. On another
+// device they have nothing to play, so they are hidden there until the file is on that device.
+async function onThisDevice(eps) {
+  if (!eps.some(e => e?.local)) return eps;
+  const have = new Set(await db.pcDownloads.toCollection().primaryKeys());
+  return eps.filter(e => !e?.local || have.has(e.id));
+}
 
 // ── Shows ───────────────────────────────────────────────────────
 export const show = (id) => db.pcShows.get(id);
@@ -146,7 +153,7 @@ export async function pool(items, n, fn) {
 export const episode = (id) => db.pcEpisodes.get(id);
 export async function episodesOf(showId) {
   const list = await db.pcEpisodes.where('showId').equals(showId).toArray();
-  return list.filter(e => !e.deleted).sort((a, b) => (b.pubDate || 0) - (a.pubDate || 0));
+  return (await onThisDevice(list.filter(e => !e.deleted))).sort((a, b) => (b.pubDate || 0) - (a.pubDate || 0));
 }
 export async function withShows(eps) {
   const ids = [...new Set(eps.map(e => e.showId))];
@@ -178,7 +185,7 @@ export async function clearInbox(ids) {
 }
 export async function inbox() {
   const subs = new Set((await shows()).map(s => s.itemId));
-  const eps = (await db.pcEpisodes.where('inbox').equals(1).toArray()).filter(e => !e.deleted && !e.played && subs.has(e.showId));
+  const eps = await onThisDevice((await db.pcEpisodes.where('inbox').equals(1).toArray()).filter(e => !e.deleted && !e.played && subs.has(e.showId)));
   return withShows(eps.sort((a, b) => (b.pubDate || 0) - (a.pubDate || 0)));
 }
 
@@ -188,14 +195,14 @@ export async function continueListening(limit = 12) {
     .filter(r => r.state !== 'finished' && r.state !== 'reset' && r.position > 5 && !r.itemId.startsWith('podcasts:'))
     .sort((a, b) => b.updatedAt - a.updatedAt).slice(0, limit);
   const eps = await db.pcEpisodes.bulkGet(rows.map(r => r.itemId));
-  return withShows(eps.map((e, i) => e && !e.deleted && !e.played ? { ...e, progress: rows[i] } : null).filter(Boolean));
+  return withShows(await onThisDevice(eps.map((e, i) => e && !e.deleted && !e.played ? { ...e, progress: rows[i] } : null).filter(Boolean)));
 }
 
 // Newest episodes from subscriptions ("Tập mới").
 export async function latest(limit = 20) {
   const subs = await shows();
   const ids = new Set(subs.map(s => s.itemId));
-  const eps = (await db.pcEpisodes.orderBy('pubDate').reverse().limit(400).toArray()).filter(e => ids.has(e.showId) && !e.deleted);
+  const eps = await onThisDevice((await db.pcEpisodes.orderBy('pubDate').reverse().limit(400).toArray()).filter(e => ids.has(e.showId) && !e.deleted));
   return withShows(eps.slice(0, limit));
 }
 
@@ -215,7 +222,7 @@ export async function enqueue(ids, { next = false } = {}) {
 export async function dequeue(id) { const q = await queue(); if (q.includes(id)) await setQueue(q.filter(x => x !== id)); }
 export async function moveInQueue(id, to) { const q = (await queue()).filter(x => x !== id); q.splice(Math.max(0, to), 0, id); await setQueue(q); }
 export const clearQueue = () => setQueue([]);
-export async function queueEpisodes() { const ids = await queue(); return withShows((await db.pcEpisodes.bulkGet(ids)).filter(Boolean)); }
+export async function queueEpisodes() { const ids = await queue(); return withShows(await onThisDevice((await db.pcEpisodes.bulkGet(ids)).filter(Boolean))); }
 
 // Smart filters: built-in ones plus the user's own (pcPlaylists kind 'smart').
 //   rules: { state: 'unplayed'|'inprogress'|'played'|'', downloaded, starred, showIds: [], days, minMin, maxMin, sort: 'new'|'old'|'short'|'long' }
@@ -245,7 +252,7 @@ export async function addToPlaylist(pid, ids) {
 export async function runFilter(rules = {}, { limit = 300 } = {}) {
   // Shows only opened from search (not subscribed) count only for downloads and starred episodes.
   const subs = new Set((await shows({ subscribed: !(rules.downloaded || rules.starred) })).map(s => s.itemId));
-  let eps = (await db.pcEpisodes.toArray()).filter(e => !e.deleted && subs.has(e.showId));
+  let eps = await onThisDevice((await db.pcEpisodes.toArray()).filter(e => !e.deleted && subs.has(e.showId)));
   if (rules.showIds?.length) eps = eps.filter(e => rules.showIds.includes(e.showId));
   const prog = await progressOf(eps.map(e => e.id));
   const dl = new Set(await db.pcDownloads.toCollection().primaryKeys());

@@ -157,12 +157,15 @@ class PodPlayer extends EventTarget {
   }
   async next() {
     const q = await store.queue();
-    const id = q.find(x => x !== this.ep?.id);
-    if (!id) { this.pause(); return false; }
-    const e = await store.episode(id);
-    if (!e) { await store.dequeue(id); return this.next(); }
-    await this.playEpisode(e);
-    return true;
+    for (const id of q) {
+      if (id === this.ep?.id) continue;
+      const e = await store.episode(id);
+      if (!e) { await store.dequeue(id); continue; }
+      if (e.local && !(await store.isDownloaded(id))) continue;   // an imported file that is on another device only
+      await this.playEpisode(e);
+      return true;
+    }
+    this.pause(); return false;
   }
 
   // ── Ticks: Skip silence, outro, sleep timer, played mark ───────
