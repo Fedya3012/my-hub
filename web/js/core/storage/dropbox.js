@@ -12,6 +12,9 @@ const API = 'https://api.dropboxapi.com/2', CONTENT = 'https://content.dropboxap
 const CHUNK = 8 * 1024 * 1024;
 const seen = new Map();
 const norm = (d) => JSON.stringify({ ...d, at: undefined });
+// What was last read or written, kept as the parsed object after a read: turning a big snapshot back into text on every
+// read froze the page for seconds. It is only compared (as text) when something is about to be written.
+const same = (name, text) => { const v = seen.get(name); return v != null && (typeof v === 'string' ? v : norm(v)) === text; };
 const safe = (s) => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[đĐ]/g, 'd').replace(/[^\w.\-]+/g, '_').slice(0, 80);
 export const fileKey = (row) => `f-${row.id}-${safe(row.name || 'file')}`;
 // Header values must stay ASCII: escape everything else the way Dropbox expects.
@@ -76,19 +79,20 @@ export const dropbox = {
     const text = await r.text();
     onProgress?.(text.length, text.length);
     const data = JSON.parse(text);
-    seen.set(name, norm(data));
+    seen.set(name, data);
     let rev = null; try { rev = JSON.parse(r.header('dropbox-api-result') || '{}').rev; } catch { /* ignore */ }
     return { id: rev || 'unknown', data };
   },
 
   async writeSnapshot(rid, data, name = 'hub-db.json', { signal, onProgress } = {}) {
-    if (rid && seen.get(name) === norm(data)) { onProgress?.(1, 1); return { id: rid }; }
+    const mine = norm(data);
+    if (rid && same(name, mine)) { onProgress?.(1, 1); return { id: rid }; }
     const mode = rid && rid !== 'unknown' ? { '.tag': 'update', update: rid } : rid === 'unknown' ? 'overwrite' : 'add';
     const r = await up('/files/upload', { path: '/' + name, mode, autorename: false, mute: true }, JSON.stringify(data), { signal });
     if (await isConflict(r)) throw err('Một máy khác vừa cập nhật dữ liệu, sẽ đồng bộ lại ngay.', 'conflict');
     if (!r.ok) throw await bad(r, `ghi ${name}`);
     const j = JSON.parse(await r.text());
-    seen.set(name, norm(data));
+    seen.set(name, mine);
     onProgress?.(1, 1);
     return { id: j.rev };
   },

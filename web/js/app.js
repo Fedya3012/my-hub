@@ -234,7 +234,8 @@ async function boot() {
   await safe(() => registerSW(), 'sw');
   autoCheck();
   setInterval(autoCheck, 3600e3);
-  if (await getSetting('storage.mode', 'local') !== 'local') { storage.syncLiveSoon(0); storage.syncSoon(3000); }
+  // Sync waits 20 s so the first screens are usable first: a big library's sync is heavy.
+  if (await getSetting('storage.mode', 'local') !== 'local') { storage.syncLiveSoon(0); storage.syncSoon(20000); }
 }
 
 boot().catch((e) => {

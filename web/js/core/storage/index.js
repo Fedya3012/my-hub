@@ -339,6 +339,16 @@ export const storage = {
       task.check();
       task.update({ done: 30, detail: 'Đang gộp dữ liệu…' });
       const lastQ = (await db.syncQueue.orderBy('seq').last())?.seq || 0;
+      // Nothing changed here and the drive file is the version this device wrote or merged last: no merge to do.
+      if (!lastQ && remote.id && remote.id === this._lastRid && !(await getSetting('sync.fullPushNeeded', false))) {
+        task.update({ done: 90, detail: 'Đang đồng bộ tiến độ…' });
+        const live = await this.syncLive({ quiet: true });
+        if (live.signedOut) { task.finish('Thiết bị đã được đăng xuất'); return { signedOut: true }; }
+        await setSetting('sync.lastAt', now());
+        task.finish('Không có thay đổi');
+        bus.emit('sync:done', { pulled: live.pulled || 0, uploaded: 0 });
+        return { pulled: live.pulled || 0, uploaded: 0 };
+      }
       const tombs = mergeTombstones(remote.data?.tombstones, await pendingDeletes(lastQ));
       const merged = {};
       let pulled = 0;
@@ -365,7 +375,8 @@ export const storage = {
         && SYNCED_TABLES.every(t => (remote.data.tables?.[t]?.length || 0) === merged[t].length && !changedAll[t].length && !removedAll[t].length)
         && JSON.stringify(Object.keys(tombs).map(t => [t, Object.keys(tombs[t] || {}).length])) === JSON.stringify(Object.keys(tombs).map(t => [t, Object.keys(remote.data.tombstones?.[t] || {}).length]));
       task.update({ done: 50, detail: pulled ? `Đã nhận ${pulled} thay đổi · đang đẩy dữ liệu lên ${cloud().label}…` : `Đang đẩy dữ liệu lên ${cloud().label}…` });
-      if (!same) await cloud().writeSnapshot(remote.id, { format: 'my-hub-snapshot', schema: db.verno, at: new Date().toISOString(), tables: merged, tombstones: tombs }, 'hub-db.json', { signal, onProgress: part(50, 40) });
+      const wrote = same ? null : await cloud().writeSnapshot(remote.id, { format: 'my-hub-snapshot', schema: db.verno, at: new Date().toISOString(), tables: merged, tombstones: tombs }, 'hub-db.json', { signal, onProgress: part(50, 40) });
+      this._lastRid = wrote?.id || remote.id || null;
       await db.syncQueue.where('seq').belowOrEqual(lastQ).delete();   // changes made during the sync go next time
       await setSetting('sync.fullPushNeeded', false);
 
@@ -577,7 +588,13 @@ bus.on('account:changed', async ({ signedIn, reason }) => {
 const autoOk = async () => (await storage.mode()) !== 'local' && cloudReady() && cloudTokenOk() && navigator.onLine;
 let qSoon = 0;   // one check per burst, however many rows a bulk write queued
 db.syncQueue.hook('creating', () => { if (qSoon) return; qSoon = setTimeout(async () => { qSoon = 0; if (await autoOk()) storage.syncSoon(8000); }, 0); });
-setInterval(async () => { if (document.visibilityState === 'visible' && await autoOk()) storage.sync({ quiet: true }).catch(() => {}); }, 120_000);
+// Every 2 minutes only when there is something to send; otherwise a full re-read of the drive file (tens of MB for
+// a big library) every 10 minutes is enough: progress follows through the small live channel meanwhile.
+setInterval(async () => {
+  if (document.visibilityState !== 'visible' || !(await autoOk())) return;
+  if (!(await db.syncQueue.count()) && now() - (await getSetting('sync.lastAt', 0) || 0) < 10 * 60_000) return;
+  storage.sync({ quiet: true }).catch(() => {});
+}, 120_000);
 
 // Pull when the app comes to the foreground (open on phone after pausing on Windows),
 // push when it goes to the background, and every 45s while visible.
