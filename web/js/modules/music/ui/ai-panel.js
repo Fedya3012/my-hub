@@ -10,6 +10,8 @@ const REC = {
   tiny: { name: 'Tiny', tag: 'Rất nhanh', desc: 'Nhẹ nhất, hợp bài rõ lời và máy yếu.', size: '≈ 40 MB', stars: 1 },
   base: { name: 'Base', tag: 'Cân bằng', desc: 'Có sẵn trong app, dùng được ngay, không cần tải.', size: '≈ 80 MB', stars: 2 },
   small: { name: 'Small', tag: 'Chính xác', desc: 'Nghe rõ tiếng Việt, Nhật, Hàn; khuyên dùng khi đồng bộ từng chữ.', size: '≈ 250 MB', stars: 3 },
+  medium: { name: 'Medium', tag: 'Rất chính xác', desc: 'Giữa Small và Large; nghe tốt nhiều ngôn ngữ, vừa phải về RAM.', size: '≈ 500 MB', stars: 4 },
+  large: { name: 'Large v3', tag: 'Tốt nhất', desc: 'Mô hình Whisper lớn nhất, chính xác nhất, rất nặng và chậm.', size: '≈ 1,1 GB', stars: 4 },
   turbo: { name: 'Large v3 Turbo', tag: 'Cao cấp', desc: 'Chính xác nhất, nặng và chậm; cần nhiều RAM.', size: '≈ 800 MB', stars: 4 },
   distil: { name: 'Distil Large v3', tag: 'Tiếng Anh nhanh', desc: 'Chỉ tiếng Anh, gần bằng Large v3 mà nhanh hơn nhiều.', size: '≈ 750 MB', stars: 4 },
 };

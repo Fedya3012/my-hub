@@ -9,7 +9,7 @@ import { storage } from '../../../core/storage/index.js';
 import { tasks } from '../../../core/tasks.js';
 import { bus } from '../../../core/bus.js';
 import { prefs, setPref } from './prefs.js';
-import { confirmBox } from '../../../core/ui.js';
+import { confirmBox, toast } from '../../../core/ui.js';
 import { saveLyrics, loadLyrics } from './lyrics-sources.js';
 import { parseLyrics, toModel, toLrc } from './lyrics.js';
 import { mainFile } from './store.js';
@@ -24,6 +24,9 @@ export const AI_MODELS = {
   small: { id: 'onnx-community/whisper-small', label: 'Chính xác', size: '≈ 250 MB', remote: true },
   // 4-bit weights; the others download their 8-bit files.
   turbo: { id: 'onnx-community/whisper-large-v3-turbo', label: 'Cao cấp', size: '≈ 800 MB', remote: true },
+  // Heavier than Small; their word-timing exports (`<id>_timestamped`) are tried first, Base times the words if a repo has none.
+  medium: { id: 'onnx-community/whisper-medium', label: 'Rất chính xác', size: '≈ 500 MB', remote: true },
+  large: { id: 'onnx-community/whisper-large-v3-ONNX', label: 'Tốt nhất', size: '≈ 1,1 GB', remote: true },
   // English only, ~6× faster than Large v3 with close accuracy; a good pick for English songs on a PC.
   distil: { id: 'distil-whisper/distil-large-v3', label: 'Tiếng Anh nhanh', size: '≈ 750 MB', remote: true, english: true },
 };
@@ -33,7 +36,7 @@ export function syncCustom() {
   if (/^[\w.-]+\/[\w.-]+$/.test(id)) AI_MODELS.custom = { id, label: 'Tùy chọn', size: 'không rõ dung lượng', remote: true };
   else delete AI_MODELS.custom;
 }
-const NAMES = { tiny: 'Tiny', base: 'Base', small: 'Small', turbo: 'Large v3 Turbo', distil: 'Distil Large v3' };
+const NAMES = { tiny: 'Tiny', base: 'Base', small: 'Small', medium: 'Medium', large: 'Large v3', turbo: 'Large v3 Turbo', distil: 'Distil Large v3' };
 export const modelName = (k) => { syncCustom(); return AI_MODELS[k] ? (k === 'custom' ? `Mô hình tự chọn · ${AI_MODELS.custom.id}` : `Whisper ${NAMES[k]} (${AI_MODELS[k].label})`) : String(k || ''); };
 const RATE = 16000, PIECE = 28;
 const MISS = 'music.lyricsAiMiss';
@@ -124,13 +127,14 @@ async function loadRecognizer(task, key) {
   // Some ONNX Runtime builds cannot create a session for the 8-bit Whisper decoder; the same file is retried with
   // graph optimisations off. Models that ship with the app never download anything; the remote one tries 4-bit first.
   const q8 = [{ dtype: 'q8' }, { dtype: 'q8', session_options: { graphOptimizationLevel: 'disabled' } }];
-  const load = (m) => callWorker({ type: 'load', lib: LIB, local: LOCAL_MODELS, wasm: LIB.slice(0, LIB.lastIndexOf('/') + 1), mid: AI_MODELS[m].id + (w ? '_timestamped' : ''), remote: !!AI_MODELS[m].remote, tries: m === 'turbo' || m === 'distil' ? [{ dtype: 'q4' }, { dtype: 'q4', session_options: { graphOptimizationLevel: 'disabled' } }, ...q8] : m === 'custom' ? [{}, ...q8, { dtype: 'q4' }] : q8 });
+  const load = (m) => callWorker({ type: 'load', lib: LIB, local: LOCAL_MODELS, wasm: LIB.slice(0, LIB.lastIndexOf('/') + 1), mid: AI_MODELS[m].id + (w ? '_timestamped' : ''), remote: !!AI_MODELS[m].remote, tries: m === 'turbo' || m === 'distil' || m === 'medium' || m === 'large' ? [{ dtype: 'q4' }, { dtype: 'q4', session_options: { graphOptimizationLevel: 'disabled' } }, ...q8] : m === 'custom' ? [{}, ...q8, { dtype: 'q4' }] : q8 });
   let eff = mk;
   try {
     try { await load(mk); }
     catch (e) {
       if (!(AI_MODELS[mk].remote && w)) throw e;
       eff = 'base'; label = AI_MODELS.base.label;   // no word-timing export of the big model: the bundled Base does the word times
+      toast(`${modelName(mk)} chưa có bản cho giờ từng chữ, dùng ${modelName('base')} để căn giờ`, 'warn');
       await load('base');
     }
   } catch (e) {

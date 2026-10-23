@@ -2413,5 +2413,9 @@
  "Không có thay đổi để đẩy": "Nothing to upload",
  "Lỗi ": "Error ",
  "đọc dữ liệu": "reading data",
- "ghi dữ liệu": "writing data"
+ "ghi dữ liệu": "writing data",
+ "Giữa Small và Large; nghe tốt nhiều ngôn ngữ, vừa phải về RAM.": "Between Small and Large; hears many languages well, moderate RAM.",
+ "Mô hình Whisper lớn nhất, chính xác nhất, rất nặng và chậm.": "The biggest Whisper model, most accurate, very heavy and slow.",
+ "Rất chính xác, nặng vừa, tải thêm ≈ 500 MB": "Very accurate, moderately heavy, extra ≈ 500 MB download",
+ "Tốt nhất trong họ Whisper, rất nặng và chậm, tải thêm ≈ 1,1 GB": "Best of the Whisper family, very heavy and slow, extra ≈ 1.1 GB download"
 }

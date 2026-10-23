@@ -12,6 +12,8 @@ const MODEL_DESC = {
   tiny: 'Rất nhanh, chính xác vừa, tải thêm ≈ 40 MB',
   base: 'Cân bằng, ≈ 80 MB (có sẵn trong app)',
   small: 'Chính xác, nghe rõ tiếng Việt, Nhật, Hàn, tải thêm ≈ 250 MB',
+  medium: 'Rất chính xác, nặng vừa, tải thêm ≈ 500 MB',
+  large: 'Tốt nhất trong họ Whisper, rất nặng và chậm, tải thêm ≈ 1,1 GB',
   turbo: 'Cao cấp, chính xác nhất, chậm và nặng, tải thêm ≈ 800 MB',
   distil: 'Chỉ tiếng Anh, gần bằng Large v3 mà nhanh hơn nhiều, tải thêm ≈ 750 MB',
 };

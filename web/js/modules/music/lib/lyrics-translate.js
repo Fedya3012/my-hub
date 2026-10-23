@@ -93,15 +93,37 @@ const looping = (out, src) => {
 };
 const clean = (x) => String(x || '').replace(/\s+/g, ' ').trim();
 
+// The 8-bit NLLB export sometimes does not stop: after the real translation it goes on in other languages
+// ("Tôi cố tin vào nó. Snažím se tomu…"). Words after the first one that cannot belong to the target language
+// are cut; words copied from the source line (names) are kept.
+const VI_SYL = /^(ngh|ng|nh|ch|gh|gi|kh|ph|th|tr|qu|[bcdđghklmnpqrstvx])?[aàáảãạăằắẳẵặâầấẩẫậeèéẻẽẹêềếểễệiìíỉĩịoòóỏõọôồốổỗộơờớởỡợuùúủũụưừứửữựyỳýỷỹỵ]+(ch|ng|nh|c|m|n|p|t)?$/i;
+const SCRIPT_OF = { vi: /[A-Za-zÀ-ỹ]/, en: /[A-Za-z]/, fr: /[A-Za-zÀ-ÿ]/, es: /[A-Za-zÀ-ÿ¿¡]/, de: /[A-Za-zÀ-ÿß]/, ja: /[\u3040-\u30FF\u4E00-\u9FFF]/, zh: /[\u4E00-\u9FFF]/, ko: /[\uAC00-\uD7AF]/ };
+export function trimStray(out, src, tgt) {
+  const known = new Set(src.toLowerCase().split(/[^\p{L}\p{N}']+/u).filter(Boolean));
+  const words = out.split(/\s+/).filter(Boolean), keep = [];
+  for (const w of words) {
+    const bare = w.replace(/[^\p{L}\p{N}']/gu, '').toLowerCase();
+    if (!bare || known.has(bare) || /^\d+$/.test(bare)) { keep.push(w); continue; }
+    const ok = tgt === 'vi' ? VI_SYL.test(bare) || /^[\d]/.test(bare) : (SCRIPT_OF[tgt] ? SCRIPT_OF[tgt].test(bare) : true);
+    if (!ok) break;
+    keep.push(w);
+  }
+  let r = keep.join(' ');
+  // A one-sentence lyric line must not come back as three sentences.
+  const sentences = (x) => (x.match(/[.!?。！？]+(\s|$)/g) || []).length;
+  if (sentences(r) > sentences(src) + 1) r = r.split(/(?<=[.!?。！？])\s+/).slice(0, Math.max(1, sentences(src))).join(' ');
+  return r.replace(/[\s,;:–-]+$/, '') || out;
+}
+
 async function nllbLines(texts, src, tgt, task) {
   const out = [];
   for (let i = 0; i < texts.length; i++) {
     if (task.cancelled) return null;
-    const text = texts[i], max = Math.min(96, Math.max(20, Math.ceil(text.length * 1.3)));
+    const text = texts[i], nWords = text.split(/\s+/).length, max = Math.min(80, Math.max(12, Math.ceil(nWords * 2.2) + 4));
     const go = async (extra) => clean(((await callWorker({ type: 'run', texts: [text], opts: { src_lang: NLLB.code[lineLang(text, src)], tgt_lang: NLLB.code[tgt], max_new_tokens: max, ...extra } })).result?.[0] || {}).translation_text);
     let r = await go({ num_beams: 3, repetition_penalty: 1.2, no_repeat_ngram_size: 3 });
     if (!r || looping(r, text)) r = (await go({ num_beams: 1, repetition_penalty: 1.6, no_repeat_ngram_size: 2, max_new_tokens: Math.ceil(max / 2) })) || text;
-    out.push(r);
+    out.push(trimStray(r, text, tgt));
     task.update({ done: i + 1, total: texts.length, unit: 'items', detail: 'Đang dịch từng dòng…' });
     if (i % 4 === 3) await new Promise(r => setTimeout(r, 0));
   }
