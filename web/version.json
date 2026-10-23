@@ -1,7 +1,19 @@
 {
-  "app": "0.9.18.0",
+  "app": "0.9.19.0",
   "released": "2026-10-23",
   "changelog": [
+    {
+      "version": "0.9.19.0",
+      "date": "2026-10-23",
+      "notes": [
+        "Trình phát nhạc: AI chỉ bundle mô hình Whisper Base; Tiny, Small và Turbo tải từ Hugging Face khi chọn lần đầu, có hiện tiến trình. Ứng dụng nhẹ hơn đáng kể",
+        "Trình phát nhạc: máy tính có bảng AI với thẻ mô hình cho tạo lời, đồng bộ từng chữ và dịch; đề xuất mô hình cho từng bài; thêm Distil Large v3 và mô hình Whisper tùy chỉnh từ Hugging Face",
+        "Trình phát nhạc: dịch lời theo dòng bằng NLLB (Nhanh) hoặc Qwen2.5 1.5B theo ngữ cảnh (Chính xác); cảnh báo một lần mỗi phiên trước khi chạy mô hình lớn trên điện thoại",
+        "Trình phát nhạc: nút đặt lại lời về trạng thái trước khi dùng AI",
+        "Android: trang tự khởi động lại thay vì đóng khi hệ thống thu hồi bộ nhớ",
+        "Giao diện: nhấn vào bong bóng tác vụ mở khay trên máy tính; hướng dẫn sử dụng không làm đơ ở chế độ tiếng Anh"
+      ]
+    },
     {
       "version": "0.9.18.0",
       "date": "2026-10-23",
@@ -701,7 +713,7 @@
     },
     "music": {
       "name": "Trình phát nhạc",
-      "version": "0.7.5",
+      "version": "0.7.6",
       "minApp": "0.3.0",
       "files": [
         "js/modules/music/index.js",
