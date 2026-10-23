@@ -1,7 +1,14 @@
 {
-  "app": "0.9.17.0",
+  "app": "0.9.17.1",
   "released": "2026-10-23",
   "changelog": [
+    {
+      "version": "0.9.17.1",
+      "date": "2026-10-23",
+      "notes": [
+        "Lõi: quy trình phát hành dùng phiên bản mới hơn của các action tải và đăng bản phát hành trên GitHub (Node 24)"
+      ]
+    },
     {
       "version": "0.9.17.0",
       "date": "2026-10-23",
