@@ -953,3 +953,33 @@ body.m-has-bottom.has-dock main#view { padding-bottom: calc(var(--dock-h, 0px) +
 .ly-tools.folded > :not(.ly-fold) { display: none; }
 .ly-tools.folded .ly-fold { margin-left: auto; background: color-mix(in srgb, var(--np-bg, var(--bg)) 55%, transparent); border-radius: 999px; opacity: .85; }
 .ly-tools.folded .ly-fold .ic { transform: rotate(180deg); }
+
+/* ── AI lyrics panel (wide screens) ── */
+.aip .msheet { width: min(860px, 94vw); }
+.aip-song { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; color: var(--muted); font-size: .9rem; }
+.aip-song svg { width: 18px; height: 18px; flex: none; }
+.aip-sec { margin-bottom: 18px; }
+.aip-sec h3 { margin: 0 0 8px; font-size: 1rem; } .aip-sec h3 small { font-weight: 400; color: var(--muted); }
+.aip-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.aip-grid.two { grid-template-columns: repeat(2, 1fr); }
+.aip-card { position: relative; display: flex; flex-direction: column; gap: 6px; text-align: left; padding: 12px 12px 10px 42px; border: 1.5px solid rgb(128 128 128 / .3); border-radius: 14px; background: transparent; color: inherit; cursor: pointer; font: inherit; transition: border-color .15s, background .15s; }
+.aip-card:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 6%, transparent); }
+.aip-card.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.aip-radio { position: absolute; left: 13px; top: 14px; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--muted); display: grid; place-items: center; }
+.aip-card.on .aip-radio { border-color: var(--accent); background: var(--accent); color: #fff; } .aip-radio svg { width: 12px; height: 12px; }
+.aip-card-t { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; } .aip-card-t b { font-size: .98rem; } .aip-card-t em { font-style: normal; font-size: .78rem; color: var(--muted); }
+.aip-card-t u { text-decoration: none; margin-left: auto; font-size: .7rem; padding: 1px 8px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 18%, transparent); }
+.aip-card-d { font-size: .82rem; color: var(--muted); line-height: 1.35; }
+.aip-card-m { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 4px; font-size: .78rem; color: var(--muted); }
+.aip-stars { letter-spacing: 2px; font-size: .62rem; color: var(--accent); } .aip-stars i { font-style: normal; opacity: .25; }
+.aip-custom { display: flex; gap: 8px; margin-top: 10px; } .aip-custom[hidden] { display: none; } .aip-custom input { flex: 1; }
+.aip-opts { display: grid; gap: 2px; margin-top: 12px; }
+.aip-opt { display: flex; align-items: center; gap: 12px; padding: 8px 6px; border-radius: 10px; cursor: pointer; } .aip-opt:hover { background: rgb(128 128 128 / .08); }
+.aip-opt > span { display: flex; flex-direction: column; flex: 1; } .aip-opt small { color: var(--muted); font-size: .78rem; }
+.aip-opt input[type=checkbox] { width: 18px; height: 18px; flex: none; accent-color: var(--accent); }
+.aip-opt.sel select { min-width: 170px; }
+.aip-foot { display: flex; justify-content: flex-end; gap: 10px; position: sticky; bottom: 0; padding: 10px 0 2px; background: var(--surface); }
+@media (max-width: 900px) { .aip-grid { grid-template-columns: repeat(2, 1fr); } }
+.aip .aip-opt { flex-direction: row; align-items: center; justify-content: flex-start; text-align: left; width: auto; }
+.aip .aip-opt > span { align-items: flex-start; }
+.aip .aip-opt input[type=checkbox] { margin: 0; }

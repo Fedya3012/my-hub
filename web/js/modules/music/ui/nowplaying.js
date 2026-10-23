@@ -15,7 +15,8 @@ import { loadLyrics, SOURCE_LABEL } from '../lib/lyrics-sources.js';
 import { prefs, setPref } from '../lib/prefs.js';
 import { attachFx, preblur } from './np-fx.js';
 import { applyScope } from '../../../core/theme.js';
-import { aiTranslate, aiPick, aiMarks, aiReset } from './ai-menu.js';
+import { aiTranslate, aiPick, aiMarks, aiReset, aiSettings } from './ai-menu.js';
+import { wide as wideAi } from './ai-panel.js';
 import { menu, infoSheet, queuePanel, sleepSheet, speedSheet, trackMenu, starsHtml, linkPicker } from './sheets.js';
 
 const ART = { cover: ['square', 'Bìa'], cd: ['disc', 'CD'], vinyl: ['vinyl', 'Vinyl'], cassette: ['cassette', 'Cassette'] };
@@ -557,11 +558,13 @@ async function lyricsStyleMenu(anchor) {
     player.track && { icon: 'translate', label: 'Dịch lời bằng AI', desc: mk.tr?.desc, on: !!mk.tr, act: () => aiTranslate(player.track, null, () => np && renderLyrics(player.track, np)) },
     player.track && mk.any && { icon: 'x', label: 'Đặt lại lời như ban đầu', desc: 'Bỏ đồng bộ từng chữ, bản dịch, lời do AI', act: () => aiReset(player.track, () => np && renderLyrics(player.track, np)) },
     player.track && mk.gen && { icon: 'lyrics', label: 'Lời do AI tạo', desc: mk.gen.desc, on: true, act: () => aiPick(player.track, 'gen', { onDone: () => np && renderLyrics(player.track, np) }) },
+    ...(wideAi() ? [{ icon: 'lyrics', label: 'Cài đặt AI cho lời…', desc: 'Mô hình nghe giọng, tách giọng, ngôn ngữ, mô hình dịch', act: aiSettings }] : [
     { icon: 'lyrics', label: Y.aiVocal === 1 ? 'Tách giọng hát khi nghe: đang bật' : 'Tách giọng hát khi nghe: đang tắt', act: () => set('lyrics.aiVocal', Y.aiVocal === 1 ? 0 : 1) },
     ...Object.entries({ vi: 'Tiếng Việt', en: 'Tiếng Anh', ja: 'Tiếng Nhật', ko: 'Tiếng Hàn', zh: 'Tiếng Trung', fr: 'Tiếng Pháp', es: 'Tiếng Tây Ban Nha', de: 'Tiếng Đức' }).map(([k, v]) => ({ icon: 'translate', label: 'Dịch sang: ' + v + ck((Y.trLang || 'vi') === k), act: () => set('lyrics.trLang', k) })),
     { icon: 'lyrics', label: Y.aiAuto !== 0 ? 'Tắt tự tạo lời khi không có (AI)' : 'Tự tạo lời khi không có (AI)', act: () => set('lyrics.aiAuto', Y.aiAuto !== 0 ? 0 : 1) },
     ...Object.entries({ tiny: 'Nhanh · ≈ 40 MB', base: 'Cân bằng · ≈ 80 MB', small: 'Chính xác · ≈ 250 MB', turbo: 'Cao cấp · tải thêm ≈ 800 MB' }).map(([k, v]) => ({ icon: 'lyrics', label: 'Mô hình AI: ' + v + ck((Y.aiModel || 'base') === k), act: () => set('lyrics.aiModel', k) })),
     ...[['', 'Tự nhận ngôn ngữ'], ['vi', 'Tiếng Việt'], ['en', 'Tiếng Anh'], ['ja', 'Tiếng Nhật'], ['ko', 'Tiếng Hàn'], ['zh', 'Tiếng Trung']].map(([k, v]) => ({ icon: 'translate', label: 'Ngôn ngữ AI: ' + v + ck((Y.aiLang || '') === k), act: () => set('lyrics.aiLang', k) })),
+    ]),
   ], { title: 'Kiểu chữ lời' });
 }
 
