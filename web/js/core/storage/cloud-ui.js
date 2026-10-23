@@ -3,10 +3,9 @@
 import { storage, drives } from './index.js';
 import { startAuth, finishAuth } from './dropbox.js';
 import * as od from './onedrive.js';
-import * as gd from './googledrive.js';
 import { getCloud, clouds } from './clouds.js';
 import { nativeShell } from './http.js';
-import { DROPBOX_APP_KEY, ONEDRIVE_CLIENT_ID, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } from '../../config.js';
+import { DROPBOX_APP_KEY, ONEDRIVE_CLIENT_ID } from '../../config.js';
 import { formDialog } from '../account-ui.js';
 import { setSetting } from '../db.js';
 import { esc, modal, confirmBox, toast } from '../ui.js';
@@ -71,39 +70,7 @@ async function onedriveDialog() {
   });
 }
 
-async function googleDialog() {
-  const cur = getCloud('googledrive') || {};
-  let auth = null;
-  return formDialog({
-    title: 'Kết nối Google Drive',
-    intro: `1) Nhập <b>Client ID</b> và <b>Client secret</b> của OAuth client loại <i>Desktop app</i> (cách tạo trong docs/STORAGE.md: khoảng 5 phút, miễn phí). 2) Bấm <b>Mở Google để cấp quyền</b> và cho phép. 3) Trình duyệt chuyển tới một trang <b>không mở được</b> (127.0.0.1): <b>sao chép toàn bộ địa chỉ</b> của trang đó (có đoạn <code>?code=…</code>) và dán vào ô bên dưới. Thư viện nằm trong thư mục ẩn riêng của app; thư mục đồng bộ chỉ được đọc, không bị sửa.`,
-    fields: [
-      { name: 'clientId', label: 'Client ID', value: cur.clientId || GOOGLE_CLIENT_ID, autocomplete: 'off' },
-      { name: 'secret', label: 'Client secret', value: cur.secret || GOOGLE_CLIENT_SECRET, autocomplete: 'off' },
-      { name: 'code', label: 'Địa chỉ trang không mở được (hoặc mã)', autocomplete: 'off', placeholder: 'http://127.0.0.1/?code=…' },
-    ],
-    extra: '<button type="button" class="btn" data-open>Mở Google để cấp quyền</button>',
-    submit: 'Kết nối',
-    onRender: (form) => {
-      form.querySelector('[data-open]').onclick = async () => {
-        const key = form.elements.clientId.value.trim();
-        if (!key) { toast('Nhập Client ID trước', 'warn'); return; }
-        auth = await gd.startAuth(key);
-        window.open(auth.url, '_blank', 'noopener');
-      };
-    },
-    onSubmit: async (v) => {
-      if (!navigator.onLine) throw new Error('Đang offline: cần có mạng để kết nối.');
-      if (!auth) throw new Error('Bấm “Mở Google để cấp quyền” trước, rồi dán địa chỉ vào đây.');
-      if (!v.secret.trim()) throw new Error('Nhập Client secret.');
-      if (!v.code.trim()) throw new Error('Dán địa chỉ trang không mở được vào ô bên trên.');
-      await gd.finishAuth(v.clientId.trim(), v.secret.trim(), v.code, auth.verifier);
-      await drives.googledrive.readSnapshot('hub-live.json');   // proves the token and the app data folder work
-    },
-  });
-}
-
-export const connectForm = (mode) => mode === 'dropbox' ? dropboxDialog() : mode === 'googledrive' ? googleDialog() : onedriveDialog();
+export const connectForm = (mode) => mode === 'dropbox' ? dropboxDialog() : onedriveDialog();
 
 // Turn a drive on: connect if needed, ask what to do with this device's library when the drive already
 // holds one, switch the mode and run the first sync (progress in the task tray, then the file upload).

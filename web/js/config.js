@@ -11,7 +11,3 @@ export const DROPBOX_APP_KEY = '';
 // OneDrive sync: Application (client) ID of a free Microsoft Entra app (platform "Mobile and desktop", redirect
 // https://login.microsoftonline.com/common/oauth2/nativeclient, permissions Files.ReadWrite.AppFolder + offline_access).
 export const ONEDRIVE_CLIENT_ID = '';
-// Google Drive: OAuth client of type "Desktop app" (Google Cloud Console → APIs & Services → Credentials).
-// Its client secret is not secret for installed apps (Google's own rule). Both can also be pasted in the dialog.
-export const GOOGLE_CLIENT_ID = '';
-export const GOOGLE_CLIENT_SECRET = '';

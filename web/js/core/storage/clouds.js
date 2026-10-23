@@ -2,7 +2,6 @@
 // device only, never in the JSON backup (they hold passwords and tokens). Shape per provider:
 //   dropbox           : { appKey, access, refresh, expires }
 //   onedrive          : { clientId, access, refresh, expires }
-//   googledrive       : { clientId, secret, access, refresh, expires }
 const KEY = 'myhub.clouds';
 const read = () => { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch { return {}; } };
 export const clouds = {
