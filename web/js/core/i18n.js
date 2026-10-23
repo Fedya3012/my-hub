@@ -83,7 +83,10 @@ export function translateTree(root) {
   if (root.nodeType === 3) return node(root);
   if (root.nodeType !== 1 && root.nodeType !== 11) return;
   if (root.nodeType === 1) { if (skippedAttr(root)) return; attrs(root); }
-  const w = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT);
+  // Subtrees marked off (long content such as the guides) are not walked at all.
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
+    acceptNode: (n) => n.nodeType === 1 && n.getAttribute('data-i18n') === 'off' ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT,
+  });
   for (let n = w.nextNode(); n; n = w.nextNode()) {
     if (n.nodeType === 3) node(n);
     else if (n.nodeType === 1) { if (/^(SCRIPT|STYLE)$/.test(n.tagName)) continue; attrs(n); }
