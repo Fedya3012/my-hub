@@ -20,17 +20,24 @@ import { local } from './local.js';
 import { github } from './github.js';
 import { dropbox } from './dropbox.js';
 import { onedrive } from './onedrive.js';
+import { supabase } from './supabase.js';
+import { supa } from '../supabase.js';
 
 // Cloud drives that also hold the files. The adapter in use follows the storage mode.
 export const drives = { dropbox, onedrive };
 let activeMode = 'local';
 // Where the library snapshot and progress live: the signed-in GitHub account, or the chosen drive.
-const cloud = () => drives[activeMode] || github;
-const cloudReady = () => activeMode === 'github' ? account.signedIn : !!drives[activeMode]?.connected();
-const cloudTokenOk = () => activeMode === 'github' ? account.tokenValid() : !!drives[activeMode]?.connected();
+// Modes that keep an account of their own (no file uploads): GitHub and My Hub (Supabase).
+const ACCOUNT_MODES = new Set(['github', 'supabase']);
+const cloud = () => activeMode === 'supabase' ? supabase : drives[activeMode] || github;
+const cloudReady = () => activeMode === 'supabase' ? supa.signedIn : activeMode === 'github' ? account.signedIn : !!drives[activeMode]?.connected();
+const cloudTokenOk = () => activeMode === 'supabase' ? supa.signedIn : activeMode === 'github' ? account.tokenValid() : !!drives[activeMode]?.connected();
+// Fresh access token for the active account mode (refreshes the Supabase session when needed).
+const accountToken = () => activeMode === 'supabase' ? supa.accessToken() : account.accessToken();
 
 export const MODES = {
   local:  { label: 'Chỉ trên máy', hint: 'Dữ liệu và tệp nằm trên thiết bị này. Không cần mạng, không cần tài khoản.' },
+  supabase: { label: 'Tài khoản My Hub', hint: 'Email và mật khẩu của My Hub: thư viện và tiến độ đồng bộ qua máy chủ của My Hub (dữ liệu riêng của bạn). Tệp nhạc/sách không đưa lên máy chủ, ở lại trên từng máy.' },
   github: { label: 'Tài khoản GitHub', hint: 'Đăng nhập GitHub (dán token): thư viện và tiến độ đồng bộ qua một kho riêng tư của bạn. Tệp nhạc/sách ở lại trên từng máy.' },
   dropbox: { label: 'Dropbox', hint: 'Đăng nhập Dropbox một lần: thư viện, tiến độ và cả tệp nhạc/sách đồng bộ qua thư mục riêng của app. Máy khác tải tệp về khi cần.' },
   onedrive: { label: 'OneDrive', hint: 'Đăng nhập OneDrive: thư viện, tiến độ và cả tệp nhạc/sách đồng bộ qua thư mục riêng của app (Apps/…). Máy khác tải tệp về khi cần.' },
@@ -312,8 +319,8 @@ export const storage = {
     if (!cloudReady()) return { skipped: 'signed-out' };
     if (!navigator.onLine) return { skipped: 'offline' };
     if (!cloud().connected()) {
-      if (activeMode !== 'github') return { skipped: 'not-connected' };
-      try { await account.accessToken(); } catch { return { skipped: 'not-connected' }; }
+      if (!ACCOUNT_MODES.has(activeMode)) return { skipped: 'not-connected' };
+      try { await accountToken(); } catch { return { skipped: 'not-connected' }; }
     }
     bus.emit('sync:start');
     const task = tasks.start({ label: 'Đồng bộ ' + cloud().label, detail: 'Đang tải dữ liệu từ ' + cloud().label + '…', unit: 'percent', cancellable: true, delay: 600, quiet });
@@ -511,7 +518,7 @@ export const storage = {
 let liveTimer = null, liveBusy = null, leavingAll = false;
 storage.syncLive = async function ({ quiet = false } = {}) {
   if ((await this.mode()) === 'local' || !cloudReady() || !navigator.onLine) return { skipped: true };
-  if (!cloud().connected()) { if (activeMode !== 'github') return { skipped: 'not-connected' }; try { await account.accessToken(); } catch { return { skipped: 'not-connected' }; } }
+  if (!cloud().connected()) { if (!ACCOUNT_MODES.has(activeMode)) return { skipped: 'not-connected' }; try { await accountToken(); } catch { return { skipped: 'not-connected' }; } }
   if (liveBusy) return liveBusy;
   liveBusy = (async () => {
     await touchDevice();
