@@ -2360,5 +2360,11 @@
  "Mô hình AI: Cao cấp · tải thêm ≈ 800 MB": "AI model: Premium · extra ≈ 800 MB download",
  "Tách giọng hát khi nghe: đang bật": "Isolate vocals when listening: on",
  "Tách giọng hát khi nghe: đang tắt": "Isolate vocals when listening: off",
- "Đang tách giọng hát khỏi nhạc nền…": "Isolating vocals from the music…"
+ "Đang tách giọng hát khỏi nhạc nền…": "Isolating vocals from the music…",
+ "Đặt lại lời như ban đầu": "Reset lyrics to original",
+ "Bỏ đồng bộ từng chữ, bản dịch, lời do AI": "Remove word sync, translation and AI lyrics",
+ "Đặt lại lời": "Reset lyrics",
+ "Lời do AI tạo cho bài này sẽ bị xoá.": "The AI-made lyrics for this song will be deleted.",
+ "Bỏ đồng bộ từng chữ và bản dịch do AI, đưa lời về như trước khi dùng AI?": "Remove the AI word sync and translation and put the lyrics back as before AI?",
+ "Đã đặt lại lời về như ban đầu": "Lyrics reset to original"
 }

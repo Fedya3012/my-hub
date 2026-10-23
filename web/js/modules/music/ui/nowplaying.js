@@ -15,7 +15,7 @@ import { loadLyrics, SOURCE_LABEL } from '../lib/lyrics-sources.js';
 import { prefs, setPref } from '../lib/prefs.js';
 import { attachFx, preblur } from './np-fx.js';
 import { applyScope } from '../../../core/theme.js';
-import { aiTranslate, aiPick, aiMarks } from './ai-menu.js';
+import { aiTranslate, aiPick, aiMarks, aiReset } from './ai-menu.js';
 import { menu, infoSheet, queuePanel, sleepSheet, speedSheet, trackMenu, starsHtml, linkPicker } from './sheets.js';
 
 const ART = { cover: ['square', 'Bìa'], cd: ['disc', 'CD'], vinyl: ['vinyl', 'Vinyl'], cassette: ['cassette', 'Cassette'] };
@@ -555,6 +555,7 @@ async function lyricsStyleMenu(anchor) {
     '-',
     player.track && { icon: 'lyrics', label: 'Tự đồng bộ từng chữ (AI)', desc: mk.words?.desc, on: !!mk.words, act: () => aiPick(player.track, 'sync', { onDone: () => np && renderLyrics(player.track, np) }) },
     player.track && { icon: 'translate', label: 'Dịch lời bằng AI', desc: mk.tr?.desc, on: !!mk.tr, act: () => aiTranslate(player.track, null, () => np && renderLyrics(player.track, np)) },
+    player.track && mk.any && { icon: 'x', label: 'Đặt lại lời như ban đầu', desc: 'Bỏ đồng bộ từng chữ, bản dịch, lời do AI', act: () => aiReset(player.track, () => np && renderLyrics(player.track, np)) },
     player.track && mk.gen && { icon: 'lyrics', label: 'Lời do AI tạo', desc: mk.gen.desc, on: true, act: () => aiPick(player.track, 'gen', { onDone: () => np && renderLyrics(player.track, np) }) },
     { icon: 'lyrics', label: Y.aiVocal === 1 ? 'Tách giọng hát khi nghe: đang bật' : 'Tách giọng hát khi nghe: đang tắt', act: () => set('lyrics.aiVocal', Y.aiVocal === 1 ? 0 : 1) },
     ...Object.entries({ vi: 'Tiếng Việt', en: 'Tiếng Anh', ja: 'Tiếng Nhật', ko: 'Tiếng Hàn', zh: 'Tiếng Trung', fr: 'Tiếng Pháp', es: 'Tiếng Tây Ban Nha', de: 'Tiếng Đức' }).map(([k, v]) => ({ icon: 'translate', label: 'Dịch sang: ' + v + ck((Y.trLang || 'vi') === k), act: () => set('lyrics.trLang', k) })),
@@ -577,6 +578,7 @@ async function lyricLineMenu(L, i, lineEl) {
     { icon: 'edit', label: 'Sửa / đồng bộ lời', act: () => editLy(t) },
     { icon: 'lyrics', label: 'Tự đồng bộ từng chữ (AI)', desc: mk.words?.desc, on: !!mk.words, act: () => aiPick(t, 'sync', { onDone: () => np && renderLyrics(t, np) }) },
     { icon: 'translate', label: 'Dịch lời bằng AI', desc: mk.tr?.desc, on: !!mk.tr, act: () => aiTranslate(t, null, () => np && renderLyrics(t, np)) },
+    mk.any && { icon: 'x', label: 'Đặt lại lời như ban đầu', desc: 'Bỏ đồng bộ từng chữ, bản dịch, lời do AI', act: () => aiReset(t, () => np && renderLyrics(t, np)) },
     mk.gen && { icon: 'lyrics', label: 'Lời do AI tạo', desc: mk.gen.desc, on: true, act: () => aiPick(t, 'gen', { onDone: () => np && renderLyrics(t, np) }) },
   ], { title: 'Dòng lời' });
 }

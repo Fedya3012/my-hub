@@ -330,7 +330,7 @@ export function autoWordSync(t, { model = modelKey(), vocal = vocalOn() } = {}) 
         if (l.t == null) l.t = ws[0].t;
         l.wend = Math.min(ws.at(-1).end, lines[li + 1]?.t ?? Infinity);
       });
-      await saveLyrics(t, { text: toLrc(lines, { words: true, tr: true }), offset: 0, updatedAt: Date.now(), aiWords: { model: used.get(model + ':w') || model, vocal, matched, total: flat.length, at: Date.now() } });
+      await saveLyrics(t, { text: toLrc(lines, { words: true, tr: true }), offset: 0, updatedAt: Date.now(), ...(row.aiWords ? {} : { aiOrig: { text: row.text, source: row.source || 'user' } }), aiWords: { model: used.get(model + ':w') || model, vocal, matched, total: flat.length, at: Date.now() } });
       task.finish(`Đã đồng bộ từng chữ: khớp ${matched}/${flat.length} chữ`);
       return { matched, total: flat.length };
     } catch (e) {

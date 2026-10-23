@@ -1,7 +1,9 @@
 // Per-song choice of the AI model (and vocal isolation) for "Tạo lời tự động" and "Tự đồng bộ từng chữ", and the
 // marks that show what AI work a song's lyrics already went through.
 import { menu } from './sheets.js';
-import { toast } from '../../../core/ui.js';
+import { toast, confirmBox } from '../../../core/ui.js';
+import { saveLyrics } from '../lib/lyrics-sources.js';
+import { parseLyrics, toModel, toLrc } from '../lib/lyrics.js';
 import { db } from '../../../core/db.js';
 import { prefs, setPref } from '../lib/prefs.js';
 
@@ -44,8 +46,28 @@ export async function aiMarks(t) {
   const when = (at) => (at ? ' · ' + new Date(at).toLocaleDateString('vi-VN') : '');
   const vo = (x) => (x.vocal ? ' · có tách giọng' : '');
   return {
+    any: !!(row?.aiGen || row?.aiWords || row?.trInfo),
     gen: row?.aiGen ? { desc: `Đã tạo lời bằng ${ai.modelName(row.aiGen.model)}${vo(row.aiGen)}${when(row.aiGen.at)}` } : null,
     words: row?.aiWords ? { desc: `Đã đồng bộ bằng ${ai.modelName(row.aiWords.model)} · khớp ${row.aiWords.matched}/${row.aiWords.total} chữ${vo(row.aiWords)}${when(row.aiWords.at)}` } : null,
     tr: row?.trInfo ? { desc: `Đã dịch bằng ${row.trInfo.name} · ${row.trInfo.src} → ${row.trInfo.tgt}${when(row.trInfo.at)}` } : null,
   };
+}
+
+// Puts the lyrics back as they were before any AI work: word timing removed (the saved original is restored,
+// or the words are folded back to line timing), the AI translation dropped, AI-made lyrics deleted.
+export async function aiReset(t, onDone) {
+  const row = t?.id ? await db.lyrics.get(t.id) : null;
+  if (!row) return;
+  const ok = await confirmBox('Đặt lại lời', row.aiGen && !row.aiOrig ? 'Lời do AI tạo cho bài này sẽ bị xoá.' : 'Bỏ đồng bộ từng chữ và bản dịch do AI, đưa lời về như trước khi dùng AI?', 'Đặt lại', 'danger');
+  if (!ok) return;
+  if (row.aiGen && !row.aiOrig) await saveLyrics(t, { text: '' });
+  else {
+    const patch = { aiWords: null, aiGen: null, aiOrig: null };
+    if (row.aiOrig?.text) { patch.text = row.aiOrig.text; patch.source = row.aiOrig.source; }
+    else if (row.aiWords) patch.text = toLrc(toModel(parseLyrics(row.text, t.duration || 0)), { words: false, tr: false });
+    if (row.trInfo || row.trSource === 'ai') Object.assign(patch, { trText: null, trSource: null, trInfo: null, trLang: null });
+    await saveLyrics(t, patch);
+  }
+  toast('Đã đặt lại lời về như ban đầu');
+  onDone?.();
 }
