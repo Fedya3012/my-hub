@@ -37,8 +37,10 @@ class PodPlayer extends EventTarget {
   // ── Loading ───────────────────────────────────────────────────
   async load(e, { autoplay = true, at = null } = {}) {
     this._teardown();
+    const tok = this._loadTok = (this._loadTok || 0) + 1;   // a newer load() wins: two quick taps never leave two players running
     this.ep = e; this.show = await store.show(e.showId); this.savedEp = 0;   // seconds Skip silence saved in this episode
     const blob = await store.downloadedBlob(e.id);
+    if (tok !== this._loadTok) return;
     const remote = !blob;
     const wantFx = !!(get('voiceBoost') || get('skipSilence'));
     this.fxOn = wantFx && !(remote && this.fxBlocked === e.url);
@@ -52,7 +54,9 @@ class PodPlayer extends EventTarget {
     el.defaultPlaybackRate = this.rate;
     this._wire(el);
     if (this.fxOn) this._connect(el);
-    this._untrack = await progress.track(store.progressItem(e), el);
+    const untrack = await progress.track(store.progressItem(e), el);
+    if (tok !== this._loadTok) { untrack?.(); return; }   // superseded while registering progress (its element is torn down by the newer load)
+    this._untrack = untrack;
     if (at != null) { const go = () => { el.currentTime = at; }; el.readyState >= 1 ? go() : el.addEventListener('loadedmetadata', go, { once: true }); }
     // Skip the intro of this show.
     const intro = this.show?.settings?.skipIntro || 0;

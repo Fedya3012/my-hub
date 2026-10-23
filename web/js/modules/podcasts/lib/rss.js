@@ -1,10 +1,12 @@
 // RSS / Atom podcast feed → { show, episodes }. Reads the iTunes tags and the Podcasting 2.0 namespace
 // (podcast:chapters, podcast:transcript, podcast:person, podcast:funding) and Podlove Simple Chapters (psc:).
+// Feed text is untrusted: only http(s) links reach href / src (a javascript: link would run on click).
+const web = (u) => { const v = String(u || '').trim(); return /^https?:\/\//i.test(v) ? v : ''; };
 const kids = (el, name) => el ? [...el.children].filter(c => c.localName === name || c.nodeName === name) : [];
 const kid = (el, name) => kids(el, name)[0] || null;
 const txt = (el, name) => (kid(el, name)?.textContent || '').trim();
 // <itunes:image href> or <image><url> (either may come first)
-const img = (el) => kids(el, 'image').map(i => i.getAttribute('href') || txt(i, 'url')).find(Boolean) || '';
+const img = (el) => web(kids(el, 'image').map(i => web(i.getAttribute('href')) || web(txt(i, 'url'))).find(Boolean));
 
 export function parseDuration(v) {
   if (v == null || v === '') return 0;
@@ -27,11 +29,11 @@ export function parseFeed(xml, feedUrl) {
     author: txt(ch, 'author') || txt(ch, 'managingEditor') || kid(kid(ch, 'owner'), 'name')?.textContent?.trim() || '',
     description: txt(ch, 'summary') || txt(ch, 'description') || txt(ch, 'subtitle'),
     image: img(ch),
-    link: txt(ch, 'link') || kid(ch, 'link')?.getAttribute('href') || '',
+    link: web(txt(ch, 'link') || kid(ch, 'link')?.getAttribute('href')),
     language: txt(ch, 'language'),
     categories: [...cats],
     explicit: /^(yes|true|explicit)$/i.test(txt(ch, 'explicit')),
-    funding: kids(ch, 'funding').map(f => ({ url: f.getAttribute('url'), label: f.textContent.trim() })).filter(f => f.url),
+    funding: kids(ch, 'funding').map(f => ({ url: web(f.getAttribute('url')), label: f.textContent.trim() })).filter(f => f.url),
     complete: /^yes$/i.test(txt(ch, 'complete')),
     newFeedUrl: txt(ch, 'new-feed-url'),
     feedUrl,
@@ -39,9 +41,9 @@ export function parseFeed(xml, feedUrl) {
   const items = kids(ch, 'item').length ? kids(ch, 'item') : kids(ch, 'entry');
   const episodes = items.map((it) => {
     const enc = kid(it, 'enclosure') || kids(it, 'link').find(l => l.getAttribute('rel') === 'enclosure');
-    const url = enc?.getAttribute('url') || enc?.getAttribute('href') || '';
+    const url = web(enc?.getAttribute('url') || enc?.getAttribute('href'));
     if (!url) return null;
-    const trs = kids(it, 'transcript').map(t => ({ url: t.getAttribute('url'), type: t.getAttribute('type') || '', lang: t.getAttribute('language') || '' })).filter(t => t.url);
+    const trs = kids(it, 'transcript').map(t => ({ url: web(t.getAttribute('url')), type: t.getAttribute('type') || '', lang: t.getAttribute('language') || '' })).filter(t => t.url);
     const rank = (t) => /vtt/.test(t.type) ? 0 : /srt|subrip/.test(t.type) ? 1 : /json/.test(t.type) ? 2 : /html|plain/.test(t.type) ? 3 : 4;
     trs.sort((a, b) => rank(a) - rank(b));
     const psc = kid(it, 'chapters') && kid(it, 'chapters').namespaceURI?.includes('podlove') ? kids(kid(it, 'chapters'), 'chapter') : [];
@@ -56,15 +58,15 @@ export function parseFeed(xml, feedUrl) {
       season: +txt(it, 'season') || null, episode: +txt(it, 'episode') || null,
       type: txt(it, 'episodeType') || 'full',
       explicit: /^(yes|true|explicit)$/i.test(txt(it, 'explicit')),
-      link: txt(it, 'link'),
-      chaptersUrl: kids(it, 'chapters').find(c => c.getAttribute('url'))?.getAttribute('url') || '',
-      chapters: psc.map(c => ({ start: parseTime(c.getAttribute('start')), title: c.getAttribute('title') || '', url: c.getAttribute('href') || '' })),
+      link: web(txt(it, 'link')),
+      chaptersUrl: web(kids(it, 'chapters').find(c => c.getAttribute('url'))?.getAttribute('url')),
+      chapters: psc.map(c => ({ start: parseTime(c.getAttribute('start')), title: c.getAttribute('title') || '', url: web(c.getAttribute('href')) })),
       transcripts: trs,
-      persons: kids(it, 'person').map(p => ({ name: p.textContent.trim(), role: (p.getAttribute('role') || 'host').toLowerCase(), img: p.getAttribute('img') || '' })),
+      persons: kids(it, 'person').map(p => ({ name: p.textContent.trim(), role: (p.getAttribute('role') || 'host').toLowerCase(), img: web(p.getAttribute('img')) })),
     };
   }).filter(Boolean);
   // Persons listed on the channel are the hosts of every episode.
-  const hosts = kids(ch, 'person').map(p => ({ name: p.textContent.trim(), role: (p.getAttribute('role') || 'host').toLowerCase(), img: p.getAttribute('img') || '' }));
+  const hosts = kids(ch, 'person').map(p => ({ name: p.textContent.trim(), role: (p.getAttribute('role') || 'host').toLowerCase(), img: web(p.getAttribute('img')) }));
   show.persons = hosts;
   return { show, episodes };
 }
@@ -99,7 +101,7 @@ export function parseTranscript(body, type = '') {
 }
 
 // podcast:chapters JSON → [{ start, title, img, url }]
-export const parseChapters = (j) => (j?.chapters || []).filter(c => c.toc !== false).map(c => ({ start: +c.startTime || 0, title: c.title || '', img: c.img || '', url: c.url || '' }));
+export const parseChapters = (j) => (j?.chapters || []).filter(c => c.toc !== false).map(c => ({ start: +c.startTime || 0, title: c.title || '', img: web(c.img), url: web(c.url) }));
 
 // OPML import / export (the standard way to move subscriptions between podcast apps).
 export function parseOpml(xml) {
