@@ -50,7 +50,9 @@ async function loadManifest(id) {
   }
 
   const shell = v.shell.files;
-  const kept = shell.filter(f => {
+  // A duplicate makes Cache.addAll() reject, so the Service Worker would never install.
+  if (new Set(shell).size !== shell.length) problems.push('shell: duplicate entries removed');
+  const kept = [...new Set(shell)].filter(f => {
     if (exists(f)) return true;
     problems.push(`shell: listed file missing: ${f}`);
     return false;
