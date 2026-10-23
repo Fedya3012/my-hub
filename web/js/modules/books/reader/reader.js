@@ -27,14 +27,13 @@ export async function openReader(root, id, { ctx, onClose }) {
   el.setAttribute('aria-label', 'Trình đọc');
   document.body.append(el);
   document.body.classList.add('bk-reader-open');
-  let closed = false, engine = null;
+  let closed = false, started = false, engine = null;
   const offs = [];
   const close = () => {
     if (closed) return;
     closed = true;
-    finishSession();
-    saveNow(true);
-    tts.stop();
+    // fail() can close before the reader has started (no book, no file): nothing to save or stop then.
+    if (started) { finishSession(); saveNow(true); tts.stop(); }
     offs.forEach(f => f());
     try { engine?.destroy(); } catch { /* ignore */ }
     el.remove();
@@ -514,6 +513,7 @@ export async function openReader(root, id, { ctx, onClose }) {
       ctx.services.get('player')?.duck?.(false);
     },
   };
+  started = true;   // close() may now save the position and end the reading session
   $('[data-t="toggle"]').onclick = () => tts.toggle();
   $('[data-t="stop"]').onclick = () => tts.stop();
 
