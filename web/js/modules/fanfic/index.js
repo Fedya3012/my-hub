@@ -20,7 +20,7 @@ const PAGES = {
   stats: () => import('./ui/stats.js'), fandoms: () => import('./ui/fandoms.js'), fandom: () => import('./ui/fandoms.js'), tools: () => import('./ui/tools.js'), settings: () => import('./ui/settings.js'),
 };
 
-let root, ctx, route = '', offs = [], pageOff = null, writer = null;
+let renderSeq = 0, root, ctx, route = '', offs = [], pageOff = null, writer = null;
 
 export async function mount(el, context, sub = '') {
   root = el; ctx = context;
@@ -61,8 +61,13 @@ async function render() {
     </header>
     <div class="fx-page" id="fx-page"></div>
     <nav class="fx-bottom" aria-label="Mục chính của ${NAME}">${nav()}</nav></section>`;
+  // Quick tab switches start a newer render while this one still loads: each page writes into its own element and a
+  // stale render drops its result instead of touching the new page.
+  const seq = ++renderSeq, host = root.querySelector('#fx-page');
   const page = await (PAGES[head] || PAGES[''])();
-  const out = await page.render(root.querySelector('#fx-page'), { ctx, head, arg, go, rerender: render });
+  if (seq !== renderSeq || !host.isConnected) return;
+  const out = await page.render(host, { ctx, head, arg, go, rerender: render });
+  if (seq !== renderSeq || !host.isConnected) { if (typeof out === 'function') out(); return; }
   if (typeof out === 'function') pageOff = out;
 }
 
