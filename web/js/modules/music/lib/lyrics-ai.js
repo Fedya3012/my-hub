@@ -59,8 +59,15 @@ export async function ensureConsent(model = '') {
       await setPref('lyrics.aiRemoteOk', { ...got, [ck]: 1 });
     }
   }
+  // A phone that reads out its memory can close the app mid-way with the big models: ask once per session.
+  if ((model === 'turbo' || model === 'distil' || model === 'custom' || model === 'small') && matchMedia('(pointer: coarse)').matches && !bigAsked.has(model)) {
+    const ok = await confirmBox('Mô hình lớn trên điện thoại', `${modelName(model)} cần khoảng 1 GB RAM. Nếu máy thiếu bộ nhớ, app có thể bị đóng giữa chừng và mở lại từ đầu. Tiếp tục?`, 'Tiếp tục', 'primary');
+    if (!ok) return false;
+    bigAsked.add(model);
+  }
   return true;
 }
+const bigAsked = new Set();
 const modelKey = () => { syncCustom(); return AI_MODELS[Y().aiModel] ? Y().aiModel : 'base'; };
 const vocalOn = () => Y().aiVocal === 1;
 
