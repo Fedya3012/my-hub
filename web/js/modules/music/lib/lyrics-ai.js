@@ -14,8 +14,7 @@ import { saveLyrics, loadLyrics } from './lyrics-sources.js';
 import { parseLyrics, toModel, toLrc } from './lyrics.js';
 import { mainFile } from './store.js';
 
-// The library and the "Cân bằng" (whisper-base) model ship with the app (web/vendor): nothing is fetched for them.
-// "Nhanh" and "Chính xác" are downloaded from Hugging Face the first time they are picked.
+// The library and the three models (whisper tiny, base, small) ship with the app (web/vendor): nothing is fetched.
 const LIB = new URL('../../../../vendor/transformers/transformers.min.js', import.meta.url).href;
 const LOCAL_MODELS = new URL('../../../../vendor/whisper/', import.meta.url).href;
 export const AI_MODELS = {
@@ -33,7 +32,7 @@ const consented = () => Y().aiConsent === 1;
 export const autoOn = () => Y().aiAuto !== 0 && consented();
 export async function ensureConsent() {
   if (consented()) return true;
-  const ok = await confirmBox('Tạo lời bằng AI', 'Thư viện nhận dạng giọng hát và mô hình “Cân bằng” đã có sẵn trong app, chạy ngay trên máy; âm thanh không rời khỏi máy. Mô hình “Nhanh” hoặc “Chính xác” sẽ tải thêm từ huggingface.co khi bạn chọn. Tiếp tục?', 'Dùng', 'primary');
+  const ok = await confirmBox('Tạo lời bằng AI', 'Thư viện và các mô hình nhận dạng giọng hát đã có sẵn trong app, chạy ngay trên máy, không tải gì từ mạng; âm thanh không rời khỏi máy. Tiếp tục?', 'Dùng', 'primary');
   if (ok) await setPref('lyrics.aiConsent', 1);
   return !!ok;
 }
@@ -52,53 +51,54 @@ function recognizer(task, words = false) {
   loading = { key, p };
   return p;
 }
+// Whisper runs in lyrics-worker.js: the page only sends 28-second pieces and receives text, so the UI and the
+// music never wait for the model. calls() answers by id; progress messages report the model loading.
+let worker = null, seq = 0, onLoadProgress = null;
+const waits = new Map();
+function startWorker() {
+  const w = new Worker(new URL('./lyrics-worker.js', import.meta.url), { type: 'module' });
+  w.onmessage = (e) => {
+    if (e.data.progress) { onLoadProgress?.(e.data.progress); return; }
+    const x = waits.get(e.data.id);
+    if (!x) return;
+    waits.delete(e.data.id);
+    if (e.data.error) x.rej(Object.assign(new Error(e.data.error), { errs: e.data.errs })); else x.res(e.data);
+  };
+  w.onerror = (e) => {
+    for (const x of waits.values()) x.rej(new Error('Không chạy được tiến trình nhận dạng giọng hát' + (e.message ? ': ' + e.message : '')));
+    waits.clear(); w.terminate(); worker = null; asr = null; asrKey = '';
+  };
+  return w;
+}
+function callWorker(msg, transfer = []) {
+  worker ||= startWorker();
+  return new Promise((res, rej) => { const id = ++seq; waits.set(id, { res, rej }); worker.postMessage({ id, ...msg }, transfer); });
+}
+// The page keeps its own copy of the audio (pieces are views of one big buffer), the worker gets a transferred slice.
+const runAsr = (audio, opts) => { const a = audio.slice(); return callWorker({ type: 'run', audio: a, opts }, [a.buffer]).then(r => r.result); };
+
 async function loadRecognizer(task, key) {
   const [mk, w] = key.split(':'), mid = AI_MODELS[mk].id + (w ? '_timestamped' : '');
-  let T;
-  try { T = await import(LIB); }
-  catch (e) { modelFailed = mk; throw new Error('Không tải được thư viện nhận dạng giọng hát (cần kết nối mạng)'); }
-  T.env.allowLocalModels = true;
-  T.env.localModelPath = LOCAL_MODELS;
-  // WebView Android không cho import() từ blob: → để ORT nạp .mjs/.wasm trực tiếp từ CDN, một luồng, không proxy worker
-  try {
-    T.env.useWasmCache = false;
-    const wa = T.env.backends?.onnx?.wasm;
-    if (wa) {
-      wa.proxy = false;
-      if (!(navigator.crossOriginIsolated)) wa.numThreads = 1;
-      wa.wasmPaths = LIB.slice(0, LIB.lastIndexOf('/') + 1);
-    }
-  } catch {}
   const files = new Map();
-  const progress_callback = (p) => {
-    if (p.status !== 'progress' || !p.total) return;
-    files.set(p.file, [p.loaded || 0, p.total]);
+  onLoadProgress = (p) => {
+    files.set(p.file, [p.loaded, p.total]);
     let done = 0, total = 0;
-    for (const [a, b] of files.values()) { done += a; total += b; }
-    task.update({ done, total, unit: 'bytes', detail: `Đang tải mô hình nhận dạng giọng hát (${AI_MODELS[mk].label}, chỉ lần đầu)…` });
+    for (const [x, y] of files.values()) { done += x; total += y; }
+    task?.update({ done, total, unit: 'bytes', detail: `Đang nạp mô hình nhận dạng giọng hát (${AI_MODELS[mk].label})…` });
   };
-  // Some ONNX Runtime builds cannot create a session for the 8-bit Whisper decoder ("Can't create a session …
-  // TransposeDQWeightsForMatMulNBits … Missing required scale"). The same model is retried with graph
-  // optimisations off, then without any quantised file (full precision, a bigger download), then as 4-bit.
-  // Whatever the first error says, every way is tried before giving up.
-  const FP32 = { encoder_model: 'fp32', decoder_model_merged: 'fp32', decoder_model: 'fp32', decoder_with_past_model: 'fp32' };
-  const tries = [
-    { dtype: 'q8' },
-    { dtype: 'q8', session_options: { graphOptimizationLevel: 'disabled' } },
-    { dtype: FP32 },
-    { dtype: FP32, session_options: { graphOptimizationLevel: 'disabled' } },
-    { dtype: 'q4' },
-  ];
-  let err = null;
-  const errs = [];
-  for (const opt of tries) {
-    try { asr = await T.pipeline('automatic-speech-recognition', mid, { device: 'wasm', progress_callback, ...opt }); err = null; break; }
-    catch (e) { err = e; asr = null; errs.push(String(e?.message || e).split('\n')[0].slice(0, 160)); console.warn('[lyrics-ai] model load failed, trying the next way', opt, e); }
-  }
-  if (err && errs.length > 1) err = new Error(`Không nạp được mô hình nhận dạng giọng hát (đã thử ${errs.length} cách). Lỗi đầu: ${errs[0]} | Lỗi cuối: ${errs[errs.length - 1]}`);
-  if (err) { modelFailed = mk; throw err; }
+  // Some ONNX Runtime builds cannot create a session for the 8-bit Whisper decoder; the same file is retried with
+  // graph optimisations off. All models ship with the app, so no other file is ever downloaded.
+  const tries = [{ dtype: 'q8' }, { dtype: 'q8', session_options: { graphOptimizationLevel: 'disabled' } }];
+  try {
+    await callWorker({ type: 'load', lib: LIB, local: LOCAL_MODELS, wasm: LIB.slice(0, LIB.lastIndexOf('/') + 1), mid, tries });
+  } catch (e) {
+    modelFailed = mk;
+    const errs = e.errs?.length ? e.errs : [e.message];
+    throw new Error(`Không nạp được mô hình nhận dạng giọng hát (đã thử ${errs.length} cách). Lỗi đầu: ${errs[0]}${errs.length > 1 ? ' | Lỗi cuối: ' + errs.at(-1) : ''}`);
+  } finally { onLoadProgress = null; }
   modelFailed = '';
   asrKey = key;
+  asr = runAsr;
   return asr;
 }
 
