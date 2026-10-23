@@ -2,7 +2,7 @@
 import { supa } from './supabase.js';
 import { storage } from './storage/index.js';
 import { getSetting, setSetting } from './db.js';
-import { h, modal, toast, confirmBox } from './ui.js';
+import { h, modal, toast, confirmBox, esc } from './ui.js';
 
 const MIN_PASSWORD = 10;
 
@@ -33,7 +33,7 @@ export async function supabaseDialog() {
       if (needsConfirm) {
         await modal({
           title: 'Kiểm tra email',
-          body: `<p>Đã gửi email xác nhận tới <b>${email}</b>. Bấm link trong email, rồi quay lại đây và đăng nhập.</p>`,
+          body: `<p>Đã gửi email xác nhận tới <b>${esc(email)}</b>. Bấm link trong email, rồi quay lại đây và đăng nhập.</p>`,
           actions: [{ label: 'Đã hiểu', value: true, kind: 'primary' }],
         });
         return false;
@@ -58,7 +58,7 @@ export async function afterSupabaseSignIn() {
   if (remote && local && lastUid !== uid) {
     choice = await modal({
       title: 'Máy này đã có dữ liệu',
-      body: `<div class="stack"><p>Thư viện trên máy này và tài khoản <b>${supa.email}</b> đều đã có dữ liệu. Bạn muốn làm gì?</p>
+      body: `<div class="stack"><p>Thư viện trên máy này và tài khoản <b>${esc(supa.email)}</b> đều đã có dữ liệu. Bạn muốn làm gì?</p>
         <ul class="acct-choices">
           <li><b>Gộp</b> (khuyên dùng): giữ cả hai, mục nào sửa sau cùng thì thắng.</li>
           <li><b>Dùng dữ liệu của tài khoản</b>: thay thư viện trên máy này bằng bản trong tài khoản. Những gì chỉ có trên máy này sẽ mất.</li>
