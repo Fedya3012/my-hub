@@ -35,7 +35,7 @@
 .mfmt.lg { font-size: .78rem; } .mfmt.sm { font-size: .62rem; }
 .hires { display: inline-flex; align-items: center; font: 700 .64rem/1.6 var(--font-body); letter-spacing: .04em; padding: 0 6px; border-radius: 4px; white-space: nowrap;
   color: var(--m-hires-fg); background: linear-gradient(160deg, var(--m-hires-a), var(--m-hires-b)); box-shadow: inset 0 0 0 1px rgb(0 0 0 / .12); }
-.hires.lg { font-size: .74rem; padding: 1px 8px; } .hires.sm { font-size: .58rem; }
+.hires.lg { font-size: .74rem; padding: 1px 8px; } .hires.sm { font-size: .72rem; }
 
 /* ── Ranges with a filled track (--v = percent) ── */
 .mnp input[type="range"], .mdock input[type="range"], .mcus-range input, .mcf-range {
@@ -691,7 +691,7 @@ body.mnp-open { overflow: hidden; }
 .mtree .msec-b { padding: 0 0 4px 22px; gap: 0; border-left: 1px solid var(--line); margin-left: 9px; }
 .mtree-files { font-size: .84rem; padding: 6px 4px; display: flex; align-items: center; gap: 6px; }
 .mtree-files .ic { width: 16px; height: 16px; }
-.mkind { position: absolute; top: 8px; right: 8px; font-size: .68rem; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; background: rgb(0 0 0 / .62); color: #fff; padding: 2px 7px; border-radius: 999px; }
+.mkind { position: absolute; top: 8px; right: 8px; font-size: .72rem; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; background: rgb(0 0 0 / .62); color: #fff; padding: 2px 7px; border-radius: 999px; }
 .mkind.in { position: static; background: var(--surface-2, rgb(127 127 127 / .14)); color: var(--muted); vertical-align: middle; margin-left: 4px; }
 .mgroup-art { display: grid; place-items: center; background: linear-gradient(135deg, hsl(var(--h) 45% 46%), hsl(calc(var(--h) + 50) 45% 26%)); color: #fff; }
 .mgroup-art .ic { width: 34%; height: 34%; stroke-width: 1.5; }

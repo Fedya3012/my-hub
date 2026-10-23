@@ -221,7 +221,7 @@ main#view > section.bk { animation: none; }
 .bk-mchart { display: flex; align-items: flex-end; gap: 4px; height: 150px; }
 .bk-mcol { flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; min-width: 0; }
 .bk-mcol i { display: block; width: 100%; max-width: 28px; min-height: 2px; border-radius: 4px 4px 0 0; background: var(--bk); }
-.bk-mcol small { font-size: .62rem; color: var(--muted); }
+.bk-mcol small { font-size: .7rem; color: var(--muted); }
 .bk-dist ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .bk-dist li { display: grid; grid-template-columns: minmax(70px, 34%) 1fr auto; gap: 8px; align-items: center; font-size: .82rem; }
 .bk-dist-k { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

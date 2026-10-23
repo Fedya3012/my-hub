@@ -400,3 +400,6 @@ body.bk-reader-open[data-audio-source]:not([data-audio-source="podcast"]) .pc-mi
   .pc-bottom a { font-weight: 500; padding-inline: 1px; }
   .pc-bottom a.on { font-weight: 600; }
 }
+
+/* Phone tap targets: the "Tất cả / Chưa nghe / Đang nghe / Có sao" filter was only 26px high */
+@media (max-width: 860px) { .pc-seg.sm button, .pc-seg.sm a { min-height: 36px; } }
