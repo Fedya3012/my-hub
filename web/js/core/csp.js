@@ -24,3 +24,7 @@ if (!document.querySelector('meta[http-equiv="Content-Security-Policy"]')) {
   m.content = POLICY;
   document.head.prepend(m);
 }
+
+// Inline handlers are blocked by the policy above, so images that should vanish when they fail to load carry
+// data-drop-on-error instead of onerror="this.remove()": one capturing listener removes them.
+document.addEventListener('error', (e) => { if (e.target?.matches?.('img[data-drop-on-error]')) e.target.remove(); }, true);

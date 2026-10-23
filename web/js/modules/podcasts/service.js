@@ -88,7 +88,7 @@ function paintMini() {
   if (!e) return;
   const artEl = mini.querySelector('.pc-mini-art');
   const src = e.image || player.show?.image || '';
-  if (artEl.dataset.src !== src) { artEl.dataset.src = src; artEl.innerHTML = src ? `<img src="${esc(src)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : icon('podcast'); }
+  if (artEl.dataset.src !== src) { artEl.dataset.src = src; artEl.innerHTML = src ? `<img src="${esc(src)}" alt="" referrerpolicy="no-referrer" data-drop-on-error>` : icon('podcast'); }
   mini.querySelector('b').textContent = e.title;
   mini.querySelector('small').textContent = player.show?.title || '';
   const p = mini.querySelector('.pc-mini-play');

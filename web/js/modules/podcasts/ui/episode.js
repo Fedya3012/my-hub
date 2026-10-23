@@ -30,7 +30,7 @@ export async function render(el, { arg, ctx, go, rerender }) {
         </div>
       </div>
     </header>
-    ${(e.persons || []).length ? `<p class="pc-people">${e.persons.map(x => `<a class="chip" href="#podcasts/discover/${encodeURIComponent(x.name)}">${x.img ? `<img src="${esc(x.img)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : icon('pc-mic')}${esc(x.name)} <small>${x.role === 'guest' ? 'khách mời' : 'dẫn'}</small></a>`).join('')}</p>` : ''}
+    ${(e.persons || []).length ? `<p class="pc-people">${e.persons.map(x => `<a class="chip" href="#podcasts/discover/${encodeURIComponent(x.name)}">${x.img ? `<img src="${esc(x.img)}" alt="" referrerpolicy="no-referrer" data-drop-on-error>` : icon('pc-mic')}${esc(x.name)} <small>${x.role === 'guest' ? 'khách mời' : 'dẫn'}</small></a>`).join('')}</p>` : ''}
     ${chs.length ? `<section class="pc-sec"><header><h2>Chương</h2></header><ol class="pc-chaps">${chs.map((c, i) => `<li><button data-at="${c.start}"><span>${esc(c.title || 'Chương ' + (i + 1))}</span><small>${fmtClock(c.start)}</small></button></li>`).join('')}</ol></section>` : ''}
     ${marks.length ? `<section class="pc-sec"><header><h2>Dấu trang</h2></header><ul class="pc-marks">${marks.map(m => `<li><button data-at="${m.at}">${icon('pc-bookmark')}<b>${fmtClock(m.at)}</b><span>${esc(m.note || '')}</span></button></li>`).join('')}</ul></section>` : ''}
     <section class="pc-sec"><header><h2>Ghi chú tập</h2></header><div class="pc-notes">${notesHtml(e.description) || '<p class="muted">Không có ghi chú.</p>'}</div></section>`;

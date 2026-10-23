@@ -58,7 +58,7 @@ export function art(src, title = '', cls = '') {
   src = sharp(src);
   const hue = parseInt(hash(title || 'x').slice(0, 4), 36) % 360;
   const fb = `<span class="pc-art-fb" style="--h:${hue}">${esc((title || '?').trim().slice(0, 1).toUpperCase())}</span>`;
-  return `<span class="pc-art ${cls}">${fb}${src ? `<img src="${esc(src)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}</span>`;
+  return `<span class="pc-art ${cls}">${fb}${src ? `<img src="${esc(src)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-drop-on-error>` : ''}</span>`;
 }
 
 export function episodeRow(e, { prog, showName = true, queued = false, downloaded = false } = {}) {
