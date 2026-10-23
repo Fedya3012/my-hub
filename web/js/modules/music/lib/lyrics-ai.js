@@ -14,7 +14,7 @@ import { saveLyrics, loadLyrics } from './lyrics-sources.js';
 import { parseLyrics, toModel, toLrc } from './lyrics.js';
 import { mainFile } from './store.js';
 
-const LIB = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.2.0/dist/transformers.min.js';
+const LIB = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1/dist/transformers.min.js';
 export const AI_MODELS = {
   tiny: { id: 'onnx-community/whisper-tiny', label: 'Nhanh', size: '≈ 40 MB' },
   base: { id: 'onnx-community/whisper-base', label: 'Cân bằng', size: '≈ 80 MB' },
@@ -62,7 +62,7 @@ async function loadRecognizer(task, key) {
     if (wa) {
       wa.proxy = false;
       if (!(navigator.crossOriginIsolated)) wa.numThreads = 1;
-      wa.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.26.0-dev.20260416-b7804b056c/dist/';
+      wa.wasmPaths = LIB.slice(0, LIB.lastIndexOf('/') + 1);
     }
   } catch {}
   const files = new Map();
@@ -91,7 +91,7 @@ async function loadRecognizer(task, key) {
     try { asr = await T.pipeline('automatic-speech-recognition', mid, { device: 'wasm', progress_callback, ...opt }); err = null; break; }
     catch (e) { err = e; asr = null; errs.push(String(e?.message || e).split('\n')[0].slice(0, 160)); console.warn('[lyrics-ai] model load failed, trying the next way', opt, e); }
   }
-  if (err && errs.length > 1) err = new Error(`Không nạp được mô hình nhận dạng giọng hát (đã thử ${errs.length} cách). Lỗi đầu: ${errs[0]}`);
+  if (err && errs.length > 1) err = new Error(`Không nạp được mô hình nhận dạng giọng hát (đã thử ${errs.length} cách). Lỗi đầu: ${errs[0]} | Lỗi cuối: ${errs[errs.length - 1]}`);
   if (err) { modelFailed = mk; throw err; }
   modelFailed = '';
   asrKey = key;
