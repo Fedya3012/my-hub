@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   version:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       version: ${{ steps.v.outputs.version }}
       code: ${{ steps.v.outputs.code }}
@@ -68,7 +68,7 @@ jobs:
 
   android:
     needs: version
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -118,7 +118,7 @@ jobs:
   release:
     needs: [version, windows, android]
     if: needs.version.outputs.release == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
       - uses: actions/download-artifact@v7
