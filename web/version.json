@@ -1,7 +1,16 @@
 {
-  "app": "0.9.19.1",
+  "app": "0.9.20.0",
   "released": "2026-10-23",
   "changelog": [
+    {
+      "version": "0.9.20.0",
+      "date": "2026-10-23",
+      "notes": [
+        "Trình phát nhạc: sửa dịch lời, cắt phần chữ thừa sau bản dịch thật",
+        "Trình phát nhạc: đồng bộ từng chữ bằng AI có thêm Whisper Medium và Large v3; có thông báo khi Base đang đồng bộ",
+        "Trình phát nhạc: chọn mô hình tạo lời riêng, có thẻ và menu riêng, dùng cho chế độ tự động; lời đã thay thế được giữ lại để đặt lại"
+      ]
+    },
     {
       "version": "0.9.19.1",
       "date": "2026-10-23",
@@ -721,7 +730,7 @@
     },
     "music": {
       "name": "Trình phát nhạc",
-      "version": "0.7.6",
+      "version": "0.7.7",
       "minApp": "0.3.0",
       "files": [
         "js/modules/music/index.js",
