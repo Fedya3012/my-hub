@@ -2323,5 +2323,20 @@
  "Xoá khỏi khay": "Remove from tray",
  "Xoá tài khoản": "Delete account",
  "Xoá tài khoản My Hub?": "Delete the My Hub account?",
- "⋯ Tuỳ chọn": "⋯ Options"
+ "⋯ Tuỳ chọn": "⋯ Options",
+ "Dịch lời bằng AI": "Translate lyrics with AI",
+ "Dịch bằng AI": "Translate with AI",
+ "Mô hình dịch: Nhanh · ≈ 80 MB": "Translation model: Fast · ≈ 80 MB",
+ "Mô hình dịch: Chính xác · ≈ 600 MB": "Translation model: Accurate · ≈ 600 MB",
+ "Dịch sang: Tiếng Việt": "Translate to: Vietnamese",
+ "Dịch sang: Tiếng Anh": "Translate to: English",
+ "Dịch sang: Tiếng Nhật": "Translate to: Japanese",
+ "Dịch sang: Tiếng Hàn": "Translate to: Korean",
+ "Dịch sang: Tiếng Trung": "Translate to: Chinese",
+ "Dịch sang: Tiếng Pháp": "Translate to: French",
+ "Dịch sang: Tiếng Tây Ban Nha": "Translate to: Spanish",
+ "Dịch sang: Tiếng Đức": "Translate to: German",
+ "Bài này chưa có lời để dịch": "This song has no lyrics to translate",
+ "Không dịch được": "Could not translate",
+ "Đang dịch từng dòng…": "Translating line by line…"
 }

@@ -706,6 +706,8 @@
         "js/modules/music/lib/lyrics-sources.js",
         "js/modules/music/lib/lyrics-ai.js",
         "js/modules/music/lib/lyrics-worker.js",
+        "js/modules/music/lib/lyrics-translate.js",
+        "js/modules/music/lib/translate-worker.js",
         "js/modules/music/lib/qol.js",
         "js/modules/music/lib/native.js",
         "js/modules/music/lib/exclusive.js",

@@ -76,6 +76,7 @@ export async function editLyrics(t, onDone) {
     </div>
     <div data-pane="tr" hidden class="stack">
       <p class="hint">Mỗi dòng ở đây là bản dịch / phiên âm của dòng lời tương ứng (bỏ qua dòng trống trong lời). Có thể dán LRC bản dịch có mốc thời gian.</p>
+      <div class="row-actions"><button class="btn small" data-aitr>${icon('translate')}Dịch bằng AI</button><span class="hint">Mô hình mã nguồn mở từ Hugging Face, chạy trên máy; dịch theo lời đã lưu; chọn ngôn ngữ đích và mô hình trong menu kiểu chữ lời.</span></div>
       <div class="mly-trgrid" data-trgrid></div>
       <textarea class="code" rows="10" data-trtext spellcheck="false" placeholder="Bản dịch dòng 1&#10;Bản dịch dòng 2&#10;…"></textarea>
     </div>
@@ -185,6 +186,14 @@ export async function editLyrics(t, onDone) {
     lines[+i].tr = e.target.value.trim() || null;
     trTa.value = lines.map(l => l.tr || '').join('\n').replace(/\n+$/, '');
   });
+
+  $('[data-aitr]').onclick = async () => {
+    try {
+      const { translateLyrics } = await import('../lib/lyrics-translate.js');
+      const r = await translateLyrics(t);
+      if (r) { trTa.value = r; dirtyText = true; loadModel(); drawTr(); }
+    } catch (e) { toast(e.message || 'Không dịch được', 'warn'); }
+  };
 
   // ── Online search ──
   $('[data-search]').onsubmit = async (e) => {
