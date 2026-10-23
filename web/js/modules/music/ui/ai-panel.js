@@ -15,6 +15,8 @@ const REC = {
   turbo: { name: 'Large v3 Turbo', tag: 'Cao cấp', desc: 'Chính xác nhất, nặng và chậm; cần nhiều RAM.', size: '≈ 800 MB', stars: 4 },
   distil: { name: 'Distil Large v3', tag: 'Tiếng Anh nhanh', desc: 'Chỉ tiếng Anh, gần bằng Large v3 mà nhanh hơn nhiều.', size: '≈ 750 MB', stars: 4 },
 };
+// Big models may lack the word-timing export; then Base times the words (the app says so).
+const SYNC_NOTE = { medium: 'Nếu thiếu bản giờ từng chữ, Base sẽ căn giờ.', large: 'Nếu thiếu bản giờ từng chữ, Base sẽ căn giờ.', turbo: 'Nếu thiếu bản giờ từng chữ, Base sẽ căn giờ.', distil: 'Nếu thiếu bản giờ từng chữ, Base sẽ căn giờ.' };
 const TRM = {
   fast: { name: 'Dịch nhanh', tag: 'NLLB-200', desc: 'Mô hình dịch chuyên dụng cho khoảng 200 ngôn ngữ, dịch từng dòng, chống lặp.', size: '≈ 600 MB', stars: 3 },
   best: { name: 'Dịch chính xác', tag: 'Qwen2.5 1.5B', desc: 'Mô hình ngôn ngữ đọc cả bài theo cụm dòng: sát nghĩa, tự nhiên, xử lý được lời pha nhiều ngôn ngữ; chậm hơn.', size: '≈ 1 GB', stars: 4 },
@@ -27,7 +29,7 @@ export const wide = () => !matchMedia('(max-width: 720px)').matches;
 export async function openAiPanel({ t = null, kind = 'settings', onDone } = {}) {
   const ai = await import('../lib/lyrics-ai.js');
   const tr = await import('../lib/lyrics-translate.js');
-  const showRec = kind !== 'translate';
+  const showRec = kind !== 'translate', showGen = kind === 'gen' || kind === 'settings', showSync = kind === 'sync' || kind === 'settings';
   const showTr = kind === 'translate' || kind === 'settings';
   const titles = { gen: 'Tạo lời tự động', sync: 'Tự đồng bộ từng chữ', translate: 'Dịch lời bằng AI', settings: 'Cài đặt AI cho lời' };
   let s;
@@ -40,17 +42,21 @@ export async function openAiPanel({ t = null, kind = 'settings', onDone } = {}) 
       <span class="aip-card-m">${stars(m.stars)}<span>${esc(m.size)}</span></span>${extra}</button>`;
   const draw = () => {
     ai.syncCustom();
-    const y = Y(), cur = ai.AI_MODELS[y.aiModel] ? y.aiModel : 'base', got = y.aiRemoteOk || {};
+    const y = Y(), got = y.aiRemoteOk || {};
+    const curOf = (pk) => { const k = pk === 'aiGenModel' ? (y.aiGenModel ?? y.aiModel) : y.aiModel; return ai.AI_MODELS[k] ? k : 'base'; };
     const badge = (k) => (!ai.AI_MODELS[k]?.remote ? 'Có sẵn' : got[k === 'custom' ? 'custom:' + ai.AI_MODELS.custom?.id : k] ? 'Đã tải' : 'Tải khi chọn');
+    const recSection = (pk, title, sub) => { const cur = curOf(pk); return `<section class="aip-sec"><h3>${title} <small>(${sub})</small></h3>
+        <div class="aip-grid" role="radiogroup" aria-label="${title}">
+          ${Object.keys(REC).map(k => card('m', pk + '|' + k, { ...REC[k], desc: pk === 'aiModel' && SYNC_NOTE[k] ? REC[k].desc + ' ' + SYNC_NOTE[k] : REC[k].desc }, { on: cur === k, badge: badge(k) })).join('')}
+          ${card('m', pk + '|custom', { name: 'Mô hình tự chọn', tag: ai.AI_MODELS.custom ? ai.AI_MODELS.custom.id : 'Hugging Face', desc: 'Dán tên kho Whisper ONNX bất kỳ, ví dụ onnx-community/whisper-medium.', size: 'tuỳ mô hình', stars: 3 }, { on: cur === 'custom' && !!ai.AI_MODELS.custom, badge: ai.AI_MODELS.custom ? badge('custom') : '' })}
+        </div></section>`; };
     const trm = y.trModel === 'best' ? 'best' : 'fast';
     const body = `
       ${t ? `<p class="aip-song">${icon('music')}<span>${esc(t.title || 'Bài hát')}${t.artist ? ' · ' + esc(t.artist) : ''}</span></p>` : ''}
-      ${showRec ? `<section class="aip-sec"><h3>Mô hình nghe giọng hát <small>(Whisper, chạy trên máy)</small></h3>
-        <div class="aip-grid" role="radiogroup" aria-label="Mô hình nghe giọng hát">
-          ${Object.keys(REC).map(k => card('m', k, REC[k], { on: cur === k, badge: badge(k) })).join('')}
-          ${card('m', 'custom', { name: 'Mô hình tự chọn', tag: ai.AI_MODELS.custom ? ai.AI_MODELS.custom.id : 'Hugging Face', desc: 'Dán tên kho Whisper ONNX bất kỳ, ví dụ onnx-community/whisper-medium.', size: 'tuỳ mô hình', stars: 3 }, { on: cur === 'custom' && !!ai.AI_MODELS.custom, badge: ai.AI_MODELS.custom ? badge('custom') : '', extra: '' })}
-        </div>
-        <div class="aip-custom" ${ai.AI_MODELS.custom || y.aiModel === 'custom' || kind === 'settings' ? '' : 'hidden'}><input name="custom" value="${esc(y.aiCustom || '')}" placeholder="onnx-community/whisper-medium" spellcheck="false" aria-label="Tên kho Hugging Face"><button class="btn small" data-custom>Dùng mô hình này</button></div>
+      ${showGen ? recSection('aiGenModel', 'Mô hình tạo lời', 'Whisper, chạy trên máy; nghe cả bài và viết lời có mốc theo dòng') : ''}
+      ${showSync ? recSection('aiModel', 'Mô hình đồng bộ từng chữ', 'Whisper, chạy trên máy; cần bản có giờ từng chữ') : ''}
+      ${showRec ? `<section class="aip-sec">
+        <div class="aip-custom" ${ai.AI_MODELS.custom || kind === 'settings' ? '' : 'hidden'}><input name="custom" value="${esc(y.aiCustom || '')}" placeholder="onnx-community/whisper-medium" spellcheck="false" aria-label="Tên kho Hugging Face"><button class="btn small" data-custom>Dùng mô hình này</button></div>
         <div class="aip-opts">
           <label class="aip-opt"><input type="checkbox" data-vocal ${y.aiVocal === 1 ? 'checked' : ''}><span><b>Tách giọng hát khỏi nhạc nền</b><small>Nghe rõ hơn với bài nhạc nền dày (stereo), lâu hơn một chút.</small></span></label>
           <label class="aip-opt"><input type="checkbox" data-auto ${y.aiAuto !== 0 ? 'checked' : ''}><span><b>Tự tạo lời khi bài chưa có lời</b><small>Chạy ngầm sau vài giây phát nhạc.</small></span></label>
@@ -63,17 +69,19 @@ export async function openAiPanel({ t = null, kind = 'settings', onDone } = {}) 
     s.el.querySelector('.msheet-body').innerHTML = body;
     bind();
   };
+  let customFor = kind === 'gen' ? 'aiGenModel' : 'aiModel';
   const bind = () => {
     const q = (x) => s.el.querySelector(x);
     s.el.querySelectorAll('[data-m]').forEach(b => b.onclick = async () => {
-      if (b.dataset.m === 'custom' && !ai.AI_MODELS.custom) { const c = q('.aip-custom'); c.hidden = false; c.querySelector('input').focus(); return; }
-      await setPref('lyrics.aiModel', b.dataset.m); draw();
+      const [pk, k] = b.dataset.m.split('|');
+      if (k === 'custom' && !ai.AI_MODELS.custom) { customFor = pk; const c = q('.aip-custom'); c.hidden = false; c.querySelector('input').focus(); return; }
+      await setPref('lyrics.' + pk, k); draw();
     });
     s.el.querySelectorAll('[data-t]').forEach(b => b.onclick = async () => { await setPref('lyrics.trModel', b.dataset.t); draw(); });
     q('[data-custom]')?.addEventListener('click', async () => {
       const id = q('[name=custom]').value.trim();
       if (!/^[\w.-]+\/[\w.-]+$/.test(id)) return toast('Tên kho không hợp lệ, cần dạng tác-giả/tên', 'warn');
-      await setPref('lyrics.aiCustom', id); ai.syncCustom(); await setPref('lyrics.aiModel', 'custom'); draw();
+      await setPref('lyrics.aiCustom', id); ai.syncCustom(); await setPref('lyrics.' + customFor, 'custom'); draw();
     });
     q('[data-vocal]')?.addEventListener('change', (e) => setPref('lyrics.aiVocal', e.target.checked ? 1 : 0));
     q('[data-auto]')?.addEventListener('change', (e) => setPref('lyrics.aiAuto', e.target.checked ? 1 : 0));
@@ -84,7 +92,8 @@ export async function openAiPanel({ t = null, kind = 'settings', onDone } = {}) 
       s.close();
       const done = (e) => { if (e) toast(e.message || 'Không thực hiện được', 'warn'); onDone?.(e); };
       if (kind === 'translate') return tr.translateLyrics(t).then(() => done(), done);
-      const model = ai.AI_MODELS[Y().aiModel] ? Y().aiModel : 'base', vocal = Y().aiVocal === 1;
+      const y = Y(), mk = kind === 'gen' ? (y.aiGenModel ?? y.aiModel) : y.aiModel;
+      const model = ai.AI_MODELS[mk] ? mk : 'base', vocal = y.aiVocal === 1;
       (kind === 'sync' ? ai.autoWordSync(t, { model, vocal }) : ai.generate(t, { model, vocal })).then(() => done(), done);
     });
   };

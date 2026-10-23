@@ -22,9 +22,11 @@ export async function aiPick(t, kind, { anchor = null, onDone } = {}) {
   const ai = await import('../lib/lyrics-ai.js');
   ai.syncCustom();
   const Y = prefs().lyrics || {};
-  const cur = ai.AI_MODELS[Y.aiModel] ? Y.aiModel : 'base';
+  const pk = kind === 'gen' ? 'aiGenModel' : 'aiModel', ck = pk === 'aiGenModel' ? (Y.aiGenModel ?? Y.aiModel) : Y.aiModel;
+  const cur = ai.AI_MODELS[ck] ? ck : 'base';
   const vocal = Y.aiVocal === 1;
   const run = (model) => {
+    setPref('lyrics.' + pk, model);
     const p = kind === 'sync' ? ai.autoWordSync(t, { model, vocal }) : ai.generate(t, { model, vocal });
     p.then(() => onDone?.(), (e) => { toast(e?.message || (kind === 'sync' ? 'Không đồng bộ được' : 'Không tạo được lời'), 'warn'); onDone?.(e); });
   };

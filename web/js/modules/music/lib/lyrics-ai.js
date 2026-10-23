@@ -73,6 +73,8 @@ export async function ensureConsent(model = '') {
 const bigAsked = new Set();
 const modelKey = () => { syncCustom(); return AI_MODELS[Y().aiModel] ? Y().aiModel : 'base'; };
 const vocalOn = () => Y().aiVocal === 1;
+// Making lyrics has its own model choice (lyrics.aiGenModel); older settings only had lyrics.aiModel.
+const genKey = () => { syncCustom(); const k = Y().aiGenModel ?? Y().aiModel; return AI_MODELS[k] ? k : 'base'; };
 
 let asr = null, asrKey = '', loading = null;
 window.addEventListener('online', () => { modelFailed = ''; });
@@ -184,7 +186,7 @@ const JUNK = /^[\s[(♪*#.…-]*(music|nhạc|instrumental|applause|vỗ tay|♪
 const stamp = (s) => { const m = Math.floor(s / 60), x = s - m * 60; return `[${String(m).padStart(2, '0')}:${x.toFixed(2).padStart(5, '0')}]`; };
 
 // → LRC text, or '' when no singing was heard.
-export async function transcribe(t, { task, model = modelKey(), vocal = vocalOn() } = {}) {
+export async function transcribe(t, { task, model = genKey(), vocal = vocalOn() } = {}) {
   const audio = await samples(t, { vocal, task });
   const asr = await recognizer(task, false, model);
   const n = Math.ceil(audio.length / (PIECE * RATE));
@@ -215,7 +217,7 @@ function releaseSoon() {
   relT = setTimeout(() => { if (!running.size && worker) { worker.terminate(); worker = null; asr = null; asrKey = ''; waits.clear(); } }, 60_000);
 }
 // Makes and saves lyrics for t, with a progress task. → the saved row, or null (nothing sung / cancelled).
-export function generate(t, { quiet = false, model = modelKey(), vocal = vocalOn() } = {}) {
+export function generate(t, { quiet = false, model = genKey(), vocal = vocalOn() } = {}) {
   if (running.has(t.id)) return running.get(t.id);
   const job = (async () => {
     if (!(await ensureConsent(model))) { running.delete(t.id); return null; }
@@ -227,7 +229,8 @@ export function generate(t, { quiet = false, model = modelKey(), vocal = vocalOn
         task.finish('Không nghe thấy lời hát trong bài này');
         return null;
       }
-      await saveLyrics(t, { text, source: 'ai', offset: 0, updatedAt: Date.now(), aiGen: { model: used.get(model) || model, vocal, at: Date.now() } });
+      const old = await db.lyrics.get(t.id);   // making lyrics over existing ones keeps them for "Đặt lại lời"
+      await saveLyrics(t, { text, source: 'ai', offset: 0, updatedAt: Date.now(), ...(old?.text && !old.aiOrig && old.source !== 'ai' ? { aiOrig: { text: old.text, source: old.source || 'user' } } : {}), aiGen: { model: used.get(model) || model, vocal, at: Date.now() } });
       task.finish(`Đã tạo lời cho “${t.title || 'bài hát'}”`);
       return db.lyrics.get(t.id);
     } catch (e) {
@@ -254,8 +257,8 @@ export function watch(player) {
     timer = setTimeout(async () => {
       // On a phone the automatic mode only uses the small bundled models and short songs: decoding a long song and a
       // 250 MB to 1 GB model together is what gets the app closed for memory.
-      if ((t.duration || 0) > 600 || (matchMedia('(pointer: coarse)').matches && !['tiny', 'base'].includes(modelKey()))) return;
-      if (player.track?.id !== t.id || !player.playing || running.size || modelFailed === modelKey() || (!asr && !navigator.onLine)) return;
+      if ((t.duration || 0) > 600 || (matchMedia('(pointer: coarse)').matches && !['tiny', 'base'].includes(genKey()))) return;
+      if (player.track?.id !== t.id || !player.playing || running.size || modelFailed === genKey() || (!asr && !navigator.onLine)) return;
       if ((await getSetting(MISS, {}))?.[t.id]) return;
       if (await loadLyrics(t, { allowOnline: !!Y().online })) return;
       generate(t).catch(() => {});
