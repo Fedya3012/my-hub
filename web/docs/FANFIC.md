@@ -29,7 +29,7 @@ All tables are in `SYNCED_TABLES`, so every storage mode (GitHub, Dropbox, OneDr
 ## UI
 Tabs: Bàn viết, Tác phẩm, Fandom, Thêm & nhập (phone bottom bar). Works filters persist in `localStorage`
 (`hub.fanfic.filters`). Long-press / right-click menus via `core/longpress.js`. Writer: binder, Markdown, autosave,
-focus + typewriter, snapshots; Flex Mode = text above the crease, tools below. Cover screen card: today's words + "Viết tiếp".
+focus + typewriter, snapshots;
 Music: the Music `library.drawer` block ("Nhạc nền") shows on the work page.
 
 ## Phase 2

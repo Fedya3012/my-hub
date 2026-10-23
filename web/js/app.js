@@ -18,8 +18,6 @@ import { account } from './core/account.js';
 import { badge as accountBadge } from './core/account-ui.js';
 import { params, services as sharedServices } from './core/params.js';
 import { initCoreParams } from './core/params-core.js';
-import { initPosture } from './core/posture.js';
-import { initCover } from './core/cover.js';
 
 const ctx = { db, bus, storage, tasks, toast, go, params, services: sharedServices, appName: APP_NAME, appVersion: APP_VERSION };
 let current = null; // { id, mod }
@@ -185,7 +183,6 @@ async function boot() {
   safe(() => account.init(), 'account');         // restore the cached GitHub session (works offline) before routing
   await safe(() => applyTheme(), 'theme');
   await safe(() => initCoreParams(), 'params');   // shared parameters (ctx.params) before any module starts
-  safe(() => initPosture(), 'posture');           // foldables: <body data-posture>, see docs/FOLDABLE.md
   await safe(() => seedIfEmpty(), 'seed');
   document.getElementById('app-name').textContent = APP_NAME;
   document.getElementById('app-version').textContent = 'v' + APP_VERSION;
@@ -234,7 +231,6 @@ async function boot() {
   window.addEventListener('unhandledrejection', (ev) => { if (isQuota(ev.reason)) { ev.preventDefault(); toast('Bộ nhớ trình duyệt đã đầy, không lưu được. Vào Cài đặt → Tài khoản đồng bộ để giải phóng chỗ.', 'error'); } });
 
   initDrawer();
-  safe(() => initCover(ctx), 'cover');            // Quick View for the cover screen (core/cover.js)
   await safe(() => registerSW(), 'sw');
   autoCheck();
   setInterval(autoCheck, 3600e3);

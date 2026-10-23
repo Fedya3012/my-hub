@@ -252,13 +252,6 @@ body.fx-writer-open .mdock { display: none; }
 .fx-writer.focus .fx-w-bar:hover, .fx-writer.focus .fx-w-tools:hover, .fx-writer.focus .fx-w-bar:focus-within { opacity: 1; }
 .fx-writer.focus .fx-w-binder { display: none; }
 
-/* Flex Mode (Galaxy Z Flip half-folded): text above the crease, tools below. */
-body[data-posture="flex"] .fx-writer { display: grid; grid-template-rows: var(--fold-y, 50%) var(--fold-h, 0px) 1fr; }
-body[data-posture="flex"] .fx-writer > .fold-top { grid-row: 1; min-height: 0; }
-body[data-posture="flex"] .fx-writer > .fold-bottom { grid-row: 3; display: flex; flex-direction: column; padding-top: 24px; background: var(--surface); }
-body[data-posture="flex"] .fx-writer .fx-w-tools { justify-content: space-around; border: 0; padding: 12px; }
-body[data-posture="flex"] .fx-writer .fx-w-tools .icon-btn { width: 48px; height: 48px; }
-body[data-posture="flex"] .fx-writer .fx-w-page { padding-bottom: 24px; }
 
 /* Phones (Android): the app bar already names the app, so the page header disappears (as in Books);
    blurbs get denser, the work page stacks with chapters first and one full-width primary action. */
@@ -327,7 +320,6 @@ body[data-posture="flex"] .fx-writer .fx-w-page { padding-bottom: 24px; }
 .fx-pinlist button { width: 100%; display: grid; text-align: left; padding: 8px 10px; border: 0; border-radius: 8px; background: var(--surface-2); color: var(--fg); font: inherit; cursor: pointer; }
 .fx-pinlist small { color: var(--muted); font-size: .78rem; }
 @media (max-width: 860px) { .fx-w-pin { position: absolute; z-index: 3; left: 0; right: 0; bottom: 0; width: auto; height: 50%; border-left: 0; border-top: 1px solid var(--line); box-shadow: var(--shadow); border-radius: 14px 14px 0 0; } }
-body[data-posture="flex"] .fx-w-pin { position: static; height: auto; }
 .fx-scratch { position: fixed; z-index: 6; right: calc(16px + env(safe-area-inset-right, 0px)); bottom: calc(70px + env(safe-area-inset-bottom, 0px)); width: min(340px, calc(100vw - 32px)); display: grid; grid-template-rows: auto 1fr; height: 240px; border-radius: 14px; background: color-mix(in srgb, #f5d142 18%, var(--surface)); border: 1px solid var(--line); box-shadow: var(--shadow); resize: both; overflow: hidden; }
 .fx-scratch header { display: flex; align-items: center; justify-content: space-between; padding: 6px 6px 0 12px; }
 .fx-scratch header b { display: flex; align-items: center; gap: 6px; font-size: .88rem; }

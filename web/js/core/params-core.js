@@ -9,7 +9,6 @@
 //   playback  what is playing now: item, title, state, position             (live, read-only, music)
 //   tasks     running tasks, overall percent                                 (live, read-only)
 import { setTabsAutoHide } from './tabs-autohide.js';
-import { setFoldAuto, setFoldPreview } from './posture.js';
 import { params } from './params.js';
 import { bus } from './bus.js';
 import { getSetting, setSetting } from './db.js';
@@ -45,17 +44,13 @@ export async function initCoreParams() {
       tabsAutoHide: { type: 'bool', default: 0, label: 'Tự ẩn thanh tab dưới khi cuộn', hint: 'Mọi app: thanh tab dưới ẩn khi cuộn xuống, hiện lại khi kéo lên.' },
       hide_music: { type: 'bool', default: 1, label: 'Tự ẩn thanh tab · Trình phát nhạc', ui: true },
       hide_books: { type: 'bool', default: 1, label: 'Tự ẩn thanh tab · Sách', ui: true },
-      foldAuto: { type: 'bool', default: 1, label: 'Tự đổi bố cục khi gập máy', hint: 'Máy gập (Galaxy Z Flip): Quick View trên màn hình ngoài, nửa trên xem và nửa dưới điều khiển khi gập Flex.' },
-      foldPreview: { type: 'enum', default: 'auto', options: { auto: 'Theo máy', open: 'Mở hoàn toàn', flex: 'Flex Mode', cover: 'Màn hình ngoài' }, label: 'Xem thử tư thế máy gập', hint: 'Để kiểm tra bố cục trên máy không phải máy gập.' },
       mode: { type: 'enum', default: 'light', options: { light: 'Sáng', dark: 'Tối' }, label: 'Sáng / tối hiện tại', readonly: true, ui: false },
     },
     adapter: {
-      get: (k) => (k === 'motion' || k === 'tabsAutoHide' || k.startsWith('fold') || k.startsWith('hide_') ? undefined : themeState[k]),
+      get: (k) => (k === 'motion' || k === 'tabsAutoHide' || k.startsWith('hide_') ? undefined : themeState[k]),
       async set(k, v) {
         if (k === 'motion') { applyMotion(v); return false; }
         if (k === 'tabsAutoHide') { setTabsAutoHide(v); return false; }
-        if (k === 'foldAuto') { setFoldAuto(v); return false; }
-        if (k === 'foldPreview') { setFoldPreview(v); return false; }
         if (k.startsWith('hide_')) return false;
         if (k === 'skin') return setSkin(v);
         if (k === 'theme') return applyTheme(v);
@@ -71,8 +66,6 @@ export async function initCoreParams() {
   });
   applyMotion(params.get('ui.motion'));
   setTabsAutoHide(params.get('ui.tabsAutoHide'));
-  setFoldAuto(params.get('ui.foldAuto'));
-  setFoldPreview(params.get('ui.foldPreview'));
 
   // ── locale ──
   params.define('locale', {

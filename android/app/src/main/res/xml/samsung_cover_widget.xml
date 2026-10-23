@@ -1,3 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Samsung: show this widget on the cover screen (Flex Window). -->
-<samsung-appwidget-provider display="sub_screen" />

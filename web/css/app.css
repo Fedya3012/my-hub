@@ -566,3 +566,6 @@ body.mnp-open .task-tray { bottom: calc(16px + var(--sai-bottom)); }
   font: inherit;
   color: inherit;
 }
+
+/* Layout wrappers (two parts of one page): plain flow, no separate layout. */
+.fold-top, .fold-bottom { display: contents; }

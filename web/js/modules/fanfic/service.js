@@ -18,7 +18,7 @@ export async function start(context) {
   definePrefs();
   css = Object.assign(document.createElement('link'), { rel: 'stylesheet', href: new URL('./fanfic.css', import.meta.url).href });
   document.head.appendChild(css);
-  offs.push(extend('library.drawer', drawerBlock), extend('cover.cards', coverCard));
+  offs.push(extend('library.drawer', drawerBlock));
   ctx.services.provide('fanfic', {
     // Books reader: { title, author, language, chapters: [{ title, html }] } from the published chapters.
     book: (id) => store.readableBook(id),
@@ -37,20 +37,6 @@ export async function start(context) {
 }
 
 export async function stop() { offs.forEach(f => f()); offs = []; css?.remove(); }
-
-// Cover screen (docs/FOLDABLE.md): today's words and one tap to keep writing the last chapter.
-async function coverCard() {
-  const fic = (await db.fanfics.toArray()).filter(f => !f.deleted && f.origin !== 'saved' && f.lastChapterId).sort((a, b) => (b.editedAt || 0) - (a.editedAt || 0))[0];
-  const item = fic && await db.items.get(fic.itemId);
-  if (!item || item.deleted) return null;
-  const ch = await db.ficChapters.get(fic.lastChapterId);
-  const by = await store.writingDays(1), words = by.get(today()) || 0, goal = ctx.params.get('fanfic.dailyGoal') || 0;
-  return {
-    id: 'fanfic-' + item.id, app: NAME, icon: 'quill', order: 25, route: `fanfic/write/${item.id}/${fic.lastChapterId}`,
-    title: item.title, sub: `${ch?.title || ''} · hôm nay ${words}${goal ? '/' + goal : ''} từ`, percent: goal ? Math.min(100, words / goal * 100) : 0,
-    actions: [{ label: 'Viết tiếp', icon: 'quill', primary: true, full: true, run: () => ctx.go(`fanfic/write/${item.id}/${fic.lastChapterId}`) }],
-  };
-}
 
 // Library drawer and Books book page (from === 'books'):
 //  - a fanfic: fandom, rating, warnings, pairings, tags, words, and "Sửa trong Xưởng Viết";

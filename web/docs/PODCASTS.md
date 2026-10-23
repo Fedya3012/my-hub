@@ -22,11 +22,9 @@ Design notes for the Podcast app. Code: `js/modules/podcasts/`. Schema: `js/core
 - Sleep timer: a minutes timer that fades out in the last 8 seconds, plus "end of episode" and "end of chapter".
 
 ## Interfaces
-- Cover screen card: `extend('cover.cards')`.
 - Library drawer block: `extend('library.drawer')`.
 - Books reader "Nghe khi đọc": `extend('audio.sources')`, with `hasMedia`, `playing`, `title`, `play`, `pause` and `onChange`.
 - Other apps can use `bus.emit('podcasts:play', { episodeId, at })` and `ctx.services.provide('podcasts')`.
-- Foldables: Now Playing uses `.fold-top` (cover and panel) and `.fold-bottom` (waveform and controls).
 
 ## Open items
 - English strings (`tools/i18n/extra.json`).

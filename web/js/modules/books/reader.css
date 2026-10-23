@@ -112,22 +112,6 @@ body.bk-reader-open { overflow: hidden; }
 @keyframes bk-left { from { transform: translateX(24px); opacity: 0; } }
 @keyframes bk-up { from { transform: translateY(24px); opacity: 0; } }
 
-/* ── Foldables (docs/FOLDABLE.md) ──────────────────────────────────────
-   Flex Mode: the page above the crease, every control below it within thumb reach; bars never auto-hide there.
-   The engine re-lays the page out on resize, so the shorter host simply gets fewer lines per page. */
-@media (max-width: 860px) {
-  body[data-posture="flex"] .bk-reader { grid-template-rows: calc(var(--fold-y, 50vh) - 24px - var(--sai-top, 0px)) var(--fold-h, 48px) auto auto minmax(0, 1fr); }
-  body[data-posture="flex"] .bk-r-host { grid-row: 1; }
-  body[data-posture="flex"] .bk-r-top { grid-row: 3; border-bottom: 0; }
-  body[data-posture="flex"] .bk-r-bot { grid-row: 4; border-top: 0; flex-wrap: wrap; justify-content: center; }
-  body[data-posture="flex"] .bk-reader.bare .bk-r-top, body[data-posture="flex"] .bk-reader.bare .bk-r-bot { transform: none; opacity: 1; pointer-events: auto; }
-  body[data-posture="flex"] .bk-r-bot .icon-btn.sm { width: 56px; height: 56px; }
-  body[data-posture="flex"] .bk-r-bot input[type=range] { flex-basis: 100%; order: -1; min-height: 32px; }
-  body[data-posture="flex"] .bk-r-panel { max-height: calc(100dvh - var(--fold-y, 50vh) - 12px); }
-  body[data-posture="flex"] .bk-r-top [data-a="search"], body[data-posture="flex"] .bk-r-top [data-a="bookmark"] { display: inline-flex; }
-}
-/* Cover screen: Quick View shows the "Đang đọc" card; the reader stays open under it. */
-body[data-posture="cover"]:not(.cover-full) .bk-reader { display: none; }
 
 /* Nghe khi đọc: pick Trình phát nhạc / Podcast (reader/audio-switch.js). */
 .bk-ra-btn.on { color: var(--accent); }

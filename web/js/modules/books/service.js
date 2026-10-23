@@ -17,7 +17,7 @@ export async function start(context) {
   definePrefs();
   css = Object.assign(document.createElement('link'), { rel: 'stylesheet', href: new URL('./books.css', import.meta.url).href });
   document.head.appendChild(css);
-  offs.push(extend('library.drawer', drawerBlock), extend('cover.cards', coverCard));
+  offs.push(extend('library.drawer', drawerBlock));
   ctx.services.provide('books', {
     open: (id) => ctx.go('books/read/' + id),
     show: (id) => ctx.go('books/book/' + id),
@@ -27,19 +27,6 @@ export async function start(context) {
   // Book items imported through the Library: catch up shortly after start and after each import.
   setTimeout(catchUp, 1500);
   offs.push(ctx.bus.on('item:changed', (e) => { if (e?.source !== 'books') { clearTimeout(timer); timer = setTimeout(catchUp, 2500); } }));
-}
-
-// "Đang đọc" card for the cover screen (core/cover.js, docs/FOLDABLE.md): the book read last, one tap to go on.
-async function coverCard() {
-  const p = (await db.progress.where('moduleId').equals('books').toArray())
-    .filter(r => r.state !== 'finished' && (r.percent || 0) < 98).sort((a, b) => b.updatedAt - a.updatedAt)[0];
-  const item = p && await db.items.get(p.itemId);
-  if (!item || item.deleted) return null;
-  return {
-    id: 'continue-' + item.id, app: 'Sách', icon: 'book', order: 20, route: 'books/read/' + item.id,
-    title: item.title, sub: p.label || '', percent: p.percent || 0,
-    actions: [{ label: 'Đọc tiếp', icon: 'book', primary: true, full: true, run: () => ctx.go('books/read/' + item.id) }],
-  };
 }
 
 export async function stop() { offs.forEach(f => f()); offs = []; css?.remove(); clearTimeout(timer); }

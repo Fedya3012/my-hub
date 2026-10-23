@@ -22,7 +22,7 @@ export async function start(context) {
   mountMini();
   const B = ctx.bus, cover = () => B.emit('cover:refresh');
   offs.push(
-    extend('library.drawer', drawerBlock), extend('cover.cards', coverCard),
+    extend('library.drawer', drawerBlock),
     // Books reader "Nghe khi đọc" switch (books/reader/audio-switch.js).
     extend('audio.sources', () => ({
       id: 'podcast', name: NAME, icon: 'podcast',
@@ -97,21 +97,6 @@ function paintMini() {
   paintTime();
 }
 function paintTime() { const b = mini?.querySelector('.pc-mini-bar i'); if (b && player.duration) b.style.width = (player.time / player.duration * 100) + '%'; }
-
-// ── Cover screen (docs/FOLDABLE.md): now playing with big controls ──
-async function coverCard() {
-  const e = player.ep;
-  if (!e) return null;
-  return {
-    id: 'podcasts-now', app: NAME, icon: 'podcast', order: 12, route: 'podcasts/play',
-    title: e.title, sub: `${player.show?.title || ''}${player.sleep ? ' · hẹn giờ ngủ' : ''}`, percent: player.duration ? player.time / player.duration * 100 : 0,
-    actions: [
-      { label: `Lùi ${get('skipBack')}s`, icon: 'pc-back', run: () => player.back() },
-      { label: player.playing ? 'Tạm dừng' : 'Phát', icon: player.playing ? 'pc-pause' : 'pc-play', primary: true, run: () => player.toggle() },
-      { label: `Tới ${get('skipFwd')}s`, icon: 'pc-fwd', run: () => player.fwd() },
-    ],
-  };
-}
 
 // ── Library drawer: a show's latest episodes and "Mở trong Podcast" ──
 async function drawerBlock({ item, el, from }) {

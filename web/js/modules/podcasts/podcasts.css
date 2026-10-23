@@ -241,16 +241,6 @@ body.pc-np-open .pc-mini { display: none; }
   .pc-np-panel { max-height: 40vh; }
   .pc-np .fold-bottom { grid-column: 1 / -1; max-width: 760px; width: 100%; justify-self: center; }
 }
-/* Galaxy Z Flip Flex Mode: cover + panel above the hinge, waveform + controls below (docs/FOLDABLE.md). */
-body[data-posture="flex"] .pc-np { height: 100vh; height: 100dvh; padding-top: calc(4px + var(--sai-top, 0px)); }
-body[data-posture="flex"] .pc-np .fold-top { flex: none; height: calc(var(--fold-y, 50vh) - 12px); overflow: hidden; display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto 1fr; gap: 6px 14px; }
-body[data-posture="flex"] .pc-np-bar { grid-column: 1 / -1; }
-body[data-posture="flex"] .pc-np-cover { grid-row: 2 / 4; padding: 0; align-self: start; }
-body[data-posture="flex"] .pc-art.np { width: min(36vw, calc(var(--fold-y, 50vh) - 90px)); }
-body[data-posture="flex"] .pc-np-title { text-align: left; }
-body[data-posture="flex"] .pc-np-tabs { display: none; }
-body[data-posture="flex"] .pc-np-panel { max-height: none; min-height: 0; }
-body[data-posture="flex"] .pc-np .fold-bottom { flex: 1; justify-content: center; padding-top: 14px; }
 
 /* ── Mini player ───────────────────────────────────────────── */
 .pc-mini { position: fixed; z-index: 21; left: calc(var(--sidebar, 0px) + 16px); right: 16px; bottom: calc(16px + var(--sai-bottom, 0px)); max-width: 720px; margin-inline: auto;
@@ -272,7 +262,6 @@ body.pc-mini-on .mdock { display: none !important; }
   .pc-mini { left: 8px; right: 8px; bottom: calc(64px + var(--sai-bottom, 0px)); }
   body:not(.pc-has-bottom):not(.own-tabs) .pc-mini { bottom: calc(72px + var(--sai-bottom, 0px)); }
 }
-body[data-posture="cover"]:not(.cover-full) .pc-mini { display: none !important; }
 
 /* Library drawer block */
 .pc-ext .pc-mini-list { list-style: none; margin: 6px 0; padding: 0; display: grid; gap: 2px; }

@@ -49,7 +49,6 @@ export async function start(context) {
     B.on('progress:pulled', async () => { if (player.playing) return; const s = await player.checkRemote(); if (s) showRemote(s); }),
     B.on('theme:changed', accent),
     extend('library.drawer', drawerBlock),
-    extend('cover.cards', coverCard),
     // "Nghe khi đọc" switch in the Books reader (books/reader/audio-switch.js).
     extend('audio.sources', () => ({
       id: 'music', name: 'Trình phát nhạc', icon: 'music',
@@ -72,22 +71,6 @@ export async function start(context) {
   // (or the first play) does not wait for it. One build; later changes rebuild only on demand.
   const warm = setTimeout(() => idle(() => store.library().catch(() => {}), 4000), 5000);
   offs.push(() => clearTimeout(warm));
-}
-
-// "Đang phát" card for the cover screen (core/cover.js, docs/FOLDABLE.md).
-function coverCard() {
-  const t = player.track;
-  if (!t) return null;
-  return {
-    id: 'music', app: 'Trình phát nhạc', icon: 'music', order: 10, route: 'music',
-    title: t.title || 'Không rõ tên', sub: [t.artist, t.album].filter(Boolean).join(' · '),
-    percent: player.duration ? player.time / player.duration * 100 : null,
-    actions: [
-      { label: 'Bài trước', icon: 'prev', run: () => player.prev() },
-      { label: player.playing ? 'Tạm dừng' : 'Phát', icon: player.playing ? 'pause' : 'play', primary: true, run: () => player.toggle() },
-      { label: 'Bài tiếp', icon: 'next', run: () => player.next() },
-    ],
-  };
 }
 
 export async function stop() {
