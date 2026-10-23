@@ -858,7 +858,7 @@
     },
     "guides": {
       "name": "Hướng dẫn sử dụng",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "minApp": "0.9.9.1",
       "files": [
         "js/modules/guides/content.js",
@@ -881,7 +881,9 @@
         "js/modules/guides/img/podcast-kham-pha.webp",
         "js/modules/guides/img/podcast-trang-chu.webp"
       ],
-      "changelog": []
+      "changelog": [
+        "Cập nhật theo 0.9.12.0: thêm trang Podcast, Cài đặt dạng danh sách mục, đặt lại tiến trình, Auto DJ và các đầu ra của Trình phát nhạc, Nghe khi đọc; ảnh chụp mới."
+      ]
     }
   }
 }
