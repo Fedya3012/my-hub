@@ -1,7 +1,15 @@
 {
-  "app": "0.9.19.0",
+  "app": "0.9.19.1",
   "released": "2026-10-23",
   "changelog": [
+    {
+      "version": "0.9.19.1",
+      "date": "2026-10-23",
+      "notes": [
+        "Tài khoản My Hub: đồng bộ từng bản ghi một và chỉ gửi những dòng đã thay đổi, thay vì cả thư viện",
+        "Giao diện tiếng Anh: không dịch lại các phần đã đánh dấu data-i18n=off"
+      ]
+    },
     {
       "version": "0.9.19.0",
       "date": "2026-10-23",
