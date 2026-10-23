@@ -5,7 +5,7 @@
 // covers) because podcasts, covers and lyrics come from any server.
 const POLICY = [
   "default-src 'self'",
-  "script-src 'self' 'wasm-unsafe-eval' https://cdn.jsdelivr.net",   // jsdelivr: the on-device lyrics AI library
+  "script-src 'self' 'wasm-unsafe-eval' blob: https://cdn.jsdelivr.net",   // jsdelivr: the on-device lyrics AI library; blob: because it imports its own modules from blob URLs
   "style-src 'self' 'unsafe-inline'",
   "font-src 'self' data:",
   "img-src 'self' data: blob: https: http:",

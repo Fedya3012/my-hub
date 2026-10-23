@@ -207,8 +207,14 @@ async function renderPage() {
         <p class="hint">My Hub không tự đặt giới hạn số bài, số tệp hay kích thước tệp. Giới hạn duy nhất là hạn mức của trình duyệt trên máy này; ứng dụng không thể nới các hạn mức đó, nhưng sẽ cảnh báo khi sắp đầy. Muốn không tốn chỗ: dùng “Thư mục đồng bộ” ở trên, hoặc “Liên kết thư mục (không sao chép)” trong Trình phát nhạc (máy tính).</p>
         ${st.mode !== 'local' ? `<div class="row-actions">
           <button class="btn" data-act="sync" ${conn ? '' : 'disabled'}>${icon('refresh')}Đồng bộ ngay</button>
-          <button class="btn" data-act="unlink">Ngừng dùng ${esc(st.cloud.label)} (về Local)</button>
-          <button class="btn danger-ghost" data-act="cloudwipe" ${conn ? '' : 'disabled'}>${icon('trash')}Xoá dữ liệu trên ${esc(st.cloud.label)}</button></div>` : ''}
+          <details class="sync-menu" style="position:relative">
+            <summary class="btn" aria-label="Tuỳ chọn đồng bộ" style="list-style:none;cursor:pointer">⋯ Tuỳ chọn</summary>
+            <div class="panel" style="position:absolute;right:0;top:calc(100% + 6px);z-index:5;display:flex;flex-direction:column;gap:6px;min-width:260px;padding:8px">
+              <button class="btn" data-act="sync-stop">Dừng đồng bộ đang chạy</button>
+              <button class="btn" data-act="unlink">Tắt đồng bộ (về Local, giữ bản trên đám mây)</button>
+              <button class="btn danger-ghost" data-act="cloudwipe" ${conn ? '' : 'disabled'}>${icon('trash')}Xoá dữ liệu trên ${esc(st.cloud.label)}</button>
+            </div>
+          </details></div>` : ''}
       </div>
     </section>
 
@@ -354,6 +360,12 @@ async function renderPage() {
     finally { b.disabled = false; }
   });
   // Drop the cloud side: Local only again (the cloud copy stays), or also erase what My Hub stored there.
+  on('sync-stop', () => {
+    const id = ctx.storage.taskId;
+    if (!id) { ctx.toast('Không có đồng bộ nào đang chạy'); return; }
+    tasks.cancel(id);
+    ctx.toast('Đã dừng đồng bộ');
+  });
   on('unlink', async () => {
     if (!(await confirmBox('Ngừng dùng ' + st.cloud.label + '?', 'App chuyển về chế độ Local, dữ liệu trên máy giữ nguyên và bản trên đám mây không bị xoá. Bật lại bất cứ lúc nào.', 'Chuyển về Local'))) return;
     await ctx.storage.setMode('local');
