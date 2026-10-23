@@ -18,6 +18,7 @@
 //                  handle.check() throws an AbortError once cancelled.
 import { bus } from './bus.js';
 import { icon } from './icons.js';
+const esc = (x) => String(x ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 const list = new Map();
 let seq = 0, trayEl = null, open = false, raf = 0, shape = '';
@@ -47,10 +48,11 @@ export function abortError() {
 }
 
 export const tasks = {
-  start({ label, detail = '', total = 0, unit = 'items', onCancel = null, quiet = false, delay = 0, cancellable = false } = {}) {
+  // actions: extra menu items [{ label, run, danger }] shown under the task's ⋯ menu (e.g. turn sync off).
+  start({ label, detail = '', total = 0, unit = 'items', onCancel = null, quiet = false, delay = 0, cancellable = false, actions = [] } = {}) {
     const ctl = new AbortController();
     const at = performance.now();
-    const t = { id: ++seq, label, detail, done: 0, total, unit, onCancel, cancellable, quiet, ctl, state: 'running', startedAt: at, showAt: at + delay, shown: false, samples: [] };
+    const t = { id: ++seq, label, detail, done: 0, total, unit, onCancel, cancellable, quiet, actions, ctl, state: 'running', startedAt: at, showAt: at + delay, shown: false, samples: [] };
     list.set(t.id, t);
     if (delay > 0) setTimeout(notify, delay + 20);
     notify();
@@ -149,6 +151,8 @@ function renderTray() {
       if (b.dataset.minimize != null) { setMinimized(true); return; }
       if (b.dataset.restore != null) { if (trayEl._dragged) { trayEl._dragged = false; return; } setMinimized(false); trayEl.querySelector('[data-minimize]')?.focus(); return; }
       if (b.dataset.toggle != null) { open = !open; renderTray(); }
+      else if (b.dataset.menu) { const m = b.closest('.task-i').querySelector('.task-menu'); const was = m.hidden; trayEl.querySelectorAll('.task-menu').forEach(x => x.hidden = true); m.hidden = was ? false : true; }
+      else if (b.dataset.taskAct) { const t = list.get(+b.dataset.id); const a = t?.actions[+b.dataset.taskAct]; if (a) { trayEl.querySelectorAll('.task-menu').forEach(x => x.hidden = true); a.run(); } }
       else if (b.dataset.cancel) tasks.cancel(+b.dataset.cancel);
       else if (b.dataset.dismiss) tasks.dismiss(+b.dataset.dismiss);
     });
@@ -188,7 +192,13 @@ function renderTray() {
       return `<li class="task-i" data-state="${t.state}" data-id="${t.id}">
         <div class="task-row"><b data-f="label"></b>${p != null && t.state === 'running' ? '<span class="num" data-f="p"></span>' : ''}
           ${t.state === 'running' && canCancel(t) ? `<button class="icon-btn sm" data-cancel="${t.id}" aria-label="Huỷ">${icon('x')}</button>` : ''}
-          ${t.state === 'failed' ? `<button class="icon-btn sm" data-dismiss="${t.id}" aria-label="Đóng">${icon('x')}</button>` : ''}</div>
+          ${t.state === 'failed' ? `<button class="icon-btn sm" data-dismiss="${t.id}" aria-label="Đóng">${icon('x')}</button>` : ''}
+          <button class="icon-btn sm" data-menu="${t.id}" aria-label="Tuỳ chọn cho ${esc(t.label)}" aria-haspopup="true">⋯</button></div>
+        <div class="task-menu" hidden>
+          ${t.state === 'running' && canCancel(t) ? `<button class="btn small" data-cancel="${t.id}">Dừng</button>` : ''}
+          ${(t.actions || []).map((a, i) => `<button class="btn small${a.danger ? ' danger-ghost' : ''}" data-task-act="${i}" data-id="${t.id}">${esc(a.label)}</button>`).join('')}
+          <button class="btn small" data-dismiss="${t.id}">Xoá khỏi khay</button>
+        </div>
         <div class="task-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100"><i class="${p == null && t.state === 'running' ? 'indet' : ''}"></i></div>
         <small class="task-d"><span data-f="detail"></span> <span class="num" data-f="meta"></span></small></li>`;
     }).join('')}</ul>` : ''}`;

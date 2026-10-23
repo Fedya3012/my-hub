@@ -329,7 +329,8 @@ export const storage = {
       try { await accountToken(); } catch { return { skipped: 'not-connected' }; }
     }
     bus.emit('sync:start');
-    const task = tasks.start({ label: 'Đồng bộ ' + cloud().label, detail: 'Đang tải dữ liệu từ ' + cloud().label + '…', unit: 'percent', cancellable: true, delay: 600, quiet });
+    const task = tasks.start({ label: 'Đồng bộ ' + cloud().label, detail: 'Đang tải dữ liệu từ ' + cloud().label + '…', unit: 'percent', cancellable: true, delay: 600, quiet,
+      actions: [{ label: 'Tắt đồng bộ (về Local)', danger: true, run: () => this.setMode('local').catch(() => {}) }] });
     this.taskId = task.id;
     const signal = task.signal;
     const part = (from, span) => (d, n) => task.update({ done: from + (n ? Math.min(1, d / n) * span : 0) });

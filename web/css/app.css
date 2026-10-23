@@ -569,3 +569,7 @@ body.mnp-open .task-tray { bottom: calc(16px + var(--sai-bottom)); }
 
 /* Layout wrappers (two parts of one page): plain flow, no separate layout. */
 .fold-top, .fold-bottom { display: contents; }
+
+/* Task row menu (⋯): stop, custom actions, dismiss. */
+.task-menu { display: flex; flex-wrap: wrap; gap: 6px; padding: 4px 0 2px; }
+.task-menu[hidden] { display: none; }
