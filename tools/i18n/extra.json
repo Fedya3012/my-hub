@@ -2370,5 +2370,16 @@
  "Rất nhanh, chính xác vừa, tải thêm ≈ 40 MB": "Very fast, fair accuracy, extra ≈ 40 MB download",
  "Cân bằng, ≈ 80 MB (có sẵn trong app)": "Balanced, ≈ 80 MB (built into the app)",
  "Chính xác, tải thêm ≈ 250 MB": "Accurate, extra ≈ 250 MB download",
- "Tải": "Download"
+ "Tải": "Download",
+ "Nhập mô hình khác từ Hugging Face…": "Enter another model from Hugging Face…",
+ "Đổi mô hình tự chọn…": "Change custom model…",
+ "Ví dụ onnx-community/whisper-medium": "For example onnx-community/whisper-medium",
+ "Mô mô hình bạn đã nhập": "Model you entered",
+ "Mô hình bạn đã nhập": "Model you entered",
+ "Mô hình Whisper trên Hugging Face": "Whisper model on Hugging Face",
+ "Tên kho không hợp lệ, cần dạng tác-giả/tên": "Invalid repo name, use author/name",
+ "Chỉ tiếng Anh, gần bằng Large v3 mà nhanh hơn nhiều, tải thêm ≈ 750 MB": "English only, close to Large v3 but much faster, extra ≈ 750 MB download",
+ "Chính xác, nghe rõ tiếng Việt, Nhật, Hàn, tải thêm ≈ 250 MB": "Accurate, hears Vietnamese, Japanese, Korean well, extra ≈ 250 MB download",
+ "Tiếng Nhật, Hàn, Trung: mô hình lớn dịch sát nghĩa hơn": "Japanese, Korean, Chinese: the large model translates more faithfully",
+ "Cặp ngôn ngữ phổ biến: mô hình nhỏ dịch nhanh và đủ tốt": "Common language pair: the small model is fast and good enough"
 }
