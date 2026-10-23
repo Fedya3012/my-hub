@@ -3837,4 +3837,9 @@ export default {"(Google cấp quyền theo từng giờ). Bấm một lần đ�
 "Nghe rõ tiếng Việt, Nhật, Hàn; khuyên dùng khi đồng bộ từng chữ.":"Hears Vietnamese, Japanese, Korean well; recommended for word sync.",
 "Chính xác nhất, nặng và chậm; cần nhiều RAM.":"Most accurate, heavy and slow; needs a lot of RAM.",
 "Chỉ tiếng Anh, gần bằng Large v3 mà nhanh hơn nhiều.":"English only, close to Large v3 but much faster.",
-"Nghe rõ hơn với bài nhạc nền dày (stereo), lâu hơn một chút.":"Clearer on songs with a dense backing (stereo), a little slower."};
+"Nghe rõ hơn với bài nhạc nền dày (stereo), lâu hơn một chút.":"Clearer on songs with a dense backing (stereo), a little slower.",
+"NLLB-200, dịch từng dòng, ≈ 600 MB (đích: Tiếng Việt)":"NLLB-200, line by line, ≈ 600 MB",
+"Qwen2.5 1.5B, đọc cả bài nên sát nghĩa và tự nhiên hơn, chậm hơn, ≈ 1 GB":"Qwen2.5 1.5B, reads the whole song so it is more faithful and natural, slower, ≈ 1 GB",
+"Mô hình dịch chuyên dụng cho khoảng 200 ngôn ngữ, dịch từng dòng, chống lặp.":"A dedicated translation model for about 200 languages, line by line, with repetition control.",
+"Mô hình ngôn ngữ đọc cả bài theo cụm dòng: sát nghĩa, tự nhiên, xử lý được lời pha nhiều ngôn ngữ; chậm hơn.":"A language model that reads the song in blocks of lines: faithful, natural, copes with mixed-language lyrics; slower.",
+"Đang dịch theo ngữ cảnh…":"Translating in context…"};

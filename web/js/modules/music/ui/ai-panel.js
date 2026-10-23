@@ -14,8 +14,8 @@ const REC = {
   distil: { name: 'Distil Large v3', tag: 'Tiếng Anh nhanh', desc: 'Chỉ tiếng Anh, gần bằng Large v3 mà nhanh hơn nhiều.', size: '≈ 750 MB', stars: 4 },
 };
 const TRM = {
-  fast: { name: 'Dịch nhanh', tag: 'Opus-MT', desc: 'Mô hình nhỏ theo từng cặp ngôn ngữ; cặp nào thiếu thì tự dùng bản chính xác.', size: '≈ 80 MB', stars: 2 },
-  best: { name: 'Dịch chính xác', tag: 'NLLB-200', desc: 'Một mô hình cho khoảng 200 ngôn ngữ, sát nghĩa hơn, nhất là Nhật, Hàn, Trung.', size: '≈ 600 MB', stars: 4 },
+  fast: { name: 'Dịch nhanh', tag: 'NLLB-200', desc: 'Mô hình dịch chuyên dụng cho khoảng 200 ngôn ngữ, dịch từng dòng, chống lặp.', size: '≈ 600 MB', stars: 3 },
+  best: { name: 'Dịch chính xác', tag: 'Qwen2.5 1.5B', desc: 'Mô hình ngôn ngữ đọc cả bài theo cụm dòng: sát nghĩa, tự nhiên, xử lý được lời pha nhiều ngôn ngữ; chậm hơn.', size: '≈ 1 GB', stars: 4 },
 };
 const LANGS = { '': 'Tự nhận', vi: 'Tiếng Việt', en: 'Tiếng Anh', ja: 'Tiếng Nhật', ko: 'Tiếng Hàn', zh: 'Tiếng Trung' };
 const TLANGS = { vi: 'Tiếng Việt', en: 'Tiếng Anh', ja: 'Tiếng Nhật', ko: 'Tiếng Hàn', zh: 'Tiếng Trung', fr: 'Tiếng Pháp', es: 'Tiếng Tây Ban Nha', de: 'Tiếng Đức' };

@@ -56,8 +56,8 @@ export async function aiTranslate(t, anchor = null, onDone) {
     lib.translateLyrics(t).then(() => onDone?.(), e => { toast(e.message || 'Không dịch được', 'warn'); onDone?.(e); });
   };
   menu(anchor, [
-    { icon: 'translate', label: 'Dịch nhanh', desc: `Mô hình nhỏ ≈ 80 MB, tải nhanh (đích: ${lang})`, on: cur === 'fast', act: () => go('fast') },
-    { icon: 'translate', label: 'Dịch chính xác', desc: 'Mô hình lớn ≈ 600 MB, sát nghĩa hơn, nhất là tiếng Nhật, Hàn, Trung', on: cur === 'best', act: () => go('best') },
+    { icon: 'translate', label: 'Dịch nhanh', desc: `NLLB-200, dịch từng dòng, ≈ 600 MB (đích: ${lang})`, on: cur === 'fast', act: () => go('fast') },
+    { icon: 'translate', label: 'Dịch chính xác', desc: 'Qwen2.5 1.5B, đọc cả bài nên sát nghĩa và tự nhiên hơn, chậm hơn, ≈ 1 GB', on: cur === 'best', act: () => go('best') },
   ], { title: 'Dịch lời bằng AI' });
 }
 
