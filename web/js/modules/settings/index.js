@@ -144,7 +144,7 @@ const SECS = {
   appearance: ['palette', 'Giao diện', () => 'Ngôn ngữ, skin, theme, màu nhấn, cỡ chữ'],
   params: ['grid', 'Thông số dùng chung', () => 'Thông số của từng ứng dụng, trạng thái hiện tại'],
   progress: ['clock', 'Đặt lại tiến trình', () => 'Đọc, nghe, xem: về lại từ đầu'],
-  backup: ['download', 'Sao lưu dữ liệu', () => 'Xuất, nhập JSON, xoá dữ liệu'],
+  backup: ['download', 'Sao lưu & quyền riêng tư', () => 'Xuất, nhập JSON, đăng xuất khỏi máy này, xoá dữ liệu'],
 };
 
 async function renderPage() {
@@ -280,6 +280,11 @@ async function renderPage() {
           <button class="btn danger-ghost" data-act="wipe">${icon('trash')}Xoá toàn bộ dữ liệu</button>
         </div>
       </div>
+      <div class="panel">
+        <p><strong>Đăng xuất khỏi máy này</strong></p>
+        <p class="hint">Xoá mọi thông tin đăng nhập lưu trên máy (token GitHub, Dropbox, OneDrive, ListenBrainz) và chuyển về chế độ Chỉ trên máy. Thư viện, tiến độ, ghi chú và tệp vẫn giữ nguyên. Dùng khi đưa máy cho người khác hoặc nghi lộ token. Đăng nhập lại bất cứ lúc nào.</p>
+        <div class="row-actions"><button class="btn" data-act="signout-here">${icon('power')}Đăng xuất khỏi máy này</button></div>
+      </div>
     </section>
   </section>`;
 
@@ -412,18 +417,36 @@ async function renderPage() {
     const n = await progress.resetAll();
     ctx.toast(`Đã đặt lại ${n} mục`); render();
   });
+  on('signout-here', async () => {
+    if (!(await confirmBox('Đăng xuất khỏi máy này?', 'Mọi token đăng nhập trên máy này bị xoá và app chuyển về Chỉ trên máy. Thư viện, tiến độ và tệp vẫn giữ nguyên. Dữ liệu trên GitHub, Dropbox hoặc OneDrive không bị xoá.', 'Đăng xuất'))) return;
+    await signOutHere();
+    ctx.toast('Đã đăng xuất khỏi máy này. Dữ liệu vẫn giữ nguyên.');
+    render();
+  });
   on('wipe', async () => {
-    if (!(await confirmBox('Xoá toàn bộ dữ liệu?', 'Mọi mục, liên kết, cài đặt và tệp lưu trên máy này sẽ mất. Dữ liệu đã đồng bộ lên GitHub, Dropbox hoặc OneDrive không bị ảnh hưởng.', 'Xoá hết'))) return;
+    if (!(await confirmBox('Xoá toàn bộ dữ liệu?', 'Mọi mục, liên kết, cài đặt, tệp và thông tin đăng nhập (token) trên máy này sẽ mất; app đăng xuất khỏi mọi tài khoản. Dữ liệu đã đồng bộ lên GitHub, Dropbox hoặc OneDrive không bị ảnh hưởng.', 'Xoá hết'))) return;
     const files = await db.files.toArray();
     const t = tasks.start({ label: 'Đang xoá dữ liệu', total: files.length + 1, detail: 'Xoá tệp trên máy…' });
     try {
       for (const f of files) { await ctx.storage.adapters.local.remove(f.locations?.local); t.step(1, f.name || ''); }
       t.update({ detail: 'Xoá cơ sở dữ liệu…' });
+      await signOutHere();
       await db.delete();
+      try { localStorage.clear(); sessionStorage.clear(); } catch { /* storage unavailable */ }
       t.finish('Đã xoá');
     } catch (e) { t.fail(e); ctx.toast(e.message, 'error'); return; }
     location.reload();
   });
+}
+
+// Sign out of everything on this device, keeping the data: GitHub session, drive tokens (Dropbox, OneDrive),
+// the ListenBrainz token; storage back to Local so nothing tries to sync with the removed credentials.
+async function signOutHere() {
+  const { clouds } = await import('../../core/storage/clouds.js');
+  for (const id of ['dropbox', 'onedrive']) clouds.set(id, null);
+  await account.signOut({ reason: 'signout' });
+  try { await (await import('../music/lib/prefs.js')).setPref('qol.lbToken', ''); } catch { /* music app off */ }
+  if ((await ctx.storage.mode()) !== 'local') await ctx.storage.setMode('local');
 }
 
 // Usage vs quota with a warning when nearly full (limit null = unlimited / unknown).

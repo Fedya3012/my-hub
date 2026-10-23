@@ -5,8 +5,8 @@
 // module can override it (the module's root element then gets its own data-skin + vars).
 // Only the fonts of skins actually on screen are loaded (Google Fonts, Vietnamese subset).
 import { getSetting, setSetting, uid } from './db.js';
+import { fontCss } from './fonts.js';
 
-const GF = 'https://fonts.googleapis.com/css2?';
 const SANS = "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
 
 // Shared non-colour defaults. Every skin starts from these.
@@ -122,15 +122,14 @@ export function skinVars(skin, mode, themeVars = {}) {
 }
 
 // ── Asset loading: fonts + skin stylesheet, only for skins in use ──
-const fontHref = (families, text) => GF + families.map(f => 'family=' + f.replace(/ /g, '+')).join('&')
-  + (text ? '&text=' + encodeURIComponent(text) : '') + '&display=swap';
 
 export function ensureSkinAssets(ids) {
   const want = new Set(ids);
   for (const id of want) {
     const s = getSkin(id), base = s.extends ? byId(BUILTIN_SKINS, s.extends) : s;
     const fam = s.fonts?.families?.length ? s.fonts.families : base.fonts.families;
-    link('skin-font-' + s.id, fontHref(fam));
+    // One local stylesheet per family (web/vendor/fonts); a family that does not ship falls back to the CSS stack.
+    fam.map(fontCss).forEach((href, i) => { if (href) link(`skin-font-${s.id}~${i}`, href); });
     if (base.id !== 'classic') link('skin-css-' + base.id, new URL(`../../css/skins/${base.id}.css`, import.meta.url).href);
   }
   // Drop links of skins no longer on screen.
@@ -142,7 +141,7 @@ export function ensureSkinAssets(ids) {
   }
 }
 function link(key, href) {
-  const id = key.replace(/^skin-(font|css)-/, '');
+  const id = key.replace(/^skin-(font|css)-/, '').replace(/~\d+$/, '');
   let l = document.getElementById(key);
   if (l) return l;
   l = Object.assign(document.createElement('link'), { id: key, rel: 'stylesheet', href });
@@ -151,10 +150,10 @@ function link(key, href) {
   return l;
 }
 
-// Picker previews: a tiny font file containing only the sample glyphs of every skin.
+// Picker previews: the local stylesheet of every skin's families (unicode-range keeps the download to the glyphs shown).
 export function previewFonts() {
-  const fams = [...new Set(allSkins().flatMap(s => s.fonts?.families || []))].map(f => f.split(':')[0]);
-  link('skin-font-preview', fontHref(fams, 'AaBbNhạcĐangphátKệsáchAuroGlKẹodẻNeoirTạpíTđườngvềChào'));
+  const fams = [...new Set(allSkins().flatMap(s => s.fonts?.families || []))];
+  fams.map(fontCss).filter(Boolean).forEach((href, i) => link(`skin-font-preview~${i}`, href));
 }
 
 // Boot: apply cached skin attributes + font links synchronously (no flash of the wrong font).
@@ -163,13 +162,14 @@ export function bootSkin() {
     const c = JSON.parse(localStorage.getItem(LS) || 'null');
     if (!c) return;
     document.documentElement.dataset.skin = c.id;
-    if (c.fonts) for (const [k, href] of Object.entries(c.fonts)) link(k, href);
+    // Only local font files (a cache written by an older version may still name Google Fonts).
+    if (c.fonts) for (const [k, href] of Object.entries(c.fonts)) if (new URL(href, location.href).origin === location.origin) link(k, href);
   } catch {}
 }
 export function rememberBoot(id) {
   try {
     const fonts = {};
-    document.querySelectorAll('link[data-skin-asset]').forEach(l => { if (l.id !== 'skin-font-preview') fonts[l.id] = l.href; });
+    document.querySelectorAll('link[data-skin-asset]').forEach(l => { if (l.dataset.skinAsset !== 'preview') fonts[l.id] = l.href; });
     localStorage.setItem(LS, JSON.stringify({ id, fonts }));
   } catch {}
 }

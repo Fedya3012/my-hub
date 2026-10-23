@@ -61,3 +61,10 @@ Ví dụ: đang nghe dở trên Windows, mở app trên điện thoại thì ngh
 - **Thư mục đồng bộ** (`sync.folderSource`: local / dropbox / onedrive, `storage/folders.js` `folderSource()`): nơi lấy nhạc và sách. Chưa chọn thì theo tài khoản đồng bộ nếu đó là ổ, nếu không thì `local`. Chọn một ổ ở đây chỉ đăng nhập ổ đó (`connectForm`), không đổi tài khoản đồng bộ. Tệp liên kết ghi `locations[<ổ nguồn>]` (`remote.drive`), nên vẫn phát được dù tài khoản đồng bộ là GitHub.
 - Rời một ổ thì bỏ chọn danh sách thư mục của ổ đó; mục đã nhập vẫn giữ.
 - Tạm dừng / Huỷ (`pauseFolderSync`, `cancelFolderSync`): tạm dừng giữ những gì đã nhập, `sync.folderPaused` chặn các lượt đồng bộ cho tới khi bấm "Đồng bộ ngay". Huỷ xoá mọi mục đã nhập từ thư mục đã chọn và đặt lại `sync.folderDone` / `sync.localDone`.
+
+## Quyền riêng tư (2026-10-23)
+
+- **Cài đặt → Sao lưu & quyền riêng tư → Đăng xuất khỏi máy này**: xoá token GitHub, Dropbox, OneDrive, ListenBrainz trên máy và chuyển về Chỉ trên máy; thư viện, tiến độ, tệp giữ nguyên. "Xoá toàn bộ dữ liệu" giờ cũng xoá token (localStorage).
+- **Android**: `allowBackup="false"` + `res/xml/data_extraction_rules.xml` loại mọi dữ liệu khỏi sao lưu Google và chuyển máy (token nằm trong dữ liệu WebView). Chuyển dữ liệu sang máy mới bằng đồng bộ hoặc tệp JSON.
+- **Phông chữ** nằm trong app (`web/vendor/fonts`, tải bằng `tools/fetch-fonts.py`, ánh xạ ở `js/core/fonts.js`): không gọi Google Fonts nữa. Skin nhập có phông lạ thì dùng phông dự phòng.
+- **CSP**: `js/core/csp.js` thêm thẻ meta ngay đầu `app.js` (sau khi bridge Capacitor đã chạy): chặn script lạ/inline, plugin, form ngoài; mạng vẫn mở (podcast, bìa, lời bài hát từ mọi máy chủ).

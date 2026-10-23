@@ -2272,5 +2272,14 @@
  "Không đọc được:": "Couldn't read:",
  "Không đổi được nguồn:": "Couldn't switch source:",
  "nguồn · đang theo:": "sources · following:",
- "Proxy CORS chỉ cần cho bản web. Nếu đặt, máy chủ proxy sẽ thấy link mọi feed và tập bạn mở, kể cả feed riêng có mã truy cập trong link. Chỉ dùng proxy bạn tin tưởng; app Windows và Android không cần proxy.": "The CORS proxy is only needed for the web version. If you set one, the proxy server sees the link of every feed and episode you open, including private feeds with an access token in the link. Only use a proxy you trust; the Windows and Android apps don't need one."
+ "Proxy CORS chỉ cần cho bản web. Nếu đặt, máy chủ proxy sẽ thấy link mọi feed và tập bạn mở, kể cả feed riêng có mã truy cập trong link. Chỉ dùng proxy bạn tin tưởng; app Windows và Android không cần proxy.": "The CORS proxy is only needed for the web version. If you set one, the proxy server sees the link of every feed and episode you open, including private feeds with an access token in the link. Only use a proxy you trust; the Windows and Android apps don't need one.",
+ "Đăng xuất khỏi máy này": "Sign out on this device",
+ "Xoá mọi thông tin đăng nhập lưu trên máy (token GitHub, Dropbox, OneDrive, ListenBrainz) và chuyển về chế độ Chỉ trên máy. Thư viện, tiến độ, ghi chú và tệp vẫn giữ nguyên. Dùng khi đưa máy cho người khác hoặc nghi lộ token. Đăng nhập lại bất cứ lúc nào.": "Removes every sign-in stored on this device (GitHub, Dropbox, OneDrive, ListenBrainz tokens) and switches to This device only. Library, progress, notes and files stay. Use it before handing the device to someone else or if a token may have leaked. Sign in again any time.",
+ "Đăng xuất khỏi máy này?": "Sign out on this device?",
+ "Mọi token đăng nhập trên máy này bị xoá và app chuyển về Chỉ trên máy. Thư viện, tiến độ và tệp vẫn giữ nguyên. Dữ liệu trên GitHub, Dropbox hoặc OneDrive không bị xoá.": "Every sign-in token on this device is removed and the app switches to This device only. Library, progress and files stay. Data on GitHub, Dropbox or OneDrive is not deleted.",
+ "Đăng xuất": "Sign out",
+ "Đã đăng xuất khỏi máy này. Dữ liệu vẫn giữ nguyên.": "Signed out on this device. Your data is kept.",
+ "Mọi mục, liên kết, cài đặt, tệp và thông tin đăng nhập (token) trên máy này sẽ mất; app đăng xuất khỏi mọi tài khoản. Dữ liệu đã đồng bộ lên GitHub, Dropbox hoặc OneDrive không bị ảnh hưởng.": "Every item, link, setting, file and sign-in token on this device will be lost; the app signs out of every account. Data already synced to GitHub, Dropbox or OneDrive is not affected.",
+ "Sao lưu & quyền riêng tư": "Backup & privacy",
+ "Xuất, nhập JSON, đăng xuất khỏi máy này, xoá dữ liệu": "Export, import JSON, sign out on this device, erase data"
 }

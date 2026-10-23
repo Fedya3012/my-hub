@@ -9,6 +9,7 @@ import { db, logActivity } from '../../../core/db.js';
 import { icon } from '../../../core/icons.js';
 import { esc, toast } from '../../../core/ui.js';
 import { params } from '../../../core/params.js';
+import { fontCss } from '../../../core/fonts.js';
 import { progress } from '../../../core/progress.js';
 import { storage } from '../../../core/storage/index.js';
 import { tasks } from '../../../core/tasks.js';
@@ -526,7 +527,7 @@ export async function openReader(root, id, { ctx, onClose }) {
 function loadFonts(key) {
   const fam = FONT_CSS[key];
   if (!fam || document.querySelector(`link[data-bk-font="${key}"]`)) return;
-  const l = Object.assign(document.createElement('link'), { rel: 'stylesheet', href: `https://fonts.googleapis.com/css2?family=${fam}&subset=vietnamese&display=swap` });
+  const l = Object.assign(document.createElement('link'), { rel: 'stylesheet', href: fontCss(fam) });
   l.dataset.bkFont = key;
   document.head.append(l);
 }

@@ -1,6 +1,7 @@
 // Xưởng Viết parameters (shared params layer, namespace 'fanfic'): shown in Cài đặt → Thông số, saved, backed up,
 // and (scope 'sync') following the account to every device.
 import { params } from '../../../core/params.js';
+import { fontCss } from '../../../core/fonts.js';
 
 export const FONTS = {
   serif: ['Có chân (Literata)', "'Literata', Georgia, serif"],
@@ -33,7 +34,7 @@ export const FONT_CSS = {
 export function loadFont(k) {
   const fam = FONT_CSS[k];
   if (!fam || document.querySelector(`link[data-fx-font="${k}"]`)) return;
-  const l = Object.assign(document.createElement('link'), { rel: 'stylesheet', href: `https://fonts.googleapis.com/css2?family=${fam}&subset=vietnamese&display=swap` });
+  const l = Object.assign(document.createElement('link'), { rel: 'stylesheet', href: fontCss(fam) });
   l.dataset.fxFont = k;
   document.head.append(l);
 }

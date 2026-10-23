@@ -7,13 +7,14 @@
 //   search(query, onHit) · clearSearch() · applyPrefs(p) · tts { start() next() stop() } · destroy()
 import { vendor } from '../lib/formats.js';
 import { THEMES, FONTS, FONT_CSS } from '../lib/prefs.js';
+import { fontCss } from '../../../core/fonts.js';
 
 // Fonts must be declared inside each book page (an iframe): OpenDyslexic ships with the app, the others come from
-// Google Fonts on first use (offline the fallback fonts apply).
+// the app's own font files too (web/vendor/fonts).
 const OD = (f) => new URL(`../../../../vendor/fonts/opendyslexic/opendyslexic-latin-${f}.woff2`, import.meta.url).href;
 const DYSLEXIC = [['400', 'normal'], ['400', 'italic'], ['700', 'normal'], ['700', 'italic']]
   .map(([w, st]) => `@font-face { font-family: 'OpenDyslexic'; font-style: ${st}; font-weight: ${w}; font-display: swap; src: url(${OD(`${w}-${st}`)}) format('woff2'); }`).join('\n');
-const fontImport = (k) => (FONT_CSS[k] ? `@import url('https://fonts.googleapis.com/css2?family=${FONT_CSS[k]}&subset=vietnamese&display=swap');` : '');
+const fontImport = (k) => (fontCss(FONT_CSS[k]) ? `@import url('${fontCss(FONT_CSS[k])}');` : '');
 import { COLORS } from '../lib/store.js';
 
 export function themeColors(p) {
