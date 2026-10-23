@@ -96,7 +96,7 @@ async function render() {
         <button class="icon-btn" data-act="clean" aria-label="Dọn dữ liệu Trình phát nhạc" title="Dọn dữ liệu Trình phát nhạc: xoá bài đã mất tệp gốc">${icon('refresh')}</button>
       </div>
     </header>
-    <nav class="mtabs" aria-label="Mục chính của Trình phát nhạc">${navItems}</nav>
+    <nav class="mtop" aria-label="Mục chính của Trình phát nhạc">${navItems}</nav>
     ${SECTION_TABS.includes(tab) || head === 'browse' ? `<details class="msections"><summary>${icon('list')}<span>${esc(tab === 'songs' ? 'Âm nhạc · Bài hát' : 'Âm nhạc · ' + (NAMES[tab] || NAMES.browse))}</span><i aria-hidden="true">▾</i></summary>
       <div class="msections-menu" role="menu">${SECTION_TABS.map(t => `<a role="menuitem" href="#music/${t}" class="${t === tab ? 'on' : ''}">${esc(SONG_NAMES[t])}</a>`).join('')}</div></details>` : ''}
     <div class="mcontent"></div></div>

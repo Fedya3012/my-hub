@@ -803,17 +803,18 @@ body.mnp-open { overflow: hidden; }
   .mlib.page { padding-bottom: calc(76px + var(--dock-h, 0px) + var(--sai-bottom, 0px)); }
 }
 @media (min-width: 861px) {
-  .mbottom { display: none; }   /* desktop uses the top tab row (.mtabs), like Sách and Podcast */
+  .mbottom { display: none !important; }   /* desktop uses the top tab row (.mtop), like Sách and Podcast */
   .mlib.page { padding-bottom: calc(var(--dock-h, 0px) + 24px); }
 }
-/* Top tab row (desktop): same pills as Sách and Podcast. Phones keep the bottom bar. */
-.mtabs { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px 10px; padding: 2px 16px; }
-.mtabs::-webkit-scrollbar { display: none; }
-.mtabs a, .mtabs button { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 38px; padding: 0 12px; border: 0; background: none; border-radius: 999px; color: var(--muted); text-decoration: none; font: inherit; font-size: .9rem; white-space: nowrap; cursor: pointer; }
-.mtabs a:hover, .mtabs button:hover { background: var(--surface-2); color: var(--fg); }
-.mtabs a.on { background: var(--fg); color: var(--bg); }
-.mtabs .ic { width: 18px; height: 18px; }
-@media (max-width: 860px) { .mtabs { display: none; } }
+/* Top tab row (desktop): the same pills as Sách and Podcast. Phones keep the bottom bar. (.mtop, not .mtabs: that class is the Now Playing tab strip) */
+.mtop { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px 12px; padding: 2px 16px; }
+.mtop::-webkit-scrollbar { display: none; }
+.mtop a, .mtop button { -webkit-appearance: none; appearance: none; flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 38px; padding: 0 12px; margin: 0; border: 0; background: none; box-shadow: none; border-radius: 999px; color: var(--muted); text-decoration: none; font-family: inherit; font-size: .9rem; font-weight: 400; line-height: 1.2; white-space: nowrap; cursor: pointer; }
+.mtop a:hover, .mtop button:hover { background: var(--surface-2); color: var(--fg); }
+.mtop a.on { background: var(--fg); color: var(--bg); }
+.mtop .ic { width: 18px; height: 18px; }
+.mtop span { font-size: inherit; }
+@media (max-width: 860px) { .mtop { display: none; } }
 
 /* ── "Âm nhạc" section menu (replaces the horizontal tab row), "Đang nghe trên", Mới ── */
 .msections { position: relative; margin: 2px 0 10px; }
