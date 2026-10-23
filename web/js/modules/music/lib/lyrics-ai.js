@@ -8,7 +8,8 @@ import { db, getSetting, setSetting } from '../../../core/db.js';
 import { storage } from '../../../core/storage/index.js';
 import { tasks } from '../../../core/tasks.js';
 import { bus } from '../../../core/bus.js';
-import { prefs } from './prefs.js';
+import { prefs, setPref } from './prefs.js';
+import { confirmBox } from '../../../core/ui.js';
 import { saveLyrics, loadLyrics } from './lyrics-sources.js';
 import { parseLyrics, toModel, toLrc } from './lyrics.js';
 import { mainFile } from './store.js';
@@ -23,10 +24,20 @@ const RATE = 16000, PIECE = 28;
 const MISS = 'music.lyricsAiMiss';
 
 const Y = () => prefs().lyrics || {};
-export const autoOn = () => Y().aiAuto !== 0;
+// The speech library (transformers.js, from a CDN) and the model (from Hugging Face) are downloaded and run
+// inside the page, so nothing is fetched before the person agrees once (ensureConsent). Automatic mode waits for it.
+const consented = () => Y().aiConsent === 1;
+export const autoOn = () => Y().aiAuto !== 0 && consented();
+export async function ensureConsent() {
+  if (consented()) return true;
+  const ok = await confirmBox('Tạo lời bằng AI', 'Lần đầu app sẽ tải thư viện nhận dạng giọng hát (từ cdn.jsdelivr.net) và mô hình Whisper (khoảng 80 MB, từ huggingface.co), rồi chạy ngay trên máy. Âm thanh không rời khỏi máy. Tiếp tục?', 'Tải và dùng', 'primary');
+  if (ok) await setPref('lyrics.aiConsent', 1);
+  return !!ok;
+}
 const modelKey = () => (AI_MODELS[Y().aiModel] ? Y().aiModel : 'base');
 
 let asr = null, asrKey = '', loading = null;
+window.addEventListener('online', () => { modelFailed = ''; });
 let modelFailed = '';   // model that could not be loaded: automatic mode stops retrying it on every song (manual still can)
 // One model load at a time: two songs asking together share it (and its error) instead of loading twice.
 // words: the "_timestamped" export of the same model, which can also give each word its own time.
@@ -40,7 +51,9 @@ function recognizer(task, words = false) {
 }
 async function loadRecognizer(task, key) {
   const [mk, w] = key.split(':'), mid = AI_MODELS[mk].id + (w ? '_timestamped' : '');
-  const T = await import(LIB);
+  let T;
+  try { T = await import(LIB); }
+  catch (e) { modelFailed = mk; throw new Error('Không tải được thư viện nhận dạng giọng hát (cần kết nối mạng)'); }
   T.env.allowLocalModels = false;
   const files = new Map();
   const progress_callback = (p) => {
@@ -69,7 +82,7 @@ async function loadRecognizer(task, key) {
     catch (e) { err = e; asr = null; errs.push(String(e?.message || e).split('\n')[0].slice(0, 160)); console.warn('[lyrics-ai] model load failed, trying the next way', opt, e); }
   }
   if (err && errs.length > 1) err = new Error(`Không nạp được mô hình nhận dạng giọng hát (đã thử ${errs.length} cách). Lỗi đầu: ${errs[0]}`);
-  if (err) { modelFailed = key; throw err; }
+  if (err) { modelFailed = mk; throw err; }
   modelFailed = '';
   asrKey = key;
   return asr;
@@ -132,6 +145,7 @@ const running = new Map();
 export function generate(t, { quiet = false } = {}) {
   if (running.has(t.id)) return running.get(t.id);
   const job = (async () => {
+    if (!(await ensureConsent())) { running.delete(t.id); return null; }
     const task = tasks.start({ label: `Đang tạo lời: ${t.title || 'bài hát'}`, cancellable: true, quiet, delay: quiet ? 0 : 300 });
     try {
       const text = await transcribe(t, { task });
@@ -165,7 +179,7 @@ export function watch(player) {
     const t = player.track;
     if (!t || !autoOn()) return;
     timer = setTimeout(async () => {
-      if (player.track?.id !== t.id || !player.playing || running.size || modelFailed === modelKey()) return;
+      if (player.track?.id !== t.id || !player.playing || running.size || modelFailed === modelKey() || (!asr && !navigator.onLine)) return;
       if ((await getSetting(MISS, {}))?.[t.id]) return;
       if (await loadLyrics(t, { allowOnline: !!Y().online })) return;
       generate(t).catch(() => {});
@@ -233,6 +247,7 @@ export function autoWordSync(t) {
   const key = 'w:' + t.id;
   if (running.has(key)) return running.get(key);
   const job = (async () => {
+    if (!(await ensureConsent())) { running.delete(key); return null; }
     const row = await db.lyrics.get(t.id);
     const parsed = row?.text && parseLyrics(row.text, t.duration || 0);
     if (!parsed?.lines.some(l => l.text)) throw new Error('Bài này chưa có lời để đồng bộ');

@@ -11,6 +11,8 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Process;
+import androidx.media.MediaSessionManager;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.MediaMetadataCompat;
@@ -168,6 +170,7 @@ public class MediaPlaybackService extends MediaBrowserServiceCompat {
   @Nullable
   @Override
   public BrowserRoot onGetRoot(@NonNull String clientPackageName, int clientUid, @Nullable Bundle rootHints) {
+    if (!trusted(clientPackageName, clientUid)) return null;   // the service is exported: only Android Auto, the system and this app may browse
     Bundle extras = new Bundle();
     extras.putBoolean("android.media.browse.SEARCH_SUPPORTED", true);
     extras.putInt("android.media.browse.CONTENT_STYLE_BROWSABLE_HINT", 2);   // grid
@@ -175,9 +178,30 @@ public class MediaPlaybackService extends MediaBrowserServiceCompat {
     return new BrowserRoot(ROOT, extras);
   }
 
+  // Callers allowed to browse the library and send commands: this app, the system, Android Auto, the Google
+  // Assistant, System UI, or any app the system itself grants media control (MEDIA_CONTENT_CONTROL).
+  private static final String[] TRUSTED = {
+    "com.google.android.projection.gearhead", "com.google.android.googlequicksearchbox", "com.android.systemui",
+    "com.google.android.autosimulator", "com.google.android.carassistant", "com.android.bluetooth", "com.google.android.wearable.app",
+  };
+  private boolean trusted(String pkg, int uid) {
+    if (uid == Process.myUid() || uid == Process.SYSTEM_UID || uid == 0) return true;
+    String[] owned = getPackageManager().getPackagesForUid(uid);
+    boolean ownsPkg = false;
+    if (owned != null) for (String o : owned) if (o.equals(pkg)) ownsPkg = true;
+    if (!ownsPkg) return false;   // a caller cannot claim another app's package name
+    for (String t : TRUSTED) if (t.equals(pkg)) return true;
+    return getPackageManager().checkPermission("android.permission.MEDIA_CONTENT_CONTROL", pkg) == android.content.pm.PackageManager.PERMISSION_GRANTED;
+  }
+  private boolean callerOk() {
+    MediaSessionManager.RemoteUserInfo c = getCurrentBrowserInfo();
+    return c != null && trusted(c.getPackageName(), c.getUid());
+  }
+
   @Override
   public void onLoadChildren(@NonNull String parentId, @NonNull Result<List<MediaBrowserCompat.MediaItem>> result) {
     List<MediaBrowserCompat.MediaItem> out = new ArrayList<>();
+    if (!callerOk()) { result.sendResult(out); return; }
     JSONArray list = tree.optJSONArray(parentId);
     if (list != null) for (int i = 0; i < list.length(); i++) {
       JSONObject o = list.optJSONObject(i);
@@ -198,6 +222,7 @@ public class MediaPlaybackService extends MediaBrowserServiceCompat {
   @Override
   public void onSearch(@NonNull String query, Bundle extras, @NonNull Result<List<MediaBrowserCompat.MediaItem>> result) {
     List<MediaBrowserCompat.MediaItem> out = new ArrayList<>();
+    if (!callerOk()) { result.sendResult(out); return; }
     String q = query.toLowerCase();
     JSONArray all = tree.optJSONArray("tracks");
     if (all != null) for (int i = 0; i < all.length() && out.size() < 50; i++) {
