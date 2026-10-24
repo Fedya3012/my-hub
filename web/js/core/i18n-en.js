@@ -3877,4 +3877,10 @@ export default {"(Google cấp quyền theo từng giờ). Bấm một lần đ�
 "Tệp không còn trên Google Drive.":"The file is no longer on Google Drive.",
 "Thư mục không còn trên Google Drive:":"Folder no longer on Google Drive:",
 "không mở được":"failed to open",
-"Không mở được":"Failed to open"};
+"Không mở được":"Failed to open",
+"Bằng GitHub (dán token), hoặc kết nối Dropbox, OneDrive hay Google Drive (đồng bộ cả tệp nhạc/sách).":"With GitHub (paste a token), or connect Dropbox, OneDrive or Google Drive (syncs music/book files too).",
+"Chọn một tài khoản để đồng bộ thư viện và tiến độ. Dropbox, OneDrive và Google Drive còn đồng bộ được cả tệp nhạc/sách. Chỉ dùng một tài khoản đồng bộ tại một thời điểm.":"Pick one account to sync your library and progress. Dropbox, OneDrive and Google Drive can also sync music/book files. Only one sync account is used at a time.",
+"Thông tin sách, trạng thái, đánh giá, nhận xét, đánh dấu, ghi chú, phiên đọc, mục tiêu và tiến độ đọc đồng bộ giữa các máy qua tài khoản đồng bộ (Cài đặt → Tài khoản đồng bộ: GitHub, Dropbox, OneDrive hoặc Google Drive). Tệp sách ở lại trên từng máy: thêm tệp trên máy kia, app tự ghép với sách đã có nếu cùng tên và dung lượng.":"Book info, status, ratings, reviews, bookmarks, notes, reading sessions, goals and reading progress sync between devices through your sync account (Settings → Sync account: GitHub, Dropbox, OneDrive or Google Drive). Book files stay on each device: add the file on the other device and the app matches it to the existing book by name and size.",
+"Muốn có cả tệp sách trên mọi máy: chọn thư mục Dropbox, OneDrive hoặc Google Drive trong Cài đặt → Thư mục đồng bộ.":"To have the book files on every device too, pick a Dropbox, OneDrive or Google Drive folder in Settings → Sync folders.",
+"Lưu trữ và đồng bộ (Local, GitHub, Dropbox, OneDrive, Google Drive), thư mục đồng bộ, thiết bị, giao diện, thông số dùng chung, sao lưu JSON.":"Storage and sync (Local, GitHub, Dropbox, OneDrive, Google Drive), sync folders, devices, appearance, shared parameters, JSON backup.",
+"Thư mục đồng bộ quét sách trong thư mục đã chọn (trên máy, Dropbox, OneDrive hoặc Google Drive) và tự thêm sách mới mỗi lần đồng bộ.":"Sync folders scans books in the chosen folders (device, Dropbox, OneDrive or Google Drive) and adds new books on each sync."};

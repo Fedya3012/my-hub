@@ -4,7 +4,7 @@
   --bg: #eef1f4; --surface: #ffffff; --surface-2: #e4e8ee; --line: #d3d9e1;
   --fg: #17202b; --muted: #5b6878; --accent: #1d6f8f; --accent-fg: #ffffff;
   --ok: #217a4b; --warn: #a3620a; --danger: #b3261e;
-  --t-music: #d4574c; --t-podcast: #24865c; --t-book: #b97a10; --t-video: #6b4fcf; --t-image: #2477b8; --t-note: #6d7787; --t-fanfic: #b8437e;
+  --t-music: #d4574c; --t-podcast: #24865c; --t-book: #94600a; --t-video: #6b4fcf; --t-image: #2477b8; --t-note: #6d7787; --t-fanfic: #b8437e;
   --font-display: 'Literata', Georgia, 'Times New Roman', serif;
   --font-body: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
@@ -36,7 +36,7 @@
   color-scheme: dark;
 }
 /* An explicit app theme (Settings) picks the matching type colours. */
-:root[data-hub-base="light"] { --t-music: #d4574c; --t-podcast: #24865c; --t-book: #b97a10; --t-video: #6b4fcf; --t-image: #2477b8; --t-note: #6d7787; --t-fanfic: #b8437e; --ok: #217a4b; --warn: #a3620a; --danger: #b3261e; }
+:root[data-hub-base="light"] { --t-music: #d4574c; --t-podcast: #24865c; --t-book: #94600a; --t-video: #6b4fcf; --t-image: #2477b8; --t-note: #6d7787; --t-fanfic: #b8437e; --ok: #217a4b; --warn: #a3620a; --danger: #b3261e; }
 :root[data-hub-base="dark"] { --t-music: #f07a6f; --t-podcast: #4cc38a; --t-book: #e3a93c; --t-video: #a08bff; --t-image: #5aaef0; --t-note: #9aa5b5; --t-fanfic: #ec7fb4; --ok: #5fcf8f; --warn: #f0b45a; --danger: #ff8a80; }
 :root[data-density="compact"] { --gap: 10px; }
 

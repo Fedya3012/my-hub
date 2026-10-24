@@ -58,7 +58,7 @@ export const BUILTIN_SKINS = [
       '--ease-out': 'cubic-bezier(.34, 1.56, .64, 1)', '--ease-spring': 'cubic-bezier(.34, 1.8, .64, 1)', '--dur-2': '260ms', '--dur-3': '520ms' },
     palette: {
       light: { '--bg': '#fff6ea', '--surface': '#ffffff', '--surface-2': '#ffecd6', '--line': '#f2dcc2', '--fg': '#231a14', '--muted': '#7a6656',
-        '--accent': '#e8461f', '--accent-2': '#ffc23d', '--accent-fg': '#ffffff',
+        '--accent': '#d63d17', '--accent-2': '#ffc23d', '--accent-fg': '#ffffff',
         '--page-glow': 'radial-gradient(40% 30% at 100% 0%, rgb(255 194 61 / .35), transparent 70%)' },
       dark: { '--bg': '#1b1410', '--surface': '#271d17', '--surface-2': '#33271f', '--line': '#43342a', '--fg': '#fff1e4', '--muted': '#c2a893',
         '--accent': '#ff8a5c', '--accent-2': '#ffd166', '--accent-fg': '#2a1206',
@@ -78,7 +78,7 @@ export const BUILTIN_SKINS = [
         '--accent': '#22e1ff', '--accent-2': '#ff3bd4', '--accent-fg': '#001a20',
         '--page-glow': 'radial-gradient(50% 40% at 100% 0%, rgb(34 225 255 / .12), transparent 70%), radial-gradient(40% 40% at 0% 100%, rgb(255 59 212 / .1), transparent 70%)' },
       light: { '--bg': '#eef2f7', '--surface': '#ffffff', '--surface-2': '#e2e8f0', '--line': '#cfd8e3', '--fg': '#0b1220', '--muted': '#55627a',
-        '--accent': '#0087a6', '--accent-2': '#c0179b', '--accent-fg': '#ffffff' },
+        '--accent': '#007a96', '--accent-2': '#c0179b', '--accent-fg': '#ffffff' },
     },
     preview: { light: ['#eef2f7', '#ffffff', '#0087a6', '#0b1220'], dark: ['#05050a', '#161624', '#22e1ff', '#ff3bd4'] },
   },

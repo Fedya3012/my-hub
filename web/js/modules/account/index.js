@@ -112,7 +112,7 @@ function renderSignedOut() {
       </div>
       <div data-drive-cards style="display:contents"></div>
     </div>
-    <p class="hint">Chọn một tài khoản để đồng bộ thư viện và tiến độ. Dropbox và OneDrive còn đồng bộ được cả tệp nhạc/sách. Chỉ dùng một tài khoản đồng bộ tại một thời điểm.</p>
+    <p class="hint">Chọn một tài khoản để đồng bộ thư viện và tiến độ. Dropbox, OneDrive và Google Drive còn đồng bộ được cả tệp nhạc/sách. Chỉ dùng một tài khoản đồng bộ tại một thời điểm.</p>
     <aside class="acct-why">
       <h2>Một tài khoản, mọi thiết bị</h2>
       <ul>

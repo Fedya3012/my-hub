@@ -1,6 +1,10 @@
 /* Podcast: home, discover, show, episode, Now Playing, mini player. Mobile first, app theme tokens, orange accent
    for play (reference design). Now Playing is always dark, tinted by the cover. */
 .pc, .pc-mini, .pc-sheet, .pc-ext { --pc: var(--t-podcast); --pc-accent: #ff7a1a; --pc-accent-fg: #1b0d02; }
+/* Orange is fine as a fill, but as small text on a light page it was 2.3:1. Text uses a deeper orange there. */
+.pc, .pc-mini, .pc-sheet, .pc-ext { --pc-accent-text: #a94700; }
+:root[data-hub-base="dark"] :is(.pc, .pc-mini, .pc-sheet, .pc-ext) { --pc-accent-text: var(--pc-accent); }
+@media (prefers-color-scheme: dark) { :root:not([data-hub-base="light"]) :is(.pc, .pc-mini, .pc-sheet, .pc-ext) { --pc-accent-text: var(--pc-accent); } }
 .pc { padding-inline: 16px; }
 .pc h1, .pc h2, .pc h3 { margin: 0; }
 .pc h1 { font-size: 1.45rem; line-height: 1.2; }
@@ -26,7 +30,7 @@ main#view > section.pc { animation: none; }
     padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px)); background: var(--surface); border-top: 1px solid var(--line); }
   .pc-bottom a { display: grid; justify-items: center; align-content: start; gap: 2px; padding: 4px 0; color: var(--muted); text-decoration: none; font-size: .64rem; border-radius: 10px; }
   .pc-bottom a .ic { width: 22px; height: 22px; }
-  .pc-bottom a.on { color: var(--pc-accent); }
+  .pc-bottom a.on { color: var(--pc-accent-text); }
   .pc-bottom a.on .ic { stroke-width: 2.4; }
   body.pc-has-bottom .mdock { bottom: calc(68px + var(--sai-bottom, 0px)); }
   .pc-page { padding-bottom: calc(150px + env(safe-area-inset-bottom, 0px)); }
@@ -63,11 +67,11 @@ main#view > section.pc { animation: none; }
 .pc-sec { margin: 22px 0; }
 .pc-sec > header { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
 .pc-sec > header > a, .pc-sec > header > .row-actions { margin-left: auto; }
-.pc-sec > header > a { color: var(--pc-accent); text-decoration: none; font-size: .9rem; }
+.pc-sec > header > a { color: var(--pc-accent-text); text-decoration: none; font-size: .9rem; }
 .pc-count { display: inline-grid; place-items: center; min-width: 24px; height: 24px; padding: 0 7px; border-radius: 999px; background: var(--pc-accent); color: var(--pc-accent-fg); font-size: .75rem; font-weight: 700; vertical-align: middle; }
 .pc-empty { padding: 18px 0; text-align: center; }
 .pc-empty-card { display: flex; gap: 16px; align-items: flex-start; padding: 18px; border-radius: 16px; background: var(--surface-2); }
-.pc-empty-card > .ic { width: 36px; height: 36px; color: var(--pc-accent); flex: none; }
+.pc-empty-card > .ic { width: 36px; height: 36px; color: var(--pc-accent-text); flex: none; }
 .pc-empty-card p { margin: 4px 0 10px; }
 .pc-loading { display: flex; align-items: center; gap: 8px; padding: 18px 0; }
 
@@ -105,7 +109,7 @@ main#view > section.pc { animation: none; }
 .pc-ep-main small { font-size: .78rem; display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap; }
 .pc-ep-main small .ic { width: 14px; height: 14px; }
 .pc-ep.played .pc-ep-main b { color: var(--muted); font-weight: 400; }
-.pc-new { color: var(--pc-accent); }
+.pc-new { color: var(--pc-accent-text); }
 .pc-grip { display: grid; place-items: center; color: var(--muted); cursor: grab; touch-action: none; }
 .pc-bar { display: block; height: 4px; border-radius: 4px; background: color-mix(in srgb, var(--fg) 14%, transparent); overflow: hidden; }
 .pc-bar i { display: block; height: 100%; background: var(--pc-accent); border-radius: inherit; }
@@ -139,14 +143,14 @@ main#view > section.pc { animation: none; }
 .pc-desc { margin: 8px 0; color: var(--muted); }
 .pc-desc summary { cursor: pointer; list-style: none; }
 .pc-desc[open] summary { display: none; }
-.pc-desc summary b { color: var(--pc-accent); font-weight: 500; }
+.pc-desc summary b { color: var(--pc-accent-text); font-weight: 500; }
 .pc-fund, .pc-sets { font-size: .88rem; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .pc-toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 14px 0 6px; }
 .pc .pc-find { flex-direction: row; flex: 1; min-width: 160px; display: flex; align-items: center; gap: 8px; padding: 0 12px; border-radius: 12px; background: var(--surface-2); }
 .pc-find input { flex: 1; border: 0; background: none; min-height: 38px; color: var(--fg); outline: none; font: inherit; }
 .pc-notes { line-height: 1.6; overflow-wrap: anywhere; }
-.pc-notes a { color: var(--pc-accent); }
-.pc-ts { border: 0; background: color-mix(in srgb, var(--pc-accent) 18%, transparent); color: var(--pc-accent); border-radius: 6px; padding: 0 5px; font: inherit; cursor: pointer; }
+.pc-notes a { color: var(--pc-accent-text); }
+.pc-ts { border: 0; background: color-mix(in srgb, var(--pc-accent) 18%, transparent); color: var(--pc-accent-text); border-radius: 6px; padding: 0 5px; font: inherit; cursor: pointer; }
 .pc-people { display: flex; gap: 8px; flex-wrap: wrap; }
 .pc-people .chip img { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; margin-left: -6px; }
 .pc-people .chip { text-decoration: none; color: var(--fg); }
@@ -159,10 +163,10 @@ main#view > section.pc { animation: none; }
 .pc-chaps small { opacity: .7; font-variant-numeric: tabular-nums; }
 .pc-chaps img { width: 36px; height: 36px; border-radius: 6px; object-fit: cover; }
 .pc-marks li { display: flex; align-items: center; }
-.pc-marks b { font-variant-numeric: tabular-nums; color: var(--pc-accent); }
+.pc-marks b { font-variant-numeric: tabular-nums; color: var(--pc-accent-text); }
 .pc-tx p { margin: 0; padding: 6px 8px; border-radius: 10px; line-height: 1.55; opacity: .6; cursor: pointer; transition: opacity .2s, background .2s; }
 .pc-tx p.on { opacity: 1; background: color-mix(in srgb, var(--pc-accent) 16%, transparent); }
-.pc-tx p b { color: var(--pc-accent); font-weight: 600; }
+.pc-tx p b { color: var(--pc-accent-text); font-weight: 600; }
 
 /* Lists page */
 .pc-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin: 6px 0 4px; }
@@ -171,7 +175,7 @@ main#view > section.pc { animation: none; }
 .pc-stats small { color: var(--muted); font-size: .78rem; }
 .pc-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
 .pc-tile { display: grid; gap: 4px; padding: 14px; border-radius: 14px; background: var(--surface-2); text-decoration: none; }
-.pc-tile .ic { color: var(--pc-accent); }
+.pc-tile .ic { color: var(--pc-accent-text); }
 
 /* Sheets and forms */
 .pc-menu { display: grid; gap: 4px; }
@@ -228,7 +232,7 @@ body.pc-np-open .pc-mini { display: none; }
 .pc-np-fx { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; }
 .pc-tog { display: inline-flex; align-items: center; gap: 6px; padding: 7px 11px; border: 1px solid var(--line); border-radius: 999px; background: none; color: var(--muted); font: inherit; font-size: .8rem; cursor: pointer; text-decoration: none; }
 .pc-tog .ic { width: 16px; height: 16px; }
-.pc-tog[aria-pressed="true"] { color: var(--pc-accent); border-color: var(--pc-accent); background: color-mix(in srgb, var(--pc-accent) 14%, transparent); }
+.pc-tog[aria-pressed="true"] { color: var(--pc-accent-text); border-color: var(--pc-accent); background: color-mix(in srgb, var(--pc-accent) 14%, transparent); }
 .pc-np-empty { display: grid; place-items: center; gap: 12px; min-height: 60vh; text-align: center; }
 .pc-np-empty > .ic { width: 48px; height: 48px; color: var(--muted); }
 @media (min-width: 900px) {
@@ -277,7 +281,7 @@ body.bk-reader-open[data-audio-source]:not([data-audio-source="podcast"]) .pc-mi
 .pc-source .ic { width: 14px; height: 14px; flex: none; }
 .pc-source.big { display: flex !important; align-items: flex-start; font-size: .88rem; margin: 8px 0; color: var(--muted); }
 .pc-source.big b { color: var(--fg); font-weight: 600; }
-.pc-source.big a { color: var(--pc-accent); overflow-wrap: anywhere; }
+.pc-source.big a { color: var(--pc-accent-text); overflow-wrap: anywhere; }
 
 .pc-srclist { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .pc-srclist li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border-radius: 12px; background: var(--surface-2); }
@@ -331,7 +335,7 @@ body.bk-reader-open[data-audio-source]:not([data-audio-source="podcast"]) .pc-mi
 .pc-cmp { border: 1px solid var(--pc-hair); border-radius: var(--pc-r); background: var(--surface); }
 .pc-cmp th, .pc-cmp td { padding: 10px 10px; }
 .pc-cmp th { font-size: .74rem; letter-spacing: .06em; text-transform: uppercase; }
-.pc-badge-txt { background: color-mix(in srgb, var(--pc-accent) 18%, transparent); color: var(--pc-accent); }
+.pc-badge-txt { background: color-mix(in srgb, var(--pc-accent) 18%, transparent); color: var(--pc-accent-text); }
 .pc-source { opacity: .9; }
 .pc-showhead { padding: 22px 16px 18px; }
 .pc-showhead::before { opacity: .28; }

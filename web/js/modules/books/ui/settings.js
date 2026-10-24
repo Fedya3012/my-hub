@@ -25,7 +25,7 @@ export async function render(el, { arg }) {
         <a class="btn" href="#books/tools">${icon('upload')}Thêm & nhập sách</a>
         <button class="btn" data-clean>${icon('refresh')}Dọn dữ liệu Sách</button>
       </div>
-      <p class="hint">Thư mục đồng bộ quét sách trong thư mục đã chọn (trên máy, Dropbox hoặc OneDrive) và tự thêm sách mới mỗi lần đồng bộ.</p>
+      <p class="hint">Thư mục đồng bộ quét sách trong thư mục đã chọn (trên máy, Dropbox, OneDrive hoặc Google Drive) và tự thêm sách mới mỗi lần đồng bộ.</p>
     </details>
   </div>`;
   const off = bindParams(el, toast);

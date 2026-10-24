@@ -64,7 +64,7 @@ export function accountSummary() {
   if (account.signedIn) {
     body = `${avatar(account.user, 'md')}<span class="acct-sum-t"><strong>${esc(account.displayName())}</strong><span class="muted">${esc(account.email)}${account.needsReconnect ? ' · cần kết nối lại' : ''}</span></span>`;
   } else {
-    body = `<span class="mod-icon">${icon('user')}</span><span class="acct-sum-t"><strong>Đăng nhập để đồng bộ</strong><span class="muted">Bằng GitHub (dán token), hoặc kết nối Dropbox hay OneDrive (đồng bộ cả tệp nhạc/sách).</span></span>`;
+    body = `<span class="mod-icon">${icon('user')}</span><span class="acct-sum-t"><strong>Đăng nhập để đồng bộ</strong><span class="muted">Bằng GitHub (dán token), hoặc kết nối Dropbox, OneDrive hay Google Drive (đồng bộ cả tệp nhạc/sách).</span></span>`;
   }
   return `<section class="set-block" id="set-account">
       <h2 class="section-title">${icon('user')}${account.signedIn ? 'Tài khoản GitHub' : 'Tài khoản'}</h2>
