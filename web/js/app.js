@@ -9,6 +9,7 @@ import { bus } from './core/bus.js';
 import { icon } from './core/icons.js';
 import { esc, toast, h } from './core/ui.js';
 import { storage } from './core/storage/index.js';
+import { folderSources } from './core/storage/folders.js';
 import { applyTheme } from './core/theme.js';
 import { syncModuleRows, listModules, loadModule, loadService, isEnabled, byId } from './core/registry.js';
 import { registerSW, autoCheck } from './core/updater.js';
@@ -80,7 +81,9 @@ function initDrawer() {
 async function renderStorageBadge() {
   const s = await storage.status();
   const el = document.getElementById('storage-badge');
-  const b = accountBadge(s);   // core/account-ui.js: account name + sync state, or the storage mode
+  const names = { local: 'Trên máy', dropbox: 'Dropbox', onedrive: 'OneDrive', googledrive: 'Google Drive' };
+  const folders = (await folderSources().catch(() => [])).map(k => names[k] || k).join(' + ');
+  const b = accountBadge(s, folders);   // core/account-ui.js: account name + sync state, or the storage mode
   el.innerHTML = b.html;
   el.title = b.title;
   el.href = b.href;
@@ -201,6 +204,7 @@ async function boot() {
     if (current?.id === u.id) { try { current.mod.unmount?.(); } catch (e) { console.error(e); } current = null; render(); }
   });
   bus.on('storage:mode', renderStorageBadge);
+  bus.on('supabase:changed', renderStorageBadge);
   bus.on('account:changed', (e) => { if (e.reason !== 'refresh') renderStorageBadge(); });
   window.addEventListener('online', renderStorageBadge); window.addEventListener('offline', renderStorageBadge);
   // Sync progress itself is shown by the task tray (storage.sync); the badge mirrors it.

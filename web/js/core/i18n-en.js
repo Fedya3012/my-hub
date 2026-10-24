@@ -3911,4 +3911,6 @@ export default {"(Google cấp quyền theo từng giờ). Bấm một lần đ�
 "Đóng sách":"Close book",
 "Bảng phím tắt này":"This shortcut list",
 "Lăn chuột":"Mouse wheel",
-"Ctrl + lăn chuột":"Ctrl + mouse wheel"};
+"Ctrl + lăn chuột":"Ctrl + mouse wheel",
+"Chưa đăng nhập, bấm để đăng nhập":"Not signed in, tap to sign in",
+"Thư mục đồng bộ: ":"Sync folders: "};
