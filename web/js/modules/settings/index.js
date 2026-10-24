@@ -233,7 +233,7 @@ async function renderPage() {
             <span class="mode-icon">${icon(k === 'local' ? 'device' : 'cloud')}</span>
             <strong>${esc(l)}</strong><span>${esc(h)}</span></label>`).join('')}
       </div>
-      <a class="panel" href="#settings/folders" style="display:flex;flex-direction:row;align-items:center;gap:10px;text-decoration:none;color:inherit"><span style="flex:1"><strong style="display:block">Chọn thư mục, đồng bộ, tạm dừng, huỷ</strong><span class="hint">${fsrcs.map(k => k === 'local' ? 'Thư mục trong máy' : 'Thư mục trên ' + esc(MODES[k].label)).join(' + ')}${fdrive && drives[fdrive].connected() ? ` · <button type="button" class="btn small" data-act="src-reconnect">Đổi tài khoản ${esc(MODES[fdrive].label)}</button>` : ''}</span></span><span aria-hidden="true">›</span></a>
+      <a class="panel" href="#settings/folders" style="display:flex;flex-direction:row;align-items:center;gap:10px;text-decoration:none;color:inherit"><span style="flex:1"><strong style="display:block">Chọn thư mục, đồng bộ, tạm dừng, huỷ</strong><span class="hint">${fsrcs.map(k => k === 'local' ? 'Thư mục trong máy' : 'Thư mục trên ' + esc(MODES[k].label)).join(' + ')}${fdrive && drives[fdrive].connected() ? ` · <button type="button" class="btn small" data-act="src-reconnect">Đổi tài khoản ${esc(MODES[fdrive].label)}</button> <button type="button" class="btn small danger" data-act="src-signout">Đăng xuất ${esc(MODES[fdrive].label)}</button>` : ''}</span></span><span aria-hidden="true">›</span></a>
     </section>
 
     <section class="set-block" data-sec="devices">
@@ -355,6 +355,17 @@ async function renderPage() {
     render();
   });
   on('src-reconnect', async (e) => { e.preventDefault(); e.stopPropagation(); const { connectForm } = await import('../../core/storage/cloud-ui.js'); if (await connectForm(fdrive)) render(); });
+  // Signing out of the drive that feeds the folders: the chosen folders stay (paused until a sign-in), and what was
+  // imported stays in the library. Nothing is deleted on the drive.
+  on('src-signout', async (e) => {
+    e.preventDefault(); e.stopPropagation();
+    const name = MODES[fdrive]?.label || 'đám mây';
+    if (!(await confirmBox(`Đăng xuất ${name} khỏi máy này?`, 'Các thư mục đã chọn vẫn giữ nguyên, nhưng app không quét hay nhập thêm từ đó cho đến khi bạn đăng nhập lại. Bài và tệp đã nhập vẫn có trong thư viện. Không có gì bị xoá trên Google Drive.', 'Đăng xuất'))) return;
+    const { disconnect } = await import('../../core/storage/cloud-ui.js');
+    await disconnect(fdrive);
+    ctx.toast(`Đã đăng xuất ${name} khỏi máy này`);
+    render();
+  });
   on('reconnect', async () => { const { useDrive } = await import('../../core/storage/cloud-ui.js'); await useDrive(st.mode, { reconnect: true }); render(); });
   on('persist', async () => { const ok = await ctx.storage.adapters.local.persist(); ctx.toast(ok ? 'Đã bật lưu trữ bền vững' : 'Trình duyệt chưa cho phép', ok ? 'info' : 'warn'); render(); });
   on('rename', async () => {
