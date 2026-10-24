@@ -1,7 +1,14 @@
 {
-  "app": "0.9.21.1",
+  "app": "0.9.21.2",
   "released": "2026-10-24",
   "changelog": [
+    {
+      "version": "0.9.21.2",
+      "date": "2026-10-24",
+      "notes": [
+        "Trình phát nhạc: ảnh bìa nét hơn; trang album dùng ảnh bìa đầy đủ, ảnh thu nhỏ 720 px được dựng lại, ảnh tới 4K"
+      ]
+    },
     {
       "version": "0.9.21.1",
       "date": "2026-10-24",
@@ -758,7 +765,7 @@
     },
     "music": {
       "name": "Trình phát nhạc",
-      "version": "0.7.8",
+      "version": "0.7.9",
       "minApp": "0.3.0",
       "files": [
         "js/modules/music/index.js",
