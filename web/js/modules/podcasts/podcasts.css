@@ -350,7 +350,14 @@ body.bk-reader-open[data-audio-source]:not([data-audio-source="podcast"]) .pc-mi
 .pc-np-tabs button[aria-selected="true"] { background: var(--fg); }
 .pc-np-panel { background: rgb(0 0 0 / .18); padding: 8px; }
 .pc-play { width: 76px; height: 76px; }
-.pc-pill { border-color: transparent; background: rgb(255 255 255 / .1); backdrop-filter: blur(8px); }
+.pc-pill { border-color: transparent; background: rgb(255 255 255 / .12); }   /* no backdrop-filter: on Android WebView it painted the pill solid white, hiding the light text */
+/* Buttons inside Now Playing use the page theme's --surface (white in light themes) with this screen's light text. */
+.pc-np .btn { background: rgb(255 255 255 / .12); border-color: transparent; color: var(--fg); }
+.pc-np .btn.primary, .pc-np .btn.pc-orange { background: var(--pc-accent); color: var(--pc-accent-fg); }
+/* A centred row that overflows cuts off its first items; auto margins centre it while keeping every tab reachable. */
+.pc-np-tabs { justify-content: flex-start; }
+.pc-np-tabs button:first-child { margin-left: auto; }
+.pc-np-tabs button:last-child { margin-right: auto; }
 .pc-tog { border-color: transparent; background: rgb(255 255 255 / .06); }
 .pc-tog[aria-pressed="true"] { border-color: color-mix(in srgb, var(--pc-accent) 60%, transparent); }
 @media (prefers-reduced-motion: reduce) { .pc *, .pc-mini * { transition: none !important; animation: none !important; } }
