@@ -74,7 +74,8 @@ async function onedriveDialog() {
 // One tap with the app's Web client (web, Windows, Android); the Desktop-client form stays as "Cách khác"
 // for anyone with their own client.
 async function googleDialog() {
-  const oneTap = !!GOOGLE_WEB_CLIENT_ID && !!GOOGLE_WEB_CLIENT_SECRET && (!window.Capacitor?.isNativePlatform?.() || !!window.Capacitor.Plugins?.OAuth);
+  const native = gd.nativeSignInAvailable();
+  const oneTap = native || (!!GOOGLE_WEB_CLIENT_ID && !!GOOGLE_WEB_CLIENT_SECRET && !window.Capacitor?.isNativePlatform?.());
   if (oneTap) {
     const act = await modal({
       title: 'Kết nối Google Drive',
@@ -84,7 +85,8 @@ async function googleDialog() {
     if (!act) return false;
     if (act === 'go') {
       try {
-        await gd.signInWeb(GOOGLE_WEB_CLIENT_ID, GOOGLE_WEB_CLIENT_SECRET, GOOGLE_PAGES_REDIRECT);
+        if (native) await gd.signInNative();
+        else await gd.signInWeb(GOOGLE_WEB_CLIENT_ID, GOOGLE_WEB_CLIENT_SECRET, GOOGLE_PAGES_REDIRECT);
         await drives.googledrive.readSnapshot('hub-live.json');   // proves the token and the app data folder work
         toast('Đã kết nối Google Drive');
         return true;

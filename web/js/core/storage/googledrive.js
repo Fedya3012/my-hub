@@ -86,10 +86,35 @@ export async function signInWeb(clientId, secret, pagesRedirect) {
   return true;
 }
 
+// Android: Google Play services signs in (GoogleAuthPlugin, Android OAuth client matched by package + SHA-1),
+// no secret and no refresh token; a fresh access token is asked for silently whenever the last one expires.
+const nativeAuth = () => (window.Capacitor?.isNativePlatform?.() && window.Capacitor.Plugins?.GoogleAuth) || null;
+export const nativeSignInAvailable = () => !!nativeAuth();
+const NATIVE_TTL = 50 * 60 * 1000;   // the API does not say; Google access tokens last an hour
+
+export async function signInNative() {
+  const r = await nativeAuth().authorize({ interactive: true });
+  clouds.set('googledrive', { native: true, access: r.accessToken, expires: Date.now() + NATIVE_TTL });
+}
+
+async function nativeToken(c) {
+  try {
+    const r = await nativeAuth().authorize({ interactive: false });
+    clouds.set('googledrive', { ...c, access: r.accessToken, expires: Date.now() + NATIVE_TTL });
+    return r.accessToken;
+  } catch (e) {
+    if (e?.code === 'consent') { clouds.set('googledrive', null); throw err('Google đã thu hồi quyền truy cập, hãy kết nối lại.', 'reconnect'); }
+    throw err('Google Drive tạm thời không phản hồi, sẽ thử lại.', 'offline');
+  }
+}
+
+const signedIn = (c) => !!(c?.refresh || (c?.native && nativeAuth()));
+
 async function token() {
   const c = getCloud('googledrive');
-  if (!c?.refresh) throw err('Chưa kết nối Google Drive.', 'signed_out');
+  if (!signedIn(c)) throw err('Chưa kết nối Google Drive.', 'signed_out');
   if (c.access && Date.now() < c.expires) return c.access;
+  if (c.native) return nativeToken(c);
   const { r, j } = await tokenCall({ client_id: c.clientId, client_secret: c.secret, grant_type: 'refresh_token', refresh_token: c.refresh });
   // Only a refused refresh token (400/401) means the access was revoked; a server hiccup (429/5xx) is retried later.
   if (!r.ok && r.status !== 400 && r.status !== 401) throw err(`Google Drive tạm thời không phản hồi (${r.status}), sẽ thử lại.`, 'offline');
@@ -163,8 +188,8 @@ export const googledrive = {
   id: 'googledrive', label: 'Google Drive', files: true,
   fileKey,
   configured: () => true,
-  connected: () => !!getCloud('googledrive')?.refresh,
-  linked: () => !!getCloud('googledrive')?.refresh,
+  connected: () => signedIn(getCloud('googledrive')),
+  linked: () => signedIn(getCloud('googledrive')),
   async available() { return this.connected() && navigator.onLine; },
 
   async readSnapshot(name = 'hub-db.json', { signal, onProgress } = {}) {

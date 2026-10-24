@@ -20,6 +20,7 @@ public class MainActivity extends BridgeActivity {
     registerPlugin(DlnaPlugin.class);
     registerPlugin(UsbAudioPlugin.class);
     registerPlugin(OAuthPlugin.class);
+    registerPlugin(GoogleAuthPlugin.class);
     super.onCreate(savedInstanceState);
     handleOAuth(getIntent());
     // When the system takes the page's memory back (render process gone), the app used to close. Start the page again
