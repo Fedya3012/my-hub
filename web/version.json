@@ -1,7 +1,15 @@
 {
-  "app": "0.9.22.3",
+  "app": "0.9.22.4",
   "released": "2026-10-24",
   "changelog": [
+    {
+      "version": "0.9.22.4",
+      "date": "2026-10-24",
+      "notes": [
+        "Google Drive: khi token hết hạn (401), tự lấy token mới và thử lại một lần",
+        "Cài đặt: đăng xuất khỏi Google Drive khi dùng làm nguồn thư mục"
+      ]
+    },
     {
       "version": "0.9.22.3",
       "date": "2026-10-24",
