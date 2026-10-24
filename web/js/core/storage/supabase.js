@@ -130,9 +130,10 @@ export const supabase = {
 
   // Empties the account's data (the account itself stays; see supa.deleteAccount for that).
   async deleteAll() {
-    const del = await rest('/hub_rows?tbl=neq.', { method: 'DELETE' });
+    const del = await rest(`/hub_rows?user_id=eq.${supa.userId}`, { method: 'DELETE' });
     if (!del.ok) throw await fail(del, 'xoá dữ liệu');
-    const r = await rest('/hub_data', {
+    // Supabase rejects an UPDATE without a filter ("UPDATE requires a WHERE clause"); RLS already limits it to this account.
+    const r = await rest(`/hub_data?user_id=eq.${supa.userId}`, {
       method: 'PATCH', body: { snapshot: {}, version: 0, live: {}, live_version: 0 },
     });
     if (!r.ok) throw await fail(r, 'xoá dữ liệu');
