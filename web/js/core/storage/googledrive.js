@@ -6,7 +6,7 @@
 //   hub-db.json / hub-live.json : library + progress (Drive has no If-Match: the file's `version` is compared first)
 //   f-<fileId>-<name>           : files; over 5 MB they go up through a resumable session in 8 MB parts
 // Token calls go through the shell (Windows/Android) where the app has one.
-import { http } from './http.js';
+import { http, nativeShell } from './http.js';
 import { getCloud, clouds } from './clouds.js';
 
 const err = (message, code) => Object.assign(new Error(message), { code });
@@ -124,7 +124,10 @@ async function token() {
 }
 
 async function api(url, { method = 'GET', headers = {}, body, signal, onProgress } = {}) {
-  const r = await http(url, { method, signal, body, onProgress, headers: { Authorization: 'Bearer ' + await token(), ...headers } });
+  // Small JSON reads (listings, lookups) go through the app shell where there is one (Windows main process, Android
+  // native HTTP): no WebView CORS preflight to worry about. File bodies keep using fetch so they can stream.
+  const viaShell = method === 'GET' && !/[?&]alt=media/.test(url) && nativeShell();
+  const r = await http(url, { method, signal, body, onProgress, viaShell, headers: { Authorization: 'Bearer ' + await token(), ...headers } });
   if (r.status === 429) throw err('Google Drive tạm giới hạn số lần gọi, thử lại sau ít phút.', 'rate');
   return r;
 }
