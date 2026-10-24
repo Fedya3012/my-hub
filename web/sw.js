@@ -92,6 +92,14 @@ self.addEventListener('fetch', (event) => {
         const hit = await c.match(req, { ignoreSearch: true });
         if (hit) return hit;
       }
+      // A module file without ?v= (e.g. its stylesheet, linked relative to import.meta.url) must come from the
+      // NEWEST cached version of that module; caches.match() alone returns the oldest cache, i.e. stale CSS.
+      if (!v && modMatch) {
+        const ver = (k) => k.slice(`hub-mod-${modMatch[1]}-`.length).split('.').map(Number);
+        const newer = (a, b) => { const x = ver(a), y = ver(b); for (let i = 0; i < Math.max(x.length, y.length); i++) { const d = (y[i] || 0) - (x[i] || 0); if (d) return d; } return 0; };
+        const keys = (await caches.keys()).filter(k => k.startsWith(`hub-mod-${modMatch[1]}-`)).sort(newer);
+        for (const k of keys) { const h = await (await caches.open(k)).match(req, { ignoreSearch: true }); if (h) return h; }
+      }
       const hit = await caches.match(req, { ignoreSearch: true });
       if (hit) return hit;
       const res = await fetch(req);
