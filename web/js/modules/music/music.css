@@ -71,6 +71,11 @@
   border: 1px solid var(--line); box-shadow: 0 8px 30px rgb(0 0 0 / .18); contain: layout paint style; }
 .mdock::before { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, color-mix(in srgb, var(--m-acc) 20%, transparent), transparent 70%); pointer-events: none; }
 .mdock > * { position: relative; }
+.mdock-fold { position: relative; flex: none; width: 34px; height: 34px; color: var(--muted); }
+.mdock-fold .ic { transition: transform .2s; }
+.mdock.is-folded { left: auto; right: max(12px, var(--sai-right)); width: max-content; max-width: calc(100% - 24px); padding: 4px; border-radius: 999px; }
+.mdock.is-folded > :not(.mdock-fold):not(.mdock-line):not(.mdock-ctrls) { display: none !important; }
+.mdock.is-folded .mdock-ctrls > :not(.mplay) { display: none !important; }
 .mdock-line { position: absolute !important; left: 0; right: 0; bottom: 0; height: 2px; background: color-mix(in srgb, var(--fg) 8%, transparent); }
 .mdock-line i { display: block; height: 100%; width: 100%; transform: scaleX(0); transform-origin: left; will-change: transform; background: var(--m-acc); }
 .mdock-now { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; background: none; border: 0; padding: 0; color: inherit; text-align: left; cursor: pointer; font: inherit; }

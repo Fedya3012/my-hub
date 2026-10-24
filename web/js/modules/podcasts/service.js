@@ -75,8 +75,16 @@ function mountMini() {
     <button class="icon-btn" data-k="back" aria-label="Lùi">${icon('pc-back')}</button>
     <button class="pc-mini-play" data-k="toggle" aria-label="Phát">${icon('pc-play')}</button>
     <button class="icon-btn" data-k="fwd" aria-label="Tới">${icon('pc-fwd')}</button>
+    <button class="icon-btn pc-mini-fold" data-k="fold" aria-label="Thu nhỏ thanh phát" aria-expanded="true">${icon('pc-fold')}</button>
     <i class="pc-mini-bar"><i></i></i>`;
-  mini.addEventListener('click', (e) => { const k = e.target.closest('[data-k]')?.dataset.k; if (k) { e.preventDefault(); player[k](); } });
+  mini.classList.toggle('is-folded', miniFolded());
+  mini.addEventListener('click', (e) => {
+    const k = e.target.closest('[data-k]')?.dataset.k;
+    if (!k) return;
+    e.preventDefault();
+    if (k === 'fold') { setMiniFolded(!mini.classList.contains('is-folded')); return; }
+    player[k]();
+  });
   document.body.appendChild(mini);
   paintMini();
 }
@@ -96,6 +104,16 @@ function paintMini() {
   p.setAttribute('aria-label', player.playing ? 'Tạm dừng' : 'Phát');
   paintTime();
 }
+// Folded = a small round control; the choice is kept on this device (shared with the music dock).
+const FOLD_KEY = 'hub.miniFolded';
+export function miniFolded() { try { return localStorage.getItem(FOLD_KEY) === '1'; } catch { return false; } }
+export function setMiniFolded(v) {
+  try { localStorage.setItem(FOLD_KEY, v ? '1' : '0'); } catch { /* storage unavailable: folds for this session only */ }
+  mini?.classList.toggle('is-folded', v);
+  mini?.querySelector('.pc-mini-fold')?.setAttribute('aria-expanded', String(!v));
+  document.dispatchEvent(new CustomEvent('hub:mini-fold', { detail: { folded: v } }));
+}
+
 function paintTime() { const b = mini?.querySelector('.pc-mini-bar i'); if (b && player.duration) b.style.width = (player.time / player.duration * 100) + '%'; }
 
 // ── Library drawer: a show's latest episodes and "Mở trong Podcast" ──

@@ -248,9 +248,16 @@ body.pc-np-open .pc-mini { display: none; }
 
 /* ── Mini player ───────────────────────────────────────────── */
 .pc-mini { position: fixed; z-index: 21; left: calc(var(--sidebar, 0px) + 16px); right: 16px; bottom: calc(16px + var(--sai-bottom, 0px)); max-width: 720px; margin-inline: auto;
-  display: grid; grid-template-columns: 1fr auto auto auto; align-items: center; gap: 4px; padding: 6px 8px 8px 6px; border-radius: 16px;
+  display: grid; grid-template-columns: 1fr auto auto auto auto; align-items: center; gap: 4px; padding: 6px 8px 8px 6px; border-radius: 16px;
   background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--line); box-shadow: var(--shadow); overflow: hidden; }
 .pc-mini[hidden] { display: none; }
+.pc-mini-fold { width: 34px; height: 34px; color: var(--muted); }
+.pc-mini-fold .ic { transition: transform .2s; }
+.pc-mini-fold[aria-expanded="false"] .ic { transform: rotate(180deg); }
+/* Folded: only the play button and the expand arrow remain, as a small pill bottom-right. */
+.pc-mini.is-folded { grid-template-columns: auto auto; left: auto; right: 12px; max-width: none; width: max-content; padding: 4px; border-radius: 999px; }
+.pc-mini.is-folded .pc-mini-open, .pc-mini.is-folded [data-k="back"], .pc-mini.is-folded [data-k="fwd"], .pc-mini.is-folded .pc-mini-bar { display: none; }
+.pc-mini.is-folded .pc-mini-play { width: 40px; height: 40px; }
 body.pc-mini-on .mdock { display: none !important; }
 .pc-mini-open { display: flex; align-items: center; gap: 10px; min-width: 0; text-decoration: none; color: var(--fg); }
 .pc-mini-art { width: 44px; height: 44px; border-radius: 10px; overflow: hidden; flex: none; display: grid; place-items: center; background: var(--surface-2); }

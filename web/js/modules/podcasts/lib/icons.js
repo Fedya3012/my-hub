@@ -10,6 +10,7 @@ registerIcons({
   'pc-subs': '<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>',
   'pc-play': '<path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/>',
   'pc-pause': '<path d="M8 5v14M16 5v14" stroke-width="3.2"/>',
+  'pc-fold': '<path d="m5 9 7 7 7-7"/>',
   'pc-back': '<path d="M11 6a7 7 0 1 1-6.3 4"/><path d="M4 5v5h5"/>',
   'pc-fwd': '<path d="M13 6a7 7 0 1 0 6.3 4"/><path d="M20 5v5h-5"/>',
   'pc-prev': '<path d="M6 5v14M19 5 9 12l10 7z"/>',

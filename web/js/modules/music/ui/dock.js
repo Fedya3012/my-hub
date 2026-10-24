@@ -30,6 +30,16 @@ export function mountDock() {
   render();
 }
 
+// Folded = a small round control. Same key as the podcast mini player: one choice for both bars on this device.
+const FOLD_KEY = 'hub.miniFolded';
+export function miniFolded() { try { return localStorage.getItem(FOLD_KEY) === '1'; } catch { return false; } }
+export function setMiniFolded(v) {
+  try { localStorage.setItem(FOLD_KEY, v ? '1' : '0'); } catch { /* storage unavailable: folds for this session only */ }
+  document.dispatchEvent(new CustomEvent('hub:mini-fold', { detail: { folded: v } }));
+}
+// The other bar changed the choice (podcast mini player): follow it.
+document.addEventListener('hub:mini-fold', () => { if (el) { el.classList.toggle('is-folded', miniFolded()); el.querySelector('[data-fold]')?.setAttribute('aria-expanded', String(!miniFolded())); sizeVar(); } });
+
 export function unmountDock() { offs.forEach(f => f()); offs = []; el?.remove(); document.body.classList.remove('has-dock'); }
 
 function sizeVar() {
@@ -53,6 +63,7 @@ async function render() {
   el.style.setProperty('--m-acc', prefs().np.albumTheme && colors ? colors.accent : 'var(--accent)');
   el.innerHTML = `
     <div class="mdock-line" aria-hidden="true"><i></i></div>
+    <button class="icon-btn mdock-fold" data-fold aria-label="Thu nhỏ thanh phát" aria-expanded="${!miniFolded()}">${icon('minimize')}</button>
     <button class="mdock-now" data-open aria-label="Mở Đang phát">
       ${artHtml(L.coverOf(t), t.album || t.title, { cls: 'sm' })}
       <span class="mdock-meta"><span class="mdock-t">${esc(t.title)}</span>
@@ -79,6 +90,8 @@ async function render() {
     </div>`;
   hydrate(el);
   el.querySelector('[data-open]').onclick = () => open();
+  el.querySelector('[data-fold]').onclick = () => setMiniFolded(!miniFolded());
+  el.classList.toggle('is-folded', miniFolded());
   const A = (k, f) => el.querySelector(`[data-act="${k}"]`).onclick = f;
   A('play', () => player.toggle()); A('next', () => player.next()); A('prev', () => player.prev());
   A('shuffle', () => player.setShuffle(!player.shuffle)); A('repeat', () => player.cycleRepeat());
