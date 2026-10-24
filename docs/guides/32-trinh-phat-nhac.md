@@ -37,6 +37,11 @@ Khi nhập, bảng **Đang thêm nhạc** hiện tiến trình, xong thì báo s
 
 ## Lời bài hát
 
+- **Chọn mô hình**: mỗi việc có mục riêng. **Mô hình tạo lời** dùng khi tạo lời mới; **Mô hình đồng bộ từng chữ** canh thời gian từng chữ. Các lựa chọn có **Base** (nhẹ, nhanh), **Small**, **Medium**, **Large v3** và **Large v3 Turbo** (chính xác nhất, nặng nhất). Mô hình lớn cần nhiều bộ nhớ: trên điện thoại app sẽ hỏi xác nhận trước khi dùng.
+- Đồng bộ từng chữ bằng Base sẽ có thông báo kèm gợi ý chọn mô hình lớn hơn để chính xác hơn.
+- Chế độ **Tạo lời tự động** trên điện thoại chỉ dùng mô hình nhỏ và bài ngắn hơn 10 phút, để không làm app bị hệ điều hành đóng.
+- Lời dịch có hai chế độ: **Nhanh** và **Chính xác**.
+
 - Lời `.lrc` cùng tên tệp được nhập tự động.
 - Bài chưa có lời: bật **Tự tạo lời khi không có (AI)**; app nghe bài hát và tạo lời ngay trên máy (lần đầu tải mô hình AI, cần mạng).
 - Lời đã có nhưng chỉ theo dòng: **Tự đồng bộ từng chữ (AI)** canh thời gian cho từng chữ để chạy karaoke **Đồng bộ từng chữ**.
@@ -58,6 +63,10 @@ Khi nhập, bảng **Đang thêm nhạc** hiện tiến trình, xong thì báo s
 | **USB DAC (Android)** | Cài đặt của Trình phát nhạc | Xuất thẳng ra DAC cắm cổng USB |
 | Loa / TV trong mạng (DLNA / UPnP, Chromecast) | Nút phát tới thiết bị ở Now Playing | Điện thoại thành điều khiển từ xa |
 | Android Auto, thông báo, màn hình khoá | Tự có trên app Android | Nhạc vẫn phát khi tắt màn hình |
+
+## Widget trên màn hình chính (Android)
+
+Giữ một chỗ trống trên màn hình chính → **Widget** → **My Hub** → chọn widget **Trình phát nhạc**. Widget hiện bài đang phát, nút tua, phát và tạm dừng. Kéo góc widget để đổi kích thước: 4×2 có đầy đủ thông tin, 4×1 gọn hơn.
 
 ## Gắn nhạc với sách và fanfic
 

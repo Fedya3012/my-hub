@@ -19,8 +19,9 @@ Ví dụ hay dùng: đồng bộ bằng **GitHub** nhưng lấy nhạc từ **Dr
 | **Tài khoản GitHub** | Thư viện, cài đặt, tiến độ, qua kho riêng tư `my-hub-data` của bạn | Ở lại từng máy, không tải lên |
 | **Dropbox** | Thư viện, tiến độ và cả tệp, trong thư mục riêng của app | Tự tải lên; máy khác tải về khi mở |
 | **OneDrive** | Như Dropbox, trong `Apps/…` | Như Dropbox |
+| **Google Drive** | Thư viện và tiến độ nằm trong thư mục ẩn của app trên Drive | Chỉ đọc, phát thẳng từ Drive; không sao chép (xem [Google Drive](21-google-drive.md)) |
 
-Cách bật: **Cài đặt → Tài khoản đồng bộ** (mở trang riêng), bấm vào một ô.
+Cách bật: **Cài đặt → Tài khoản đồng bộ** (mở trang riêng), bấm vào một ô. Google Drive cần tự tạo một khoá đăng nhập một lần, làm theo [hướng dẫn Google Drive](21-google-drive.md).
 
 ### Đăng nhập GitHub
 
@@ -78,6 +79,8 @@ App hỏi **Máy này đã có dữ liệu**:
 | Dropbox / OneDrive | Không. Nhạc phát thẳng từ ổ; sách được tải về khi mở |
 | Trong máy, trên Windows | Không. Đọc thẳng từ ổ cứng |
 | Trong máy, trên Android | Có, mỗi tệp mới được sao chép vào app một lần |
+
+Có thể chọn nhiều nơi cùng lúc: ví dụ **Trong máy** cho nhạc và **Google Drive** cho sách.
 
 Thư mục đồng bộ chỉ đi **một chiều**: app đọc tệp từ thư mục, không bao giờ tải tệp đó lên tài khoản đồng bộ. Ví dụ nhạc lấy từ Dropbox sẽ không bị chép thêm một bản lên OneDrive.
 
