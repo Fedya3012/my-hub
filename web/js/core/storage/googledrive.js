@@ -213,8 +213,6 @@ export const googledrive = {
     return out.sort((a, b) => (b.isDir - a.isDir) || a.name.localeCompare(b.name, 'vi'));
   },
   async getPath(path, opts = {}) { return (await download(await pathId(path), opts)).blob(); },
-  // Drive media needs the Authorization header, which an <audio> element cannot send: no stream address,
-  // the player falls back to open() (downloads the track first).
   // Drive needs an Authorization header, which <audio> cannot send: the app's service worker answers a local
   // address (__gdrive/<id>?t=<token>) by fetching the file from Drive with the header, Range requests included,
   // so the song streams without being copied. The token never leaves the device. No service worker: null (download).
