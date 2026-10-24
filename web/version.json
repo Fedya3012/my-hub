@@ -1,7 +1,19 @@
 {
-  "app": "0.9.20.1",
-  "released": "2026-10-23",
+  "app": "0.9.21.0",
+  "released": "2026-10-24",
   "changelog": [
+    {
+      "version": "0.9.21.0",
+      "date": "2026-10-24",
+      "notes": [
+        "Google Drive trở lại: chọn Google Drive làm tài khoản đồng bộ và nguồn thư mục; nhạc trên Drive phát trực tiếp qua service worker, không sao chép",
+        "Android: widget trên màn hình chính cho Trình phát nhạc (thẻ 4x2, hoặc 4x1 khi thu nhỏ)",
+        "Android: nút thư mục trong Âm nhạc hoạt động qua trình chọn thư mục gốc; bài hát chỉ sao chép vào bộ nhớ đệm khi được đọc",
+        "Giao diện: chữ nhấn mạnh dễ đọc hơn ở chế độ sáng (Podcast, Sách, Noir, Pop)",
+        "Chuyển ngôn ngữ: tải lại với ?lang để không bị giữ ngôn ngữ cũ (ứng dụng Windows)",
+        "Hướng dẫn sử dụng: trang Google Drive, widget Android, mô hình lời AI và chế độ dịch Nhanh/Chính xác"
+      ]
+    },
     {
       "version": "0.9.20.1",
       "date": "2026-10-23",
@@ -720,7 +732,7 @@
     },
     "settings": {
       "name": "Cài đặt",
-      "version": "0.5.0",
+      "version": "0.5.1",
       "minApp": "0.2.0",
       "files": [
         "js/modules/settings/index.js"
@@ -738,7 +750,7 @@
     },
     "music": {
       "name": "Trình phát nhạc",
-      "version": "0.7.7",
+      "version": "0.7.8",
       "minApp": "0.3.0",
       "files": [
         "js/modules/music/index.js",
