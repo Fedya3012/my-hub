@@ -282,13 +282,22 @@ export const googledrive = {
         if (!isDir && e.mimeType.startsWith('application/vnd.google-apps')) continue;
         const path = (sub ? sub + '/' : '') + e.name;
         if (isDir) dirs.set(path, e.id);
-        out.push({ name: e.name, path, isDir, size: +e.size || 0 });
+        out.push({ id: e.id, name: e.name, path, isDir, size: +e.size || 0 });
       }
       page = j.nextPageToken || '';
     } while (page);
     return out.sort((a, b) => (b.isDir - a.isDir) || a.name.localeCompare(b.name, 'vi'));
   },
   async getPath(path, opts = {}) { return (await download(await pathId(path), opts)).blob(); },
+  // Bytes [from, to) of a file by its Drive id (a Range request): reading a song's tags needs the start and the end
+  // of the file, not all of it.
+  async getRange(id, from, to, { signal } = {}) {
+    const r = await api(`${API}/${encodeURIComponent(id)}?alt=media`, { signal, headers: { Range: `bytes=${from}-${to - 1}` } });
+    if (r.status === 404) throw err('Tệp không còn trên Google Drive.', 'missing');
+    if (!r.ok) throw await bad(r, 'đọc tệp');
+    const buf = await (await r.blob()).arrayBuffer();
+    return r.status === 206 ? buf : buf.slice(from, to);   // 200: the server ignored Range and sent the whole file
+  },
   // Drive needs an Authorization header, which <audio> cannot send: the app's service worker answers a local
   // address (__gdrive/<id>?t=<token>) by fetching the file from Drive with the header, Range requests included,
   // so the song streams without being copied. The token never leaves the device. No service worker: null (download).

@@ -264,7 +264,8 @@ export const storage = {
       if (!key || !d.connected() || !navigator.onLine) continue;
       const r = reporter({ onProgress, signal, quiet: false, big: fileRow.size >= 512 * 1024, label: 'Đang tải tệp từ ' + d.label, detail: fileRow.name, total: fileRow.size });
       try {
-        const got = await d.getFile(key, { signal: r.signal, onProgress: (done, total) => r.report(done) });
+        // A chosen-folder file's key is its path on the drive; otherwise it is the name of a file in the app's own folder.
+        const got = await (fileRow.linked && d.getPath ? d.getPath(key, { signal: r.signal, onProgress: (done, total) => r.report(done) }) : d.getFile(key, { signal: r.signal, onProgress: (done, total) => r.report(done) }));
         if (fileRow.linked) { r.finish(fileRow.name); return got; }   // a chosen-folder file: never kept on this device
         const loc = { ...(await local.put(fileRow.id, got)), dev: (await thisDevice()).id };
         await withoutSyncHooks(() => db.files.update(fileRow.id, { 'locations.local': loc }));

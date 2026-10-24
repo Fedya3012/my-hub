@@ -178,6 +178,21 @@ async function runSync({ pruneOnly = false } = {}) {
   return out;
 }
 
+// A stand-in for a File that is still on the drive: the tag reader only asks for its size and slices of it, so
+// reading a song's tags downloads a few hundred KB (read-ahead window) instead of the whole file.
+const WINDOW = 384 * 1024;
+function remoteFile(name, size, range) {
+  let win = null;   // { from, to, buf }
+  const bytes = async (a, b) => {
+    if (!win || a < win.from || b > win.to) {
+      const from = a, to = Math.min(size, Math.max(b, a + WINDOW));
+      win = { from, to, buf: new Uint8Array(await range(from, to)) };
+    }
+    return win.buf.slice(a - win.from, b - win.from).buffer;
+  };
+  return { name, size, type: '', slice: (a = 0, b = size) => ({ arrayBuffer: () => bytes(Math.max(0, a), Math.min(size, b)) }) };
+}
+
 async function runDrive(mode, { pruneOnly = false } = {}) {
   const d = drives[mode];
   if (!d || !d.listDir) return { skipped: 'no-folders' };
@@ -226,8 +241,11 @@ async function runDrive(mode, { pruneOnly = false } = {}) {
     const e = todo[i];
     task.update({ done: i, detail: `${e.name} · ${Math.round(i / todo.length * 100)}%` });
     try {
-      const blob = await d.getPath(e.path, { signal: task.signal });
-      const file = new File([blob], e.name, { type: blob.type || '' });
+      // Music: only the parts the tag reader asks for. Books are parsed whole, so they are downloaded.
+      const lazy = MUSIC.test(e.name) && d.getRange && e.id && e.size > 0;
+      let file;
+      if (lazy) file = remoteFile(e.name, e.size, (a, b) => d.getRange(e.id, a, b, { signal: task.signal }));
+      else { const blob = await d.getPath(e.path, { signal: task.signal }); file = new File([blob], e.name, { type: blob.type || '' }); }
       // Stays on the drive: nothing is copied to this device or uploaded (see storage.addFile remote).
       const remote = Object.assign(() => e.path, { drive: mode });
       if (MUSIC.test(e.name)) await music.importFiles([file], { kind: 'music', remote });
