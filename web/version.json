@@ -1,7 +1,17 @@
 {
-  "app": "0.9.22.7",
+  "app": "0.9.22.8",
   "released": "2026-10-24",
   "changelog": [
+    {
+      "version": "0.9.22.8",
+      "date": "2026-10-24",
+      "notes": [
+        "Sách: tự nhận diện chương cho PDF không có mục lục; PDF có phím tắt (phóng to, cuộn bằng chuột, Esc để thoát tìm kiếm)",
+        "Sách: gộp các file chương tải lên riêng (PDF, EPUB, TXT…) thành một Tập",
+        "Đồng bộ: thư mục đã đồng bộ không nhập lại các mục đã xoá trong ứng dụng",
+        "Tài khoản My Hub: xoá dữ liệu không còn lỗi 400 khi xoá"
+      ]
+    },
     {
       "version": "0.9.22.7",
       "date": "2026-10-24",
@@ -949,7 +959,7 @@
     },
     "books": {
       "name": "Sách",
-      "version": "0.1.4",
+      "version": "0.1.5",
       "minApp": "0.9.0.0",
       "files": [
         "js/modules/books/index.js",
@@ -1002,7 +1012,8 @@
         "vendor/fonts/opendyslexic/opendyslexic-latin-400-italic.woff2",
         "vendor/fonts/opendyslexic/opendyslexic-latin-700-normal.woff2",
         "vendor/fonts/opendyslexic/opendyslexic-latin-700-italic.woff2",
-        "js/modules/books/reader/audio-switch.js"
+        "js/modules/books/reader/audio-switch.js",
+        "js/modules/books/ui/volume.js"
       ],
       "changelog": [
         {
@@ -1055,7 +1066,7 @@
     },
     "account": {
       "name": "Tài khoản",
-      "version": "0.3.0",
+      "version": "0.3.1",
       "minApp": "0.3.0",
       "files": [
         "js/modules/account/index.js"

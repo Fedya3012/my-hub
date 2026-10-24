@@ -3,7 +3,7 @@
 export default {
   id: 'books',
   name: 'Sách',
-  version: '0.1.4',
+  version: '0.1.5',
   status: 'available',
   icon: 'book',
   route: 'books',

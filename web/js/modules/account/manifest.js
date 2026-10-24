@@ -3,7 +3,7 @@
 export default {
   id: 'account',
   name: 'Tài khoản',
-  version: '0.3.0',
+  version: '0.3.1',
   core: true,
   nav: false,
   icon: 'user',
