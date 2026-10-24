@@ -43,7 +43,7 @@ pre, code { overflow-wrap: anywhere; white-space: pre-wrap; }
    lower resolution in Android WebView, and re-blurs on every scrolled frame. Solid bars there; the blur stays on desktop. */
 @media (max-width: 860px), (pointer: coarse) {
   *, *::before, *::after { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
-  .pc-bottom, .pc-mini, .tabbar, .bk-bottom { background: var(--surface) !important; }
+  .pc-bottom, .pc-mini:not(.is-folded), .tabbar, .bk-bottom { background: var(--surface) !important; }
   .pc-pill, .pc-mini .pc-pill { background: color-mix(in srgb, var(--fg) 12%, var(--surface)) !important; }
   /* Bottom tab labels: at least 11px (smaller text smears on phone screens). */
   .tabbar a, .tabbar a span, .fx-bottom a, .fx-bottom a span, .bk-bottom a, .bk-bottom a span, .mbottom a, .mbottom a span, .mbottom button, .mbottom button span, .pc-bottom a, .pc-bottom a > span { font-size: max(.7rem, 11px) !important; }

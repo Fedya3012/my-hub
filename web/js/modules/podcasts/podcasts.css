@@ -254,10 +254,16 @@ body.pc-np-open .pc-mini { display: none; }
 .pc-mini-fold { width: 34px; height: 34px; color: var(--muted); }
 .pc-mini-fold .ic { transition: transform .2s; }
 .pc-mini-fold[aria-expanded="false"] .ic { transform: rotate(180deg); }
-/* Folded: only the play button and the expand arrow remain, as a small pill bottom-right. */
-.pc-mini.is-folded { grid-template-columns: auto auto; left: auto; right: 12px; max-width: none; width: max-content; padding: 4px; border-radius: 999px; }
-.pc-mini.is-folded .pc-mini-open, .pc-mini.is-folded [data-k="back"], .pc-mini.is-folded [data-k="fwd"], .pc-mini.is-folded .pc-mini-bar { display: none; }
-.pc-mini.is-folded .pc-mini-play { width: 40px; height: 40px; }
+/* Folded: a round cover with a progress ring; play/pause sits on its corner and a small arrow opens the bar again. */
+.pc-mini.is-folded { display: block; left: auto; right: 14px; width: 58px; height: 58px; max-width: none; padding: 0; border: 0; border-radius: 50%; overflow: visible;
+  background: conic-gradient(var(--pc-accent) calc(var(--p, 0) * 1%), color-mix(in srgb, var(--fg) 16%, transparent) 0%); box-shadow: 0 8px 24px rgb(0 0 0 / .28); backdrop-filter: none; -webkit-backdrop-filter: none; }
+.pc-mini.is-folded .pc-mini-open { position: absolute; inset: 3px; }
+.pc-mini.is-folded .pc-mini-art { width: 100%; height: 100%; border-radius: 50%; }
+.pc-mini.is-folded .pc-mini-txt, .pc-mini.is-folded [data-k="back"], .pc-mini.is-folded [data-k="fwd"], .pc-mini.is-folded .pc-mini-bar { display: none; }
+.pc-mini.is-folded .pc-mini-play { position: absolute; right: -6px; bottom: -6px; width: 30px; height: 30px; border: 2px solid var(--surface); box-shadow: 0 2px 8px rgb(0 0 0 / .3); }
+.pc-mini.is-folded .pc-mini-play .ic { width: 15px; height: 15px; }
+.pc-mini.is-folded .pc-mini-fold { position: absolute; top: -8px; left: -8px; width: 22px; height: 22px; padding: 0; border-radius: 50%; background: var(--surface); border: 1px solid var(--line); box-shadow: 0 2px 6px rgb(0 0 0 / .2); color: var(--fg); }
+.pc-mini.is-folded .pc-mini-fold .ic { width: 12px; height: 12px; }
 body.pc-mini-on .mdock { display: none !important; }
 .pc-mini-open { display: flex; align-items: center; gap: 10px; min-width: 0; text-decoration: none; color: var(--fg); }
 .pc-mini-art { width: 44px; height: 44px; border-radius: 10px; overflow: hidden; flex: none; display: grid; place-items: center; background: var(--surface-2); }

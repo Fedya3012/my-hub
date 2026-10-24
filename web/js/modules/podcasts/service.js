@@ -114,7 +114,13 @@ export function setMiniFolded(v) {
   document.dispatchEvent(new CustomEvent('hub:mini-fold', { detail: { folded: v } }));
 }
 
-function paintTime() { const b = mini?.querySelector('.pc-mini-bar i'); if (b && player.duration) b.style.width = (player.time / player.duration * 100) + '%'; }
+function paintTime() {
+  const b = mini?.querySelector('.pc-mini-bar i');
+  if (!player.duration) return;
+  const pct = player.time / player.duration * 100;
+  if (b) b.style.width = pct + '%';
+  mini?.style.setProperty('--p', pct.toFixed(1));   // the progress ring of the folded bubble
+}
 
 // ── Library drawer: a show's latest episodes and "Mở trong Podcast" ──
 async function drawerBlock({ item, el, from }) {
