@@ -183,17 +183,39 @@ async function runSync({ pruneOnly = false } = {}) {
 
 // A stand-in for a File that is still on the drive: the tag reader only asks for its size and slices of it, so
 // reading a song's tags downloads a few hundred KB (read-ahead window) instead of the whole file.
-const WINDOW = 384 * 1024;
-function remoteFile(name, size, range) {
-  let win = null;   // { from, to, buf }
+const HEAD = 1024 * 1024, TAIL = 256 * 1024;   // most songs need only these two ends (tags and cover art at the start, footers at the end)
+function remoteFile(name, size, range, relPath = '') {
+  // Both ends are requested at once on first use; anything else is fetched when asked for.
+  const parts = [{ from: 0, to: Math.min(size, HEAD) }, { from: Math.max(Math.min(size, HEAD), size - TAIL), to: size }].filter(w => w.to > w.from)
+    .map(w => Object.assign(w, { buf: null }));
+  const load = (w) => (w.buf ||= range(w.from, w.to).then(b => new Uint8Array(b)));
   const bytes = async (a, b) => {
-    if (!win || a < win.from || b > win.to) {
-      const from = a, to = Math.min(size, Math.max(b, a + WINDOW));
-      win = { from, to, buf: new Uint8Array(await range(from, to)) };
-    }
-    return win.buf.slice(a - win.from, b - win.from).buffer;
+    let w = parts.find(x => a >= x.from && b <= x.to);
+    if (!w) { w = { from: a, to: Math.min(size, Math.max(b, a + 384 * 1024)), buf: null }; parts.push(w); }
+    if (a < HEAD && !parts[0].buf) parts.slice(0, 2).forEach(load);   // first read: head and tail in parallel
+    const buf = await load(w);
+    return buf.slice(a - w.from, b - w.from).buffer;
   };
-  return { name, size, type: '', slice: (a = 0, b = size) => ({ arrayBuffer: () => bytes(Math.max(0, a), Math.min(size, b)) }) };
+  return { name, size, type: '', relPath, slice: (a = 0, b = size) => ({ arrayBuffer: () => bytes(Math.max(0, a), Math.min(size, b)) }) };
+}
+
+// Albums without a cover whose songs sit next to a cover image on the drive get that image.
+async function fillFolderCovers(mode, images, d, dirOf, sidecar) {
+  if (!images.length) return;
+  const imgByDir = new Map(images.map(e => [dirOf(e.path), e]));
+  const rows = await db.files.filter(f => f.role === 'main' && f.linked && !!f.locations?.[mode]?.key && imgByDir.has(dirOf(f.locations[mode].key))).toArray();
+  if (!rows.length) return;
+  const music = await import('../../modules/music/lib/store.js');
+  const tracks = await db.tracks.where('itemId').anyOf(rows.map(f => f.itemId)).toArray();
+  const dirOfItem = new Map(rows.map(f => [f.itemId, dirOf(f.locations[mode].key)]));
+  const done = new Set();
+  for (const t of tracks) {
+    if (t.deleted || done.has(t.albumId)) continue;
+    const al = await db.albums.get(t.albumId);
+    if (!al || al.coverFileId) { done.add(t.albumId); continue; }
+    try { await music.setAlbumCover(t.albumId, await sidecar(imgByDir.get(dirOfItem.get(t.itemId)))); done.add(t.albumId); }
+    catch { /* try again next sync */ }
+  }
 }
 
 async function runDrive(mode, { pruneOnly = false } = {}) {
@@ -230,7 +252,21 @@ async function runDrive(mode, { pruneOnly = false } = {}) {
 
   const { isBookFile } = await import('../../modules/books/lib/formats.js');
   const done = (await getSetting('sync.folderDone', {})) || {};
+  // Next to a song: its folder cover (cover.jpg…) and lyrics (.lrc…). The music import looks for them by folder, so
+  // they travel with the song; each is downloaded once.
+  const IMG = /^(cover|folder|front|album|albumart)\.(jpe?g|png|webp)$/i, LYR = /\.(lrc|ttml|srt)$/i;
+  const dirOf = (p) => p.includes('/') ? p.slice(0, p.lastIndexOf('/')) : '';
+  const stem = (n) => n.replace(/\.[^.]+$/, '').toLowerCase();
+  const sideByDir = new Map();
+  for (const e of found) if (IMG.test(e.name) || LYR.test(e.name)) { const k = dirOf(e.path); (sideByDir.get(k) || sideByDir.set(k, []).get(k)).push(e); }
+  const sideFiles = new Map();
+  const sidecar = (e, signal) => {
+    if (!sideFiles.has(e.path)) sideFiles.set(e.path, d.getPath(e.path, { signal }).then(b => Object.assign(new File([b], e.name, { type: b.type || '' }), { relPath: e.path })));
+    return sideFiles.get(e.path);
+  };
   // A music file is imported only when a chosen folder above it feeds music; a book only when one feeds books.
+  // Songs imported before covers were picked up (or whose file has no embedded art): give their album the folder cover.
+  await fillFolderCovers(mode, found.filter(e => IMG.test(e.name)), d, dirOf, sidecar);
   const todo = found.filter(e => ((MUSIC.test(e.name) && allows(e.path, 'music')) || (!MUSIC.test(e.name) && isBookFile({ name: e.name }) && allows(e.path, 'books'))) && done[e.path] !== e.size);
   if (!todo.length) return { added: 0, failed: [], removed, missing };
 
@@ -247,11 +283,16 @@ async function runDrive(mode, { pruneOnly = false } = {}) {
       // Music: only the parts the tag reader asks for. Books are parsed whole, so they are downloaded.
       const lazy = MUSIC.test(e.name) && d.getRange && e.id && e.size > 0;
       let file;
-      if (lazy) file = remoteFile(e.name, e.size, (a, b) => d.getRange(e.id, a, b, { signal: task.signal }));
+      if (lazy) file = remoteFile(e.name, e.size, (a, b) => d.getRange(e.id, a, b, { signal: task.signal }), e.path);
       else { const blob = await d.getPath(e.path, { signal: task.signal }); file = new File([blob], e.name, { type: blob.type || '' }); }
       // Stays on the drive: nothing is copied to this device or uploaded (see storage.addFile remote).
       const remote = Object.assign(() => e.path, { drive: mode });
-      if (MUSIC.test(e.name)) await music.importFiles([file], { kind: 'music', remote });
+      if (MUSIC.test(e.name)) {
+        const side = (sideByDir.get(dirOf(e.path)) || []).filter(x => IMG.test(x.name) || stem(x.name) === stem(e.name));
+        const extra = (await Promise.all(side.map(x => sidecar(x, task.signal).catch(() => null)))).filter(Boolean);
+        if (!file.relPath) file.relPath = e.path;
+        await music.importFiles([file, ...extra], { kind: 'music', remote });
+      }
       else await books.importFiles([file], { remote });
       done[e.path] = e.size;
       res.added++;
