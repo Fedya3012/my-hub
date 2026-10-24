@@ -246,7 +246,7 @@ export const storage = {
       row.locations.local = { ...(source.handle ? await local.link(id, source.handle)
         : await local.put(id, blob, { signal: r.signal, onProgress: (d) => r.report(hashW + d, 'ghi vào máy') })), dev: (await thisDevice()).id };
       row.syncStatus = 'local-only';
-      if (localFolder) row.localFolder = localFolder;   // imported from a 'Thư mục đồng bộ' folder: Dọn removes it once that folder is removed
+      if (localFolder) { row.localFolder = localFolder; const rel = source.relPath || blob.relPath; if (rel) row.localKey = `${localFolder}/${rel}`; }   // localKey: lets a delete in the app make the next scan import it again; imported from a 'Thư mục đồng bộ' folder: Dọn removes it once that folder is removed
       await db.files.put(row);
       r.report(hashW + storeW);
       r.finish(fileName);
@@ -293,6 +293,11 @@ export const storage = {
 
   async removeFile(fileRow) {
     await local.remove(fileRow.locations?.local);
+    // Deleted in the app, still in the sync folder: forget it was imported so the next sync brings it back (the folder is never touched).
+    const forget = [];
+    if (fileRow.localKey) forget.push(['sync.localDone', fileRow.localKey]);
+    if (fileRow.linked) for (const l of Object.values(fileRow.locations || {})) if (l?.key) forget.push(['sync.folderDone', l.key]);
+    for (const [k, key] of forget) { const m = (await getSetting(k, {})) || {}; if (key in m) { delete m[key]; await setSetting(k, m); } }
     for (const [id, d] of Object.entries(drives)) {
       const key = fileRow.locations?.[id]?.key;
       if (key && !fileRow.linked && d.connected() && navigator.onLine) await d.removeFile(key).catch(() => {});

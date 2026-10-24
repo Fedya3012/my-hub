@@ -377,7 +377,7 @@ async function importFilesNow(files, { onProgress, sample = false, kind = 'music
         subtitle: '', tags: [], status: 'new', favorite: 0, deleted: 0, rating: 0, createdAt: now(),
         meta: { originalName: file.name, ...(sample ? { sample: true } : {}) },
       };
-      await db.items.add(item);
+      await db.items.put(item);   // put, not add: a song deleted in the app has the same id and comes back on re-sync
       const fileRow = await storage.addFile(item.id, handle ? { handle } : file, { role: 'main', name: file.name, ...(remote ? { remote: { key: remote(file), drive: remote.drive } } : {}), ...(localFolder ? { localFolder } : {}) });
       const lrcFile = lrc.get(dirOf(file) + '/' + base(file.name).toLowerCase());
       const folderImg = imgs.get(dirOf(file));
