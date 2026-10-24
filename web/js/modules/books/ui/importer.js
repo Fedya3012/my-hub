@@ -41,6 +41,7 @@ export async function importFiles(files, { remote = null, localFolder = null } =
           added.push(same.itemId);
         } catch (e) { toast(`${f.name}: ${e.message}`, 'error'); }
       } else dup++;
+      await repairCover(same.itemId, f).catch(() => {});
       base += f.size || 0; continue;
     }
     let id = null;
@@ -96,6 +97,16 @@ export async function linkFolder() {
   return importFiles(out);
 }
 
+// A book synced from another device: its cover row exists but the image is only on that device. Read the
+// cover from this device's file and attach it under the same row, so the cover shows here too.
+async function repairCover(itemId, f) {
+  const cover = await db.files.where('itemId').equals(itemId).filter(x => x.role === 'cover').first();
+  if (!cover || storage.hasLocal(cover)) return;
+  const file = f.handle ? await f.handle.getFile() : f;
+  const { coverBlob } = await extractMeta(asNamedFile(file, f.name));
+  if (coverBlob) await storage.attachLocal(cover, coverBlob);
+}
+
 // A book item added from the Library: read its file's metadata and cover into the book row.
 export async function readMetaInto(itemId) {
   const f = await db.files.where('itemId').equals(itemId).filter(x => x.role === 'main').first();
@@ -108,7 +119,9 @@ export async function readMetaInto(itemId) {
   if (meta.authors?.length && !b?.authorIds?.length) patch.authors = meta.authors;
   if (meta.title && item?.meta?.originalName) patch.title = meta.title;
   if (Object.keys(patch).length) await store.updateBook(itemId, patch);
-  if (meta.coverBlob && !(await db.files.where('itemId').equals(itemId).filter(x => x.role === 'cover').count())) await setCover(itemId, meta.coverBlob);
+  const cover = await db.files.where('itemId').equals(itemId).filter(x => x.role === 'cover').first();
+  if (meta.coverBlob && !cover) await setCover(itemId, meta.coverBlob);
+  else if (meta.coverBlob && !storage.hasLocal(cover)) await storage.attachLocal(cover, meta.coverBlob);
 }
 
 // ── Online metadata (bulk) ───────────────────────────────────────

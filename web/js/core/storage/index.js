@@ -278,6 +278,18 @@ export const storage = {
     throw new Error(fileRow.locations?.gdrive ? 'Tệp này từ bản Google Drive cũ (trước 0.8). Kết nối lại Google Drive hoặc thêm lại tệp.' : 'Không tìm thấy tệp trên máy này.');
   },
 
+  // Is this file openable on this device without a drive (its own copy or a linked file here)?
+  hasLocal(fileRow) { return !!fileRow?.locations?.local; },
+
+  // Give a row synced from another device this device's own copy (same id), e.g. a cover rebuilt from the
+  // song or book on this device, so the row and every reference to it stay the same on all devices.
+  async attachLocal(fileRow, blob) {
+    const loc = { ...(await local.put(fileRow.id, blob)), dev: (await thisDevice()).id };
+    await withoutSyncHooks(() => db.files.update(fileRow.id, { 'locations.local': loc }));
+    fileRow.locations = { ...fileRow.locations, local: loc };
+    return fileRow;
+  },
+
   async objectUrl(fileRow, opts) { return URL.createObjectURL(await this.open(fileRow, opts)); },
 
   // A short-lived address the browser can stream from, for a file that stays on its drive. null if the drive

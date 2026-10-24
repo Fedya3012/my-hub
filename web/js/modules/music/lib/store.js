@@ -361,10 +361,11 @@ async function importFilesNow(files, { onProgress, sample = false, kind = 'music
     const known = existing.get(file.name + '|' + file.size);
     if (known) {
       const here = (await db.files.where('itemId').equals(known).toArray()).some(f => f.role === 'main' && usableHere(f));
-      if (here) { res.skipped++; if (i % 25 === 24) await yieldToMain(); continue; }
+      if (here) { res.skipped++; await repairKnownCover(known, file, imgs.get(dirOf(file))).catch(() => {}); if (i % 25 === 24) await yieldToMain(); continue; }
       try {
         await storage.addFile(known, handle ? { handle } : file, { role: 'main', name: file.name, ...(remote ? { remote: { key: remote(file), drive: remote.drive } } : {}), ...(localFolder ? { localFolder } : {}) });
         res.linked = (res.linked || 0) + 1;
+        await repairKnownCover(known, file, imgs.get(dirOf(file))).catch(() => {});
       } catch (e) { res.failed.push(`${file.name}: ${e.message}`); }
       continue;
     }
@@ -394,6 +395,20 @@ async function importFilesNow(files, { onProgress, sample = false, kind = 'music
   onProgress?.(audio.length, audio.length, '');
   invalidate();
   return res;
+}
+
+// A song already in the library (synced from another device): if its album cover has no image on this
+// device, read the cover from this file (or the folder image) and attach it. Cheap when the cover is fine.
+const coverChecked = new Set();
+async function repairKnownCover(itemId, file, folderImg) {
+  const t = await db.tracks.get(itemId);
+  const al = t?.albumId && await db.albums.get(t.albumId);
+  if (!al?.coverFileId || coverChecked.has(al.id)) return;
+  const cover = await db.files.get(al.coverFileId);
+  if (!cover || storage.hasLocal(cover)) { coverChecked.add(al.id); return; }
+  const meta = await readAudioMeta(file, { name: file.name });
+  const pic = meta?.picture ? new Blob([meta.picture.data], { type: meta.picture.mime || 'image/jpeg' }) : folderImg || null;
+  if (pic) { await repairAlbumCover(al, pic); coverChecked.add(al.id); invalidate(); }
 }
 
 // Same file name + size → same id on every device (see importFilesNow).
@@ -433,6 +448,7 @@ async function saveTrack(item, meta, { file, folder = '', lrcText, folderImg, ar
   const pic = meta?.picture ? new Blob([meta.picture.data], { type: meta.picture.mime || 'image/jpeg' }) : folderImg || null;
   let coverFileId = null;
   if (pic && !al.coverFileId) await setAlbumCover(albumId, pic);
+  else if (pic && al.coverFileId) await repairAlbumCover(al, pic);
   else if (pic && al.coverFileId && meta?.picture && al.coverSize && Math.abs(al.coverSize - pic.size) > 2048) {
     // Track has its own, different artwork (singles, compilations).
     coverFileId = (await storage.addFile(item.id, pic, { role: 'cover', name: 'cover.jpg' })).id;
@@ -458,6 +474,18 @@ async function saveTrack(item, meta, { file, folder = '', lrcText, folderImg, ar
   const text = lrcText || meta?.lyrics?.text;
   if (text && !(await db.lyrics.get(item.id))) await db.lyrics.put({ itemId: item.id, text, source: lrcText ? 'lrc' : 'tag', ...S });
   return track;
+}
+
+// The album row (and its cover file row) came from another device through account sync, but that device's
+// image is not on this one: put this device's copy under the same file ids, so the cover shows here too
+// without changing the rows every device shares.
+async function repairAlbumCover(al, pic) {
+  const cover = await db.files.get(al.coverFileId);
+  if (!cover || storage.hasLocal(cover) || Object.keys(cover.locations || {}).some(k => k !== 'local' && drives[k]?.connected?.())) return;
+  await storage.attachLocal(cover, pic);
+  const thumb = al.thumbFileId && await db.files.get(al.thumbFileId);
+  if (thumb && !storage.hasLocal(thumb)) { try { const th = await makeThumb(pic); if (th) await storage.attachLocal(thumb, th); } catch { /* decode failed */ } }
+  forgetUrl(cover.id); if (thumb) forgetUrl(thumb.id);
 }
 
 export async function setAlbumCover(albumId, blob) {
