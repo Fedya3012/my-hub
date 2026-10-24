@@ -3,6 +3,10 @@
 // (`handles` table, local to this device) and listed live. Files play straight from the handle
 // as "virtual" tracks (store.registerVirtual), so nothing is copied into the app.
 //
+// The Android app has no showDirectoryPicker and its WebView cannot open <input webkitdirectory>: it uses the native
+// FolderPicker (system folder dialog, access kept for good). A song is copied to the cache only when it is read
+// (played or tagged), never the whole folder.
+//
 // Without showDirectoryPicker (Firefox, iOS Safari, most Android browsers) a folder picked with
 // <input webkitdirectory> is browsed for this session only (the browser gives no lasting access).
 // Browsers never accept a typed path like /storage/XXXX-XXXX/Music or E:\Music: the user must
@@ -11,10 +15,11 @@ import { db, uid } from '../../../core/db.js';
 import { readAudioMeta } from './meta.js';
 import { registerVirtual } from './store.js';
 import { cmpViNum } from '../../../core/perf.js';
+import { nativeRoot } from '../../../core/storage/local-folders.js';
 
 export const AUDIO = /\.(mp3|flac|m4a|m4b|mp4|aac|alac|ogg|oga|opus|wav|wave|aif|aiff|aifc|wv|ape|dsf|dff|wma)$/i;
 const IMG = /^(cover|folder|front|album|albumart)\.(jpe?g|png|webp)$/i;
-export const supported = () => typeof window.showDirectoryPicker === 'function';
+export const supported = () => typeof window.showDirectoryPicker === 'function' || !!nativeRoot();
 const PREFIX = 'music-root:';
 
 export const KINDS = { internal: 'Bộ nhớ máy', sd: 'Thẻ SD', usb: 'Ổ USB / ổ ngoài', network: 'Ổ mạng', other: 'Khác' };
@@ -29,6 +34,7 @@ export async function roots() {
 }
 
 export async function permission(handle, ask = false) {
+  if (!handle) return 'granted';   // Android folders (SAF) keep their access in the system
   try {
     const o = { mode: 'read' };
     let p = await handle.queryPermission?.(o) ?? 'granted';
@@ -37,7 +43,52 @@ export async function permission(handle, ask = false) {
   } catch { return 'denied'; }
 }
 
+// Android (SAF): the folder tree is listed once per root and kept in memory; files are copied from the content
+// address into the cache one at a time, when they are read.
+const safTrees = new Map();   // root id -> { dirs: Map, files: [] }
+const safFiles = new Map();   // uri -> Promise<File>
+let safQueue = Promise.resolve();
+async function safTree(root, refresh = false) {
+  if (!refresh && safTrees.has(root.id)) return safTrees.get(root.id);
+  const { files = [] } = await nativeRoot().listTree({ treeUri: root.treeUri });
+  const tree = { dirs: new Map(), files: [] };
+  for (const e of files) {
+    const parts = String(e.relPath || e.name).split('/').filter(Boolean);
+    let n = tree;
+    for (const p of parts.slice(0, -1)) { if (!n.dirs.has(p)) n.dirs.set(p, { dirs: new Map(), files: [] }); n = n.dirs.get(p); }
+    n.files.push(e);
+  }
+  safTrees.set(root.id, tree);
+  return tree;
+}
+function safFile(e) {
+  if (!safFiles.has(e.uri)) {
+    const P = nativeRoot();
+    const job = (safQueue = safQueue.catch(() => {}).then(async () => {
+      const { path } = await P.copyToCache({ uri: e.uri, name: e.name });
+      try {
+        const blob = await (await fetch(window.Capacitor.convertFileSrc('file://' + path))).blob();
+        return new File([blob], e.name, { type: blob.type, lastModified: e.lastModified || 0 });
+      } finally { await P.clearCache().catch(() => {}); }
+    }));
+    safFiles.set(e.uri, job);
+    job.catch(() => safFiles.delete(e.uri));
+    if (safFiles.size > 12) safFiles.delete(safFiles.keys().next().value);
+  }
+  return safFiles.get(e.uri);
+}
+
 export async function addRoot(kind = 'internal') {
+  const P = !window.showDirectoryPicker && nativeRoot();
+  if (P) {
+    const r = await P.pickRoot();
+    if (!r || r.cancelled) throw Object.assign(new Error('cancelled'), { name: 'AbortError' });
+    for (const x of await roots()) if (x.treeUri === r.treeUri) return x;
+    const id = uid();
+    const name = decodeURIComponent(r.treeUri.split('%3A').pop() || r.treeUri).split('/').pop() || 'Thư mục';
+    await db.handles.put({ id: PREFIX + id, treeUri: r.treeUri, saf: true, name, kind, addedAt: Date.now() });
+    return { id, treeUri: r.treeUri, saf: true, name, kind, permission: 'granted' };
+  }
   const handle = await window.showDirectoryPicker({ id: 'music-' + kind, mode: 'read' });
   // Same folder twice: keep one.
   for (const r of await roots()) if (r.handle && (await r.handle.isSameEntry?.(handle))) return r;
@@ -65,7 +116,11 @@ export function addSessionRoot(files, kind = 'other') {
 }
 
 export async function renameRoot(id, patch) { const r = await db.handles.get(PREFIX + id); if (r) await db.handles.put({ ...r, ...patch }); }
-export async function removeRoot(id) { session.delete(id); await db.handles.delete(PREFIX + id); }
+export async function removeRoot(id) {
+  const r = await db.handles.get(PREFIX + id);
+  if (r?.saf) nativeRoot()?.releaseRoot?.({ treeUri: r.treeUri }).catch(() => {});
+  safTrees.delete(id); session.delete(id); await db.handles.delete(PREFIX + id);
+}
 export async function getRoot(id) {
   if (session.has(id)) return session.get(id);
   const r = await db.handles.get(PREFIX + id);
@@ -78,11 +133,15 @@ export async function list(root, path = '') {
   const parts = path.split('/').filter(Boolean);
   const dirs = [], files = [];
   let image = null;
-  if (root.session) {
-    let n = root.tree;
+  if (root.saf || root.session) {
+    let n = root.saf ? await safTree(root, !parts.length) : root.tree;
     for (const p of parts) { n = n?.dirs.get(p); if (!n) throw new Error('Không tìm thấy thư mục'); }
     for (const name of n.dirs.keys()) dirs.push({ name, path: [...parts, name].join('/') });
     for (const f of n.files) {
+      if (root.saf) {
+        if (AUDIO.test(f.name)) files.push({ name: f.name, path: [...parts, f.name].join('/'), size: f.size, get: () => safFile(f) });
+        continue;
+      }
       if (IMG.test(f.name)) image ||= f;
       if (AUDIO.test(f.name)) files.push({ name: f.name, path: [...parts, f.name].join('/'), size: f.size, lastModified: f.lastModified, file: f, get: async () => f });
     }
@@ -127,7 +186,7 @@ export async function toTracks(root, files, { image, onEach, signal, lazy = fals
   const out = files.map(f => {
     const id = 'vt:' + hash(root.id + '/' + f.path);
     const t = metaCache.get(id) || { id, virtual: true, title: f.name.replace(/\.[^.]+$/, '').replace(/^\d+[\s.-]+/, ''), artist: '', album: '', fileName: f.name,
-      folder: root.name + '/' + f.path.split('/').slice(0, -1).join('/'), handle: f.handle, file: f.file, size: f.size, item: { type: 'music' }, type: 'music', plays: 0 };
+      folder: root.name + '/' + f.path.split('/').slice(0, -1).join('/'), handle: f.handle, file: f.file, get: f.get, size: f.size, item: { type: 'music' }, type: 'music', plays: 0 };
     t.cover ||= folderArt.get(dirKey(f)) ? 'u:' + folderArt.get(dirKey(f)) : null;
     return t;
   });

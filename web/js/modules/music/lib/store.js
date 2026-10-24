@@ -733,7 +733,7 @@ export async function mainFile(id) {
     const t = virtual.get(id);
     if (!t) return null;
     if (!vUrls.has(id)) {
-      const f = t.file || await t.handle.getFile();
+      const f = t.file || (t.handle ? await t.handle.getFile() : await t.get());
       vUrls.set(id, URL.createObjectURL(f));
       if (vUrls.size > 8) { const [k, u] = vUrls.entries().next().value; URL.revokeObjectURL(u); vUrls.delete(k); }
     }
