@@ -1,7 +1,16 @@
 {
-  "app": "0.9.22.8",
+  "app": "0.9.22.9",
   "released": "2026-10-24",
   "changelog": [
+    {
+      "version": "0.9.22.9",
+      "date": "2026-10-24",
+      "notes": [
+        "Đồng bộ: bỏ qua thay đổi đang chờ có khoá không hợp lệ, không làm đồng bộ bị dừng",
+        "Đồng bộ thư mục: bìa nhạc và sách không còn mất sau khi đồng bộ từ máy khác",
+        "Service Worker: tệp giao diện luôn lấy phiên bản mới nhất đã lưu trong bộ nhớ đệm"
+      ]
+    },
     {
       "version": "0.9.22.8",
       "date": "2026-10-24",
