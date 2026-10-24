@@ -1,7 +1,15 @@
 {
-  "app": "0.9.22.1",
+  "app": "0.9.22.2",
   "released": "2026-10-24",
   "changelog": [
+    {
+      "version": "0.9.22.2",
+      "date": "2026-10-24",
+      "notes": [
+        "Android: sửa nút ☰ không phản hồi và hộp chọn thư mục Google Drive bị treo",
+        "Chọn thư mục: nếu danh sách không phản hồi sau 25 giây thì hiện lỗi kèm nút thử lại, thay vì treo ở \"Đang mở thư mục\""
+      ]
+    },
     {
       "version": "0.9.22.1",
       "date": "2026-10-24",
