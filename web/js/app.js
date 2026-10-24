@@ -226,6 +226,9 @@ async function boot() {
 
   // Services (music engine restoring its queue, books catch-up) start alongside the first page
   // instead of before it: restoring a big music queue no longer delays opening the app.
+  // The ☰ drawer works from the first frame: it used to be wired only after the first page finished, so a page
+  // that waited on the network (Cài đặt listing Google Drive folders) left the button dead.
+  safe(() => initDrawer(), 'drawer');
   const svc = safe(() => startServices(), 'services');
   await render();
   await svc;
@@ -234,7 +237,6 @@ async function boot() {
   if (storageFull) toast('Bộ nhớ trình duyệt gần đầy: một số thay đổi chưa lưu được. Vào Cài đặt để giải phóng chỗ.', 'warn');
   window.addEventListener('unhandledrejection', (ev) => { if (isQuota(ev.reason)) { ev.preventDefault(); toast('Bộ nhớ trình duyệt đã đầy, không lưu được. Vào Cài đặt → Tài khoản đồng bộ để giải phóng chỗ.', 'error'); } });
 
-  initDrawer();
   await safe(() => registerSW(), 'sw');
   autoCheck();
   setInterval(autoCheck, 3600e3);

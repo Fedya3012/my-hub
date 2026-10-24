@@ -70,8 +70,10 @@ async function renderFolders() {
   const pick = root.querySelector('#folder-picker');
   const lpick = root.querySelector('#local-picker');
   if (src && !srcOn) pick.innerHTML = `<p class="hint">Chưa kết nối ${esc(label)}. Quay lại Thư mục đồng bộ để kết nối.</p>`;
-  else if (src) await m.folderPicker(pick, src, ctx.toast);
-  if (hasLocal) await (await import('../../core/storage/local-folders.js')).localFolderPicker(lpick, ctx.toast);
+  // The pickers fill in on their own: a drive that is slow to list must not hold up the buttons below
+  // (or the rest of the app, when Cài đặt is the first page opened).
+  else if (src) m.folderPicker(pick, src, ctx.toast).catch(e => { pick.innerHTML = `<p class="hint">Không mở được thư mục: ${esc(e?.message || e)}</p>`; });
+  if (hasLocal) import('../../core/storage/local-folders.js').then(x => x.localFolderPicker(lpick, ctx.toast)).catch(e => { lpick.innerHTML = `<p class="hint">${esc(e?.message || e)}</p>`; });
 
   // Live progress card: the scan / import task of the folder sync (also visible in the task tray).
   const prog = root.querySelector('#fold-progress');

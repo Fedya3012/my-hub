@@ -123,11 +123,21 @@ async function token() {
   return j.access_token;
 }
 
+const withTimeout = (p, ms) => { let t; return Promise.race([p, new Promise((_, rej) => { t = setTimeout(() => rej(err('Google Drive không trả lời.', 'timeout')), ms); })]).finally(() => clearTimeout(t)); };
+
 async function api(url, { method = 'GET', headers = {}, body, signal, onProgress } = {}) {
   // Small JSON reads (listings, lookups) go through the app shell where there is one (Windows main process, Android
   // native HTTP): no WebView CORS preflight to worry about. File bodies keep using fetch so they can stream.
   const viaShell = method === 'GET' && !/[?&]alt=media/.test(url) && nativeShell();
-  const r = await http(url, { method, signal, body, onProgress, viaShell, headers: { Authorization: 'Bearer ' + await token(), ...headers } });
+  const h = { Authorization: 'Bearer ' + await token(), ...headers };
+  let r;
+  // A shell call that fails or never answers (seen on Android) falls back to the page's own fetch, which Drive's
+  // API allows (CORS) for plain reads.
+  if (viaShell) {
+    try { r = await withTimeout(http(url, { method, signal, viaShell, headers: h }), 12000); }
+    catch (e) { if (e?.name === 'AbortError') throw e; r = null; }
+  }
+  r ||= await http(url, { method, signal, body, onProgress, headers: h });
   if (r.status === 429) throw err('Google Drive tạm giới hạn số lần gọi, thử lại sau ít phút.', 'rate');
   return r;
 }

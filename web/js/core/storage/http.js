@@ -28,7 +28,7 @@ export async function http(url, { method = 'GET', headers = {}, body, signal, on
     if (viaShell && window.Capacitor?.isNativePlatform?.() && window.Capacitor?.Plugins?.CapacitorHttp) {
       const isBlobBody = body != null && typeof body !== 'string';
       const r = await window.Capacitor.Plugins.CapacitorHttp.request({
-        url, method, headers, responseType: method === 'GET' ? 'blob' : 'text',
+        url, method, headers, responseType: method === 'GET' ? 'blob' : 'text', connectTimeout: 15000, readTimeout: 30000,
         ...(body == null ? {} : isBlobBody ? { data: b64(await body.arrayBuffer()), dataType: 'file' } : { data: body }),
       });
       onProgress?.(1, 1);
