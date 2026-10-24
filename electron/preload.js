@@ -3,6 +3,8 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('hubDesktop', {
   installUpdate: () => ipcRenderer.invoke('hub:update-install'),
   http: (req) => ipcRenderer.invoke('hub:http', req),
+  // Google sign-in finishes in the system browser on oauth-google.html, which posts the result to the shell.
+  onGoogle: (cb) => { const f = (_e, hash) => cb(hash); ipcRenderer.on('hub:google', f); return () => ipcRenderer.removeListener('hub:google', f); },
   xs: {
     available: () => ipcRenderer.invoke('hub:xs-available'),
     cmd: (line) => ipcRenderer.invoke('hub:xs', line),

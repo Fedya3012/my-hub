@@ -15,3 +15,6 @@ export const ONEDRIVE_CLIENT_ID = '';
 // Its client secret is not secret for installed apps (Google's own rule). Both can also be pasted in the dialog.
 export const GOOGLE_CLIENT_ID = '';
 export const GOOGLE_CLIENT_SECRET = '';
+// Google Drive one-tap sign-in ("Đăng nhập bằng Google"): OAuth client of type "Web application" with the origins
+// https://fedya3012.github.io and http://localhost:47821 and the redirect <origin>/…/oauth-google.html.
+export const GOOGLE_WEB_CLIENT_ID = '442469437504-i6tl22nkukmbeiqk5ikl3qa2d01euq3a.apps.googleusercontent.com';

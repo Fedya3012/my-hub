@@ -48,8 +48,40 @@ export async function finishAuth(clientId, secret, pasted, verifier) {
   ids.clear(); dirs.clear();
 }
 
+// One-tap sign-in with the app's own Web client: Google's account chooser in a popup (Windows: the system browser),
+// which lands on oauth-google.html; that page hands the access token back (postMessage, or through the Windows
+// shell). No secret, so no refresh token: the token lasts an hour, then "Đăng nhập bằng Google" again.
+export function signInWeb(clientId) {
+  const state = b64url(crypto.getRandomValues(new Uint8Array(16)));
+  const redirect = new URL('oauth-google.html', document.baseURI).href;
+  const url = `${AUTH}?client_id=${encodeURIComponent(clientId)}&response_type=token&redirect_uri=${encodeURIComponent(redirect)}&scope=${encodeURIComponent(SCOPE)}&include_granted_scopes=true&prompt=select_account&state=${state}`;
+  return new Promise((resolve, reject) => {
+    let offShell = null;
+    const done = (hash) => {
+      const p = new URLSearchParams(String(hash || '').replace(/^#/, ''));
+      if (p.get('state') !== state) return;
+      removeEventListener('message', onMsg); offShell?.(); clearTimeout(timer);
+      if (p.get('error')) { reject(err(p.get('error') === 'access_denied' ? 'Bạn chưa cho phép My Hub truy cập Google Drive.' : 'Google báo lỗi: ' + p.get('error'), 'bad_token')); return; }
+      const access = p.get('access_token');
+      if (!access) { reject(err('Google không trả về quyền truy cập.', 'bad_token')); return; }
+      clouds.set('googledrive', { web: true, clientId, access, refresh: null, expires: Date.now() + ((+p.get('expires_in') || 3600) - 60) * 1000 });
+      ids.clear(); dirs.clear();
+      resolve(true);
+    };
+    const onMsg = (e) => { if (e.origin === location.origin && e.data?.type === 'hub-google') done(e.data.hash); };
+    addEventListener('message', onMsg);
+    offShell = window.hubDesktop?.onGoogle?.(done) || null;
+    const timer = setTimeout(() => { removeEventListener('message', onMsg); offShell?.(); reject(err('Hết thời gian chờ đăng nhập Google, thử lại.', 'timeout')); }, 5 * 60 * 1000);
+    window.open(url, 'hub-google', 'popup,width=500,height=650');
+  });
+}
+
 async function token() {
   const c = getCloud('googledrive');
+  if (c?.web && c.access) {
+    if (Date.now() < c.expires) return c.access;
+    throw err('Phiên Google Drive đã hết hạn, bấm “Đăng nhập bằng Google” lại.', 'reconnect');
+  }
   if (!c?.refresh) throw err('Chưa kết nối Google Drive.', 'signed_out');
   if (c.access && Date.now() < c.expires) return c.access;
   const { r, j } = await tokenCall({ client_id: c.clientId, client_secret: c.secret, grant_type: 'refresh_token', refresh_token: c.refresh });
@@ -125,8 +157,8 @@ export const googledrive = {
   id: 'googledrive', label: 'Google Drive', files: true,
   fileKey,
   configured: () => true,
-  connected: () => !!getCloud('googledrive')?.refresh,
-  linked: () => !!getCloud('googledrive')?.refresh,
+  connected: () => { const c = getCloud('googledrive'); return !!(c?.refresh || (c?.web && c.access && Date.now() < c.expires)); },
+  linked: () => { const c = getCloud('googledrive'); return !!(c?.refresh || c?.web); },
   async available() { return this.connected() && navigator.onLine; },
 
   async readSnapshot(name = 'hub-db.json', { signal, onProgress } = {}) {

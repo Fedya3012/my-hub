@@ -641,6 +641,8 @@
     "files": [
       "./",
       "index.html",
+      "oauth-google.html",
+      "js/oauth-google.js",
       "manifest.webmanifest",
       "css/app.css",
       "vendor/dexie.min.js",

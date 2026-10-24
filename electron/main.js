@@ -23,6 +23,16 @@ const TYPES = {
 
 function serve() {
   const server = http.createServer((req, res) => {
+    // oauth-google.html (opened in the system browser) hands Google's answer to the app window.
+    if (req.method === 'POST' && req.url === '/__google') {
+      let body = '';
+      req.on('data', (d) => { body += d; if (body.length > 8192) req.destroy(); });
+      req.on('end', () => {
+        for (const w of BrowserWindow.getAllWindows()) { w.webContents.send('hub:google', body); w.show(); w.focus(); }
+        res.writeHead(204); res.end();
+      });
+      return;
+    }
     let rel = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
     if (rel.endsWith('/')) rel += 'index.html';
     const file = path.normalize(path.join(WEB, rel));
