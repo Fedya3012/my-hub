@@ -1,7 +1,15 @@
 {
-  "app": "0.9.22.5",
+  "app": "0.9.22.6",
   "released": "2026-10-24",
   "changelog": [
+    {
+      "version": "0.9.22.6",
+      "date": "2026-10-24",
+      "notes": [
+        "Podcast: trang Đang phát trên máy tính theo bố cục Trình phát nhạc, toàn màn hình, dựng lại cho Windows",
+        "Podcast: nút Tạo bằng AI trong Đang phát đọc được"
+      ]
+    },
     {
       "version": "0.9.22.5",
       "date": "2026-10-24",
@@ -904,7 +912,7 @@
     },
     "podcasts": {
       "name": "Podcast",
-      "version": "0.1.5",
+      "version": "0.1.6",
       "minApp": "0.9.11.0",
       "files": [
         "js/modules/podcasts/index.js",
