@@ -1,7 +1,15 @@
 {
-  "app": "0.9.21.0",
+  "app": "0.9.21.1",
   "released": "2026-10-24",
   "changelog": [
+    {
+      "version": "0.9.21.1",
+      "date": "2026-10-24",
+      "notes": [
+        "Sách: chế độ đọc liền hoặc từng chương; thanh chương với chương trước và sau, số chương và tiến độ trong chương; Ctrl + lăn chuột để phóng chữ",
+        "Hướng dẫn sử dụng: bỏ trang thiết lập OAuth Google Drive"
+      ]
+    },
     {
       "version": "0.9.21.0",
       "date": "2026-10-24",
@@ -867,7 +875,7 @@
     },
     "books": {
       "name": "Sách",
-      "version": "0.1.3",
+      "version": "0.1.4",
       "minApp": "0.9.0.0",
       "files": [
         "js/modules/books/index.js",
