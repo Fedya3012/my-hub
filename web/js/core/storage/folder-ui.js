@@ -25,13 +25,18 @@ export async function folderPicker(el, mode, toast) {
   const open = new Set();
   const kids = new Map(); // path → { dirs, files } | { error } | 'loading'
 
+  // A listing that never answers (a sign-in prompt that did not open, a dead network) must not leave the picker on
+  // "Đang mở thư mục…" forever: after 25 s it shows an error with a retry button.
   const load = async (p) => {
     if (kids.has(p)) return;
     kids.set(p, 'loading');
+    let timer;
+    const timeout = new Promise((_, rej) => { timer = setTimeout(() => rej(Object.assign(new Error(`${d.label} không trả lời sau 25 giây. Kiểm tra mạng rồi thử lại.`), { code: 'timeout' })), 25000); });
     try {
-      const all = await d.listDir(p);
+      const all = await Promise.race([d.listDir(p), timeout]);
       kids.set(p, { dirs: all.filter(e => e.isDir), files: all.filter(e => !e.isDir && fileKind(e.name)) });
     } catch (e) { kids.set(p, { error: e?.code === 'missing' ? 'Thư mục không còn trên ' + d.label : e.message }); }
+    finally { clearTimeout(timer); }
   };
 
   // Per-folder numbers (size, files, music, books), counted by walking the folder in the background (2 at a time).
@@ -90,8 +95,14 @@ export async function folderPicker(el, mode, toast) {
 
   const draw = async () => {
     if (!kids.has('')) { el.innerHTML = '<p class="hint">Đang mở thư mục…</p>'; await load(''); }
+    if (!kids.get('') || kids.get('') === 'loading') return;
     const root = kids.get('');
-    if (root.error) { el.innerHTML = `<p class="hint">Không mở được thư mục: ${esc(root.error)}</p>`; kids.delete(''); return; }
+    if (root.error) {
+      el.innerHTML = `<p class="hint">Không mở được thư mục: ${esc(root.error)}</p><button type="button" class="btn" data-retry>Thử lại</button>`;
+      el.querySelector('[data-retry]').onclick = () => { kids.delete(''); draw(); };
+      kids.delete('');
+      return;
+    }
     el.innerHTML = `
       <p class="hint" style="margin:0 0 8px"><span data-sum>${sumHtml()}</span> · tích thư mục cha là gồm cả thư mục con</p>
       <div style="background:#fff;border:1px solid #e3e8ea;border-radius:14px;overflow:hidden">
