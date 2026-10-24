@@ -28,6 +28,8 @@ export async function render(el, { go, rerender }) {
       <header class="pc-np-bar">
         <button class="icon-btn" data-k="close" aria-label="Thu nhỏ">${icon('arrow')}</button>
         <a class="pc-np-from" href="#podcasts/show/${encodeURIComponent(e.showId)}"><small>Đang phát từ</small><b>${esc(s?.title || 'Podcast')}</b></a>
+        <button class="icon-btn pc-np-hb" data-k="mark" aria-label="Đánh dấu">${icon('pc-bookmark')}</button>
+        <a class="icon-btn pc-np-hb" href="#podcasts/queue" aria-label="Hàng chờ">${icon('pc-queue')}</a>
         <button class="icon-btn" data-k="menu" aria-label="Thêm">${icon('pc-more')}</button>
       </header>
       <div class="pc-np-cover">${art(cover, s?.title || e.title, 'np')}</div>
@@ -48,8 +50,8 @@ export async function render(el, { go, rerender }) {
       <div class="pc-np-fx">
         <button class="pc-tog" data-fx="voiceBoost" aria-pressed="${!!get('voiceBoost')}">${icon('pc-boost')}Voice Boost</button>
         <button class="pc-tog" data-fx="skipSilence" aria-pressed="${!!get('skipSilence')}">${icon('pc-silence')}Bỏ khoảng lặng<span class="pc-saved" data-saved></span></button>
-        <button class="pc-tog" data-k="mark">${icon('pc-bookmark')}Đánh dấu</button>
-        <a class="pc-tog" href="#podcasts/queue">${icon('pc-queue')}Hàng chờ</a>
+        <button class="pc-tog pc-np-fxmore" data-k="mark">${icon('pc-bookmark')}Đánh dấu</button>
+        <a class="pc-tog pc-np-fxmore" href="#podcasts/queue">${icon('pc-queue')}Hàng chờ</a>
       </div>
     </div>
   </div>`;
@@ -70,7 +72,7 @@ export async function render(el, { go, rerender }) {
       if (panel !== 'transcript') return;
       body.innerHTML = cues?.length
         ? `<div class="pc-tx">${cues.map((c, i) => `<p data-ci="${i}" ${c.start >= 0 ? `data-seek="${c.start}"` : ''}>${c.speaker ? `<b>${esc(c.speaker)}</b> ` : ''}${esc(c.text)}</p>`).join('')}</div>`
-        : `<div class="pc-empty"><p class="muted">Tập này chưa có bản chép lời.</p><button class="btn" data-k="ai">${icon('pc-mic')}Tạo bằng AI (Whisper, chạy trên máy)</button><p class="muted"><small>Lần đầu tải mô hình ≈ 80 MB. Tập dài có thể mất vài phút; tiến độ hiện ở khay tác vụ.</small></p></div>`;
+        : `<div class="pc-empty pc-tx-empty"><p class="muted">Tập này chưa có bản chép lời.</p><button class="btn sm" data-k="ai">${icon('pc-mic')}Tạo bằng AI</button><p class="muted"><small>Chạy trên máy (Whisper). Lần đầu tải mô hình ≈ 80 MB.</small></p></div>`;
       paintCue(true);
     }
   };
@@ -82,7 +84,7 @@ export async function render(el, { go, rerender }) {
     lastCue = i;
     body.querySelectorAll('.pc-tx p.on').forEach(p => p.classList.remove('on'));
     const p = body.querySelector(`.pc-tx p[data-ci="${i}"]`);
-    if (p) { p.classList.add('on'); if (!body.matches(':hover')) p.scrollIntoView({ block: 'center', behavior: force ? 'auto' : 'smooth' }); }
+    if (p) { p.classList.add('on'); if (!body.matches(':hover')) body.scrollTo({ top: p.offsetTop - body.clientHeight / 2 + p.offsetHeight / 2, behavior: force ? 'auto' : 'smooth' }); }   // scroll the panel only, never the page
   };
 
   // ── Waveform ──

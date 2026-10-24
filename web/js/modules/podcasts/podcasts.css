@@ -436,3 +436,42 @@ body.bk-reader-open[data-audio-source]:not([data-audio-source="podcast"]) .pc-mi
 body.pc-np-open main#view { padding-bottom: 0 !important; }
 html:has(body.pc-np-open), body.pc-np-open { background: #121014; }
 .pc.pc-full .pc-page { padding-bottom: 0 !important; }
+
+/* Now Playing on phones fits one screen (no page scroll): the cover shrinks with the screen height, the panel takes
+   the space left and scrolls inside itself, and the controls stay at the bottom. */
+@media (max-width: 899px) {
+  body:not([data-posture="flex"]) .pc-np { height: 100vh; height: 100dvh; min-height: 0; overflow: hidden; gap: 10px;
+    padding: calc(4px + var(--sai-top, 0px)) 16px calc(10px + var(--sai-bottom, 0px)); }
+  body:not([data-posture="flex"]) .pc-np .fold-top { flex: 1; min-height: 0; gap: 8px; }
+  .pc-np .fold-bottom { flex: none; gap: 10px; }
+  .pc-np-cover { flex: none; padding: 0; }
+  body:not([data-posture="flex"]) .pc-art.np { width: min(62vw, 26vh, 26dvh); border-radius: 18px; }
+  .pc-np-title h1 { font-size: 1.12rem; -webkit-line-clamp: 1; }
+  .pc-np-title p { margin-top: 2px; font-size: .88rem; }
+  .pc-np-tabs { justify-content: flex-start; }
+  .pc-np-tabs button { padding: 6px 11px; }
+  body:not([data-posture="flex"]) .pc-np-panel { flex: 1; min-height: 56px; max-height: none; }
+  .pc-tx-empty { padding: 8px 0; gap: 6px; }
+  .pc-tx-empty p { margin: 0; }
+  .pc-wave { height: 44px; }
+  .pc-np-times { margin-top: -8px; }
+  .pc-play { width: 66px; height: 66px; }
+  .pc-play .ic { width: 30px; height: 30px; }
+  .pc-np-ctl .icon-btn.lg { width: 50px; height: 50px; }
+  .pc-pill { height: 36px; }
+  .pc-np-fx { flex-wrap: nowrap; justify-content: safe center; overflow-x: auto; scrollbar-width: none; margin-inline: -16px; padding-inline: 16px; }
+  .pc-tog { flex: none; padding: 6px 10px; }
+}
+@media (max-width: 899px) and (max-height: 640px) {
+  body:not([data-posture="flex"]) .pc-np-cover { display: none; }   /* very short screens: the panel and controls first */
+}
+.pc-np-hb { display: none; }
+.pc-np-bar .pc-np-hb { color: var(--fg); }
+@media (max-width: 899px) {
+  .pc-np-hb { display: inline-grid; }
+  .pc-np-fxmore { display: none !important; }   /* Đánh dấu and Hàng chờ move to the top bar */
+  .pc-np .fold-top > *, .pc-np .fold-bottom > * { flex-shrink: 0; }
+  .pc-np .fold-top > .pc-np-panel { flex-shrink: 1; }
+  .pc-np-bar { gap: 2px; }
+}
+.pc-np-panel { position: relative; }
