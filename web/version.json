@@ -1,7 +1,14 @@
 {
-  "app": "0.9.22.6",
+  "app": "0.9.22.7",
   "released": "2026-10-24",
   "changelog": [
+    {
+      "version": "0.9.22.7",
+      "date": "2026-10-24",
+      "notes": [
+        "Google Drive: lấy ảnh bìa thư mục và lời bài hát đi kèm bài nhạc, ít yêu cầu hơn cho mỗi bài"
+      ]
+    },
     {
       "version": "0.9.22.6",
       "date": "2026-10-24",
