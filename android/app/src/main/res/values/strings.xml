@@ -2,6 +2,7 @@
 <resources>
     <string name="app_name">My Hub</string>
     <string name="title_activity_main">My Hub</string>
+    <string name="music_widget_desc">Điều khiển Trình phát nhạc: bài đang phát, tua, phát và tạm dừng</string>
     <string name="package_name">com.myhub.app</string>
     <string name="custom_url_scheme">com.myhub.app</string>
     <string name="cover_widget_desc">Đang đọc, đang nghe và mục dở dang của My Hub</string>

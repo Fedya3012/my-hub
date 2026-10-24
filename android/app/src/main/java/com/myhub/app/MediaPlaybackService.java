@@ -54,6 +54,15 @@ public class MediaPlaybackService extends MediaBrowserServiceCompat {
 
   private MediaSessionCompat session;
   private boolean foreground = false;
+  private final android.os.Handler tick = new android.os.Handler(android.os.Looper.getMainLooper());
+  // While a song plays the home-screen widget's progress bar is redrawn every few seconds.
+  private final Runnable widgetTick = new Runnable() {
+    @Override public void run() {
+      if (!playing || !MusicWidgetProvider.any(MediaPlaybackService.this)) return;
+      MusicWidgetProvider.refresh(MediaPlaybackService.this);
+      tick.postDelayed(this, 4000);
+    }
+  };
 
   static void send(String action, Bundle args) {
     if (commands != null) commands.onCommand(action, args);
@@ -92,6 +101,7 @@ public class MediaPlaybackService extends MediaBrowserServiceCompat {
   @Override
   public void onDestroy() {
     instance = null;
+    tick.removeCallbacks(widgetTick);
     session.setActive(false);
     session.release();
     super.onDestroy();
@@ -125,6 +135,9 @@ public class MediaPlaybackService extends MediaBrowserServiceCompat {
       .setActions(actions)
       .setState(playing ? PlaybackStateCompat.STATE_PLAYING : PlaybackStateCompat.STATE_PAUSED, position, playing ? rate : 0f, updatedAt)
       .build());
+    MusicWidgetProvider.refresh(this);
+    tick.removeCallbacks(widgetTick);
+    if (playing) tick.postDelayed(widgetTick, 4000);
     Notification n = buildNotification();
     if (playing) {
       if (Build.VERSION.SDK_INT >= 29) startForeground(NOTE_ID, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK);
