@@ -3,7 +3,7 @@
 export default {
   id: 'podcasts',
   name: 'Podcast',
-  version: '0.1.2',
+  version: '0.1.3',
   status: 'available',
   icon: 'podcast',
   route: 'podcasts',

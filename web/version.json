@@ -1,7 +1,15 @@
 {
-  "app": "0.9.22.0",
+  "app": "0.9.22.1",
   "released": "2026-10-24",
   "changelog": [
+    {
+      "version": "0.9.22.1",
+      "date": "2026-10-24",
+      "notes": [
+        "Podcast: sửa nút khó đọc và tab bị cắt trên trang Đang phát",
+        "Google Drive: sửa yêu cầu liệt kê và tra cứu qua lõi ứng dụng; nhãn tài khoản trên thanh bên hiển thị đúng"
+      ]
+    },
     {
       "version": "0.9.22.0",
       "date": "2026-10-24",
@@ -862,7 +870,7 @@
     },
     "podcasts": {
       "name": "Podcast",
-      "version": "0.1.2",
+      "version": "0.1.3",
       "minApp": "0.9.11.0",
       "files": [
         "js/modules/podcasts/index.js",
