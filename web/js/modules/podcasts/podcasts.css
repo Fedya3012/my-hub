@@ -414,3 +414,10 @@ body.bk-reader-open[data-audio-source]:not([data-audio-source="podcast"]) .pc-mi
 
 /* Phone tap targets: the "Tất cả / Chưa nghe / Đang nghe / Có sao" filter was only 26px high */
 @media (max-width: 860px) { .pc-seg.sm button, .pc-seg.sm a { min-height: 36px; } }
+/* Now Playing on phones: native.css paints pills with the app surface (white in the light theme), which hid the
+   light text of the speed and sleep pills here. Now Playing is always dark, so keep a dark glass pill. */
+.pc-np .pc-pill, .pc-np .pc-mini .pc-pill { background: rgb(255 255 255 / .12) !important; color: var(--fg); }
+/* No light strip under Now Playing: no bottom padding for the dock or tab bar, and a dark page behind it. */
+body.pc-np-open main#view { padding-bottom: 0 !important; }
+html:has(body.pc-np-open), body.pc-np-open { background: #121014; }
+.pc.pc-full .pc-page { padding-bottom: 0 !important; }
