@@ -149,6 +149,8 @@ export async function open(host, blob, { lastLocation = null, prefs }) {
     await walk(outline, toc);
     tocPages.sort((a, b) => a[0] - b[0]);
   } catch { /* no outline */ }
+  // No outline: find the chapter headings from the text (same smart detection as the reflow mode).
+  if (!toc.length && n <= 800) for (const [page, title] of await detectHeads(doc)) { toc.push({ label: title, href: 'pdf:' + page, subitems: [] }); tocPages.push([page, title]); }
   function tocLabelAt(p) { let l = ''; for (const [pg, t] of tocPages) { if (pg <= p) l = t; else break; } return l; }
 
   const textCache = new Map();
@@ -193,26 +195,86 @@ export async function open(host, blob, { lastLocation = null, prefs }) {
 
 // PDF -> chapters of re-flowed text (one chapter per outline entry, or per 10 pages), for the
 // reflow mode. Lines are joined into paragraphs; hyphenated line ends are re-joined.
+// Chapters are found from the page layout (smart detection, on this device): a line that reads like a heading
+// ("Chương 12", "Chapter IV", "Hồi 3", "Phần 2"…) or is set clearly larger than the body text and short.
+// With fewer than 2 such headings it falls back to the PDF outline, then to one chapter per 10 pages.
+const HEAD_RE = /^\s*(chương|chuong|chapter|chap\.?|hồi|hoi|phần|phan|quyển|quyen|tập|tap|part|book|volume|prologue|epilogue|mở đầu|lời mở đầu|vĩ thanh|ngoại truyện|phiên ngoại)\b[\s.:\-–—]*([0-9]+|[ivxlcdm]+\b)?/i;
+// Headings on the first lines of each page: [[page, title]] (only when at least 2 are found).
+async function detectHeads(doc) {
+  const tops = [], sizes = [];
+  for (let i = 1; i <= doc.numPages; i++) {
+    const items = (await (await doc.getPage(i)).getTextContent()).items.filter(it => it.str.trim());
+    for (const it of items) sizes.push(Math.abs(it.transform?.[3] || it.height || 10));
+    const lines = [];
+    for (const it of items.slice(0, 12)) {
+      const y = it.transform?.[5], hgt = Math.abs(it.transform?.[3] || it.height || 10), last = lines[lines.length - 1];
+      if (last && Math.abs(last.y - y) < hgt * 0.5) { last.text += (last.text.endsWith(' ') ? '' : ' ') + it.str; last.size = Math.max(last.size, hgt); }
+      else lines.push({ text: it.str, size: hgt, y });
+      if (lines.length > 3) break;
+    }
+    tops.push({ page: i, lines });
+  }
+  sizes.sort((a, b) => a - b);
+  const body = sizes[Math.floor(sizes.length / 2)] || 10, out = [];
+  for (const { page, lines } of tops) {
+    const l = lines.slice(0, 3).find(l => { const t = l.text.trim(); return t.length <= 90 && (HEAD_RE.test(t) || (l.size >= body * 1.3 && t.length <= 60 && /\p{L}/u.test(t))); });
+    if (l) out.push([page, l.text.trim()]);
+  }
+  return out.length >= 2 ? out : [];
+}
+
 export async function pdfToTextBook(blob, { title, author, onProgress } = {}) {
   const lib = await loadPdfjs();
   const doc = await lib.getDocument({ data: new Uint8Array(await blob.arrayBuffer()), isEvalSupported: false }).promise;
   const esc = (s) => s.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
-  const chapters = [];
-  let paras = [], line = '', lastY = null, start = 1;
-  const flushPara = () => { if (line.trim()) paras.push(line.trim()); line = ''; };
+  const lines = [];   // { text, size, page, first } one per paragraph
+  let line = '', size = 0, lastY = null, first = true;
+  const flush = (page) => { if (line.trim()) { lines.push({ text: line.trim(), size, page, first }); first = false; } line = ''; size = 0; };
   for (let i = 1; i <= doc.numPages; i++) {
     const c = await (await doc.getPage(i)).getTextContent();
+    first = true;
     for (const it of c.items) {
-      const y = it.transform?.[5];
-      if (lastY != null && Math.abs(y - lastY) > (it.height || 10) * 1.8) flushPara();
+      const y = it.transform?.[5], hgt = Math.abs(it.transform?.[3] || it.height || 10);
+      if (lastY != null && Math.abs(y - lastY) > (it.height || 10) * 1.8) flush(i);
+      // A change of font size starts a new paragraph too (a heading over its first line of text).
+      if (line && size && it.str.trim() && Math.abs(hgt - size) / size > 0.25) flush(i);
       line = line.endsWith('-') ? line.slice(0, -1) + it.str : line + (line && !line.endsWith(' ') && it.str && !it.str.startsWith(' ') && lastY != null && Math.abs(y - lastY) > 1 ? ' ' : '') + it.str;
+      if (it.str.trim()) size = Math.max(size, hgt);
       lastY = y;
     }
-    flushPara(); lastY = null;
-    if (i % 10 === 0 || i === doc.numPages) { chapters.push({ title: `Trang ${start}–${i}`, html: paras.map(p => `<p>${esc(p)}</p>`).join('') }); paras = []; start = i + 1; }
-    onProgress?.(i / doc.numPages);
+    flush(i); lastY = null;
+    onProgress?.(i / doc.numPages * 0.9);
+  }
+  const sizes = lines.map(l => l.size).filter(Boolean).sort((a, b) => a - b), body = sizes[Math.floor(sizes.length / 2)] || 10;
+  const isHead = (l) => l.text.length <= 90 && (HEAD_RE.test(l.text) || (l.size >= body * 1.3 && l.text.length <= 60 && /\p{L}/u.test(l.text)));
+  let chapters = [];
+  const heads = lines.filter(isHead);
+  if (heads.length >= 2) {
+    let cur = null;
+    for (const l of lines) {
+      if (isHead(l) && !(cur && !cur.html && cur.title.length < 40)) { cur = { title: l.text, html: '' }; chapters.push(cur); continue; }
+      if (isHead(l) && cur && !cur.html) { cur.title += ' · ' + l.text; continue; }   // "Chương 3" + its name on the next line
+      if (!cur) { cur = { title: 'Mở đầu', html: '' }; chapters.push(cur); }
+      cur.html += `<p>${esc(l.text)}</p>`;
+    }
+  } else {
+    const outline = await doc.getOutline().catch(() => null);
+    const marks = [];
+    for (const o of outline || []) {
+      try { const dest = typeof o.dest === 'string' ? await doc.getDestination(o.dest) : o.dest; if (dest) marks.push({ title: o.title, page: (await doc.getPageIndex(dest[0])) + 1 }); } catch {}
+    }
+    marks.sort((a, b) => a.page - b.page);
+    if (marks.length >= 2) {
+      if (marks[0].page > 1) marks.unshift({ title: 'Mở đầu', page: 1 });
+      chapters = marks.map((m, k) => ({ title: m.title, html: lines.filter(l => l.page >= m.page && l.page < (marks[k + 1]?.page ?? 1e9)).map(l => `<p>${esc(l.text)}</p>`).join('') }));
+    } else {
+      for (let a = 1; a <= doc.numPages; a += 10) { const b = Math.min(doc.numPages, a + 9); chapters.push({ title: `Trang ${a}–${b}`, html: lines.filter(l => l.page >= a && l.page <= b).map(l => `<p>${esc(l.text)}</p>`).join(''), pages: true }); }
+    }
   }
   doc.destroy();
+  onProgress?.(1);
   const { makeTextBook } = await import('./text-book.js');
-  return makeTextBook({ title, author, chapters });
+  const book = makeTextBook({ title, author, chapters });
+  book.chaptersFound = !chapters[0]?.pages;
+  return book;
 }

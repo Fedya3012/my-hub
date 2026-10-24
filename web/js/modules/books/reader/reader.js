@@ -273,10 +273,10 @@ export async function openReader(root, id, { ctx, onClose }) {
     else el.classList.toggle('bare');
   });
   // Shortcuts most e-book readers share (Kindle, Apple Books, Calibre, Thorium); "?" lists them.
-  const zoom = (d) => changePref('fontSize', d === 0 ? 18 : Math.max(12, Math.min(40, prefs.fontSize + d)));
+  const zoom = (d) => engine.kind === 'pdf' && engine.zoom ? engine.zoom(d > 0 ? 'in' : d < 0 ? 'out' : 'width') : changePref('fontSize', d === 0 ? 18 : Math.max(12, Math.min(40, prefs.fontSize + d)));
   const fullscreen = () => document.fullscreenElement ? document.exitFullscreen?.().catch(() => {}) : el.requestFullscreen?.().catch(() => {});
   const onKey = (e) => {
-    if (e.target.closest?.('input, textarea, select')) return;
+    if (e.target.closest?.('input, textarea, select') && e.key !== 'Escape') return;
     const k = e.key, mod = e.ctrlKey || e.metaKey, prevent = () => e.preventDefault?.();
     if (k === 'Escape') { if (!$('.bk-r-panel').hidden) hidePanel(); else if (!$('.bk-r-sel').hidden) hideSel(); else if (!$('.bk-r-chend').hidden) $('.bk-r-chend').hidden = true; else if (document.fullscreenElement) fullscreen(); else { close(); onClose(); } return; }
     if (mod) {
@@ -314,7 +314,7 @@ export async function openReader(root, id, { ctx, onClose }) {
   let wheelAt = 0;
   el.addEventListener('wheel', (e) => {
     if (e.ctrlKey || e.metaKey) { e.preventDefault(); const t = Date.now(); if (t - wheelAt < 60) return; wheelAt = t; zoom(e.deltaY < 0 ? 1 : -1); return; }
-    if (!host.contains(e.target) || prefs.flow === 'scrolled' || engine.kind === 'pdf' || !prefs.wheelTurns || Math.abs(e.deltaY) < 4) return;
+    if (!host.contains(e.target) || prefs.flow === 'scrolled' || (engine.kind === 'pdf' && prefs.pdfMode !== 'page') || !prefs.wheelTurns || Math.abs(e.deltaY) < 4) return;
     e.preventDefault();
     const t = Date.now(); if (t - wheelAt < 350) return; wheelAt = t;
     turn(e.deltaY > 0 ? 1 : -1);

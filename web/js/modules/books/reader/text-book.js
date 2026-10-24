@@ -139,7 +139,7 @@ export async function volumeBook({ title, author, parts, open }) {
   for (const p of parts) {
     const file = await open(p);
     if (!file) { chapters.push({ title: p.title, html: '<p>(Không mở được tệp của chương này trên máy này.)</p>' }); continue; }
-    let list;
+    let list, found = false;
     if (p.engine === 'text') list = (await textChapters(file, p.name)).chapters;
     else {
       // PDF parts are reflowed to text first (engine-pdf), other formats go through foliate.
@@ -152,9 +152,11 @@ export async function volumeBook({ title, author, parts, open }) {
         const html = doc?.body ? doc.body.innerHTML : '';
         if (html.replace(/<[^>]+>|\s/g, '')) list.push({ title: '', html });
       }
+      found = !!bk.chaptersFound;
+      if (found) list.forEach((c, i) => { c.title = bk.toc?.[i]?.label || ''; c.html = c.html.replace(/<h2>[\s\S]*?<\/h2>/, ''); });
       bk.destroy?.();
     }
-    if (list.length <= 1 || p.engine === 'pdf') chapters.push({ title: p.title, html: list.map(c => c.html).join('') });
+    if (list.length <= 1 || (p.engine === 'pdf' && !found)) chapters.push({ title: p.title, html: list.map(c => c.html).join('') });
     else list.forEach((c, i) => chapters.push({ title: c.title || `${p.title} (${i + 1})`, html: c.html }));
   }
   return makeTextBook({ title, author, chapters });
