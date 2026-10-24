@@ -1,7 +1,16 @@
 {
-  "app": "0.9.22.4",
+  "app": "0.9.22.5",
   "released": "2026-10-24",
   "changelog": [
+    {
+      "version": "0.9.22.5",
+      "date": "2026-10-24",
+      "notes": [
+        "Mini player: thu gọn thành nút tròn có vòng tiến độ, kéo được; áp dụng cho Podcast và thanh nhạc",
+        "Podcast: trang Đang phát vừa một màn hình điện thoại, không cần cuộn",
+        "Đồng bộ: tạm dừng khi đang nhập hàng loạt, đồng bộ một lần sau khi nhập xong"
+      ]
+    },
     {
       "version": "0.9.22.4",
       "date": "2026-10-24",
@@ -753,7 +762,8 @@
       "js/core/storage/cleanup.js",
       "js/core/storage/local-folders.js",
       "js/modules/guides/manifest.js",
-      "js/modules/podcasts/manifest.js"
+      "js/modules/podcasts/manifest.js",
+      "js/core/bubble-drag.js"
     ]
   },
   "modules": {
@@ -894,7 +904,7 @@
     },
     "podcasts": {
       "name": "Podcast",
-      "version": "0.1.4",
+      "version": "0.1.5",
       "minApp": "0.9.11.0",
       "files": [
         "js/modules/podcasts/index.js",
