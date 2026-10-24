@@ -475,3 +475,8 @@ html:has(body.pc-np-open), body.pc-np-open { background: #121014; }
   .pc-np-bar { gap: 2px; }
 }
 .pc-np-panel { position: relative; }
+
+/* Now Playing is always dark: give plain buttons (e.g. "Tạo bằng AI") readable colours */
+.pc-np .pc-empty .btn { background: rgb(255 255 255 / .14); color: var(--fg); border: 1px solid rgb(255 255 255 / .28); min-height: 40px; padding: 0 16px; }
+.pc-np .pc-empty .btn:hover { background: rgb(255 255 255 / .22); }
+.pc-np .pc-empty .btn .ic { color: var(--pc-accent); }
