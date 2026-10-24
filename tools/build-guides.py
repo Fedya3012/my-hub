@@ -12,7 +12,6 @@ PAGES = [  # (group, file, page id, label)
   ('Bắt đầu', '10-android', 'android', 'Android (Obtainium)'),
   ('Bắt đầu', '11-windows', 'windows', 'Windows'),
   (None, '20-dong-bo', 'dong-bo', 'Đồng bộ'),
-  (None, '21-google-drive', 'google-drive', 'Google Drive'),
   ('Ứng dụng', '30-thu-vien', 'thu-vien', 'Thư viện'),
   ('Ứng dụng', '31-quan-ly-ung-dung', 'quan-ly-ung-dung', 'Quản lý ứng dụng'),
   ('Ứng dụng', '32-trinh-phat-nhac', 'trinh-phat-nhac', 'Trình phát nhạc'),

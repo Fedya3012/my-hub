@@ -154,124 +154,42 @@ export const PAGES = [
     "level": 2
    }
   ],
-  "html": "\n<p>Trang <strong>Cài đặt</strong> là một danh sách mục, bấm mục nào thì mở trang riêng của mục đó. Hai mục liên quan tới đồng bộ là hai lựa chọn riêng, không phụ thuộc nhau:</p>\n<ul>\n<li><strong>Tài khoản đồng bộ</strong>: nơi thư viện, cài đặt và tiến độ nghe/đọc/viết đi giữa các máy.</li>\n<li><strong>Thư mục đồng bộ</strong>: nơi app lấy nhạc và sách (thư mục trong máy, hoặc thư mục trên Dropbox / OneDrive).</li>\n</ul>\n<p>Ví dụ hay dùng: đồng bộ bằng <strong>GitHub</strong> nhưng lấy nhạc từ <strong>Dropbox</strong>; hoặc dùng <strong>Dropbox</strong> cho cả hai.</p>\n<figure><img data-src=\"cai-dat-tai-khoan.webp\" alt=\"Cài đặt → Tài khoản đồng bộ trên điện thoại\"><figcaption>Cài đặt → Tài khoản đồng bộ trên điện thoại</figcaption></figure>\n\n<h2 data-sec=\"tai-khoan-dong-bo\">Tài khoản đồng bộ</h2>\n<h3 data-sec=\"bon-che-do\">Bốn chế độ</h3>\n<div class=\"gd-tw\"><table>\n<thead>\n<tr>\n<th>Chế độ</th>\n<th>Đồng bộ gì</th>\n<th>Tệp nhạc/sách</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><strong>Chỉ trên máy</strong></td>\n<td>Không đồng bộ, không cần mạng, không cần tài khoản</td>\n<td>Ở lại máy này</td>\n</tr>\n<tr>\n<td><strong>Tài khoản GitHub</strong></td>\n<td>Thư viện, cài đặt, tiến độ, qua kho riêng tư <code>my-hub-data</code> của bạn</td>\n<td>Ở lại từng máy, không tải lên</td>\n</tr>\n<tr>\n<td><strong>Dropbox</strong></td>\n<td>Thư viện, tiến độ và cả tệp, trong thư mục riêng của app</td>\n<td>Tự tải lên; máy khác tải về khi mở</td>\n</tr>\n<tr>\n<td><strong>OneDrive</strong></td>\n<td>Như Dropbox, trong <code>Apps/…</code></td>\n<td>Như Dropbox</td>\n</tr>\n<tr>\n<td><strong>Google Drive</strong></td>\n<td>Thư viện và tiến độ nằm trong thư mục ẩn của app trên Drive</td>\n<td>Chỉ đọc, phát thẳng từ Drive; không sao chép (xem <a href=\"#guides/google-drive\">Google Drive</a>)</td>\n</tr>\n</tbody>\n</table></div>\n<p>Cách bật: <strong>Cài đặt → Tài khoản đồng bộ</strong> (mở trang riêng), bấm vào một ô. Google Drive cần tự tạo một khoá đăng nhập một lần, làm theo <a href=\"#guides/google-drive\">hướng dẫn Google Drive</a>.</p>\n<h3 data-sec=\"dang-nhap-github\">Đăng nhập GitHub</h3>\n<ol>\n<li>Bấm ô <strong>Tài khoản GitHub</strong>, hoặc vào trang <strong>Tài khoản → Đăng nhập bằng GitHub</strong>.</li>\n<li>App mở trang tạo token của GitHub. Giữ ô <code>repo</code> đã tích, bấm <strong>Generate token</strong>.</li>\n<li>Sao chép chuỗi bắt đầu bằng <code>ghp_…</code>, dán vào app.</li>\n<li>App tự tạo kho riêng tư <code>my-hub-data</code> và đồng bộ lần đầu.</li>\n<li>Trên máy khác, làm lại đúng các bước trên với <strong>cùng tài khoản GitHub</strong>.</li>\n</ol>\n<figure><img data-src=\"tai-khoan.webp\" alt=\"Trang Tài khoản\"><figcaption>Trang Tài khoản</figcaption></figure>\n\n<h3 data-sec=\"ket-noi-dropbox\">Kết nối Dropbox</h3>\n<ol>\n<li>Bấm ô <strong>Dropbox</strong>. Hộp <strong>Kết nối Dropbox</strong> mở ra.</li>\n<li>Nếu app hỏi <strong>App key</strong>: dán App key của app Dropbox của bạn (tạo một lần ở <a href=\"https://www.dropbox.com/developers/apps\" target=\"_blank\" rel=\"noopener\">https://www.dropbox.com/developers/apps</a>, loại <em>Scoped access</em> + <em>App folder</em>, bật quyền <code>files.content.read</code> và <code>files.content.write</code>).</li>\n<li>Bấm <strong>Kết nối</strong>. Trang Dropbox mở ra, bấm <strong>Allow</strong>.</li>\n<li>Dropbox hiện một mã. Sao chép, dán vào ô <strong>Mã Dropbox</strong> trong app.</li>\n</ol>\n<h3 data-sec=\"ket-noi-onedrive\">Kết nối OneDrive</h3>\n<ol>\n<li>Bấm ô <strong>OneDrive</strong>. Hộp <strong>Kết nối OneDrive</strong> mở ra.</li>\n<li>Nếu app hỏi <strong>Client ID</strong>: dán Application (client) ID của app Microsoft Entra của bạn.</li>\n<li>Bấm <strong>Kết nối</strong>, đăng nhập Microsoft và cho phép.</li>\n<li>Trình duyệt chuyển tới một <strong>trang trắng</strong>. Sao chép cả địa chỉ trên thanh địa chỉ, dán vào ô <strong>Địa chỉ trang trắng (hoặc mã)</strong>.</li>\n</ol>\n<h3 data-sec=\"khi-ca-may-va-tai-khoan-deu-da-co-du-lieu\">Khi cả máy và tài khoản đều đã có dữ liệu</h3>\n<p>App hỏi <strong>Máy này đã có dữ liệu</strong>:</p>\n<ul>\n<li><strong>Gộp</strong> (nên chọn): giữ cả hai, bản sửa mới hơn thắng.</li>\n<li><strong>Dùng dữ liệu của …</strong>: bỏ dữ liệu trên máy, lấy toàn bộ từ tài khoản.</li>\n<li><strong>Để sau</strong>: chưa đồng bộ.</li>\n</ul>\n<h3 data-sec=\"khi-nao-app-dong-bo\">Khi nào app đồng bộ</h3>\n<ul>\n<li>Khi mở app, khi có mạng trở lại, khoảng 8 giây sau mỗi thay đổi, và mỗi 2 phút khi app đang mở.</li>\n<li>Tiến độ nghe/đọc đi riêng, nhanh hơn: vài giây sau mỗi lần dừng. Mở máy khác là nghe/đọc tiếp đúng chỗ.</li>\n<li>Bảng bên dưới các ô có: <strong>Đồng bộ ngay</strong>, <strong>Đổi tài khoản</strong>, <strong>Ngừng dùng … (về Local)</strong>, <strong>Xoá dữ liệu trên …</strong>.</li>\n</ul>\n<h2 data-sec=\"thu-muc-dong-bo-nhac-va-sach\">Thư mục đồng bộ (nhạc và sách)</h2>\n<ol>\n<li><strong>Cài đặt → Thư mục đồng bộ</strong>, chọn nơi lấy: <strong>Trong máy</strong>, <strong>Dropbox</strong> hoặc <strong>OneDrive</strong>. Chọn một ổ chưa kết nối thì app mở hộp đăng nhập ổ đó; tài khoản đồng bộ không đổi.</li>\n<li>Bấm <strong>Chọn thư mục, đồng bộ, tạm dừng, huỷ</strong>.</li>\n<li>Với ổ đám mây: tích một hoặc nhiều thư mục trong cây thư mục. Với <strong>Trong máy</strong>: bấm <strong>Thêm thư mục trong máy…</strong>.</li>\n<li>Mỗi thư mục có thể chọn app nhận tệp: <strong>Trình phát nhạc</strong>, <strong>Sách</strong>, hoặc cả hai.</li>\n<li>Bấm <strong>Đồng bộ ngay</strong>. Thẻ tiến trình hiện đang quét hay đang nhập, bao nhiêu tệp, bao nhiêu phần trăm.</li>\n<li>Lần sau chỉ tệp mới được nhập. Tệp mới trong thư mục cũng tự vào thư viện mỗi lần đồng bộ.</li>\n</ol>\n<figure><img data-src=\"thu-muc-dong-bo.webp\" alt=\"Trang Thư mục đồng bộ\"><figcaption>Trang Thư mục đồng bộ</figcaption></figure>\n\n<h3 data-sec=\"tep-duoc-xu-ly-the-nao\">Tệp được xử lý thế nào</h3>\n<div class=\"gd-tw\"><table>\n<thead>\n<tr>\n<th>Nguồn</th>\n<th>Có sao chép vào app không</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>Dropbox / OneDrive</td>\n<td>Không. Nhạc phát thẳng từ ổ; sách được tải về khi mở</td>\n</tr>\n<tr>\n<td>Trong máy, trên Windows</td>\n<td>Không. Đọc thẳng từ ổ cứng</td>\n</tr>\n<tr>\n<td>Trong máy, trên Android</td>\n<td>Có, mỗi tệp mới được sao chép vào app một lần</td>\n</tr>\n</tbody>\n</table></div>\n<p>Có thể chọn nhiều nơi cùng lúc: ví dụ <strong>Trong máy</strong> cho nhạc và <strong>Google Drive</strong> cho sách.</p>\n<p>Thư mục đồng bộ chỉ đi <strong>một chiều</strong>: app đọc tệp từ thư mục, không bao giờ tải tệp đó lên tài khoản đồng bộ. Ví dụ nhạc lấy từ Dropbox sẽ không bị chép thêm một bản lên OneDrive.</p>\n<h2 data-sec=\"tam-dung-huy-don\">Tạm dừng, huỷ, dọn</h2>\n<ul>\n<li><strong>Tạm dừng</strong>: dừng lượt đang chạy, giữ nguyên những gì đã nhập. App không tự đồng bộ thư mục nữa cho tới khi bạn bấm <strong>Đồng bộ ngay</strong>, lúc đó tiếp tục từ chỗ đã dừng.</li>\n<li><strong>Huỷ đồng bộ</strong>: dừng và <strong>xoá khỏi thư viện</strong> mọi bài nhạc, sách đã nhập từ các thư mục đã chọn, đặt lại tiến trình từ đầu. Tệp gốc trên ổ hoặc trong máy không bị đụng tới. Danh sách thư mục vẫn giữ, bấm <strong>Đồng bộ ngay</strong> để làm lại.</li>\n<li><strong>Dọn mục đã mất tệp</strong>: xoá khỏi thư viện những mục mà tệp gốc đã bị xoá.</li>\n<li>Mọi tác vụ dài (đồng bộ, tải lên, tải về) cũng hiện ở <strong>khay tác vụ</strong> góc màn hình, có nút huỷ từng tác vụ và tốc độ, thời gian còn lại.</li>\n</ul>\n<h2 data-sec=\"meo\">Mẹo</h2>\n<ul>\n<li>Token và mã kết nối chỉ nằm trên từng máy, không vào bản sao lưu JSON. Máy mới phải đăng nhập lại.</li>\n<li>Dùng GitHub mà muốn có nhạc trên điện thoại: chọn <strong>Thư mục đồng bộ</strong> là Dropbox hoặc OneDrive.</li>\n<li>Bấm <strong>Yêu cầu lưu trữ bền vững</strong> trong Cài đặt để trình duyệt không tự xoá dữ liệu khi máy đầy.</li>\n</ul>"
- },
- {
-  "id": "google-drive",
-  "num": "3",
-  "group": null,
-  "label": "Google Drive",
-  "title": "Google Drive: kết nối và dùng nhạc, sách",
-  "sections": [
-   {
-    "id": "phan-1-tao-chia-khoa-google-oauth-client-cho-my-hub",
-    "num": "3.1",
-    "title": "Phần 1. Tạo \"chìa khoá\" Google (OAuth client) cho My Hub",
-    "level": 2
-   },
-   {
-    "id": "buoc-1-tao-project",
-    "num": "3.1.1",
-    "title": "Bước 1. Tạo project",
-    "level": 3
-   },
-   {
-    "id": "buoc-2-bat-google-drive-api",
-    "num": "3.1.2",
-    "title": "Bước 2. Bật Google Drive API",
-    "level": 3
-   },
-   {
-    "id": "buoc-3-man-hinh-xin-quyen-oauth-consent-screen",
-    "num": "3.1.3",
-    "title": "Bước 3. Màn hình xin quyền (OAuth consent screen)",
-    "level": 3
-   },
-   {
-    "id": "buoc-4-khai-bao-quyen-data-access-scopes",
-    "num": "3.1.4",
-    "title": "Bước 4. Khai báo quyền (Data access / Scopes)",
-    "level": 3
-   },
-   {
-    "id": "buoc-5-tao-oauth-client-loai-desktop-app",
-    "num": "3.1.5",
-    "title": "Bước 5. Tạo OAuth client loại \"Desktop app\"",
-    "level": 3
-   },
-   {
-    "id": "phan-2-ket-noi-trong-my-hub-lam-tren-moi-may",
-    "num": "3.2",
-    "title": "Phần 2. Kết nối trong My Hub (làm trên mỗi máy)",
-    "level": 2
-   },
-   {
-    "id": "buoc-1-bat-google-drive-lam-noi-lay-thu-muc",
-    "num": "3.2.1",
-    "title": "Bước 1. Bật Google Drive làm nơi lấy thư mục",
-    "level": 3
-   },
-   {
-    "id": "buoc-2-dang-nhap-google",
-    "num": "3.2.2",
-    "title": "Bước 2. Đăng nhập Google",
-    "level": 3
-   },
-   {
-    "id": "buoc-3-chon-thu-muc",
-    "num": "3.2.3",
-    "title": "Bước 3. Chọn thư mục",
-    "level": 3
-   },
-   {
-    "id": "tuy-chon-dung-google-drive-lam-tai-khoan-dong-bo",
-    "num": "3.2.4",
-    "title": "(Tuỳ chọn) Dùng Google Drive làm tài khoản đồng bộ",
-    "level": 3
-   },
-   {
-    "id": "cau-hoi-thuong-gap",
-    "num": "3.3",
-    "title": "Câu hỏi thường gặp",
-    "level": 2
-   }
-  ],
-  "html": "\n<p>Google Drive dùng được theo hai cách, độc lập với nhau:</p>\n<ul>\n<li><strong>Thư mục đồng bộ</strong> (Cài đặt → Thư mục đồng bộ): chọn thư mục nhạc, sách trên Drive. Nhạc phát thẳng từ Drive, sách mở khi cần, không sao chép cả thư mục vào máy. App chỉ có quyền <strong>đọc</strong> Drive, không sửa hay xoá gì.</li>\n<li><strong>Tài khoản đồng bộ</strong> (tuỳ chọn): lưu thư viện và tiến độ vào một thư mục ẩn của app trên Drive. Bạn đang dùng Tài khoản My Hub thì không cần bật cách này.</li>\n</ul>\n<p>Phần 1 chỉ làm <strong>một lần</strong> trên máy tính, khoảng 10 phút. Phần 2 làm trên mỗi máy dùng My Hub.</p>\n<hr />\n<h2 data-sec=\"phan-1-tao-chia-khoa-google-oauth-client-cho-my-hub\">Phần 1. Tạo \"chìa khoá\" Google (OAuth client) cho My Hub</h2>\n<p>My Hub không qua máy chủ trung gian nào. Bạn tự tạo một client miễn phí trong Google Cloud, và chỉ tài khoản của bạn dùng được client đó.</p>\n<h3 data-sec=\"buoc-1-tao-project\">Bước 1. Tạo project</h3>\n<ol>\n<li>Mở <a href=\"https://console.cloud.google.com\" target=\"_blank\" rel=\"noopener\">https://console.cloud.google.com</a> và đăng nhập bằng tài khoản Google chứa nhạc và sách.</li>\n<li>Lần đầu vào, Google hỏi quốc gia và điều khoản: chọn Việt Nam, tích đồng ý, bấm <strong>Agree and continue</strong>.</li>\n<li>Bấm ô chọn project ở thanh trên cùng (cạnh logo Google Cloud) → <strong>New project</strong>.</li>\n<li>Project name: <code>My Hub</code> → <strong>Create</strong>. Đợi vài giây rồi chọn project vừa tạo ở ô đó.</li>\n</ol>\n<h3 data-sec=\"buoc-2-bat-google-drive-api\">Bước 2. Bật Google Drive API</h3>\n<ol>\n<li>Menu ☰ → <strong>APIs &amp; Services</strong> → <strong>Library</strong>.</li>\n<li>Tìm <code>Google Drive API</code> → bấm vào → <strong>Enable</strong>.</li>\n</ol>\n<h3 data-sec=\"buoc-3-man-hinh-xin-quyen-oauth-consent-screen\">Bước 3. Màn hình xin quyền (OAuth consent screen)</h3>\n<ol>\n<li>Menu ☰ → <strong>APIs &amp; Services</strong> → <strong>OAuth consent screen</strong> (giao diện mới gọi là <strong>Google Auth Platform</strong>). Bấm <strong>Get started</strong> nếu có.</li>\n<li><strong>App information</strong>: App name <code>My Hub</code>, User support email chọn email của bạn → <strong>Next</strong>.</li>\n<li><strong>Audience</strong>: chọn <strong>External</strong> → <strong>Next</strong>.</li>\n<li><strong>Contact information</strong>: nhập email của bạn → <strong>Next</strong>.</li>\n<li>Tích đồng ý chính sách → <strong>Continue</strong> → <strong>Create</strong>.</li>\n<li>Vào mục <strong>Audience</strong> (hoặc <strong>Test users</strong> ở giao diện cũ) → <strong>Add users</strong> → nhập <strong>chính email Google của bạn</strong> → <strong>Save</strong>.</li>\n<li>Bắt buộc. App đang ở chế độ <em>Testing</em>, Google chỉ cho các email trong danh sách này đăng nhập.</li>\n<li>Không cần bấm <em>Publish app</em>.</li>\n</ol>\n<h3 data-sec=\"buoc-4-khai-bao-quyen-data-access-scopes\">Bước 4. Khai báo quyền (Data access / Scopes)</h3>\n<p>Không bắt buộc (app tự xin quyền khi đăng nhập), nhưng khai báo cho rõ thì làm như sau:</p>\n<ol>\n<li>Mục <strong>Data access</strong> → <strong>Add or remove scopes</strong>.</li>\n<li>Tích <code>.../auth/drive.readonly</code> (xem tệp Drive, chỉ đọc) và <code>.../auth/drive.appdata</code> (thư mục ẩn của app) → <strong>Update</strong> → <strong>Save</strong>.</li>\n</ol>\n<h3 data-sec=\"buoc-5-tao-oauth-client-loai-desktop-app\">Bước 5. Tạo OAuth client loại \"Desktop app\"</h3>\n<ol>\n<li>Mục <strong>Clients</strong> (giao diện cũ: <strong>APIs &amp; Services → Credentials → Create credentials → OAuth client ID</strong>) → <strong>Create client</strong>.</li>\n<li>Application type: <strong>Desktop app</strong>. Name: <code>My Hub</code> → <strong>Create</strong>.</li>\n<li>Google hiện <strong>Client ID</strong> (đuôi <code>.apps.googleusercontent.com</code>) và <strong>Client secret</strong> (bắt đầu <code>GOCSPX-</code>).</li>\n<li>Bấm <strong>Download JSON</strong> hoặc chép cả hai vào chỗ an toàn.</li>\n<li>Giao diện mới chỉ hiện secret <strong>một lần</strong>. Lỡ mất thì vào client đó → <strong>Add secret</strong> để tạo cái mới.</li>\n<li>Không cần khai báo redirect URI: client loại Desktop app tự chấp nhận <code>http://127.0.0.1</code>.</li>\n</ol>\n<blockquote>\n<p>Client secret của Desktop app không phải mật khẩu tài khoản. Google coi nó là thông tin không bí mật tuyệt đối. Dù vậy, đừng đăng công khai.</p>\n</blockquote>\n<hr />\n<h2 data-sec=\"phan-2-ket-noi-trong-my-hub-lam-tren-moi-may\">Phần 2. Kết nối trong My Hub (làm trên mỗi máy)</h2>\n<p>Cách làm giống nhau trên Android, Windows và trình duyệt.</p>\n<h3 data-sec=\"buoc-1-bat-google-drive-lam-noi-lay-thu-muc\">Bước 1. Bật Google Drive làm nơi lấy thư mục</h3>\n<ol>\n<li>My Hub → <strong>Cài đặt</strong> → <strong>Thư mục đồng bộ</strong>.</li>\n<li>Tích ô <strong>Google Drive</strong>. Có thể giữ cả <strong>Trong máy</strong>, ví dụ nhạc trong máy còn sách trên Drive.</li>\n<li>Hộp <strong>Kết nối Google Drive</strong> hiện ra.</li>\n</ol>\n<h3 data-sec=\"buoc-2-dang-nhap-google\">Bước 2. Đăng nhập Google</h3>\n<ol>\n<li>Dán <strong>Client ID</strong> và <strong>Client secret</strong> từ Phần 1.</li>\n<li>Bấm <strong>Mở Google để cấp quyền</strong>. Trình duyệt mở trang đăng nhập Google.</li>\n<li>Chọn đúng tài khoản đã thêm vào danh sách người dùng thử.</li>\n<li>Google cảnh báo <strong>\"Google hasn't verified this app\"</strong>: bấm <strong>Advanced</strong> (Nâng cao) → <strong>Go to My Hub (unsafe)</strong>. Đây là app của chính bạn nên an toàn.</li>\n<li>Tích <strong>cả hai</strong> quyền (xem tệp Google Drive, và dữ liệu cấu hình của app) → <strong>Continue</strong>.</li>\n<li>Trình duyệt chuyển tới một trang <strong>không mở được</strong>, địa chỉ dạng <code>http://127.0.0.1/?code=4/0Ab...&amp;scope=...</code>. <strong>Đây là bình thường.</strong></li>\n<li>Chạm vào thanh địa chỉ và <strong>sao chép toàn bộ địa chỉ</strong> đó.</li>\n<li>Android (Chrome): chạm thanh địa chỉ → biểu tượng sao chép, hoặc giữ ngón tay → Chọn tất cả → Sao chép.</li>\n<li>Quay lại My Hub, dán vào ô <strong>Địa chỉ trang không mở được</strong> → <strong>Kết nối</strong>.</li>\n<li>Mã chỉ dùng được một lần và hết hạn sau vài phút. Báo lỗi mã sai thì bấm lại <strong>Mở Google để cấp quyền</strong> và làm lại từ bước 3.</li>\n</ol>\n<h3 data-sec=\"buoc-3-chon-thu-muc\">Bước 3. Chọn thư mục</h3>\n<ol>\n<li>Vẫn ở <strong>Thư mục đồng bộ</strong>, bấm <strong>Chọn thư mục, đồng bộ, tạm dừng, huỷ</strong>.</li>\n<li>Ở khu Google Drive, mở cây thư mục và tích các thư mục cần dùng.</li>\n<li>Mỗi thư mục chọn <strong>Trình phát nhạc</strong>, <strong>Sách</strong> hoặc cả hai. Ví dụ thư mục <code>Sách</code> trên Drive chỉ tích Sách.</li>\n<li>Bấm <strong>Đồng bộ ngay</strong>. App quét thư mục rồi thêm bài nhạc, sách vào thư viện; tiến độ hiện trong khay tác vụ.</li>\n<li>Để đọc tên bài và nghệ sĩ, app tải tạm từng tệp <strong>một lần</strong> trong lúc quét rồi bỏ đi, không lưu lại trên máy.</li>\n<li>Từ giờ, mỗi lần đồng bộ app chỉ thêm tệp mới. Tệp đã xoá trên Drive cũng bị gỡ khỏi thư viện (tắt được trong trang chọn thư mục).</li>\n</ol>\n<h3 data-sec=\"tuy-chon-dung-google-drive-lam-tai-khoan-dong-bo\">(Tuỳ chọn) Dùng Google Drive làm tài khoản đồng bộ</h3>\n<p>Cài đặt → <strong>Tài khoản đồng bộ</strong> → chọn <strong>Google Drive</strong>. Thư viện và tiến độ nằm trong thư mục ẩn của app trên Drive, bạn không thấy và không xoá nhầm được. Bạn đang dùng Tài khoản My Hub thì không cần làm.</p>\n<hr />\n<h2 data-sec=\"cau-hoi-thuong-gap\">Câu hỏi thường gặp</h2>\n<p><strong>Bài hát có bị chép về máy không?</strong>\nKhông. Khi phát, app lấy thẳng từ Drive theo từng đoạn, như xem video trực tuyến. Lúc quét thư mục để đọc thông tin bài, app chỉ tải tạm từng bài rồi bỏ.</p>\n<p><strong>Lỗi \"Access blocked: My Hub has not completed the Google verification process\"</strong>\nEmail chưa có trong danh sách người dùng thử. Làm lại Phần 1, Bước 3, mục 6.</p>\n<p><strong>Lỗi \"Google không trả về quyền dùng lâu dài\"</strong>\nVào <a href=\"https://myaccount.google.com/permissions\" target=\"_blank\" rel=\"noopener\">https://myaccount.google.com/permissions</a> → My Hub → <strong>Xoá quyền truy cập</strong>, rồi kết nối lại.</p>\n<p><strong>Một tuần sau app bắt đăng nhập lại</strong>\nClient đang ở chế độ <em>Testing</em> nên Google cho quyền hết hạn sau 7 ngày. Để không phải đăng nhập lại: Google Cloud → <strong>Audience</strong> → <strong>Publish app</strong> → xác nhận. Quyền <code>drive.readonly</code> là quyền nhạy cảm nên Google vẫn cảnh báo \"chưa xác minh\", nhưng bạn vẫn dùng được như ở Phần 2, Bước 2 mục 4. Riêng tài khoản của bạn thì không cần xin Google xét duyệt.</p>\n<p><strong>Nhạc không phát mà chỉ tải về</strong>\nLần đầu mở app sau khi cập nhật, phần nền của app (service worker) có thể chưa chạy. Tắt hẳn app rồi mở lại.</p>\n<p><strong>Gỡ kết nối</strong>\nCài đặt → Thư mục đồng bộ → bỏ tích Google Drive. Muốn thu hồi hẳn quyền thì vào <a href=\"https://myaccount.google.com/permissions\" target=\"_blank\" rel=\"noopener\">https://myaccount.google.com/permissions</a>.</p>"
+  "html": "\n<p>Trang <strong>Cài đặt</strong> là một danh sách mục, bấm mục nào thì mở trang riêng của mục đó. Hai mục liên quan tới đồng bộ là hai lựa chọn riêng, không phụ thuộc nhau:</p>\n<ul>\n<li><strong>Tài khoản đồng bộ</strong>: nơi thư viện, cài đặt và tiến độ nghe/đọc/viết đi giữa các máy.</li>\n<li><strong>Thư mục đồng bộ</strong>: nơi app lấy nhạc và sách (thư mục trong máy, hoặc thư mục trên Dropbox / OneDrive).</li>\n</ul>\n<p>Ví dụ hay dùng: đồng bộ bằng <strong>GitHub</strong> nhưng lấy nhạc từ <strong>Dropbox</strong>; hoặc dùng <strong>Dropbox</strong> cho cả hai.</p>\n<figure><img data-src=\"cai-dat-tai-khoan.webp\" alt=\"Cài đặt → Tài khoản đồng bộ trên điện thoại\"><figcaption>Cài đặt → Tài khoản đồng bộ trên điện thoại</figcaption></figure>\n\n<h2 data-sec=\"tai-khoan-dong-bo\">Tài khoản đồng bộ</h2>\n<h3 data-sec=\"bon-che-do\">Bốn chế độ</h3>\n<div class=\"gd-tw\"><table>\n<thead>\n<tr>\n<th>Chế độ</th>\n<th>Đồng bộ gì</th>\n<th>Tệp nhạc/sách</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><strong>Chỉ trên máy</strong></td>\n<td>Không đồng bộ, không cần mạng, không cần tài khoản</td>\n<td>Ở lại máy này</td>\n</tr>\n<tr>\n<td><strong>Tài khoản GitHub</strong></td>\n<td>Thư viện, cài đặt, tiến độ, qua kho riêng tư <code>my-hub-data</code> của bạn</td>\n<td>Ở lại từng máy, không tải lên</td>\n</tr>\n<tr>\n<td><strong>Dropbox</strong></td>\n<td>Thư viện, tiến độ và cả tệp, trong thư mục riêng của app</td>\n<td>Tự tải lên; máy khác tải về khi mở</td>\n</tr>\n<tr>\n<td><strong>OneDrive</strong></td>\n<td>Như Dropbox, trong <code>Apps/…</code></td>\n<td>Như Dropbox</td>\n</tr>\n<tr>\n<td><strong>Google Drive</strong></td>\n<td>Thư viện và tiến độ nằm trong thư mục ẩn của app trên Drive</td>\n<td>Chỉ đọc, phát thẳng từ Drive; không sao chép</td>\n</tr>\n</tbody>\n</table></div>\n<p>Cách bật: <strong>Cài đặt → Tài khoản đồng bộ</strong> (mở trang riêng), bấm vào một ô.</p>\n<h3 data-sec=\"dang-nhap-github\">Đăng nhập GitHub</h3>\n<ol>\n<li>Bấm ô <strong>Tài khoản GitHub</strong>, hoặc vào trang <strong>Tài khoản → Đăng nhập bằng GitHub</strong>.</li>\n<li>App mở trang tạo token của GitHub. Giữ ô <code>repo</code> đã tích, bấm <strong>Generate token</strong>.</li>\n<li>Sao chép chuỗi bắt đầu bằng <code>ghp_…</code>, dán vào app.</li>\n<li>App tự tạo kho riêng tư <code>my-hub-data</code> và đồng bộ lần đầu.</li>\n<li>Trên máy khác, làm lại đúng các bước trên với <strong>cùng tài khoản GitHub</strong>.</li>\n</ol>\n<figure><img data-src=\"tai-khoan.webp\" alt=\"Trang Tài khoản\"><figcaption>Trang Tài khoản</figcaption></figure>\n\n<h3 data-sec=\"ket-noi-dropbox\">Kết nối Dropbox</h3>\n<ol>\n<li>Bấm ô <strong>Dropbox</strong>. Hộp <strong>Kết nối Dropbox</strong> mở ra.</li>\n<li>Nếu app hỏi <strong>App key</strong>: dán App key của app Dropbox của bạn (tạo một lần ở <a href=\"https://www.dropbox.com/developers/apps\" target=\"_blank\" rel=\"noopener\">https://www.dropbox.com/developers/apps</a>, loại <em>Scoped access</em> + <em>App folder</em>, bật quyền <code>files.content.read</code> và <code>files.content.write</code>).</li>\n<li>Bấm <strong>Kết nối</strong>. Trang Dropbox mở ra, bấm <strong>Allow</strong>.</li>\n<li>Dropbox hiện một mã. Sao chép, dán vào ô <strong>Mã Dropbox</strong> trong app.</li>\n</ol>\n<h3 data-sec=\"ket-noi-onedrive\">Kết nối OneDrive</h3>\n<ol>\n<li>Bấm ô <strong>OneDrive</strong>. Hộp <strong>Kết nối OneDrive</strong> mở ra.</li>\n<li>Nếu app hỏi <strong>Client ID</strong>: dán Application (client) ID của app Microsoft Entra của bạn.</li>\n<li>Bấm <strong>Kết nối</strong>, đăng nhập Microsoft và cho phép.</li>\n<li>Trình duyệt chuyển tới một <strong>trang trắng</strong>. Sao chép cả địa chỉ trên thanh địa chỉ, dán vào ô <strong>Địa chỉ trang trắng (hoặc mã)</strong>.</li>\n</ol>\n<h3 data-sec=\"khi-ca-may-va-tai-khoan-deu-da-co-du-lieu\">Khi cả máy và tài khoản đều đã có dữ liệu</h3>\n<p>App hỏi <strong>Máy này đã có dữ liệu</strong>:</p>\n<ul>\n<li><strong>Gộp</strong> (nên chọn): giữ cả hai, bản sửa mới hơn thắng.</li>\n<li><strong>Dùng dữ liệu của …</strong>: bỏ dữ liệu trên máy, lấy toàn bộ từ tài khoản.</li>\n<li><strong>Để sau</strong>: chưa đồng bộ.</li>\n</ul>\n<h3 data-sec=\"khi-nao-app-dong-bo\">Khi nào app đồng bộ</h3>\n<ul>\n<li>Khi mở app, khi có mạng trở lại, khoảng 8 giây sau mỗi thay đổi, và mỗi 2 phút khi app đang mở.</li>\n<li>Tiến độ nghe/đọc đi riêng, nhanh hơn: vài giây sau mỗi lần dừng. Mở máy khác là nghe/đọc tiếp đúng chỗ.</li>\n<li>Bảng bên dưới các ô có: <strong>Đồng bộ ngay</strong>, <strong>Đổi tài khoản</strong>, <strong>Ngừng dùng … (về Local)</strong>, <strong>Xoá dữ liệu trên …</strong>.</li>\n</ul>\n<h2 data-sec=\"thu-muc-dong-bo-nhac-va-sach\">Thư mục đồng bộ (nhạc và sách)</h2>\n<ol>\n<li><strong>Cài đặt → Thư mục đồng bộ</strong>, chọn nơi lấy: <strong>Trong máy</strong>, <strong>Dropbox</strong> hoặc <strong>OneDrive</strong>. Chọn một ổ chưa kết nối thì app mở hộp đăng nhập ổ đó; tài khoản đồng bộ không đổi.</li>\n<li>Bấm <strong>Chọn thư mục, đồng bộ, tạm dừng, huỷ</strong>.</li>\n<li>Với ổ đám mây: tích một hoặc nhiều thư mục trong cây thư mục. Với <strong>Trong máy</strong>: bấm <strong>Thêm thư mục trong máy…</strong>.</li>\n<li>Mỗi thư mục có thể chọn app nhận tệp: <strong>Trình phát nhạc</strong>, <strong>Sách</strong>, hoặc cả hai.</li>\n<li>Bấm <strong>Đồng bộ ngay</strong>. Thẻ tiến trình hiện đang quét hay đang nhập, bao nhiêu tệp, bao nhiêu phần trăm.</li>\n<li>Lần sau chỉ tệp mới được nhập. Tệp mới trong thư mục cũng tự vào thư viện mỗi lần đồng bộ.</li>\n</ol>\n<figure><img data-src=\"thu-muc-dong-bo.webp\" alt=\"Trang Thư mục đồng bộ\"><figcaption>Trang Thư mục đồng bộ</figcaption></figure>\n\n<h3 data-sec=\"tep-duoc-xu-ly-the-nao\">Tệp được xử lý thế nào</h3>\n<div class=\"gd-tw\"><table>\n<thead>\n<tr>\n<th>Nguồn</th>\n<th>Có sao chép vào app không</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>Dropbox / OneDrive</td>\n<td>Không. Nhạc phát thẳng từ ổ; sách được tải về khi mở</td>\n</tr>\n<tr>\n<td>Trong máy, trên Windows</td>\n<td>Không. Đọc thẳng từ ổ cứng</td>\n</tr>\n<tr>\n<td>Trong máy, trên Android</td>\n<td>Có, mỗi tệp mới được sao chép vào app một lần</td>\n</tr>\n</tbody>\n</table></div>\n<p>Có thể chọn nhiều nơi cùng lúc: ví dụ <strong>Trong máy</strong> cho nhạc và <strong>Google Drive</strong> cho sách.</p>\n<p>Thư mục đồng bộ chỉ đi <strong>một chiều</strong>: app đọc tệp từ thư mục, không bao giờ tải tệp đó lên tài khoản đồng bộ. Ví dụ nhạc lấy từ Dropbox sẽ không bị chép thêm một bản lên OneDrive.</p>\n<h2 data-sec=\"tam-dung-huy-don\">Tạm dừng, huỷ, dọn</h2>\n<ul>\n<li><strong>Tạm dừng</strong>: dừng lượt đang chạy, giữ nguyên những gì đã nhập. App không tự đồng bộ thư mục nữa cho tới khi bạn bấm <strong>Đồng bộ ngay</strong>, lúc đó tiếp tục từ chỗ đã dừng.</li>\n<li><strong>Huỷ đồng bộ</strong>: dừng và <strong>xoá khỏi thư viện</strong> mọi bài nhạc, sách đã nhập từ các thư mục đã chọn, đặt lại tiến trình từ đầu. Tệp gốc trên ổ hoặc trong máy không bị đụng tới. Danh sách thư mục vẫn giữ, bấm <strong>Đồng bộ ngay</strong> để làm lại.</li>\n<li><strong>Dọn mục đã mất tệp</strong>: xoá khỏi thư viện những mục mà tệp gốc đã bị xoá.</li>\n<li>Mọi tác vụ dài (đồng bộ, tải lên, tải về) cũng hiện ở <strong>khay tác vụ</strong> góc màn hình, có nút huỷ từng tác vụ và tốc độ, thời gian còn lại.</li>\n</ul>\n<h2 data-sec=\"meo\">Mẹo</h2>\n<ul>\n<li>Token và mã kết nối chỉ nằm trên từng máy, không vào bản sao lưu JSON. Máy mới phải đăng nhập lại.</li>\n<li>Dùng GitHub mà muốn có nhạc trên điện thoại: chọn <strong>Thư mục đồng bộ</strong> là Dropbox hoặc OneDrive.</li>\n<li>Bấm <strong>Yêu cầu lưu trữ bền vững</strong> trong Cài đặt để trình duyệt không tự xoá dữ liệu khi máy đầy.</li>\n</ul>"
  },
  {
   "id": "thu-vien",
-  "num": "4.1",
+  "num": "3.1",
   "group": "Ứng dụng",
   "label": "Thư viện",
   "title": "Thư viện",
   "sections": [
    {
     "id": "cac-phan-tren-trang",
-    "num": "4.1.1",
+    "num": "3.1.1",
     "title": "Các phần trên trang",
     "level": 2
    },
    {
     "id": "them-noi-dung",
-    "num": "4.1.2",
+    "num": "3.1.2",
     "title": "Thêm nội dung",
     "level": 2
    },
    {
     "id": "ngan-chi-tiet",
-    "num": "4.1.3",
+    "num": "3.1.3",
     "title": "Ngăn chi tiết",
     "level": 2
    },
    {
     "id": "dat-lai-tien-trinh",
-    "num": "4.1.4",
+    "num": "3.1.4",
     "title": "Đặt lại tiến trình",
     "level": 2
    },
    {
     "id": "don-du-lieu-thu-vien",
-    "num": "4.1.5",
+    "num": "3.1.5",
     "title": "Dọn dữ liệu Thư viện",
     "level": 2
    }
@@ -280,26 +198,26 @@ export const PAGES = [
  },
  {
   "id": "quan-ly-ung-dung",
-  "num": "4.2",
+  "num": "3.2",
   "group": "Ứng dụng",
   "label": "Quản lý ứng dụng",
   "title": "Quản lý ứng dụng",
   "sections": [
    {
     "id": "phien-ban-va-cap-nhat",
-    "num": "4.2.1",
+    "num": "3.2.1",
     "title": "Phiên bản và cập nhật",
     "level": 2
    },
    {
     "id": "cai-dat-amp-ngoai-tuyen",
-    "num": "4.2.2",
+    "num": "3.2.2",
     "title": "Cài đặt &amp; ngoại tuyến",
     "level": 2
    },
    {
     "id": "module",
-    "num": "4.2.3",
+    "num": "3.2.3",
     "title": "Module",
     "level": 2
    }
@@ -308,62 +226,62 @@ export const PAGES = [
  },
  {
   "id": "trinh-phat-nhac",
-  "num": "4.3",
+  "num": "3.3",
   "group": "Ứng dụng",
   "label": "Trình phát nhạc",
   "title": "Trình phát nhạc",
   "sections": [
    {
     "id": "them-nhac",
-    "num": "4.3.1",
+    "num": "3.3.1",
     "title": "Thêm nhạc",
     "level": 2
    },
    {
     "id": "trang-chu-nhac",
-    "num": "4.3.2",
+    "num": "3.3.2",
     "title": "Trang chủ nhạc",
     "level": 2
    },
    {
     "id": "thanh-phat-va-now-playing",
-    "num": "4.3.3",
+    "num": "3.3.3",
     "title": "Thanh phát và Now Playing",
     "level": 2
    },
    {
     "id": "loi-bai-hat",
-    "num": "4.3.4",
+    "num": "3.3.4",
     "title": "Lời bài hát",
     "level": 2
    },
    {
     "id": "nghe-lien-tuc",
-    "num": "4.3.5",
+    "num": "3.3.5",
     "title": "Nghe liên tục",
     "level": 2
    },
    {
     "id": "phat-ra-dau",
-    "num": "4.3.6",
+    "num": "3.3.6",
     "title": "Phát ra đâu",
     "level": 2
    },
    {
     "id": "widget-tren-man-hinh-chinh-android",
-    "num": "4.3.7",
+    "num": "3.3.7",
     "title": "Widget trên màn hình chính (Android)",
     "level": 2
    },
    {
     "id": "gan-nhac-voi-sach-va-fanfic",
-    "num": "4.3.8",
+    "num": "3.3.8",
     "title": "Gắn nhạc với sách và fanfic",
     "level": 2
    },
    {
     "id": "nghe-tiep-tren-may-khac",
-    "num": "4.3.9",
+    "num": "3.3.9",
     "title": "Nghe tiếp trên máy khác",
     "level": 2
    }
@@ -372,50 +290,50 @@ export const PAGES = [
  },
  {
   "id": "podcast",
-  "num": "4.4",
+  "num": "3.4",
   "group": "Ứng dụng",
   "label": "Podcast",
   "title": "Podcast",
   "sections": [
    {
     "id": "cac-muc",
-    "num": "4.4.1",
+    "num": "3.4.1",
     "title": "Các mục",
     "level": 2
    },
    {
     "id": "tim-va-dang-ky",
-    "num": "4.4.2",
+    "num": "3.4.2",
     "title": "Tìm và đăng ký",
     "level": 2
    },
    {
     "id": "mot-podcast-co-nhieu-nguon",
-    "num": "4.4.2.1",
+    "num": "3.4.2.1",
     "title": "Một podcast có nhiều nguồn",
     "level": 3
    },
    {
     "id": "nghe",
-    "num": "4.4.3",
+    "num": "3.4.3",
     "title": "Nghe",
     "level": 2
    },
    {
     "id": "tai-ve-va-nhap",
-    "num": "4.4.4",
+    "num": "3.4.4",
     "title": "Tải về và nhập",
     "level": 2
    },
    {
     "id": "thao-tac-nhanh",
-    "num": "4.4.5",
+    "num": "3.4.5",
     "title": "Thao tác nhanh",
     "level": 2
    },
    {
     "id": "nghe-khi-doc-sach",
-    "num": "4.4.6",
+    "num": "3.4.6",
     "title": "Nghe khi đọc sách",
     "level": 2
    }
@@ -424,56 +342,56 @@ export const PAGES = [
  },
  {
   "id": "sach",
-  "num": "4.5",
+  "num": "3.5",
   "group": "Ứng dụng",
   "label": "Sách",
   "title": "Sách",
   "sections": [
    {
     "id": "cac-muc",
-    "num": "4.5.1",
+    "num": "3.5.1",
     "title": "Các mục",
     "level": 2
    },
    {
     "id": "them-sach",
-    "num": "4.5.2",
+    "num": "3.5.2",
     "title": "Thêm sách",
     "level": 2
    },
    {
     "id": "doc",
-    "num": "4.5.3",
+    "num": "3.5.3",
     "title": "Đọc",
     "level": 2
    },
    {
     "id": "nghe-khi-doc",
-    "num": "4.5.3.1",
+    "num": "3.5.3.1",
     "title": "Nghe khi đọc",
     "level": 3
    },
    {
     "id": "doc-lai-tu-dau",
-    "num": "4.5.3.2",
+    "num": "3.5.3.2",
     "title": "Đọc lại từ đầu",
     "level": 3
    },
    {
     "id": "theo-doi-viec-doc",
-    "num": "4.5.4",
+    "num": "3.5.4",
     "title": "Theo dõi việc đọc",
     "level": 2
    },
    {
     "id": "tim-kiem-nang-cao",
-    "num": "4.5.5",
+    "num": "3.5.5",
     "title": "Tìm kiếm nâng cao",
     "level": 2
    },
    {
     "id": "dong-bo-tep-sach",
-    "num": "4.5.6",
+    "num": "3.5.6",
     "title": "Đồng bộ tệp sách",
     "level": 2
    }
@@ -482,50 +400,50 @@ export const PAGES = [
  },
  {
   "id": "xuong-viet",
-  "num": "4.6",
+  "num": "3.6",
   "group": "Ứng dụng",
   "label": "Xưởng Viết",
   "title": "Xưởng Viết",
   "sections": [
    {
     "id": "ban-viet",
-    "num": "4.6.1",
+    "num": "3.6.1",
     "title": "Bàn viết",
     "level": 2
    },
    {
     "id": "tao-truyen-moi",
-    "num": "4.6.2",
+    "num": "3.6.2",
     "title": "Tạo truyện mới",
     "level": 2
    },
    {
     "id": "nhap-truyen",
-    "num": "4.6.3",
+    "num": "3.6.3",
     "title": "Nhập truyện",
     "level": 2
    },
    {
     "id": "trinh-viet",
-    "num": "4.6.4",
+    "num": "3.6.4",
     "title": "Trình viết",
     "level": 2
    },
    {
     "id": "doc-trong-sach",
-    "num": "4.6.5",
+    "num": "3.6.5",
     "title": "Đọc trong Sách",
     "level": 2
    },
    {
     "id": "xuat-tep",
-    "num": "4.6.6",
+    "num": "3.6.6",
     "title": "Xuất tệp",
     "level": 2
    },
    {
     "id": "fandom-va-sach-goc",
-    "num": "4.6.7",
+    "num": "3.6.7",
     "title": "Fandom và sách gốc",
     "level": 2
    }
@@ -534,32 +452,32 @@ export const PAGES = [
  },
  {
   "id": "cai-dat",
-  "num": "4.7",
+  "num": "3.7",
   "group": "Ứng dụng",
   "label": "Cài đặt",
   "title": "Cài đặt",
   "sections": [
    {
     "id": "cac-muc",
-    "num": "4.7.1",
+    "num": "3.7.1",
     "title": "Các mục",
     "level": 2
    },
    {
     "id": "sao-luu-va-khoi-phuc",
-    "num": "4.7.2",
+    "num": "3.7.2",
     "title": "Sao lưu và khôi phục",
     "level": 2
    },
    {
     "id": "dat-lai-tien-trinh",
-    "num": "4.7.3",
+    "num": "3.7.3",
     "title": "Đặt lại tiến trình",
     "level": 2
    },
    {
     "id": "chong-bi-xoa-du-lieu",
-    "num": "4.7.4",
+    "num": "3.7.4",
     "title": "Chống bị xoá dữ liệu",
     "level": 2
    }
@@ -568,32 +486,32 @@ export const PAGES = [
  },
  {
   "id": "phat-hanh",
-  "num": "5",
+  "num": "4",
   "group": null,
   "label": "Phát hành",
   "title": "Phát hành phiên bản mới",
   "sections": [
    {
     "id": "quy-tac",
-    "num": "5.1",
+    "num": "4.1",
     "title": "Quy tắc",
     "level": 2
    },
    {
     "id": "so-phien-ban",
-    "num": "5.2",
+    "num": "4.2",
     "title": "Số phiên bản",
     "level": 2
    },
    {
     "id": "sau-khi-ban-noi-cap-nhat",
-    "num": "5.3",
+    "num": "4.3",
     "title": "Sau khi bạn nói \"cập nhật\"",
     "level": 2
    },
    {
     "id": "theo-doi",
-    "num": "5.4",
+    "num": "4.4",
     "title": "Theo dõi",
     "level": 2
    }
