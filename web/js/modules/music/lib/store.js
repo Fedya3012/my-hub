@@ -2,7 +2,7 @@
 // play counts), playlists (normal and smart), links to books/fanfic/podcasts, history.
 // Tables: see docs/MUSIC.md. Music items stay in `items` so the Library shows them.
 import { db, uid, now, logActivity, softDeleteItem, getSetting, setSetting } from '../../../core/db.js';
-import { storage } from '../../../core/storage/index.js';
+import { storage, drives } from '../../../core/storage/index.js';
 import { bus } from '../../../core/bus.js';
 import { thisDevice } from '../../../core/device.js';
 import { readAudioMeta } from './meta.js';
@@ -347,19 +347,32 @@ async function importFilesNow(files, { onProgress, sample = false, kind = 'music
   }
   for (const [k, v] of lrc) lrc.set(k, v.file);
   const imgs = new Map(list.filter(x => IMG_NAMES.test(x.file.name)).map(x => [dirOf(x.file), x.file]));
-  const existing = new Set((await db.tracks.toArray()).filter(t => !t.deleted).map(t => t.fileName + '|' + t.size));
+  // The same song (file name + size) is one library entry on every device: imported on Windows from G: and on
+  // Android from Drive, both point at one item, so progress, plays and lyrics match. Its id is derived from the
+  // file, so two devices importing before they sync still agree; an entry already known (synced from another
+  // device) only gets this device's file attached.
+  const existing = new Map((await db.tracks.toArray()).filter(t => !t.deleted).map(t => [t.fileName + '|' + t.size, t.itemId]));
   const res = { added: 0, skipped: 0, failed: [] };
   for (let i = 0; i < audio.length; i++) {
     if (signal?.aborted) { res.cancelled = true; break; }
     const { file, handle } = audio[i];
     onProgress?.(i, audio.length, file.name);
-    if (existing.has(file.name + '|' + file.size)) { res.skipped++; if (i % 25 === 24) await yieldToMain(); continue; }
+    const known = existing.get(file.name + '|' + file.size);
+    if (known) {
+      const here = (await db.files.where('itemId').equals(known).toArray()).some(f => f.role === 'main' && usableHere(f));
+      if (here) { res.skipped++; if (i % 25 === 24) await yieldToMain(); continue; }
+      try {
+        await storage.addFile(known, handle ? { handle } : file, { role: 'main', name: file.name, ...(remote ? { remote: { key: remote(file), drive: remote.drive } } : {}), ...(localFolder ? { localFolder } : {}) });
+        res.linked = (res.linked || 0) + 1;
+      } catch (e) { res.failed.push(`${file.name}: ${e.message}`); }
+      continue;
+    }
     await yieldToMain();   // let the page draw and react between songs
     try {
       const meta = await readAudioMeta(file, { name: file.name });
       const t = meta.tags || {};
       const item = {
-        id: uid(), type: kind, moduleId: 'music', title: t.title || base(file.name).replace(/^\d+[\s.-]+/, '').replace(/_/g, ' '),
+        id: sample ? uid() : songId(file), type: kind, moduleId: 'music', title: t.title || base(file.name).replace(/^\d+[\s.-]+/, '').replace(/_/g, ' '),
         subtitle: '', tags: [], status: 'new', favorite: 0, deleted: 0, rating: 0, createdAt: now(),
         meta: { originalName: file.name, ...(sample ? { sample: true } : {}) },
       };
@@ -373,7 +386,7 @@ async function importFilesNow(files, { onProgress, sample = false, kind = 'music
       else if (fv && !(await db.albums.get(track.albumId))?.bgVideoFileId) await setBgVideo('album', track.albumId, fv);
       await logActivity(item.id, 'music', 'import');
       await yieldToMain();
-      existing.add(file.name + '|' + file.size);
+      existing.set(file.name + '|' + file.size, item.id);
       res.added++;
     } catch (e) { console.error(e); res.failed.push(`${file.name}: ${e.message}`); }
   }
@@ -381,6 +394,12 @@ async function importFilesNow(files, { onProgress, sample = false, kind = 'music
   invalidate();
   return res;
 }
+
+// Same file name + size → same id on every device (see importFilesNow).
+const songId = (file) => 'mu-' + hash36(norm(file.name) + '|' + file.size);
+// A file row this device can open: its own copy / link (rows synced from elsewhere arrive without
+// locations.local), or a file left on a drive this device is connected to.
+const usableHere = (f) => !!f.locations?.local || (!!f.linked && Object.keys(f.locations || {}).some(k => drives[k]?.connected?.()));
 
 // Create/refresh the track, album and artist rows for an item.
 async function saveTrack(item, meta, { file, folder = '', lrcText, folderImg, artist, album, sample } = {}) {
@@ -740,7 +759,9 @@ export async function mainFile(id) {
     }
     return { id: 'vf:' + id.slice(3), itemId: id, role: 'main', name: t.fileName, size: t.size, mime: t.tech?.mime || '', locations: { local: { kind: 'url', ref: vUrls.get(id) } } };
   }
-  return db.files.where('itemId').equals(id).filter(f => f.role === 'main').first();
+  // Several devices may each have attached their own copy of the song: use the one that opens here.
+  const rows = await db.files.where('itemId').equals(id).filter(f => f.role === 'main').toArray();
+  return rows.find(f => f.locations?.local) || rows.find(usableHere) || rows[0];
 }
 
 // ── Artwork for anything (artist, playlist, genre, year, label, composer, folder…) ──
