@@ -19,9 +19,9 @@ Ví dụ hay dùng: đồng bộ bằng **GitHub** nhưng lấy nhạc từ **Dr
 | **Tài khoản GitHub** | Thư viện, cài đặt, tiến độ, qua kho riêng tư `my-hub-data` của bạn | Ở lại từng máy, không tải lên |
 | **Dropbox** | Thư viện, tiến độ và cả tệp, trong thư mục riêng của app | Tự tải lên; máy khác tải về khi mở |
 | **OneDrive** | Như Dropbox, trong `Apps/…` | Như Dropbox |
-| **Google Drive** | Thư viện và tiến độ nằm trong thư mục ẩn của app trên Drive | Chỉ đọc, phát thẳng từ Drive; không sao chép (xem [Google Drive](21-google-drive.md)) |
+| **Google Drive** | Thư viện và tiến độ nằm trong thư mục ẩn của app trên Drive | Chỉ đọc, phát thẳng từ Drive; không sao chép |
 
-Cách bật: **Cài đặt → Tài khoản đồng bộ** (mở trang riêng), bấm vào một ô. Google Drive cần tự tạo một khoá đăng nhập một lần, làm theo [hướng dẫn Google Drive](21-google-drive.md).
+Cách bật: **Cài đặt → Tài khoản đồng bộ** (mở trang riêng), bấm vào một ô.
 
 ### Đăng nhập GitHub
 
