@@ -65,6 +65,15 @@ export async function open(host, source, { lastLocation = null, prefs, rtl = fal
   let relocateFn = () => {}, selectFn = () => {}, annFn = () => {};
   let lastDetail = null, lastOut = null;
 
+  // How far into the current section (chapter) the page is, 0..1. foliate's detail.section is the section index, not this.
+  let sf = null;
+  const inSection = (d) => {
+    const i = d.section?.current;
+    if (i == null) return null;
+    try { sf ||= view.getSectionFractions(); } catch { return null; }
+    const a = sf?.[i], b = sf?.[i + 1] ?? 1;
+    return a == null || b <= a ? null : Math.min(1, Math.max(0, ((d.fraction ?? 0) - a) / (b - a)));
+  };
   view.addEventListener('relocate', (e) => {
     const d = e.detail;
     lastDetail = d;
@@ -72,7 +81,7 @@ export async function open(host, source, { lastLocation = null, prefs, rtl = fal
     relocateFn(lastOut = {
       fraction: d.fraction ?? 0, loc: d.cfi, page: d.location ? d.location.current + 1 : null, total,
       label: d.pageItem ? `Trang ${d.pageItem.label}` : total ? `Vị trí ${d.location.current + 1} / ${total}` : `${Math.round((d.fraction || 0) * 100)}%`,
-      tocLabel: d.tocItem?.label?.trim() || '', chapterFraction: d.section ? (d.section.current + 1) / (d.section.total || 1) : null, index: d.index ?? null,
+      tocLabel: d.tocItem?.label?.trim() || '', chapterFraction: inSection(d), index: d.section?.current ?? d.index ?? null,
     });
   });
   view.addEventListener('create-overlay', (e) => {

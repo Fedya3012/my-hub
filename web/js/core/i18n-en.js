@@ -3883,4 +3883,7 @@ export default {"(Google cấp quyền theo từng giờ). Bấm một lần đ�
 "Muốn có cả tệp sách trên mọi máy: chọn thư mục Dropbox, OneDrive hoặc Google Drive trong Cài đặt → Thư mục đồng bộ.":"To have the book files on every device too, pick a Dropbox, OneDrive or Google Drive folder in Settings → Sync folders.",
 "Lưu trữ và đồng bộ (Local, GitHub, Dropbox, OneDrive, Google Drive), thư mục đồng bộ, thiết bị, giao diện, thông số dùng chung, sao lưu JSON.":"Storage and sync (Local, GitHub, Dropbox, OneDrive, Google Drive), sync folders, devices, appearance, shared parameters, JSON backup.",
 "Thư mục đồng bộ quét sách trong thư mục đã chọn (trên máy, Dropbox, OneDrive hoặc Google Drive) và tự thêm sách mới mỗi lần đồng bộ.":"Sync folders scans books in the chosen folders (device, Dropbox, OneDrive or Google Drive) and adds new books on each sync.",
-"Tệp này từ bản Google Drive cũ (trước 0.8). Kết nối lại Google Drive hoặc thêm lại tệp.":"This file comes from the old Google Drive version (before 0.8). Reconnect Google Drive or add the file again."};
+"Tệp này từ bản Google Drive cũ (trước 0.8). Kết nối lại Google Drive hoặc thêm lại tệp.":"This file comes from the old Google Drive version (before 0.8). Reconnect Google Drive or add the file again.",
+"Chương trước":"Previous chapter",
+"Chương sau":"Next chapter",
+"Danh sách chương":"Chapter list"};

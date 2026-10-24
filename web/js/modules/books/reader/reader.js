@@ -69,6 +69,11 @@ export async function openReader(root, id, { ctx, onClose }) {
     <div class="bk-r-dim" aria-hidden="true"></div>
     <div class="bk-r-warm" aria-hidden="true"></div>
     <footer class="bk-r-bot">
+      <div class="bk-r-ch" hidden>
+        <button class="bk-r-chbtn" data-a="chprev" aria-label="Chương trước">${icon('b-left')}<span>Chương trước</span></button>
+        <button class="bk-r-chnow" data-a="chlist" aria-label="Danh sách chương"><span class="num" data-chn></span><span class="bk-r-chname" data-chname></span><i class="bk-r-chbar"><b data-chbar></b></i></button>
+        <button class="bk-r-chbtn" data-a="chnext" aria-label="Chương sau"><span>Chương sau</span>${icon('b-right')}</button>
+      </div>
       <button class="icon-btn sm" data-a="prev" aria-label="Trang trước">${icon('b-left')}</button>
       <input type="range" min="0" max="1000" value="0" data-slider aria-label="Vị trí trong sách">
       <button class="icon-btn sm" data-a="next" aria-label="Trang sau">${icon('b-right')}</button>
@@ -133,10 +138,15 @@ export async function openReader(root, id, { ctx, onClose }) {
   const wpm = () => Math.max(60, Math.min(1200, myWpm || prefs.wpm || 230));
   let saveTimer = 0, dirty = false, sliding = false, lastAct = Date.now();
   const ses = { id: null, start: Date.now(), seconds: 0, from: last.fraction || 0 };
+  // Flat chapter list for the chapter row (chapterBar below), before the first relocate fires.
+  const flat = [];
+  (function walk(items) { for (const t of items || []) { if (t.href) flat.push({ href: t.href, label: (t.label || '').trim() }); walk(t.subitems); } })(engine.toc);
+  let chIdx = -1;
   engine.onRelocate((d) => {
     last = d;
     $('[data-loc]').textContent = d.label || '';
     $('[data-chapter]').textContent = d.tocLabel || '';
+    chapterBar(d);
     if (!sliding) $('[data-slider]').value = Math.round((d.fraction || 0) * 1000);
     if (words) { const min = (1 - (d.fraction || 0)) * words / wpm(); $('[data-left]').textContent = min > 1 ? `còn ${min < 60 ? Math.round(min) + ' phút' : (min / 60).toFixed(1) + ' giờ'}` : ''; }
     $('.bk-r-end').hidden = !((d.fraction || 0) >= 0.995 && b.status !== 'finished');
@@ -203,6 +213,29 @@ export async function openReader(root, id, { ctx, onClose }) {
   $('[data-a="end-x"]').onclick = () => { $('.bk-r-end').hidden = true; };
   $('[data-a="panel-x"]').onclick = hidePanel;
 
+  // ── Chapters: "‹ Chương trước · 3/12 Tên chương · Chương sau ›" above the slider, from the book's table of contents
+  // (EPUB/MOBI/FB2 nav, chapters detected in TXT/Markdown/HTML, a fanfic's chapters). Keys [ and ] jump too.
+  function chapterBar(d) {
+    const bar = $('.bk-r-ch');
+    if (flat.length < 2) { bar.hidden = true; return; }
+    bar.hidden = false;
+    // Same label can repeat ("Chương 1" in two parts): prefer the match nearest the current one.
+    const hits = flat.map((t, i) => t.label === d.tocLabel ? i : -1).filter(i => i >= 0);
+    if (hits.length) chIdx = hits.reduce((a, i) => Math.abs(i - chIdx) < Math.abs(a - chIdx) ? i : a, hits[0]);
+    $('[data-chn]').textContent = chIdx >= 0 ? `${chIdx + 1}/${flat.length}` : '';
+    $('[data-chname]').textContent = chIdx >= 0 ? flat[chIdx].label : (d.tocLabel || '');
+    const cf = d.chapterFraction ?? 0;
+    $('[data-chbar]').style.width = Math.round(cf * 100) + '%';
+    $('[data-a="chprev"]').disabled = chIdx <= 0;
+    $('[data-a="chnext"]').disabled = chIdx < 0 || chIdx >= flat.length - 1;
+    // Last page of a chapter: the next-chapter button lights up.
+    $('[data-a="chnext"]').classList.toggle('ready', cf >= 0.9 && chIdx < flat.length - 1);
+  }
+  const goChapter = (step) => { const i = chIdx + step; if (i < 0 || i >= flat.length) return; chIdx = i; engine.goTo(flat[i].href); };
+  $('[data-a="chprev"]').onclick = () => goChapter(-1);
+  $('[data-a="chnext"]').onclick = () => goChapter(1);
+  $('[data-a="chlist"]').onclick = () => $('[data-a="toc"]').click();
+
   // Tap zones: left / right third turns pages, middle toggles the bars.
   host.addEventListener('bk-tap', (e) => {
     if (!$('.bk-r-sel').hidden) { hideSel(); return; }
@@ -217,6 +250,8 @@ export async function openReader(root, id, { ctx, onClose }) {
     if (k === 'Escape') { if (!$('.bk-r-panel').hidden) hidePanel(); else if (!$('.bk-r-sel').hidden) hideSel(); else { close(); onClose(); } }
     else if (k === 'ArrowRight' || k === 'PageDown' || (k === ' ' && !e.shiftKey)) { e.preventDefault?.(); k === 'ArrowRight' && engine.right ? engine.right() : engine.next(); }
     else if (k === 'ArrowLeft' || k === 'PageUp' || (k === ' ' && e.shiftKey)) { e.preventDefault?.(); k === 'ArrowLeft' && engine.left ? engine.left() : engine.prev(); }
+    else if (k === '[') goChapter(-1);
+    else if (k === ']') goChapter(1);
     else if (k === 'f') el.requestFullscreen?.().catch(() => {});
     else if (k === '+' || k === '=') changePref('fontSize', Math.min(40, prefs.fontSize + 1));
     else if (k === '-') changePref('fontSize', Math.max(12, prefs.fontSize - 1));

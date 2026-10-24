@@ -147,3 +147,19 @@ body.bk-reader-open #toasts { z-index: 890; }
 /* Reading with the bars hidden: the player drops to the bottom edge. */
 body.bk-reader-open #dock .mdock { bottom: calc(64px + var(--sai-bottom, 0px)); transition: bottom .2s var(--ease-out, ease); }
 body.bk-reader-open:has(.bk-reader.bare) #dock .mdock { bottom: calc(12px + var(--sai-bottom, 0px)); }
+
+/* Chapter row above the slider (reader.js chapterBar). */
+.bk-r-bot:has(.bk-r-ch:not([hidden])) { flex-wrap: wrap; row-gap: 4px; }
+.bk-r-ch { flex: 1 1 100%; display: flex; align-items: center; gap: 6px; min-width: 0; }
+.bk-r-chbtn { display: inline-flex; align-items: center; gap: 4px; height: 32px; padding: 0 10px; border: 0; border-radius: 999px; background: none; color: inherit; font: inherit; font-size: .8rem; cursor: pointer; white-space: nowrap; }
+.bk-r-chbtn .ic { width: 16px; height: 16px; }
+.bk-r-chbtn:hover:not(:disabled) { background: color-mix(in srgb, var(--r-fg) 8%, transparent); }
+.bk-r-chbtn:disabled { opacity: .35; cursor: default; }
+.bk-r-chbtn.ready { background: color-mix(in srgb, var(--t-book, var(--accent)) 18%, transparent); color: var(--t-book, var(--accent)); font-weight: 600; }
+.bk-r-chnow { flex: 1; min-width: 0; display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: 8px; row-gap: 3px; padding: 4px 8px; border: 0; border-radius: 10px; background: none; color: inherit; font: inherit; font-size: .8rem; text-align: left; cursor: pointer; }
+.bk-r-chnow:hover { background: color-mix(in srgb, var(--r-fg) 6%, transparent); }
+.bk-r-chnow [data-chn] { opacity: .6; }
+.bk-r-chname { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-weight: 600; }
+.bk-r-chbar { grid-column: 1 / -1; height: 2px; border-radius: 2px; background: color-mix(in srgb, var(--r-fg) 12%, transparent); overflow: hidden; }
+.bk-r-chbar b { display: block; height: 100%; width: 0; background: var(--t-book, var(--accent)); transition: width .2s; }
+@media (max-width: 520px) { .bk-r-chbtn span { display: none; } .bk-r-chbtn { padding: 0 8px; } }
