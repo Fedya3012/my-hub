@@ -6,7 +6,7 @@ import * as od from './onedrive.js';
 import * as gd from './googledrive.js';
 import { getCloud, clouds } from './clouds.js';
 import { nativeShell } from './http.js';
-import { DROPBOX_APP_KEY, ONEDRIVE_CLIENT_ID, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_WEB_CLIENT_ID } from '../../config.js';
+import { DROPBOX_APP_KEY, ONEDRIVE_CLIENT_ID, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_WEB_CLIENT_ID, GOOGLE_WEB_CLIENT_SECRET, GOOGLE_PAGES_REDIRECT } from '../../config.js';
 import { formDialog } from '../account-ui.js';
 import { setSetting } from '../db.js';
 import { esc, modal, confirmBox, toast } from '../ui.js';
@@ -71,20 +71,20 @@ async function onedriveDialog() {
   });
 }
 
-// One tap where the app's Web client works (web, Windows); the Desktop-client form stays as "Cách khác"
-// (Android until it has its own return path, or anyone with their own client).
+// One tap with the app's Web client (web, Windows, Android); the Desktop-client form stays as "Cách khác"
+// for anyone with their own client.
 async function googleDialog() {
-  const oneTap = GOOGLE_WEB_CLIENT_ID && !window.Capacitor?.isNativePlatform?.();
+  const oneTap = !!GOOGLE_WEB_CLIENT_ID && !!GOOGLE_WEB_CLIENT_SECRET && (!window.Capacitor?.isNativePlatform?.() || !!window.Capacitor.Plugins?.OAuth);
   if (oneTap) {
     const act = await modal({
       title: 'Kết nối Google Drive',
-      body: '<p>Chọn tài khoản Google và cho phép My Hub đọc Google Drive. Thư mục đồng bộ chỉ được đọc, không bị sửa; thư viện (nếu dùng Google Drive làm tài khoản đồng bộ) nằm trong thư mục ẩn riêng của app.</p><p class="hint">Phiên đăng nhập kéo dài một giờ; hết hạn thì bấm lại nút này.</p>',
+      body: '<p>Chọn tài khoản Google và cho phép My Hub đọc Google Drive. Thư mục đồng bộ chỉ được đọc, không bị sửa; thư viện (nếu dùng Google Drive làm tài khoản đồng bộ) nằm trong thư mục ẩn riêng của app.</p><p class="hint">Chỉ cần đăng nhập một lần trên mỗi máy.</p>',
       actions: [{ label: 'Huỷ', value: null }, { label: 'Cách khác (dán mã)', value: 'manual' }, { label: 'Đăng nhập bằng Google', value: 'go', kind: 'primary' }],
     });
     if (!act) return false;
     if (act === 'go') {
       try {
-        await gd.signInWeb(GOOGLE_WEB_CLIENT_ID);
+        await gd.signInWeb(GOOGLE_WEB_CLIENT_ID, GOOGLE_WEB_CLIENT_SECRET, GOOGLE_PAGES_REDIRECT);
         await drives.googledrive.readSnapshot('hub-live.json');   // proves the token and the app data folder work
         toast('Đã kết nối Google Drive');
         return true;

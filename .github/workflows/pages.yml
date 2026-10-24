@@ -1,0 +1,39 @@
+# Publishes only the Google sign-in landing page (oauth-google.html) to GitHub Pages:
+# https://fedya3012.github.io/my-hub/oauth-google.html. Android's sign-in ends there and goes back into the app.
+# One-time setup: repository Settings → Pages → Source: GitHub Actions.
+name: Sign-in page
+
+on:
+  push:
+    branches: [main]
+    paths: ['web/oauth-google.html', 'web/js/oauth-google.js', '.github/workflows/pages.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Collect the page
+        run: |
+          mkdir -p site/js
+          cp web/oauth-google.html site/
+          cp web/js/oauth-google.js site/js/
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deploy
+        uses: actions/deploy-pages@v4

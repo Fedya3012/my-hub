@@ -18,3 +18,9 @@ export const GOOGLE_CLIENT_SECRET = '';
 // Google Drive one-tap sign-in ("Đăng nhập bằng Google"): OAuth client of type "Web application" with the origins
 // https://fedya3012.github.io and http://localhost:47821 and the redirect <origin>/…/oauth-google.html.
 export const GOOGLE_WEB_CLIENT_ID = '442469437504-i6tl22nkukmbeiqk5ikl3qa2d01euq3a.apps.googleusercontent.com';
+// Its secret: needed to swap the sign-in code for a lasting (refresh) token. An app that runs on the user's device
+// cannot hide it; it only lets someone ask Google for a sign-in in My Hub's name, never read anyone's Drive.
+// Kept out of the public repository: paste it locally, or set it once the owner decides how to ship it.
+export const GOOGLE_WEB_CLIENT_SECRET = '';
+// Where Android's sign-in lands before going back to the app (GitHub Pages, workflow pages.yml).
+export const GOOGLE_PAGES_REDIRECT = 'https://fedya3012.github.io/my-hub/oauth-google.html';

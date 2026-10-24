@@ -48,40 +48,46 @@ export async function finishAuth(clientId, secret, pasted, verifier) {
   ids.clear(); dirs.clear();
 }
 
-// One-tap sign-in with the app's own Web client: Google's account chooser in a popup (Windows: the system browser),
-// which lands on oauth-google.html; that page hands the access token back (postMessage, or through the Windows
-// shell). No secret, so no refresh token: the token lasts an hour, then "Đăng nhập bằng Google" again.
-export function signInWeb(clientId) {
+// One-tap sign-in with the app's own Web client: Google's account chooser, once; the code it returns is swapped
+// (PKCE + the client secret) for a refresh token, so the app stays signed in. Where it opens:
+//   web: a popup that lands on oauth-google.html, which posts the answer back;
+//   Windows: the system browser, oauth-google.html on localhost hands it to the shell (hub:google);
+//   Android: the system browser (Google refuses WebViews), oauth-google.html on GitHub Pages sends it back to the
+//   app as com.myhub.app://oauth?… (OAuthPlugin).
+export async function signInWeb(clientId, secret, pagesRedirect) {
+  const OA = window.Capacitor?.isNativePlatform?.() ? window.Capacitor.Plugins?.OAuth : null;
   const state = b64url(crypto.getRandomValues(new Uint8Array(16)));
-  const redirect = new URL('oauth-google.html', document.baseURI).href;
-  const url = `${AUTH}?client_id=${encodeURIComponent(clientId)}&response_type=token&redirect_uri=${encodeURIComponent(redirect)}&scope=${encodeURIComponent(SCOPE)}&include_granted_scopes=true&prompt=select_account&state=${state}`;
-  return new Promise((resolve, reject) => {
-    let offShell = null;
-    const done = (hash) => {
-      const p = new URLSearchParams(String(hash || '').replace(/^#/, ''));
+  const verifier = b64url(crypto.getRandomValues(new Uint8Array(48)));
+  const challenge = b64url(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier)));
+  const redirect = OA ? pagesRedirect : new URL('oauth-google.html', document.baseURI).href;
+  const url = `${AUTH}?client_id=${encodeURIComponent(clientId)}&response_type=code&redirect_uri=${encodeURIComponent(redirect)}&scope=${encodeURIComponent(SCOPE)}&access_type=offline&prompt=${encodeURIComponent('select_account consent')}&include_granted_scopes=true&code_challenge=${challenge}&code_challenge_method=S256&state=${state}`;
+  const query = await new Promise((resolve, reject) => {
+    const offs = [];
+    const stop = () => { offs.forEach(f => f()); clearTimeout(timer); };
+    const got = (q) => {
+      const p = new URLSearchParams(String(q || '').replace(/^.*?[?#]/, ''));
       if (p.get('state') !== state) return;
-      removeEventListener('message', onMsg); offShell?.(); clearTimeout(timer);
-      if (p.get('error')) { reject(err(p.get('error') === 'access_denied' ? 'Bạn chưa cho phép My Hub truy cập Google Drive.' : 'Google báo lỗi: ' + p.get('error'), 'bad_token')); return; }
-      const access = p.get('access_token');
-      if (!access) { reject(err('Google không trả về quyền truy cập.', 'bad_token')); return; }
-      clouds.set('googledrive', { web: true, clientId, access, refresh: null, expires: Date.now() + ((+p.get('expires_in') || 3600) - 60) * 1000 });
-      ids.clear(); dirs.clear();
-      resolve(true);
+      stop(); resolve(p);
     };
-    const onMsg = (e) => { if (e.origin === location.origin && e.data?.type === 'hub-google') done(e.data.hash); };
-    addEventListener('message', onMsg);
-    offShell = window.hubDesktop?.onGoogle?.(done) || null;
-    const timer = setTimeout(() => { removeEventListener('message', onMsg); offShell?.(); reject(err('Hết thời gian chờ đăng nhập Google, thử lại.', 'timeout')); }, 5 * 60 * 1000);
-    window.open(url, 'hub-google', 'popup,width=500,height=650');
+    const onMsg = (e) => { if (e.origin === location.origin && e.data?.type === 'hub-google') got(e.data.query); };
+    addEventListener('message', onMsg); offs.push(() => removeEventListener('message', onMsg));
+    const off = window.hubDesktop?.onGoogle?.(got); if (off) offs.push(off);
+    if (OA) OA.addListener('result', (r) => got(r.url)).then(h => offs.push(() => h.remove()));
+    const timer = setTimeout(() => { stop(); reject(err('Hết thời gian chờ đăng nhập Google, thử lại.', 'timeout')); }, 10 * 60 * 1000);
+    if (OA) OA.open({ url }).catch(e => { stop(); reject(e); });
+    else window.open(url, 'hub-google', 'popup,width=500,height=650');
   });
+  if (query.get('error')) throw err(query.get('error') === 'access_denied' ? 'Bạn chưa cho phép My Hub truy cập Google Drive.' : 'Google báo lỗi: ' + query.get('error'), 'bad_token');
+  const { r, j } = await tokenCall({ client_id: clientId, client_secret: secret, grant_type: 'authorization_code', code: query.get('code') || '', redirect_uri: redirect, code_verifier: verifier });
+  if (!r.ok) throw err(j.error_description || 'Google không nhận mã đăng nhập, thử lại.', 'bad_token');
+  if (!j.refresh_token) throw err('Google không trả về quyền dùng lâu dài. Vào myaccount.google.com/permissions gỡ My Hub rồi đăng nhập lại.', 'bad_token');
+  clouds.set('googledrive', { clientId, secret, access: j.access_token, refresh: j.refresh_token, expires: Date.now() + (j.expires_in - 60) * 1000 });
+  ids.clear(); dirs.clear();
+  return true;
 }
 
 async function token() {
   const c = getCloud('googledrive');
-  if (c?.web && c.access) {
-    if (Date.now() < c.expires) return c.access;
-    throw err('Phiên Google Drive đã hết hạn, bấm “Đăng nhập bằng Google” lại.', 'reconnect');
-  }
   if (!c?.refresh) throw err('Chưa kết nối Google Drive.', 'signed_out');
   if (c.access && Date.now() < c.expires) return c.access;
   const { r, j } = await tokenCall({ client_id: c.clientId, client_secret: c.secret, grant_type: 'refresh_token', refresh_token: c.refresh });
@@ -157,8 +163,8 @@ export const googledrive = {
   id: 'googledrive', label: 'Google Drive', files: true,
   fileKey,
   configured: () => true,
-  connected: () => { const c = getCloud('googledrive'); return !!(c?.refresh || (c?.web && c.access && Date.now() < c.expires)); },
-  linked: () => { const c = getCloud('googledrive'); return !!(c?.refresh || c?.web); },
+  connected: () => !!getCloud('googledrive')?.refresh,
+  linked: () => !!getCloud('googledrive')?.refresh,
   async available() { return this.connected() && navigator.onLine; },
 
   async readSnapshot(name = 'hub-db.json', { signal, onProgress } = {}) {
