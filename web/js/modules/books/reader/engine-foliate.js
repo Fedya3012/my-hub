@@ -85,7 +85,7 @@ export async function open(host, source, { lastLocation = null, prefs, rtl = fal
     });
   });
   view.addEventListener('create-overlay', (e) => {
-    for (const a of ann.values()) if (byIndex(a.loc) === e.detail.index) view.addAnnotation({ value: a.loc, color: a.color, kind: a.kind });
+    for (const a of ann.values()) if (byIndex(a.loc) === (e.detail.section?.current ?? e.detail.index)) view.addAnnotation({ value: a.loc, color: a.color, kind: a.kind });
   });
   view.addEventListener('draw-annotation', (e) => {
     const { draw, annotation } = e.detail;
@@ -120,7 +120,18 @@ export async function open(host, source, { lastLocation = null, prefs, rtl = fal
     };
     doc.addEventListener('pointerup', () => setTimeout(fire, 10));
     doc.addEventListener('keyup', (ev) => { if (ev.shiftKey) fire(); });
-    doc.addEventListener('keydown', (ev) => host.dispatchEvent(new KeyboardEvent('keydown', { key: ev.key, shiftKey: ev.shiftKey, ctrlKey: ev.ctrlKey, metaKey: ev.metaKey, bubbles: true })));
+    doc.addEventListener('keydown', (ev) => {
+      // Reader shortcuts (Ctrl+F, Ctrl+D, Ctrl+±/0) must not reach the browser's own find / bookmark / zoom.
+      if ((ev.ctrlKey || ev.metaKey) && /^[fd=+\-0]$/i.test(ev.key)) ev.preventDefault();
+      if (ev.key === ' ' || ev.key === 'Home' || ev.key === 'End') ev.preventDefault();
+      host.dispatchEvent(new KeyboardEvent('keydown', { key: ev.key, code: ev.code, shiftKey: ev.shiftKey, ctrlKey: ev.ctrlKey, metaKey: ev.metaKey, altKey: ev.altKey, bubbles: true }));
+    });
+    // Wheel inside the page: re-sent to the host so Ctrl+wheel zoom and wheel page turns work over the text too.
+    doc.addEventListener('wheel', (ev) => {
+      const out = new WheelEvent('wheel', { deltaX: ev.deltaX, deltaY: ev.deltaY, deltaMode: ev.deltaMode, ctrlKey: ev.ctrlKey, metaKey: ev.metaKey, shiftKey: ev.shiftKey, bubbles: true, cancelable: true });
+      host.dispatchEvent(out);
+      if (out.defaultPrevented) ev.preventDefault();
+    }, { passive: false });
     doc.addEventListener('click', (ev) => { if (!doc.getSelection()?.toString()) host.dispatchEvent(new CustomEvent('bk-tap', { detail: { x: ev.clientX + (doc.defaultView.frameElement?.getBoundingClientRect().left || 0), y: ev.clientY } })); });
   });
 
@@ -155,6 +166,8 @@ export async function open(host, source, { lastLocation = null, prefs, rtl = fal
     kind: fixed ? 'fixed' : 'reflow', book, view, toc: book.toc || [], dir: book.dir,
     sectionFractions: () => view.getSectionFractions(),
     goTo: (loc) => view.goTo(loc).catch(() => {}), goToFraction: (f) => view.goToFraction(f),
+    // Last page of the current section (paginator.atEnd means the end of the whole book). Pages count the blank pads at both ends.
+    atSectionEnd: () => { const r = view.renderer; if (!r || fixed) return false; return r.scrolled ? r.viewSize - r.end <= 2 : r.page >= r.pages - 2; },
     next: () => view.next(), prev: () => view.prev(), left: () => view.goLeft(), right: () => view.goRight(),
     onRelocate: (fn) => { relocateFn = fn; if (lastOut) fn(lastOut); }, onSelect: (fn) => { selectFn = fn; }, onAnnotation: (fn) => { annFn = fn; },
     addAnnotation(a) { if (!a.loc || a.kind === 'bookmark' || a.kind === 'note' && !a.text) return; ann.set(a.loc, a); view.addAnnotation({ value: a.loc, color: a.color }).catch?.(() => {}); },

@@ -8,7 +8,7 @@ import { KINDS, UNAVAILABLE, sources, saveSources, resetSources, labelOf } from 
 const GROUPS = [
   ['b-font', 'Chữ và bố cục', ['font', 'fontSize', 'lineHeight', 'margin', 'maxWidth', 'justify', 'hyphenate']],
   ['palette', 'Nền trang và ánh sáng', ['theme', 'customBg', 'customFg', 'brightness', 'warmth']],
-  ['book', 'Cách đọc', ['flow', 'columns', 'animated', 'tapZones']],
+  ['book', 'Cách đọc', ['flow', 'readMode', 'columns', 'animated', 'tapZones', 'wheelTurns']],
   ['image', 'Truyện tranh và PDF', ['comicFit', 'comicRtl', 'panelZoom', 'pdfMode']],
   ['b-speak', 'Đọc to và dịch', ['ttsRate', 'translateTo']],
   ['b-chart', 'Theo dõi việc đọc', ['trackSessions', 'idleMinutes', 'wpm', 'halfStars']],

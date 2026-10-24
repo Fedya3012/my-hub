@@ -42,6 +42,8 @@ export function definePrefs() {
       customBg: { type: 'color', default: '#fbf7ee', label: 'Màu nền tuỳ chỉnh', scope: 'sync' },
       customFg: { type: 'color', default: '#2b2b2b', label: 'Màu chữ tuỳ chỉnh', scope: 'sync' },
       flow: { type: 'enum', default: 'paginated', options: { paginated: 'Lật trang', scrolled: 'Cuộn liên tục' }, label: 'Kiểu đọc' },
+      readMode: { type: 'enum', default: 'continuous', options: { continuous: 'Đọc liền một lượt', chapter: 'Từng chương (dừng ở cuối mỗi chương)' }, label: 'Đọc liền hay từng chương' },
+      wheelTurns: { type: 'bool', default: 1, label: 'Lăn chuột để lật trang (khi lật trang)' },
       columns: { type: 'enum', default: 'auto', options: { auto: 'Tự động (2 trang khi màn rộng)', 1: 'Một trang', 2: 'Hai trang' }, label: 'Số trang trên màn hình' },
       animated: { type: 'bool', default: 1, label: 'Hiệu ứng lật trang' },
       brightness: { type: 'number', default: 100, min: 30, max: 100, step: 5, label: 'Độ sáng trang', unit: '%' },

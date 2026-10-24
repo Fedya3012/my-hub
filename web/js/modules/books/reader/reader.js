@@ -81,6 +81,7 @@ export async function openReader(root, id, { ctx, onClose }) {
     </footer>
     <div class="bk-r-tts" hidden><button class="icon-btn sm" data-t="toggle" aria-label="Tạm dừng">${icon('b-pause')}</button><span data-t-text class="muted"></span><button class="icon-btn sm" data-t="stop" aria-label="Dừng đọc">${icon('b-stop')}</button></div>
     <div class="bk-r-end" hidden><span>Đã đến cuối sách.</span><button class="btn small primary" data-a="finish">${icon('check')}Đánh dấu đã đọc</button><button class="icon-btn sm" data-a="end-x" aria-label="Đóng">${icon('x')}</button></div>
+    <div class="bk-r-chend" hidden role="status"><span><small>Hết chương</small><b data-chend-name></b></span><button class="btn small primary" data-a="chend-next">Chương sau${icon('b-right')}</button><button class="icon-btn sm" data-a="chend-x" aria-label="Đóng">${icon('x')}</button></div>
     <div class="bk-r-sel" hidden role="toolbar" aria-label="Thao tác với đoạn chọn"></div>
     <aside class="bk-r-panel" hidden><header><h2 data-ptitle></h2><button class="icon-btn" data-a="panel-x" aria-label="Đóng">${icon('x')}</button></header><div class="bk-r-pbody"></div></aside>`;
   const $ = (s) => el.querySelector(s);
@@ -192,8 +193,8 @@ export async function openReader(root, id, { ctx, onClose }) {
   slider.oninput = () => { sliding = true; };
   slider.onchange = () => { sliding = false; engine.goToFraction(slider.value / 1000); };
   $('[data-a="back"]').onclick = () => { close(); onClose(); };
-  $('[data-a="prev"]').onclick = () => engine.left ? engine.left() : engine.prev();
-  $('[data-a="next"]').onclick = () => engine.right ? engine.right() : engine.next();
+  $('[data-a="prev"]').onclick = () => turn(-1, true);
+  $('[data-a="next"]').onclick = () => turn(1, true);
   $('[data-a="toc"]').onclick = () => panel('Mục lục', tocHtml(engine.toc), (body) => body.querySelectorAll('[data-href]').forEach(a => a.onclick = () => { engine.goTo(a.dataset.href); hidePanel(); }));
   $('[data-a="notes"]').onclick = () => notesPanel();
   $('[data-a="search"]').onclick = () => searchPanel();
@@ -231,6 +232,21 @@ export async function openReader(root, id, { ctx, onClose }) {
     // Last page of a chapter: the next-chapter button lights up.
     $('[data-a="chnext"]').classList.toggle('ready', cf >= 0.9 && chIdx < flat.length - 1);
   }
+  // One page forward / back. "Từng chương" mode stops at the end of a chapter with a card; the next turn goes on.
+  let chEndShown = false;
+  function turn(dir, physical = false) {
+    const go = () => dir > 0 ? (physical && engine.right ? engine.right() : engine.next()) : (physical && engine.left ? engine.left() : engine.prev());
+    if (prefs.readMode === 'chapter' && engine.atSectionEnd && dir > 0 && engine.atSectionEnd() && chIdx < flat.length - 1 && !chEndShown) {
+      chEndShown = true;
+      $('[data-chend-name]').textContent = chIdx >= 0 ? flat[chIdx].label : '';
+      $('.bk-r-chend').hidden = false;
+      return;
+    }
+    $('.bk-r-chend').hidden = true; chEndShown = false;
+    go();
+  }
+  $('[data-a="chend-next"]').onclick = () => { $('.bk-r-chend').hidden = true; chEndShown = false; goChapter(1); };
+  $('[data-a="chend-x"]').onclick = () => { $('.bk-r-chend').hidden = true; };
   const goChapter = (step) => { const i = chIdx + step; if (i < 0 || i >= flat.length) return; chIdx = i; engine.goTo(flat[i].href); };
   $('[data-a="chprev"]').onclick = () => goChapter(-1);
   $('[data-a="chnext"]').onclick = () => goChapter(1);
@@ -240,22 +256,64 @@ export async function openReader(root, id, { ctx, onClose }) {
   host.addEventListener('bk-tap', (e) => {
     if (!$('.bk-r-sel').hidden) { hideSel(); return; }
     const w = host.clientWidth, x = e.detail.x - host.getBoundingClientRect().left;
-    if (prefs.tapZones && x < w * 0.25) engine.left ? engine.left() : engine.prev();
-    else if (prefs.tapZones && x > w * 0.75) engine.right ? engine.right() : engine.next();
+    if (prefs.tapZones && x < w * 0.25) turn(-1, true);
+    else if (prefs.tapZones && x > w * 0.75) turn(1, true);
     else el.classList.toggle('bare');
   });
+  // Shortcuts most e-book readers share (Kindle, Apple Books, Calibre, Thorium); "?" lists them.
+  const zoom = (d) => changePref('fontSize', d === 0 ? 18 : Math.max(12, Math.min(40, prefs.fontSize + d)));
+  const fullscreen = () => document.fullscreenElement ? document.exitFullscreen?.().catch(() => {}) : el.requestFullscreen?.().catch(() => {});
   const onKey = (e) => {
     if (e.target.closest?.('input, textarea, select')) return;
-    const k = e.key;
-    if (k === 'Escape') { if (!$('.bk-r-panel').hidden) hidePanel(); else if (!$('.bk-r-sel').hidden) hideSel(); else { close(); onClose(); } }
-    else if (k === 'ArrowRight' || k === 'PageDown' || (k === ' ' && !e.shiftKey)) { e.preventDefault?.(); k === 'ArrowRight' && engine.right ? engine.right() : engine.next(); }
-    else if (k === 'ArrowLeft' || k === 'PageUp' || (k === ' ' && e.shiftKey)) { e.preventDefault?.(); k === 'ArrowLeft' && engine.left ? engine.left() : engine.prev(); }
+    const k = e.key, mod = e.ctrlKey || e.metaKey, prevent = () => e.preventDefault?.();
+    if (k === 'Escape') { if (!$('.bk-r-panel').hidden) hidePanel(); else if (!$('.bk-r-sel').hidden) hideSel(); else if (!$('.bk-r-chend').hidden) $('.bk-r-chend').hidden = true; else if (document.fullscreenElement) fullscreen(); else { close(); onClose(); } return; }
+    if (mod) {
+      if (k === '=' || k === '+') { prevent(); zoom(1); }
+      else if (k === '-') { prevent(); zoom(-1); }
+      else if (k === '0') { prevent(); zoom(0); }
+      else if (k.toLowerCase() === 'f') { prevent(); searchPanel(); }
+      else if (k.toLowerCase() === 'd' || k.toLowerCase() === 'b') { prevent(); toggleBookmark(); }
+      else if (k === 'Home') { prevent(); engine.goToFraction(0); }
+      else if (k === 'End') { prevent(); engine.goToFraction(1); }
+      return;
+    }
+    if (e.altKey) { if (k === 'ArrowLeft') { prevent(); close(); onClose(); } return; }
+    // Up/Down keep scrolling the page in the scrolled layouts; they turn pages only when the book is paginated.
+    const vert = (k === 'ArrowDown' || k === 'ArrowUp') && (prefs.flow === 'scrolled' || engine.kind === 'pdf');
+    if (vert) return;
+    if (k === 'ArrowRight' || k === 'ArrowDown' || k === 'PageDown' || (k === ' ' && !e.shiftKey)) { prevent(); turn(1, k === 'ArrowRight'); }
+    else if (k === 'ArrowLeft' || k === 'ArrowUp' || k === 'PageUp' || (k === ' ' && e.shiftKey)) { prevent(); turn(-1, k === 'ArrowLeft'); }
+    else if (k === 'Home') { prevent(); flat.length ? engine.goTo(flat[Math.max(0, chIdx)].href) : engine.goToFraction(0); }
+    else if (k === 'End' && flat.length && chIdx < flat.length - 1) { prevent(); engine.goTo(flat[chIdx + 1].href).then?.(() => engine.prev()); }
     else if (k === '[') goChapter(-1);
     else if (k === ']') goChapter(1);
-    else if (k === 'f') el.requestFullscreen?.().catch(() => {});
-    else if (k === '+' || k === '=') changePref('fontSize', Math.min(40, prefs.fontSize + 1));
-    else if (k === '-') changePref('fontSize', Math.max(12, prefs.fontSize - 1));
+    else if (k === 'f' || k === 'F11') { prevent(); fullscreen(); }
+    else if (k === '+' || k === '=') zoom(1);
+    else if (k === '-') zoom(-1);
+    else if (k === 't') $('[data-a="toc"]').click();
+    else if (k === 'n') notesPanel();
+    else if (k === 's') settingsPanel();
+    else if (k === 'b') toggleBookmark();
+    else if (k === 'r') tts.on ? tts.stop() : tts.start();
+    else if (k === 'h') el.classList.toggle('bare');
+    else if (k === '?') shortcutsPanel();
   };
+  // Ctrl/⌘ + wheel: text size (the zoom of a reading app); plain wheel turns pages when the book is paginated.
+  let wheelAt = 0;
+  el.addEventListener('wheel', (e) => {
+    if (e.ctrlKey || e.metaKey) { e.preventDefault(); const t = Date.now(); if (t - wheelAt < 60) return; wheelAt = t; zoom(e.deltaY < 0 ? 1 : -1); return; }
+    if (!host.contains(e.target) || prefs.flow === 'scrolled' || engine.kind === 'pdf' || !prefs.wheelTurns || Math.abs(e.deltaY) < 4) return;
+    e.preventDefault();
+    const t = Date.now(); if (t - wheelAt < 350) return; wheelAt = t;
+    turn(e.deltaY > 0 ? 1 : -1);
+  }, { passive: false });
+  function shortcutsPanel() {
+    const rows = [['→, ↓, Space, PageDown', 'Trang sau'], ['←, ↑, Shift+Space, PageUp', 'Trang trước'], ['[, ]', 'Chương trước / sau'], ['Home, End', 'Đầu / cuối chương'],
+      ['Ctrl+Home, Ctrl+End', 'Đầu / cuối sách'], ['Ctrl + lăn chuột, Ctrl +, Ctrl −', 'Phóng to / thu nhỏ chữ'], ['Ctrl+0', 'Cỡ chữ mặc định'], ['Lăn chuột', 'Lật trang'],
+      ['Ctrl+F', 'Tìm trong sách'], ['Ctrl+D, B', 'Dấu trang'], ['T', 'Mục lục'], ['N', 'Đánh dấu & ghi chú'], ['S', 'Tuỳ chỉnh hiển thị'], ['R', 'Đọc to'],
+      ['H', 'Ẩn / hiện thanh công cụ'], ['F, F11', 'Toàn màn hình'], ['Alt+←, Esc', 'Đóng sách'], ['?', 'Bảng phím tắt này']];
+    panel('Phím tắt', `<dl class="bk-r-keys">${rows.map(([k, v]) => `<dt>${k.split(', ').map(x => `<kbd>${esc(x)}</kbd>`).join('')}</dt><dd>${esc(v)}</dd>`).join('')}</dl>`);
+  }
   // Keys from the page iframe are re-dispatched on host and bubble up to el: one listener, so each key acts once.
   el.addEventListener('keydown', onKey);
   const onDocKey = (e) => { if (!el.contains(e.target) || e.target === document.body) onKey(e); };
@@ -428,9 +486,10 @@ export async function openReader(root, id, { ctx, onClose }) {
       <label class="bk-r-row"><span>Phông</span><select data-p="font">${Object.entries(FONTS).map(([k, [l]]) => `<option value="${k}" ${p.font === k ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
       ${sl('fontSize', 'Cỡ chữ', 12, 40, 1, 'px')}${sl('lineHeight', 'Giãn dòng', 1, 2.6, 0.05)}${sl('margin', 'Lề', 0, 160, 4, 'px')}${sl('maxWidth', 'Độ rộng dòng', 360, 1600, 20, 'px')}
       <div class="bk-r-seg">${[['paginated', 'Lật trang'], ['scrolled', 'Cuộn']].map(([v, l]) => `<button data-flow="${v}" aria-pressed="${p.flow === v}">${l}</button>`).join('')}</div>
+      <div class="bk-r-seg">${[['continuous', 'Đọc liền'], ['chapter', 'Từng chương']].map(([v, l]) => `<button data-rmode="${v}" aria-pressed="${p.readMode === v}">${l}</button>`).join('')}</div>
       <div class="bk-r-seg">${[['auto', 'Tự động'], ['1', '1 trang'], ['2', '2 trang']].map(([v, l]) => `<button data-cols="${v}" aria-pressed="${String(p.columns) === v}">${l}</button>`).join('')}</div>
       ${tg('justify', 'Căn đều')}${tg('hyphenate', 'Ngắt chữ')}${tg('animated', 'Hiệu ứng lật trang')}` : ''}
-      ${sl('brightness', 'Độ sáng', 30, 100, 5, '%')}${sl('warmth', 'Độ ấm', 0, 100, 5, '%')}${tg('tapZones', 'Chạm cạnh để lật trang')}
+      ${sl('brightness', 'Độ sáng', 30, 100, 5, '%')}${sl('warmth', 'Độ ấm', 0, 100, 5, '%')}${tg('tapZones', 'Chạm cạnh để lật trang')}${tg('wheelTurns', 'Lăn chuột để lật trang')}<button class="btn small" data-keys>⌨ Phím tắt (?)</button>
       ${sl('ttsRate', 'Tốc độ đọc to', 0.5, 2.5, 0.1, '×')}
       <p class="muted">Mọi tuỳ chỉnh cũng có trong Cài đặt → Thông số → Sách & trình đọc.</p>`, (body) => {
       body.querySelectorAll('[data-p]').forEach(i => i.addEventListener(i.type === 'range' ? 'input' : 'change', () => {
@@ -440,6 +499,8 @@ export async function openReader(root, id, { ctx, onClose }) {
       }));
       body.querySelectorAll('[data-theme]').forEach(x => x.onclick = () => { changePref('theme', x.dataset.theme); settingsPanel(); });
       body.querySelectorAll('[data-flow]').forEach(x => x.onclick = () => { changePref('flow', x.dataset.flow); settingsPanel(); });
+      body.querySelector('[data-keys]').onclick = () => shortcutsPanel();
+      body.querySelectorAll('[data-rmode]').forEach(x => x.onclick = () => { changePref('readMode', x.dataset.rmode); settingsPanel(); });
       body.querySelectorAll('[data-cols]').forEach(x => x.onclick = () => { changePref('columns', x.dataset.cols); settingsPanel(); });
       body.querySelectorAll('[data-fit]').forEach(x => x.onclick = () => { changePref('comicFit', x.dataset.fit); settingsPanel(); });
       body.querySelectorAll('[data-z]').forEach(x => x.onclick = () => engine.zoom?.(x.dataset.z));

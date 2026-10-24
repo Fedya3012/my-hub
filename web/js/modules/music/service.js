@@ -98,6 +98,8 @@ async function accent() {
 // Desktop-friendly shortcuts (ignored while typing).
 function keys(e) {
   if (e.target.closest?.('input, textarea, select, [contenteditable]') || e.ctrlKey || e.metaKey || e.altKey) return;
+  // The Books reader and Xưởng Viết use these keys (pages, typing): the dock's buttons still work there.
+  if (document.body.classList.contains('bk-reader-open') || document.body.classList.contains('fx-writer-open')) return;
   if (!player.track && e.code !== 'Space') return;
   const k = e.key;
   const act = {

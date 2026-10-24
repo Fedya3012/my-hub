@@ -163,3 +163,14 @@ body.bk-reader-open:has(.bk-reader.bare) #dock .mdock { bottom: calc(12px + var(
 .bk-r-chbar { grid-column: 1 / -1; height: 2px; border-radius: 2px; background: color-mix(in srgb, var(--r-fg) 12%, transparent); overflow: hidden; }
 .bk-r-chbar b { display: block; height: 100%; width: 0; background: var(--t-book, var(--accent)); transition: width .2s; }
 @media (max-width: 520px) { .bk-r-chbtn span { display: none; } .bk-r-chbtn { padding: 0 8px; } }
+
+/* "Từng chương": card at the end of a chapter (reader.js turn()). */
+.bk-r-chend { position: fixed; z-index: 9; left: 50%; transform: translateX(-50%); bottom: calc(96px + var(--sai-bottom, 0px)); display: flex; align-items: center; gap: 12px;
+  padding: 10px 10px 10px 16px; border-radius: 14px; background: var(--surface); color: var(--fg); border: 1px solid var(--line); box-shadow: 0 10px 30px rgb(0 0 0 / .2); max-width: calc(100vw - 24px); }
+.bk-r-chend span { display: flex; flex-direction: column; min-width: 0; }
+.bk-r-chend small { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.bk-r-chend b { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 46vw; }
+/* Phím tắt */
+.bk-r-keys { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 10px 16px; margin: 0; align-items: center; }
+.bk-r-keys dt { display: flex; flex-wrap: wrap; gap: 4px; } .bk-r-keys dd { margin: 0; color: var(--muted); }
+.bk-r-keys kbd { display: inline-block; padding: 1px 6px; border-radius: 6px; border: 1px solid var(--line); border-bottom-width: 2px; font: 12px/1.5 var(--font-mono, monospace); background: color-mix(in srgb, var(--fg) 4%, transparent); }
