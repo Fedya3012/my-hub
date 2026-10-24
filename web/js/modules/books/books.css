@@ -342,3 +342,14 @@ body.bk-reader-open #dock .mdock { z-index: 850; }
 .bk-src-add { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
 .bk-src-add select { border: 0; background: var(--soft, rgba(127, 127, 127, 0.12)); border-radius: 999px; padding: 6px 12px; font: inherit; color: inherit; }
 .bk-src-add > [data-reset] { margin-left: auto; }
+
+/* Volumes (ui/volume.js) */
+.bk-vol { display: grid; gap: 10px; min-width: min(520px, 80vw); }
+.bk-vol-tools { display: flex; flex-wrap: wrap; gap: 6px; }
+.bk-vol-list, .bk-vol-pick { list-style: none; margin: 0; padding: 0; max-height: 50vh; overflow: auto; display: grid; gap: 4px; }
+.bk-vol-list li { display: flex; align-items: center; gap: 6px; padding: 4px 6px; border-radius: 8px; background: var(--surface-2, rgba(127,127,127,.08)); cursor: grab; }
+.bk-vol-list .num { width: 2em; text-align: right; flex: none; }
+.bk-vol-t { flex: 1; min-width: 0; }
+.bk-vol-pick li label { display: flex; gap: 8px; align-items: center; padding: 4px; }
+.bk-vol-ch { margin: 0; padding-left: 1.6em; columns: 2 240px; }
+.bk-panel .section-title .btn { margin-left: auto; }

@@ -86,6 +86,9 @@ export async function render(el, { ctx, snap, arg: id, go, rerender }) {
 
     <div id="bk-ext" class="bk-ext"></div>
 
+    ${b.parts ? `<section class="bk-panel"><h2 class="section-title">${icon('book')}Chương trong Volume (${b.parts.length})<button class="btn small" data-a="vol">Quản lý</button></h2>
+      <ol class="bk-vol-ch">${b.parts.map(pid => snap.all.byId.get(pid)).filter(Boolean).map(p => `<li><a href="#books/book/${esc(p.id)}">${esc(p.title)}</a></li>`).join('')}</ol></section>` : ''}
+    ${b.partOf && snap.all.byId.get(b.partOf) ? `<p class="bk-panel">${icon('book')} Chương này thuộc Volume <a href="#books/book/${esc(b.partOf)}">${esc(snap.all.byId.get(b.partOf).title)}</a></p>` : ''}
     ${b.book.description ? `<section class="bk-panel"><h2 class="section-title">Giới thiệu</h2><p class="bk-desc">${esc(b.book.description)}</p></section>` : ''}
 
     <section class="bk-panel"><h2 class="section-title">${icon('b-highlight')}Đánh dấu & ghi chú trong sách <span class="num muted">${notes.length}</span>
@@ -123,14 +126,17 @@ export async function render(el, { ctx, snap, arg: id, go, rerender }) {
     await store.setStatus(id, v);
     toast(store.STATUSES[v]);
   };
+  $('[data-a="vol"]')?.addEventListener('click', async () => (await import('./volume.js')).editVolume(b, snap.all));
   $('[data-a="fav"]').onclick = () => store.updateBook(id, { favorite: !b.favorite });
   $('[data-a="more"]').onclick = (e) => menu(e.currentTarget, [
     { label: 'Sửa thông tin', icon: 'b-edit', run: async () => (await import('./editor.js')).editBook(b, snap) },
     { label: 'Tìm thông tin trên mạng', icon: 'b-globe', run: async () => (await import('./editor.js')).onlineSheet(b) },
     { label: 'Đổi ảnh bìa', icon: 'b-image', run: async () => (await import('./editor.js')).pickCover(b) },
     b.main && !b.main.virtual ? { label: 'Tải tệp sách về máy', icon: 'download', run: async () => download(b.main.name, await storage.open(b.main)) } : null,
+    b.parts ? { label: 'Quản lý Volume', icon: 'book', run: async () => (await import('./volume.js')).editVolume(b, snap.all) } : null,
+    b.parts ? { label: 'Tách Volume thành chương lẻ', icon: 'link', run: async () => { if (await (await import('./volume.js')).ungroup(b)) go('library'); } } : null,
     b.fanfic ? { label: 'Sửa trong Xưởng Viết', icon: 'quill', run: () => ctx.services.get('fanfic')?.show(b.id) } : null,
-    b.main ? null : { label: 'Gắn tệp sách', icon: 'upload', run: () => attachFile(b) },
+    b.main || b.parts ? null : { label: 'Gắn tệp sách', icon: 'upload', run: () => attachFile(b) },
     '-',
     { label: 'Xoá sách', icon: 'trash', danger: true, run: async () => { if (await confirmBox('Xoá sách này?', `“${b.title}”, tệp, ghi chú và tiến độ sẽ bị xoá khỏi mọi thiết bị đồng bộ.`, 'Xoá')) { await store.removeBooks([id]); go('library'); } } },
   ]);

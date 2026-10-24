@@ -51,7 +51,7 @@ export async function render(el, { ctx, snap, arg, go }) {
   const draw = () => {
     let m;
     try { m = compile(st.q, { shelves: snap.all.shelves }); } catch { m = () => true; }
-    current = snap.list.filter(b => (!st.status || b.status === st.status) && m(b)).sort(SORTS[pref('libSort')]?.[1] || SORTS.added[1]);
+    current = snap.list.filter(b => (!b.partOf || st.q.trim()) && (!st.status || b.status === st.status) && m(b)).sort(SORTS[pref('libSort')]?.[1] || SORTS.added[1]);
     $('#bk-count').textContent = `${current.length} cuốn`;
     const box = $('#bk-results');
     const v = pref('libView');
@@ -142,6 +142,7 @@ export async function render(el, { ctx, snap, arg, go }) {
       <button class="btn small" data-b="all">Chọn hết (${current.length})</button>
       <select data-b="status" ${ids.length ? '' : 'disabled'} aria-label="Đổi trạng thái"><option value="">Trạng thái…</option>${statusOptions('')}</select>
       <button class="btn small" data-b="edit" ${ids.length ? '' : 'disabled'}>${icon('b-edit')}Sửa hàng loạt</button>
+      <button class="btn small" data-b="vol" ${ids.length > 1 ? '' : 'disabled'}>${icon('book')}Gộp thành Volume</button>
       <button class="btn small" data-b="meta" ${ids.length ? '' : 'disabled'}>${icon('b-globe')}Lấy thông tin</button>
       <button class="btn small danger-ghost" data-b="del" ${ids.length ? '' : 'disabled'}>${icon('trash')}Xoá</button>
       <button class="btn small" data-b="none">Bỏ chọn</button>`;
@@ -149,6 +150,7 @@ export async function render(el, { ctx, snap, arg, go }) {
     bar.querySelector('[data-b="all"]').onclick = () => { if (st.sel.size === current.length) st.sel.clear(); else current.forEach(b => st.sel.add(b.id)); draw(); };
     bar.querySelector('[data-b="status"]').onchange = async (e) => { if (!e.target.value) return; for (const id of ids) await store.setStatus(id, e.target.value); toast(`Đã đổi trạng thái ${ids.length} cuốn`); };
     bar.querySelector('[data-b="edit"]').onclick = async () => (await import('./editor.js')).bulkEdit(ids, snap);
+    bar.querySelector('[data-b="vol"]').onclick = async () => { if (await (await import('./volume.js')).groupVolume(ids, snap)) { st.sel.clear(); st.select = false; } };
     bar.querySelector('[data-b="meta"]').onclick = async () => (await import('./importer.js')).fetchMetadata(ids, { onlyEmpty: true });
     bar.querySelector('[data-b="del"]').onclick = async () => {
       if (!(await confirmBox(`Xoá ${ids.length} cuốn?`, 'Sách, tệp sách trên máy này, ghi chú và tiến độ sẽ bị xoá khỏi mọi thiết bị đồng bộ.', 'Xoá'))) return;

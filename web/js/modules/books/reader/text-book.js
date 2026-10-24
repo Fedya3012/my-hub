@@ -119,10 +119,43 @@ function htmlChapters(html) {
   return { title, chapters: parts.map(p => ({ title: p.title, html: ser(p.nodes) })) };
 }
 
-export async function bookFromText(blob, { name = '', title = '', author = '' } = {}) {
+export async function textChapters(blob, name = '') {
   const text = await readText(blob);
   const ext = name.toLowerCase().split('.').pop();
-  if (ext === 'html' || ext === 'htm') { const r = htmlChapters(text); return makeTextBook({ title: title || r.title, author, chapters: r.chapters }); }
-  if (ext === 'md') return makeTextBook({ title, author, chapters: htmlChapters(`<body>${mdToHtml(text)}</body>`).chapters });
-  return makeTextBook({ title, author, chapters: txtChapters(text) });
+  if (ext === 'html' || ext === 'htm') return htmlChapters(text);
+  if (ext === 'md') return htmlChapters(`<body>${mdToHtml(text)}</body>`);
+  return { title: '', chapters: txtChapters(text) };
+}
+
+export async function bookFromText(blob, { name = '', title = '', author = '' } = {}) {
+  const r = await textChapters(blob, name);
+  return makeTextBook({ title: title || r.title, author, chapters: r.chapters });
+}
+
+// A volume: every part (one chapter file, or a book with chapters of its own) in order, one TOC.
+// A part with a single chapter takes the part's title; EPUB-like parts keep their text (not images).
+export async function volumeBook({ title, author, parts, open }) {
+  const chapters = [];
+  for (const p of parts) {
+    const file = await open(p);
+    if (!file) { chapters.push({ title: p.title, html: '<p>(Không mở được tệp của chương này trên máy này.)</p>' }); continue; }
+    let list;
+    if (p.engine === 'text') list = (await textChapters(file, p.name)).chapters;
+    else {
+      // PDF parts are reflowed to text first (engine-pdf), other formats go through foliate.
+      const bk = p.engine === 'pdf' ? await (await import('./engine-pdf.js')).pdfToTextBook(file, { title: p.title })
+        : await (await import(p.vendor)).makeBook(file);
+      list = [];
+      for (const s of bk.sections || []) {
+        if (s.linear === 'no') continue;
+        const doc = await s.createDocument?.();
+        const html = doc?.body ? doc.body.innerHTML : '';
+        if (html.replace(/<[^>]+>|\s/g, '')) list.push({ title: '', html });
+      }
+      bk.destroy?.();
+    }
+    if (list.length <= 1 || p.engine === 'pdf') chapters.push({ title: p.title, html: list.map(c => c.html).join('') });
+    else list.forEach((c, i) => chapters.push({ title: c.title || `${p.title} (${i + 1})`, html: c.html }));
+  }
+  return makeTextBook({ title, author, chapters });
 }

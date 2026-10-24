@@ -85,7 +85,8 @@ bus.on('fanfic:changed', () => snapshot.invalidate());
 export function view(item, book, { A, S, P, F }) {
   const files = F.get(item.id) || [];
   // A fanfic has no file: the reader builds it from Xưởng Viết's published chapters (virtual main file).
-  const main = item.type === 'fanfic' ? { id: 'fanfic:' + item.id, virtual: 'fanfic', name: item.title + '.fanfic' } : files.find(f => f.role === 'main') || null;
+  const main = item.type === 'fanfic' ? { id: 'fanfic:' + item.id, virtual: 'fanfic', name: item.title + '.fanfic' } : book.parts?.length ? { id: 'volume:' + item.id, virtual: 'volume', name: item.title + '.volume' }
+    : files.find(f => f.role === 'main') || null;
   const cover = files.find(f => f.role === 'cover') || null;
   const p = P.get(item.id) || null;
   const authors = (book.authorIds || []).map(id => A.get(id)?.name).filter(Boolean);
@@ -95,6 +96,7 @@ export function view(item, book, { A, S, P, F }) {
     status: book.status || 'want', rating: book.rating || 0, format: book.format || (main ? formatOf(main.name) : book.physical ? 'paper' : ''),
     main, cover, files, progress: p, percent: book.status === 'finished' ? 100 : Math.round(p?.percent || book.manualPercent || 0),
     pages: book.pages || 0, favorite: !!item.favorite, tags: item.tags || [], fanfic: item.type === 'fanfic',
+    parts: book.parts || null, partOf: book.partOf || null,
   };
 }
 
@@ -217,6 +219,9 @@ export async function setStatus(id, status, extra = {}) { await updateBook(id, {
 export async function removeBooks(ids, { files = true } = {}) {
   for (const id of ids) {
     const it = await db.items.get(id);
+    // A volume owns no file: deleting it only frees its chapter books.
+    const row = await db.books.get(id);
+    if (row?.parts?.length) { await ungroupParts(row.parts, id); await softDeleteItem(id); await db.books.update(id, { deleted: 1 }); continue; }
     if (it?.type === 'fanfic') {
       await db.books.update(id, { deleted: 1 });
       await db.fanfics.update(id, { published: 0 });
@@ -228,6 +233,29 @@ export async function removeBooks(ids, { files = true } = {}) {
     await db.books.update(id, { deleted: 1 });
   }
   changed(ids);
+}
+
+// ── Volumes: chapter books (one uploaded file per chapter) joined into one readable book ──
+async function ungroupParts(parts, volId) {
+  for (const p of parts) { const r = await db.books.get(p); if (r && r.partOf === volId) await db.books.update(p, { partOf: null }); }
+}
+export async function createVolume(title, parts, { authors = [], series = '' } = {}) {
+  const id = await createBook({ title, authors, series, format: 'volume' }, { quiet: true });
+  await setVolumeParts(id, parts);
+  return id;
+}
+export async function setVolumeParts(id, parts) {
+  const old = (await db.books.get(id))?.parts || [];
+  await ungroupParts(old.filter(p => !parts.includes(p)), id);
+  for (const p of parts) await db.books.update(p, { partOf: id });
+  await db.books.update(id, { parts });
+  changed([id, ...parts, ...old]);
+}
+export async function ungroupVolume(id) {
+  const row = await db.books.get(id);
+  if (row?.parts) await ungroupParts(row.parts, id);
+  await softDeleteItem(id); await db.books.update(id, { deleted: 1 });
+  changed([id, ...(row?.parts || [])]);
 }
 
 // Older installs filed books under the planned 'reader' module, and the Library's own import

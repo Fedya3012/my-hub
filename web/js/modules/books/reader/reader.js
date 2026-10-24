@@ -14,7 +14,7 @@ import { progress } from '../../../core/progress.js';
 import { storage } from '../../../core/storage/index.js';
 import { tasks } from '../../../core/tasks.js';
 import * as store from '../lib/store.js';
-import { FORMATS, engineOf, asNamedFile } from '../lib/formats.js';
+import { FORMATS, engineOf, asNamedFile, formatOf, vendor } from '../lib/formats.js';
 import { FONTS, THEMES, FONT_CSS, set as setPref } from '../lib/prefs.js';
 import { themeColors } from './engine-foliate.js';
 
@@ -103,6 +103,18 @@ export async function openReader(root, id, { ctx, onClose }) {
       const fic = await (ctx.services.get('fanfic') || await ctx.services.when('fanfic', 3000))?.book(id);
       if (!fic?.chapters.length) throw new Error('Truyện chưa có chương nào được xuất bản. Mở Xưởng Viết để xuất bản.');
       source = (await import('./text-book.js')).makeTextBook(fic);
+    }
+    if (eng === 'volume') {
+      const t = tasks.start({ label: 'Mở Volume', unit: 'items', total: b.parts.length, delay: 500 });
+      const parts = (await Promise.all(b.parts.map(pid => store.get(pid)))).filter(p => p?.main && !p.main.virtual);
+      if (!parts.length) { t.finish(); throw new Error('Volume này chưa có chương nào có tệp.'); }
+      let n = 0;
+      source = await (await import('./text-book.js')).volumeBook({
+        title: b.title, author: b.authors[0],
+        parts: parts.map(p => ({ title: p.title, name: p.main.name, engine: engineOf(formatOf(p.main.name)), vendor: vendor('foliate/view.js'), main: p.main })),
+        open: async (p) => { t.update({ done: ++n }); const bl = await storage.open(p.main).catch(() => null); return bl && asNamedFile(bl, p.name); },
+      });
+      t.finish();
     }
     if (eng === 'text') source = await (await import('./text-book.js')).bookFromText(file, { name: b.main.name, title: b.title, author: b.authors[0] });
     if (eng === 'pdf' && prefs.pdfMode === 'reflow') {
