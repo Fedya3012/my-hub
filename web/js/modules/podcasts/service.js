@@ -5,13 +5,14 @@ import { getSetting } from '../../core/db.js';
 import { icon } from '../../core/icons.js';
 import { esc } from '../../core/ui.js';
 import { extend } from '../../core/extensions.js';
+import { draggableBubble } from '../../core/bubble-drag.js';
 import { tasks } from '../../core/tasks.js';
 import { params } from '../../core/params.js';
 import { definePrefs, get, NAME } from './lib/prefs.js';
 import { player } from './lib/player.js';
 import * as store from './lib/store.js';
 
-let offs = [], css = null, ctx = null, mini = null, timer = null, lastApp = 'podcasts', nativeOff = null;
+let offs = [], css = null, ctx = null, mini = null, timer = null, lastApp = 'podcasts', nativeOff = null, dragOff = null;
 
 export async function start(context) {
   ctx = context;
@@ -62,6 +63,7 @@ export async function start(context) {
 export async function stop() {
   offs.forEach(f => f()); offs = [];
   clearInterval(timer); player.pause(); nativeOff?.();
+  dragOff?.(); dragOff = null;
   mini?.remove(); mini = null; css?.remove();
   document.body.classList.remove('pc-mini-on');
 }
@@ -86,6 +88,7 @@ function mountMini() {
     player[k]();
   });
   document.body.appendChild(mini);
+  dragOff = draggableBubble(mini);   // the folded bubble can be moved
   paintMini();
 }
 function paintMini() {

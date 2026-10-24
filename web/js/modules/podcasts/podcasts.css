@@ -257,6 +257,8 @@ body.pc-np-open .pc-mini { display: none; }
 /* Folded: a round cover with a progress ring; play/pause sits on its corner and a small arrow opens the bar again. */
 .pc-mini.is-folded { display: block; left: auto; right: 14px; width: 58px; height: 58px; max-width: none; padding: 0; border: 0; border-radius: 50%; overflow: visible;
   background: conic-gradient(var(--pc-accent) calc(var(--p, 0) * 1%), color-mix(in srgb, var(--fg) 16%, transparent) 0%); box-shadow: 0 8px 24px rgb(0 0 0 / .28); backdrop-filter: none; -webkit-backdrop-filter: none; }
+.pc-mini.is-folded { touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; transition: left .22s ease, top .22s ease; }
+.pc-mini.is-folded.is-dragging { transition: none; cursor: grabbing; }
 .pc-mini.is-folded .pc-mini-open { position: absolute; inset: 3px; }
 .pc-mini.is-folded .pc-mini-art { width: 100%; height: 100%; border-radius: 50%; }
 .pc-mini.is-folded .pc-mini-txt, .pc-mini.is-folded [data-k="back"], .pc-mini.is-folded [data-k="fwd"], .pc-mini.is-folded .pc-mini-bar { display: none; }

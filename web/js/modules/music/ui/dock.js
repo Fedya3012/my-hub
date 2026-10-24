@@ -2,6 +2,7 @@
 // transport bar along the bottom on desktop (seek, volume, lyrics/queue/EQ). Tapping it (or
 // swiping up) opens Now Playing; swiping sideways skips.
 import { icon } from '../../../core/icons.js';
+import { draggableBubble } from '../../../core/bubble-drag.js';
 import { repeatMode, shuffleMode } from '../lib/modes.js';
 import { esc } from '../../../core/ui.js';
 import { player } from '../lib/player.js';
@@ -12,7 +13,7 @@ import { prefs } from '../lib/prefs.js';
 import { timers, fmtLeft } from '../lib/timers.js';
 import './audio-icons.js';
 
-let host = null, el = null, offs = [];
+let host = null, el = null, offs = [], dragOff = null;
 
 export function mountDock() {
   host = document.getElementById('dock');
@@ -21,6 +22,7 @@ export function mountDock() {
   el.className = 'mdock';
   el.hidden = true;
   host.appendChild(el);
+  dragOff = draggableBubble(el);   // the folded bubble can be moved
   const on = (t, f) => { player.addEventListener(t, f); offs.push(() => player.removeEventListener(t, f)); };
   on('track', render); on('state', state); on('time', time); on('status', status); on('volume', vol); on('queue', state); on('audio', state);
   const tm = () => timerBadge();
@@ -40,7 +42,7 @@ export function setMiniFolded(v) {
 // The other bar changed the choice (podcast mini player): follow it.
 document.addEventListener('hub:mini-fold', () => { if (el) { el.classList.toggle('is-folded', miniFolded()); el.querySelector('[data-fold]')?.setAttribute('aria-expanded', String(!miniFolded())); sizeVar(); } });
 
-export function unmountDock() { offs.forEach(f => f()); offs = []; el?.remove(); document.body.classList.remove('has-dock'); }
+export function unmountDock() { offs.forEach(f => f()); offs = []; dragOff?.(); dragOff = null; el?.remove(); document.body.classList.remove('has-dock'); }
 
 function sizeVar() {
   const shown = !el.hidden;
