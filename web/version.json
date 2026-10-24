@@ -1,7 +1,15 @@
 {
-  "app": "0.9.21.2",
+  "app": "0.9.22.0",
   "released": "2026-10-24",
   "changelog": [
+    {
+      "version": "0.9.22.0",
+      "date": "2026-10-24",
+      "notes": [
+        "Google Drive: đăng nhập bằng Google một chạm, chọn tài khoản; Windows dùng trình duyệt hệ thống; Android đăng nhập qua Google Play services",
+        "Trình phát nhạc: cùng một bài nhập trên hai thiết bị chỉ là một mục trong thư viện"
+      ]
+    },
     {
       "version": "0.9.21.2",
       "date": "2026-10-24",
@@ -749,7 +757,7 @@
     },
     "settings": {
       "name": "Cài đặt",
-      "version": "0.5.1",
+      "version": "0.5.2",
       "minApp": "0.2.0",
       "files": [
         "js/modules/settings/index.js"
