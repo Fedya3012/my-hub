@@ -125,11 +125,23 @@ async function token() {
 
 const withTimeout = (p, ms) => { let t; return Promise.race([p, new Promise((_, rej) => { t = setTimeout(() => rej(err('Google Drive không trả lời.', 'timeout')), ms); })]).finally(() => clearTimeout(t)); };
 
-async function api(url, { method = 'GET', headers = {}, body, signal, onProgress } = {}) {
+// A 401 means the access token died before its expected time (Google Play services can hand out a cached token that
+// is already old, and a token can be revoked): drop it, get a fresh one and try once more.
+async function api(url, opts = {}) {
+  const used = await token();
+  const r = await apiOnce(url, opts, used);
+  if (r.status !== 401) return r;
+  const c = getCloud('googledrive');
+  if (c?.native) await nativeAuth()?.clearToken?.({ token: used }).catch(() => {});
+  if (c) clouds.set('googledrive', { ...c, access: null, expires: 0 });
+  return apiOnce(url, opts, await token());
+}
+
+async function apiOnce(url, { method = 'GET', headers = {}, body, signal, onProgress } = {}, access) {
   // Small JSON reads (listings, lookups) go through the app shell where there is one (Windows main process, Android
   // native HTTP): no WebView CORS preflight to worry about. File bodies keep using fetch so they can stream.
   const viaShell = method === 'GET' && !/[?&]alt=media/.test(url) && nativeShell();
-  const h = { Authorization: 'Bearer ' + await token(), ...headers };
+  const h = { Authorization: 'Bearer ' + access, ...headers };
   let r;
   // A shell call that fails or never answers (seen on Android) falls back to the page's own fetch, which Drive's
   // API allows (CORS) for plain reads.

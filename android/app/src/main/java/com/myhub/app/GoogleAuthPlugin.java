@@ -53,6 +53,17 @@ public class GoogleAuthPlugin extends Plugin {
       .addOnFailureListener(e -> call.reject(String.valueOf(e.getMessage()), "failed"));
   }
 
+  // Removes a token from Google Play services' cache (it was refused with 401), so the next authorize() gets a new one.
+  @PluginMethod
+  public void clearToken(PluginCall call) {
+    String token = call.getString("token");
+    if (token == null || token.isEmpty()) { call.resolve(); return; }
+    new Thread(() -> {
+      try { com.google.android.gms.auth.GoogleAuthUtil.clearToken(getContext(), token); call.resolve(); }
+      catch (Exception e) { call.reject(String.valueOf(e.getMessage()), "failed"); }
+    }).start();
+  }
+
   private void onConsent(ActivityResult res) {
     PluginCall call = pending;
     pending = null;
