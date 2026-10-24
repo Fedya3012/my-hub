@@ -1,7 +1,15 @@
 {
-  "app": "0.9.22.2",
+  "app": "0.9.22.3",
   "released": "2026-10-24",
   "changelog": [
+    {
+      "version": "0.9.22.3",
+      "date": "2026-10-24",
+      "notes": [
+        "Google Drive: đọc thẻ bài hát bằng yêu cầu Range, mở tệp đã liên kết theo đường dẫn",
+        "Podcast: nút tốc độ và hẹn giờ trên trang Đang phát dễ đọc trên điện thoại, bỏ dải sáng bên dưới trình phát"
+      ]
+    },
     {
       "version": "0.9.22.2",
       "date": "2026-10-24",
@@ -878,7 +886,7 @@
     },
     "podcasts": {
       "name": "Podcast",
-      "version": "0.1.3",
+      "version": "0.1.4",
       "minApp": "0.9.11.0",
       "files": [
         "js/modules/podcasts/index.js",
