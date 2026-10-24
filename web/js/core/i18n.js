@@ -12,6 +12,17 @@ const read = () => { try { return localStorage.getItem(KEY); } catch { return nu
 
 export const LANGS = [{ id: 'vi', label: 'Tiếng Việt', locale: 'vi-VN' }, { id: 'en', label: 'English', locale: 'en-US' }];
 export let lang = read();
+// setLang reloads with ?lang=xx as well: the desktop shell can reload before the stored value has landed, which
+// left the old language in place. The address wins once, is stored, then is removed from the address bar.
+try {
+  const u = new URL(location.href), q = u.searchParams.get('lang');
+  if (q && LANGS.some(l => l.id === q)) {
+    lang = q;
+    try { localStorage.setItem(KEY, q); } catch { /* private mode */ }
+    u.searchParams.delete('lang');
+    history.replaceState(null, '', u.pathname + (u.search || '') + u.hash);
+  }
+} catch { /* no address to read */ }
 if (!lang) lang = 'vi';
 if (!LANGS.some(l => l.id === lang)) lang = 'vi';
 
@@ -21,7 +32,9 @@ document.documentElement.lang = lang;
 
 export function setLang(id) {
   try { localStorage.setItem(KEY, id); } catch { /* private mode */ }
-  location.reload();
+  const u = new URL(location.href);
+  u.searchParams.set('lang', id);
+  location.replace(u.href);
 }
 
 const SKIP = 'script,style,textarea,input,[contenteditable="true"],[data-i18n="off"],.ly,.ly *';
