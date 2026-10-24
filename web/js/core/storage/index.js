@@ -274,7 +274,7 @@ export const storage = {
       } catch (e) { r.fail(e); throw e; }
     }
     if (Object.keys(fileRow.locations || {}).some(k => k in drives)) throw new Error('Tệp này nằm trên ' + MODES[Object.keys(fileRow.locations).find(k => k in drives)].label + ' nhưng chưa kết nối được (kiểm tra mạng, hoặc kết nối lại trong Cài đặt).');
-    throw new Error(fileRow.locations?.gdrive ? 'Tệp này chỉ còn trên Google Drive cũ (đã bỏ hỗ trợ Drive). Thêm lại tệp vào app.' : 'Không tìm thấy tệp trên máy này.');
+    throw new Error(fileRow.locations?.gdrive ? 'Tệp này từ bản Google Drive cũ (trước 0.8). Kết nối lại Google Drive hoặc thêm lại tệp.' : 'Không tìm thấy tệp trên máy này.');
   },
 
   async objectUrl(fileRow, opts) { return URL.createObjectURL(await this.open(fileRow, opts)); },

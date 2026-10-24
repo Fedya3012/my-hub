@@ -1621,7 +1621,6 @@ export default {"(Google cấp quyền theo từng giờ). Bấm một lần đ�
 "tên":"name",
 "tệp của My Hub trên GitHub. Thư viện trên máy này vẫn dùng được ở chế độ Trên máy.":"My Hub files on GitHub. The library on this device still works in On Device mode.",
 "tệp dữ liệu":"data files",
-"Tệp này chỉ còn trên Google Drive cũ (đã bỏ hỗ trợ Drive). Thêm lại tệp vào app.":"This file only exists on the old Google Drive (Drive support was removed). Add the file to the app again.",
 "Tệp nhạc/sách ở lại trên máy":"Music/book files stay on the device",
 "thay đổi":"changes",
 "thay đổi · đang đẩy dữ liệu lên GitHub…":"changes · pushing data to GitHub…",
@@ -3883,4 +3882,5 @@ export default {"(Google cấp quyền theo từng giờ). Bấm một lần đ�
 "Thông tin sách, trạng thái, đánh giá, nhận xét, đánh dấu, ghi chú, phiên đọc, mục tiêu và tiến độ đọc đồng bộ giữa các máy qua tài khoản đồng bộ (Cài đặt → Tài khoản đồng bộ: GitHub, Dropbox, OneDrive hoặc Google Drive). Tệp sách ở lại trên từng máy: thêm tệp trên máy kia, app tự ghép với sách đã có nếu cùng tên và dung lượng.":"Book info, status, ratings, reviews, bookmarks, notes, reading sessions, goals and reading progress sync between devices through your sync account (Settings → Sync account: GitHub, Dropbox, OneDrive or Google Drive). Book files stay on each device: add the file on the other device and the app matches it to the existing book by name and size.",
 "Muốn có cả tệp sách trên mọi máy: chọn thư mục Dropbox, OneDrive hoặc Google Drive trong Cài đặt → Thư mục đồng bộ.":"To have the book files on every device too, pick a Dropbox, OneDrive or Google Drive folder in Settings → Sync folders.",
 "Lưu trữ và đồng bộ (Local, GitHub, Dropbox, OneDrive, Google Drive), thư mục đồng bộ, thiết bị, giao diện, thông số dùng chung, sao lưu JSON.":"Storage and sync (Local, GitHub, Dropbox, OneDrive, Google Drive), sync folders, devices, appearance, shared parameters, JSON backup.",
-"Thư mục đồng bộ quét sách trong thư mục đã chọn (trên máy, Dropbox, OneDrive hoặc Google Drive) và tự thêm sách mới mỗi lần đồng bộ.":"Sync folders scans books in the chosen folders (device, Dropbox, OneDrive or Google Drive) and adds new books on each sync."};
+"Thư mục đồng bộ quét sách trong thư mục đã chọn (trên máy, Dropbox, OneDrive hoặc Google Drive) và tự thêm sách mới mỗi lần đồng bộ.":"Sync folders scans books in the chosen folders (device, Dropbox, OneDrive or Google Drive) and adds new books on each sync.",
+"Tệp này từ bản Google Drive cũ (trước 0.8). Kết nối lại Google Drive hoặc thêm lại tệp.":"This file comes from the old Google Drive version (before 0.8). Reconnect Google Drive or add the file again."};
