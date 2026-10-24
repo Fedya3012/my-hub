@@ -22,5 +22,7 @@ export const GOOGLE_WEB_CLIENT_ID = '442469437504-i6tl22nkukmbeiqk5ikl3qa2d01euq
 // cannot hide it; it only lets someone ask Google for a sign-in in My Hub's name, never read anyone's Drive.
 // Kept out of the public repository: paste it locally, or set it once the owner decides how to ship it.
 export const GOOGLE_WEB_CLIENT_SECRET = '';
+// Android OAuth client (package com.myhub.app + release SHA-1). Public identifier, no secret.
+export const GOOGLE_ANDROID_CLIENT_ID = '442469437504-ol5uqc8lhl6sa76rp1t142cptlaiol8r.apps.googleusercontent.com';
 // Where Android's sign-in lands before going back to the app (GitHub Pages, workflow pages.yml).
 export const GOOGLE_PAGES_REDIRECT = 'https://fedya3012.github.io/my-hub/oauth-google.html';
