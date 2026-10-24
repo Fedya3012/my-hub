@@ -189,7 +189,7 @@ async function renderPage() {
             <strong>${m.label}</strong><span>${m.hint}</span></label>`).join('')}
       </div>
 
-      <p class="hint">Chọn một ô ở trên để kết nối: <b>Dropbox</b> và <b>OneDrive</b> sẽ mở hộp đăng nhập. Đang dùng chế độ này rồi thì bấm “Đổi tài khoản” trong bảng bên dưới.</p>
+      <p class="hint">Chọn một ô ở trên để kết nối: <b>Dropbox</b>, <b>OneDrive</b> và <b>Google Drive</b> sẽ mở hộp đăng nhập. Đang dùng chế độ này rồi thì bấm “Đổi tài khoản” trong bảng bên dưới.</p>
       <div class="panel">
         <dl class="kv">
           <dt>Lưu tệp trên máy bằng</dt><dd>${st.backend === 'opfs' ? 'Hệ thống tệp riêng của ứng dụng (OPFS)' : 'IndexedDB'}</dd>
@@ -223,7 +223,7 @@ async function renderPage() {
 
     <section class="set-block" data-sec="source">
       <h2 class="section-title">${icon('library')}Thư mục đồng bộ</h2>
-      <p class="hint">Nơi lấy nhạc và sách: thư mục trong máy và / hoặc thư mục trên Dropbox / OneDrive. Bật cả hai được, ví dụ sách từ Dropbox còn nhạc trong máy: mỗi thư mục tự chọn nhập nhạc hay sách. Không phụ thuộc vào tài khoản đồng bộ ở trên.</p>
+      <p class="hint">Nơi lấy nhạc và sách: thư mục trong máy và / hoặc thư mục trên Dropbox / OneDrive / Google Drive. Bật cả hai được, ví dụ sách từ Dropbox còn nhạc trong máy: mỗi thư mục tự chọn nhập nhạc hay sách. Không phụ thuộc vào tài khoản đồng bộ ở trên.</p>
       <div class="mode-cards" role="group" aria-label="Nơi lấy thư mục đồng bộ">
         ${[['local', 'Trong máy', 'Thư mục trên thiết bị này.']].concat(Object.keys(drives).filter(F.canPickFolders).map(k => [k, MODES[k].label, drives[k].connected() ? 'Đã kết nối' : 'Chưa kết nối, chọn để đăng nhập'])).map(([k, l, h]) => `
           <label class="mode-card${fsrcs.includes(k) ? ' on' : ''}">
@@ -240,7 +240,7 @@ async function renderPage() {
         <ul class="devices">${devices.map(d => `<li><span class="mod-icon">${icon(d.platform === 'android' || d.platform === 'ios' ? 'device' : 'apps')}</span>
           <span class="dev-main"><strong>${esc(d.name)}</strong>${d.id === me.id ? ' <span class="pill s-core">Máy này</span>' : ''}<span class="muted">Hoạt động ${fmtAgo(d.lastSeenAt)}</span></span>
           ${d.id === me.id ? '<button class="btn small" data-act="rename">Đổi tên</button>' : ''}</li>`).join('')}</ul>
-        <p class="hint">${st.mode === 'local' ? 'Kết nối GitHub, Dropbox hoặc OneDrive để tiến độ (đang nghe tới đâu, đọc tới trang nào) theo bạn sang điện thoại, máy Windows và bản APK.' : 'Dừng nhạc trên một máy, mở app trên máy khác sẽ tiếp tục đúng chỗ đó.'}</p>
+        <p class="hint">${st.mode === 'local' ? 'Kết nối GitHub, Dropbox, OneDrive hoặc Google Drive để tiến độ (đang nghe tới đâu, đọc tới trang nào) theo bạn sang điện thoại, máy Windows và bản APK.' : 'Dừng nhạc trên một máy, mở app trên máy khác sẽ tiếp tục đúng chỗ đó.'}</p>
       </div>
     </section>
 
@@ -293,7 +293,7 @@ async function renderPage() {
       </div>
       <div class="panel">
         <p><strong>Đăng xuất khỏi máy này</strong></p>
-        <p class="hint">Xoá mọi thông tin đăng nhập lưu trên máy (token GitHub, Dropbox, OneDrive, ListenBrainz) và chuyển về chế độ Chỉ trên máy. Thư viện, tiến độ, ghi chú và tệp vẫn giữ nguyên. Dùng khi đưa máy cho người khác hoặc nghi lộ token. Đăng nhập lại bất cứ lúc nào.</p>
+        <p class="hint">Xoá mọi thông tin đăng nhập lưu trên máy (token GitHub, Dropbox, OneDrive, Google Drive, ListenBrainz) và chuyển về chế độ Chỉ trên máy. Thư viện, tiến độ, ghi chú và tệp vẫn giữ nguyên. Dùng khi đưa máy cho người khác hoặc nghi lộ token. Đăng nhập lại bất cứ lúc nào.</p>
         <div class="row-actions"><button class="btn" data-act="signout-here">${icon('power')}Đăng xuất khỏi máy này</button></div>
       </div>
     </section>
@@ -313,7 +313,7 @@ async function renderPage() {
       render();
       return;
     }
-    if (isDrive(r.value)) {   // Dropbox / OneDrive: connect, then asks what to do with this device's data
+    if (isDrive(r.value)) {   // Dropbox / OneDrive / Google Drive: connect, then asks what to do with this device's data
       const { useDrive } = await import('../../core/storage/cloud-ui.js');
       await useDrive(r.value); render();
       return;

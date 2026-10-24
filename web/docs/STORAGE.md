@@ -68,3 +68,12 @@ Ví dụ: đang nghe dở trên Windows, mở app trên điện thoại thì ngh
 - **Android**: `allowBackup="false"` + `res/xml/data_extraction_rules.xml` loại mọi dữ liệu khỏi sao lưu Google và chuyển máy (token nằm trong dữ liệu WebView). Chuyển dữ liệu sang máy mới bằng đồng bộ hoặc tệp JSON.
 - **Phông chữ** nằm trong app (`web/vendor/fonts`, tải bằng `tools/fetch-fonts.py`, ánh xạ ở `js/core/fonts.js`): không gọi Google Fonts nữa. Skin nhập có phông lạ thì dùng phông dự phòng.
 - **CSP**: `js/core/csp.js` thêm thẻ meta ngay đầu `app.js` (sau khi bridge Capacitor đã chạy): chặn script lạ/inline, plugin, form ngoài; mạng vẫn mở (podcast, bìa, lời bài hát từ mọi máy chủ).
+
+## Google Drive (`googledrive`, thêm lại 2026-10-23)
+
+- Adapter `js/core/storage/googledrive.js` (Drive API v3), cùng giao diện với Dropbox/OneDrive: dùng được làm **tài khoản đồng bộ** lẫn **thư mục đồng bộ**.
+- Thư viện, tiến độ và tệp tải lên nằm trong **appDataFolder** (thư mục ẩn, chỉ My Hub thấy). Thư mục đồng bộ đọc My Drive của bạn, chỉ đọc (`drive.readonly`), bỏ qua Google Docs/Sheets.
+- Drive không có ghi có điều kiện: trước khi ghi `hub-db.json` app so `version` đã đọc với bản trên Drive, khác thì đồng bộ lại.
+- Nhạc từ thư mục Google Drive **phát thẳng** từ Drive, không sao chép: service worker của app nhận địa chỉ nội bộ `__gdrive/<id>` và tự gắn header Authorization (thẻ `<audio>` không gửi được header). Không có service worker thì app tải bài về rồi phát.
+- **Tạo OAuth client (miễn phí, khoảng 5 phút):** https://console.cloud.google.com → tạo project → *APIs & Services → Library* bật **Google Drive API** → *OAuth consent screen*: User type *External*, thêm email của bạn vào *Test users*, thêm scope `.../auth/drive.appdata` và `.../auth/drive.readonly` → *Credentials → Create credentials → OAuth client ID*, loại **Desktop app** → chép **Client ID** và **Client secret** (dán vào hộp kết nối, hoặc `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` trong `js/config.js`).
+- Đăng nhập: bấm *Mở Google để cấp quyền*, cho phép (Google cảnh báo app chưa xác minh: *Advanced → Go to …*), trình duyệt chuyển tới `http://127.0.0.1/?code=…` (trang không mở được là bình thường), chép cả địa chỉ dán vào app. Ở chế độ *Testing* của Google, quyền dùng lâu dài hết hạn sau 7 ngày: phải kết nối lại, hoặc đưa app sang *In production*.

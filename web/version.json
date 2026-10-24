@@ -646,6 +646,7 @@
       "js/core/storage/folder-ui.js",
       "js/core/storage/dropbox.js",
       "js/core/storage/onedrive.js",
+      "js/core/storage/googledrive.js",
       "js/core/storage/cloud-ui.js",
       "js/modules/library/manifest.js",
       "js/modules/app-manager/manifest.js",

@@ -56,6 +56,16 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
 
+  // Google Drive songs (see storage/googledrive.js streamUrl): fetch from Drive with the token as a header.
+  const gd = url.origin === self.location.origin && url.pathname.match(/\/__gdrive\/([^/]+)$/);
+  if (gd) {
+    const headers = { Authorization: 'Bearer ' + (url.searchParams.get('t') || '') };
+    const range = req.headers.get('range');
+    if (range) headers.Range = range;
+    event.respondWith(fetch(`https://www.googleapis.com/drive/v3/files/${gd[1]}?alt=media`, { headers }));
+    return;
+  }
+
   // Never cache GitHub API calls or version checks.
   if (url.host === 'api.github.com' || url.pathname.endsWith('version.json')) return;
 
