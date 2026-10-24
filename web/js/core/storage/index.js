@@ -300,8 +300,17 @@ export const storage = {
     await db.files.delete(fileRow.id);
   },
 
-  _timer: null,
+  _timer: null, _holds: 0, _held: false,
+  // A bulk import (folder sync, a batch of songs) holds sync back: every song queues rows, and a sync after each one
+  // (every 8-15 s on a slow drive) kept restarting the task. One sync runs after the whole import instead.
+  // Returns the function that lets go; call it in a finally.
+  holdSync() {
+    this._holds++;
+    let done = false;
+    return () => { if (done) return; done = true; if (!--this._holds && this._held) { this._held = false; this.syncSoon(1500); } };
+  },
   syncSoon(delay = 4000) {
+    if (this._holds) { this._held = true; return; }
     clearTimeout(this._timer);
     this._timer = setTimeout(() => this.sync().catch(e => bus.emit('sync:error', e)), delay);
   },
@@ -662,7 +671,7 @@ db.syncQueue.hook('creating', () => { if (qSoon) return; qSoon = setTimeout(asyn
 // Every 2 minutes only when there is something to send; otherwise a full re-read of the drive file (tens of MB for
 // a big library) every 10 minutes is enough: progress follows through the small live channel meanwhile.
 setInterval(async () => {
-  if (document.visibilityState !== 'visible' || !(await autoOk())) return;
+  if (document.visibilityState !== 'visible' || storage._holds || !(await autoOk())) return;
   if (!(await db.syncQueue.count()) && now() - (await getSetting('sync.lastAt', 0) || 0) < 10 * 60_000) return;
   storage.sync({ quiet: true }).catch(() => {});
 }, 120_000);

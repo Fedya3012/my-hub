@@ -50,7 +50,8 @@ export function invalidate() {
 }
 export async function whileImporting(fn) {
   holds++;
-  try { return await fn(); } finally { if (!--holds && held) { held = false; bus.emit('music:changed'); } }
+  const releaseSync = storage.holdSync();
+  try { return await fn(); } finally { releaseSync(); if (!--holds && held) { held = false; bus.emit('music:changed'); } }
 }
 
 export async function library() {

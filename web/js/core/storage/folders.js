@@ -155,7 +155,10 @@ export async function syncFolders(opts = {}) {
   if (opts.resume) await resumeFolderSync();
   else if (!opts.pruneOnly && (await folderPaused())) return { skipped: 'paused', added: 0, failed: [] };
   // Chained on the running sync: two callers waiting on it would otherwise both start a run.
-  const p = (current || Promise.resolve()).catch(() => {}).then(() => runSync(opts));
+  const p = (current || Promise.resolve()).catch(() => {}).then(async () => {
+    const release = storage.holdSync();   // one sync after the whole import, not one per song
+    try { return await runSync(opts); } finally { release(); }
+  });
   current = p;
   try { return await p; } finally { if (current === p) current = null; active.clear(); }
 }
