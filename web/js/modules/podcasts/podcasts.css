@@ -480,3 +480,25 @@ html:has(body.pc-np-open), body.pc-np-open { background: #121014; }
 .pc-np .pc-empty .btn { background: rgb(255 255 255 / .14); color: var(--fg); border: 1px solid rgb(255 255 255 / .28); min-height: 40px; padding: 0 16px; }
 .pc-np .pc-empty .btn:hover { background: rgb(255 255 255 / .22); }
 .pc-np .pc-empty .btn .ic { color: var(--pc-accent); }
+
+/* Now Playing on desktop / Windows: the top bar no longer takes the spare height. The cover and the
+   title + tabs + panel sit as one centred block, the controls stay at the bottom, all inside one screen. */
+@media (min-width: 900px) {
+  .pc-np { height: 100vh; height: 100dvh; min-height: 0; overflow: hidden; row-gap: 12px; column-gap: 48px;
+    padding: 20px max(40px, calc((100% - 1160px) / 2)) 28px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+    grid-template-rows: auto minmax(0, 1fr) auto auto min(42vh, 420px) minmax(0, 1fr) auto;
+    grid-template-areas: "bar bar" ". ." "cover title" "cover tabs" "cover panel" ". ." "bottom bottom"; }
+  .pc-np-bar { grid-area: bar; }
+  .pc-np-cover { grid-area: cover; align-self: center; width: 100%; display: flex; justify-content: flex-end; padding: 0; }
+  .pc-np .pc-art.np { width: min(40vh, 400px, 100%); flex: none; height: auto; aspect-ratio: 1; border-radius: 22px; box-shadow: 0 24px 60px rgb(0 0 0 / .45); }
+  .pc-np-title { grid-area: title; align-self: end; }
+  .pc-np-title h1 { font-size: 1.6rem; }
+  .pc-np-tabs { grid-area: tabs; align-self: start; }
+  .pc-np-tabs button:first-child, .pc-np-tabs button:last-child { margin: 0; }
+  .pc-np-tabs button { padding: 8px 14px; }
+  .pc-np-panel { grid-area: panel; max-height: none; min-height: 0; padding: 12px 14px; }
+  .pc-np-panel .pc-empty { height: 100%; align-content: center; }
+  .pc-np .fold-bottom { grid-area: bottom; max-width: 820px; gap: 10px; }
+  .pc-np-ctl { max-width: 560px; width: 100%; margin-inline: auto; }
+}
