@@ -40,6 +40,7 @@ function css(p) {
     [align="left"] { text-align: left; } [align="right"] { text-align: right; } [align="center"] { text-align: center; }
     pre { white-space: pre-wrap !important; }
     img, svg { max-width: 100%; height: auto; }
+    .tb-pg { margin: 0 0 8px !important; text-indent: 0 !important; text-align: center !important; break-inside: avoid; } .tb-pg img { display: block; margin: 0 auto; max-height: 96vh; width: auto; }
     ${p.theme === 'night' || p.theme === 'black' || p.theme === 'contrast' ? 'img { filter: brightness(.85); }' : ''}
     aside[epub|type~="footnote"], aside[epub|type~="endnote"], aside[epub|type~="note"], aside[epub|type~="rearnote"] { display: none; }`;
 }

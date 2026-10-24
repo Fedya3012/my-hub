@@ -27,7 +27,14 @@ function toXhtml(html) {
 export function makeTextBook({ title = '', author = '', language = '', chapters = [] }) {
   const urls = [];
   const sections = chapters.map((ch, index) => {
-    const str = page(ch.title || title, `<section ${ID}="${index}">${ch.title ? `<h2>${esc(ch.title)}</h2>` : ''}${toXhtml(ch.html)}</section>`, language);
+    const build = (html) => page(ch.title || title, `<section ${ID}="${index}">${ch.title && !ch.images ? `<h2>${esc(ch.title)}</h2>` : ''}${toXhtml(html)}</section>`, language);
+    // A chapter with render() (pages drawn from images) is built the first time it is shown.
+    if (ch.render) {
+      let str = null, url = null;
+      const make = async () => { if (str == null) { str = build(await ch.render()); url = URL.createObjectURL(new Blob([str], { type: XHTML })); urls.push(url); } return url; };
+      return { id: index, load: make, unload: () => {}, createDocument: async () => { await make(); return new DOMParser().parseFromString(str, XHTML); }, size: (ch.pages || 1) * 4000, linear: 'yes' };
+    }
+    const str = build(ch.html);
     const blob = new Blob([str], { type: XHTML });
     const url = URL.createObjectURL(blob);
     urls.push(url);
@@ -140,6 +147,10 @@ export async function volumeBook({ title, author, parts, open }) {
     const file = await open(p);
     if (!file) { chapters.push({ title: p.title, html: '<p>(Không mở được tệp của chương này trên máy này.)</p>' }); continue; }
     let list, found = false;
+    if (p.engine === 'pdf') {
+      const img = await (await import('./engine-pdf.js')).pdfImagePart(file);
+      if (img) { chapters.push({ title: p.title, images: true, pages: img.pages, render: img.render }); continue; }
+    }
     if (p.engine === 'text') list = (await textChapters(file, p.name)).chapters;
     else {
       // PDF parts are reflowed to text first (engine-pdf), other formats go through foliate.

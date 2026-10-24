@@ -16,7 +16,7 @@ const natural = (a, b) => {
 function guessTitle(list) {
   let p = list[0]?.title || '';
   for (const b of list) while (p && !b.title.startsWith(p)) p = p.slice(0, -1);
-  p = p.replace(/[\s\-–—_:.,(#]*(chương|chuong|chapter|chap|ch|phần|phan|tập|tap)?\s*\d*\s*$/i, '').trim();
+  p = p.replace(/[\s\-–—_:.,(#]*(chương|chuong|chapter|chap|ch|phần|phan|tập|tap|volume|vol|v)?\s*\d*\s*$/i, '').trim();
   return p.length >= 3 ? p : (list[0]?.series || 'Volume mới');
 }
 

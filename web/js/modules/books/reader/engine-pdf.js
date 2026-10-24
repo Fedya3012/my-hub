@@ -199,6 +199,31 @@ export async function open(host, blob, { lastLocation = null, prefs }) {
 // ("Chương 12", "Chapter IV", "Hồi 3", "Phần 2"…) or is set clearly larger than the body text and short.
 // With fewer than 2 such headings it falls back to the PDF outline, then to one chapter per 10 pages.
 const HEAD_RE = /^\s*(chương|chuong|chapter|chap\.?|hồi|hoi|phần|phan|quyển|quyen|tập|tap|part|book|volume|prologue|epilogue|mở đầu|lời mở đầu|vĩ thanh|ngoại truyện|phiên ngoại)\b[\s.:\-–—]*([0-9]+|[ivxlcdm]+\b)?/i;
+// A scanned PDF (manga, comics: pages are pictures, almost no text) as one chapter of page images for a
+// volume. Pages are drawn only when the chapter is first shown; null when the PDF has real text.
+export async function pdfImagePart(blob) {
+  const lib = await loadPdfjs();
+  const doc = await lib.getDocument({ data: new Uint8Array(await blob.arrayBuffer()), isEvalSupported: false }).promise;
+  let chars = 0;
+  for (let i = 1; i <= Math.min(doc.numPages, 6); i++) chars += (await (await doc.getPage(i)).getTextContent()).items.reduce((a, it) => a + it.str.trim().length, 0);
+  if (chars / Math.min(doc.numPages, 6) > 80) { doc.destroy(); return null; }
+  const pages = doc.numPages;
+  return {
+    pages,
+    async render() {
+      const out = [];
+      for (let i = 1; i <= pages; i++) {
+        const pg = await doc.getPage(i), vp = pg.getViewport({ scale: Math.min(2, 1600 / pg.getViewport({ scale: 1 }).height) });
+        const c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height;
+        await pg.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+        const b = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.85));
+        out.push(`<p class="tb-pg"><img src="${URL.createObjectURL(b)}" alt="Trang ${i}"/></p>`);
+      }
+      return out.join('');
+    },
+  };
+}
+
 // Headings on the first lines of each page: [[page, title]] (only when at least 2 are found).
 async function detectHeads(doc) {
   const tops = [], sizes = [];
