@@ -386,7 +386,8 @@ export const storage = {
       for (const e of q) {
         if (!SYNCED_TABLES.includes(e.entity)) continue;
         if (e.op === 'delete') { out.set(tkey(e.entity, e.entityId), { tbl: e.entity, id: String(e.entityId), deleted: true, updatedAt: e.createdAt || now() }); continue; }
-        const r = await db.table(e.entity).get(e.entityId);
+        if (e.entityId == null) continue;   // queued with a bad key by an older build
+        const r = await db.table(e.entity).get(e.entityId).catch(() => null);
         if (r) add(e.entity, r);
       }
     }

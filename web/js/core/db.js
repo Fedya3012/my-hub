@@ -190,7 +190,7 @@ for (const name of SYNCED_TABLES) {
     if (syncHooksPaused) return;
     obj.updatedAt = obj.updatedAt || now();
     obj.rev = (obj.rev || 0) + 1;
-    tx.on('complete', () => queueChange(name, key ?? obj.id, 'put'));
+    tx.on('complete', () => queueChange(name, key ?? obj[table.schema.primKey.keyPath] ?? obj.id, 'put'));
   });
   table.hook('updating', function (mods, key, obj, tx) {
     if (syncHooksPaused) return;
@@ -207,6 +207,7 @@ for (const name of SYNCED_TABLES) {
 // and one bulkAdd, outside the writing transaction (one Dexie call per row overflowed the stack).
 let pendingQ = [], flushQ = null;
 function queueChange(entity, entityId, op) {
+  if (entityId == null || (typeof entityId === 'object' && !Array.isArray(entityId))) return;   // an invalid key would make every later sync fail in Table.get()
   pendingQ.push({ entity, entityId, op, createdAt: now(), attempts: 0 });
   flushQ ||= setTimeout(async () => {
     const batch = pendingQ; pendingQ = []; flushQ = null;
