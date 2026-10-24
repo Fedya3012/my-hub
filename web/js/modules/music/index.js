@@ -30,6 +30,7 @@ export async function mount(el, context, sub = '') {
   root = el; ctx = context;
   // Covers are made on each device: rebuild any that are missing here (quietly, after the page is shown).
   setTimeout(() => store.rebuildMissingCovers().catch(() => {}), 2000);
+  setTimeout(() => store.upgradeThumbs().catch(() => {}), 6000);
   // Styles of the tag editor, artwork, folder browser and statistics (separate from music.css).
   if (!document.querySelector('link[data-music-library-css]')) {
     libCss = Object.assign(document.createElement('link'), { rel: 'stylesheet', href: new URL('./library.css', import.meta.url).href });
@@ -648,7 +649,7 @@ async function hero(c, { cover, fullCover, colors, kicker, title, sub, meta, rou
   c.innerHTML = `<section class="mhero ${cls}" style="${colors ? `--h-bg:${colors.bg};--h-acc:${colors.light};` : ''}">
     <div class="mhero-bg" aria-hidden="true" style="${bg ? `background-image:url('${bg}')` : ''}"></div>
     <button class="icon-btn mhero-back" data-back aria-label="Quay lại">${icon('chev-left')}</button>
-    ${artHtml(cover, title, { cls: 'hero' + (round ? ' round' : '') })}
+    ${artHtml(fullCover || cover, title, { cls: 'hero' + (round ? ' round' : '') })}
     <div class="mhero-txt"><span class="eyebrow">${kicker}</span><h1>${esc(title)}</h1><p>${sub || ''}</p><p class="mhero-meta">${meta || ''}</p>
       <div class="mhero-act">${actions}</div></div></section><div data-body></div>`;
   c.querySelector('[data-back]').onclick = () => history.length > 1 ? history.back() : go('');
@@ -681,7 +682,7 @@ async function albumPage(c, L, id) {
   withCovers(L, a.tracks);
   const formats = [...new Set(a.tracks.map(t => techLine(t.tech, { bitrate: false })))];
   const src = { kind: 'album', id: a.id, name: a.title };
-  const credits = [a.label && `<a href="#music/label/${encodeURIComponent(L.labels.get(store.norm(a.label))?.id || '')}">${esc(a.label)}</a>`].filter(Boolean);
+  const credits = [a.label && store.norm(a.label) !== store.norm(a.artist) && `<a href="#music/label/${encodeURIComponent(L.labels.get(store.norm(a.label))?.id || '')}">${esc(a.label)}</a>`].filter(Boolean);
   const body = await hero(c, { cover: a.cover, fullCover: a.coverFileId, colors: prefs().np.albumTheme && a.colors, kicker: store.KIND_LABEL[a.kind] || 'Album', title: a.title,
     sub: `<a href="#music/albumartist/${a.artistId}">${esc(a.artist)}</a>${a.year ? ` · <a href="#music/year/${a.year}">${a.year}</a>` : ''}${credits.length ? ' · ' + credits.join(' · ') : ''}`,
     meta: `${a.tracks.length} bài · ${fmtTotal(a.duration)} · ${a.hiRes && prefs().showHiRes ? '<span class="hires sm">Hi-Res</span> ' : ''}${esc(formats.slice(0, 2).join(' / '))}${a.rg?.gain != null ? ` · ReplayGain album ${a.rg.gain > 0 ? '+' : ''}${a.rg.gain.toFixed(2)} dB` : ''}`,

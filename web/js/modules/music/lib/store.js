@@ -6,7 +6,7 @@ import { storage } from '../../../core/storage/index.js';
 import { bus } from '../../../core/bus.js';
 import { thisDevice } from '../../../core/device.js';
 import { readAudioMeta } from './meta.js';
-import { makeThumb, palette, forgetUrl, collageRef } from './art.js';
+import { makeThumb, palette, forgetUrl, collageRef, THUMB } from './art.js';
 import { isHiRes } from './format.js';
 import { prefs } from './prefs.js';
 import { cmpVi, cmpViNum, yieldToMain } from '../../../core/perf.js';
@@ -70,7 +70,8 @@ export async function library() {
     const ART = new Map();
     for (const f of artRows.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0))) {
       const cur = ART.get(f.itemId);
-      if (!cur || f.role === 'artwork-thumb' || (cur.role !== 'artwork-thumb' && (f.createdAt || 0) >= (cur.createdAt || 0))) ART.set(f.itemId, f);
+      const sharp = (x) => x.role === 'artwork' || x.w >= THUMB;   // thumbs from before 720 px look soft, so the full artwork wins
+      if (!cur || (sharp(f) && !sharp(cur)) || (sharp(f) === sharp(cur) && (f.role === 'artwork-thumb' ? cur.role !== 'artwork-thumb' || (f.createdAt || 0) >= (cur.createdAt || 0) : cur.role !== 'artwork-thumb' && (f.createdAt || 0) >= (cur.createdAt || 0)))) ART.set(f.itemId, f);
     }
     const custom = (kind, id) => ART.get(kind + ':' + id)?.id || null;
     const artMode = prefs().art || {};
@@ -108,7 +109,7 @@ export async function library() {
       al.plays = al.tracks.reduce((s, t) => s + t.plays, 0);
       al.lastPlayed = maxOf(al.tracks, t => t.lastPlayed);
       al.formats = [...new Set(al.tracks.map(t => t.tech && t.tech.codecLabel).filter(Boolean))];
-      al.cover = al.thumbFileId || al.coverFileId || al.tracks.find(t => t.coverFileId)?.coverFileId || custom('album', al.id);
+      al.cover = (al.thumbW >= THUMB ? al.thumbFileId : null) || al.coverFileId || al.thumbFileId || al.tracks.find(t => t.coverFileId)?.coverFileId || custom('album', al.id);
     }
     for (const [id, al] of A) if (!al.tracks.length) A.delete(id);
     for (const al of A.values()) {
@@ -446,7 +447,7 @@ export async function setAlbumCover(albumId, blob) {
   let thumbId = null, colors = null;
   try { const th = await makeThumb(blob); if (th) thumbId = (await storage.addFile(albumId, th, { role: 'thumb', name: 'thumb.webp' })).id; } catch { /* decode failed */ }
   try { colors = await palette(blob); } catch { /* ignore */ }
-  await db.albums.update(albumId, { coverFileId: cover.id, thumbFileId: thumbId, coverSize: blob.size, colors });
+  await db.albums.update(albumId, { coverFileId: cover.id, thumbFileId: thumbId, thumbW: THUMB, coverSize: blob.size, colors });
   invalidate();
 }
 
@@ -743,8 +744,8 @@ export async function mainFile(id) {
 }
 
 // ── Artwork for anything (artist, playlist, genre, year, label, composer, folder…) ──
-// Stored as ordinary files (synced like covers): itemId '<kind>:<id>', role 'artwork' (≤ 1200 px)
-// + 'artwork-thumb' (360 px). Albums use their own cover fields, tracks their coverFileId.
+// Stored as ordinary files (synced like covers): itemId '<kind>:<id>', role 'artwork' (≤ 3840 px)
+// + 'artwork-thumb' (720 px). Albums use their own cover fields, tracks their coverFileId.
 export const ART_KINDS = { album: 'album', track: 'bài hát', artist: 'nghệ sĩ', albumartist: 'nghệ sĩ album', playlist: 'danh sách phát', genre: 'thể loại', year: 'năm', label: 'hãng đĩa', composer: 'nhạc sĩ', folder: 'thư mục' };
 export async function setArtwork(kind, id, blob) {
   if (kind === 'album') return setAlbumCover(id, blob);
@@ -759,9 +760,9 @@ export async function setArtwork(kind, id, blob) {
   await clearArtwork(kind, id, { silent: true });
   const key = kind + ':' + id;
   let full = blob;
-  try { const b = await makeThumb(blob, 1200); if (b && b.size < blob.size) full = b; } catch { /* keep original */ }
+  try { const b = await makeThumb(blob, 3840); if (b && b.size < blob.size) full = b; } catch { /* keep original (up to 4K) */ }
   await storage.addFile(key, full, { role: 'artwork', name: 'artwork' + (full.type === 'image/png' ? '.png' : full.type === 'image/webp' ? '.webp' : '.jpg'), quiet: true });
-  try { const th = await makeThumb(blob); if (th) await storage.addFile(key, th, { role: 'artwork-thumb', name: 'artwork-thumb.webp', quiet: true }); } catch { /* decode failed */ }
+  try { const th = await makeThumb(blob); if (th) { const r = await storage.addFile(key, th, { role: 'artwork-thumb', name: 'artwork-thumb.webp', quiet: true }); await db.files.update(r.id, { w: THUMB }); } } catch { /* decode failed */ }
   invalidate();
 }
 export async function clearArtwork(kind, id, { silent = false } = {}) {
@@ -809,6 +810,33 @@ export function attachListenLog(player) {
 }
 let markLogged = () => {};
 import('./player.js').then(m => attachListenLog(m.player)).catch(() => {});
+
+// Album thumbnails from before 0.9.21 are 360 px and look soft on phones: rebuild them at 720 px from the cover
+// already on this device (never downloads anything), a few at a time in the background.
+let thumbsChecked = false;
+export async function upgradeThumbs() {
+  if (thumbsChecked) return 0;
+  thumbsChecked = true;
+  let made = 0;
+  for (const al of await db.albums.toArray()) {
+    if (!al.coverFileId || al.thumbW >= THUMB) continue;
+    try {
+      const row = await db.files.get(al.coverFileId);
+      if (!row || row.deleted || !row.locations?.local) continue;
+      const blob = await storage.adapters.local.get(row.locations.local).catch(() => null);
+      if (!(blob instanceof Blob)) continue;
+      const th = await makeThumb(blob);
+      if (!th) continue;
+      const old = al.thumbFileId && await db.files.get(al.thumbFileId);
+      const id = (await storage.addFile(al.id, th, { role: 'thumb', name: 'thumb.webp', quiet: true })).id;
+      await db.albums.update(al.id, { thumbFileId: id, thumbW: THUMB });
+      if (old) { await storage.removeFile(old, { everywhere: true }).catch(() => {}); forgetUrl(old.id); }
+      if (++made % 8 === 0) await yieldToMain();
+    } catch { /* keep the full cover */ }
+  }
+  if (made) invalidate();
+  return made;
+}
 
 // Album covers and thumbnails are made on each device (they are not synced): when an album's cover file is not on
 // this device, read its first track's embedded picture again and store it here. Cheap: one tag read per album.

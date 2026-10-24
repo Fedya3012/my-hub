@@ -86,16 +86,20 @@ export function forgetUrl(fileId) {
   Promise.resolve(u).then(x => x && URL.revokeObjectURL(x));
 }
 
-// Small JPEG/WebP for grids and lists (full covers can be several MB).
-export async function makeThumb(blob, size = 360) {
+// JPEG/WebP for grids and lists (full covers can be several MB). 720 px keeps a 240 px tile sharp on a 3× phone
+// screen; big views (album page, Đang phát) use the original cover.
+export const THUMB = 720;
+export async function makeThumb(blob, size = THUMB) {
   const bmp = await createImageBitmap(blob);
   const s = Math.min(1, size / Math.max(bmp.width, bmp.height));
   const w = Math.max(1, Math.round(bmp.width * s)), h = Math.max(1, Math.round(bmp.height * s));
   const c = document.createElement('canvas');
   c.width = w; c.height = h;
-  c.getContext('2d').drawImage(bmp, 0, 0, w, h);
+  const g = c.getContext('2d');
+  g.imageSmoothingQuality = 'high';
+  g.drawImage(bmp, 0, 0, w, h);
   bmp.close?.();
-  return new Promise(res => c.toBlob(b => res(b), 'image/webp', 0.86)).then(b => b || new Promise(res => c.toBlob(res, 'image/jpeg', 0.86)));
+  return new Promise(res => c.toBlob(b => res(b), 'image/webp', 0.9)).then(b => b || new Promise(res => c.toBlob(res, 'image/jpeg', 0.9)));
 }
 
 // ── Palette ─────────────────────────────────────────────────────
