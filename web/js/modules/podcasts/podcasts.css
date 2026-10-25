@@ -248,7 +248,7 @@ body.pc-np-open .pc-mini { display: none; }
 
 /* ── Mini player ───────────────────────────────────────────── */
 .pc-mini { position: fixed; z-index: 21; left: calc(var(--sidebar, 0px) + 16px); right: 16px; bottom: calc(16px + var(--sai-bottom, 0px)); max-width: 720px; margin-inline: auto;
-  display: grid; grid-template-columns: 1fr auto auto auto auto; align-items: center; gap: 4px; padding: 6px 8px 8px 6px; border-radius: 16px;
+  display: grid; grid-template-columns: 1fr repeat(5, auto); align-items: center; gap: 4px; padding: 6px 8px 8px 6px; border-radius: 16px;
   background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--line); box-shadow: var(--shadow); overflow: hidden; }
 .pc-mini[hidden] { display: none; }
 .pc-mini-close { width: 34px; height: 34px; color: var(--muted); }

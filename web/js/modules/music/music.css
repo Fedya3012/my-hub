@@ -120,6 +120,11 @@
   .mdock-seek { display: flex !important; align-items: center; gap: 10px; font-size: .74rem; color: var(--muted); min-width: 0; }
   .mdock-side { display: flex !important; align-items: center; gap: 2px; }
   .mvol { width: 80px !important; }
+  /* Fold and close sit stacked in the left edge, so the grid keeps song | controls | seek | tools in one row. */
+  .mdock:not(.is-folded) { padding-left: 56px; }
+  .mdock:not(.is-folded) > .mdock-fold, .mdock:not(.is-folded) > .mdock-close { position: absolute; left: 12px; width: 32px; height: 32px; }
+  .mdock:not(.is-folded) > .mdock-fold { top: calc(50% - 34px); }
+  .mdock:not(.is-folded) > .mdock-close { top: calc(50% + 2px); }
 }
 
 /* ── Sheets & menus ────────────────────── */
