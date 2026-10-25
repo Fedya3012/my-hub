@@ -54,6 +54,21 @@ public class MusicWidgetProvider extends AppWidgetProvider {
     return art;
   }
 
+  // The cover, softly blurred, behind the widget: scaled down to a few pixels and back up (bilinear), which
+  // costs nothing and stays tiny for the binder call.
+  private static MediaMetadataCompat blurFor;
+  private static Bitmap blur;
+  private static Bitmap blurred() {
+    Bitmap c = cover();
+    if (c == null) return null;
+    if (blurFor != artFor || blur == null) {
+      blurFor = artFor;
+      Bitmap small = Bitmap.createScaledBitmap(c, 12, 12, true);
+      blur = Bitmap.createScaledBitmap(small, 96, 96, true);
+    }
+    return blur;
+  }
+
   private static void draw(Context ctx, AppWidgetManager mgr, int id) {
     Bundle o = mgr.getAppWidgetOptions(id);
     boolean compact = o != null && o.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 140) < 110;
@@ -65,12 +80,14 @@ public class MusicWidgetProvider extends AppWidgetProvider {
     v.setTextViewText(R.id.mw_artist, d != null && d.getSubtitle() != null ? d.getSubtitle() : "Chưa phát nhạc");
     Bitmap cover = cover();
     if (cover != null) v.setImageViewBitmap(R.id.mw_art, cover); else v.setImageViewResource(R.id.mw_art, R.mipmap.ic_launcher);
+    Bitmap bg = blurred();
+    if (bg != null) v.setImageViewBitmap(R.id.mw_bg, bg); else v.setImageViewBitmap(R.id.mw_bg, null);
 
     long dur = m != null ? m.getLong(MediaMetadataCompat.METADATA_KEY_DURATION) : 0;
     long pos = MediaPlaybackService.position;
     if (MediaPlaybackService.playing) pos += (long) ((SystemClock.elapsedRealtime() - MediaPlaybackService.updatedAt) * MediaPlaybackService.rate);
     v.setProgressBar(R.id.mw_progress, 1000, dur > 0 ? (int) Math.min(1000, pos * 1000 / dur) : 0, false);
-    v.setImageViewResource(R.id.mw_play, MediaPlaybackService.playing ? android.R.drawable.ic_media_pause : android.R.drawable.ic_media_play);
+    v.setImageViewResource(R.id.mw_play, MediaPlaybackService.playing ? R.drawable.ic_w_pause : R.drawable.ic_w_play);
 
     v.setOnClickPendingIntent(R.id.mw_prev, MediaButtonReceiver.buildMediaButtonPendingIntent(ctx, PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS));
     v.setOnClickPendingIntent(R.id.mw_play, MediaButtonReceiver.buildMediaButtonPendingIntent(ctx, PlaybackStateCompat.ACTION_PLAY_PAUSE));
