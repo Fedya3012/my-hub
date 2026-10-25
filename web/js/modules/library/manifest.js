@@ -1,7 +1,7 @@
 export default {
   id: 'library',
   name: 'Thư viện',
-  version: '0.4.1',
+  version: '0.4.2',
   core: true,            // cannot be disabled: it is the home screen
   icon: 'library',
   route: 'library',

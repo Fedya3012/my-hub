@@ -1,7 +1,25 @@
 {
-  "app": "0.9.22.9",
-  "released": "2026-10-24",
+  "app": "0.9.22.10",
+  "released": "2026-10-25",
   "changelog": [
+    {
+      "version": "0.9.22.10",
+      "date": "2026-10-25",
+      "notes": [
+        "Sách: thêm loại sách (trọn bộ, tập, chương), chọn phiên bản đọc (Kindle, bản giấy…), trang loạt sách cho bộ dài có tập và chương",
+        "Sách: thêm chương vào sách hoặc tập (tải file chương lên hoặc chọn từ Thư viện)",
+        "Sách: Tiki để tìm sách tiếng Việt theo tên, nhận diện bìa bằng OCR (tiếng Việt và Anh)",
+        "Sách: tập quét (PDF truyện tranh) hiển thị ảnh trang khi mở chương",
+        "Sách: mở vị trí đã lưu không còn lỗi khi nội dung không khớp, mở lại từ đầu",
+        "Sách: tập hiển thị lý do khi không mở được file chương",
+        "Thư viện: nhận ra file đổi tên hoặc chuyển thư mục (nhạc theo tên, album, nghệ sĩ; sách theo tên, tác giả, tập, ngày, ngôn ngữ)",
+        "Đồng bộ thư mục: xoá khỏi thư viện các file đã rời khỏi thư mục, không nhập lại trùng",
+        "Trình phát nhạc: nút Đóng thanh phát nhỏ dừng phát và ẩn thanh",
+        "Podcast: nút Đóng thanh phát nhỏ dừng phát và ẩn thanh; thanh phát nhỏ không làm vỡ bố cục",
+        "Writer Studio: chọn nơi lưu bản sao (thư mục Dropbox hoặc OneDrive)",
+        "Đồng bộ: bỏ qua mục đã đổi tên hoặc chuyển đi khi nhập lại"
+      ]
+    },
     {
       "version": "0.9.22.9",
       "date": "2026-10-24",
@@ -803,7 +821,7 @@
   "modules": {
     "library": {
       "name": "Thư viện",
-      "version": "0.4.1",
+      "version": "0.4.2",
       "minApp": "0.3.0",
       "files": [
         "js/modules/library/index.js"
@@ -851,7 +869,7 @@
     },
     "music": {
       "name": "Trình phát nhạc",
-      "version": "0.7.9",
+      "version": "0.7.10",
       "minApp": "0.3.0",
       "files": [
         "js/modules/music/index.js",
@@ -938,7 +956,7 @@
     },
     "podcasts": {
       "name": "Podcast",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "minApp": "0.9.11.0",
       "files": [
         "js/modules/podcasts/index.js",
@@ -968,7 +986,7 @@
     },
     "books": {
       "name": "Sách",
-      "version": "0.1.5",
+      "version": "0.1.6",
       "minApp": "0.9.0.0",
       "files": [
         "js/modules/books/index.js",
@@ -1022,7 +1040,8 @@
         "vendor/fonts/opendyslexic/opendyslexic-latin-700-normal.woff2",
         "vendor/fonts/opendyslexic/opendyslexic-latin-700-italic.woff2",
         "js/modules/books/reader/audio-switch.js",
-        "js/modules/books/ui/volume.js"
+        "js/modules/books/ui/volume.js",
+        "js/modules/books/lib/ocr.js"
       ],
       "changelog": [
         {
@@ -1043,7 +1062,7 @@
     },
     "fanfic": {
       "name": "Xưởng Viết",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "minApp": "0.9.9.1",
       "files": [
         "js/modules/fanfic/fanfic.css",
