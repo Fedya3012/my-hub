@@ -5,7 +5,7 @@ import { sheet } from './sheets.js';
 import { icon } from '../../../core/icons.js';
 import { toast, esc } from '../../../core/ui.js';
 import { prefs, setPref } from '../lib/prefs.js';
-import { aiPref, setAiPref, hasSongPrefs, clearSongPrefs } from '../lib/ai-prefs.js';
+import { aiPref, setAiPref, hasSongPrefs, clearSongPrefs, SONG_KEYS } from '../lib/ai-prefs.js';
 
 const REC = {
   tiny: { name: 'Tiny', tag: 'Rất nhanh', desc: 'Nhẹ nhất, hợp bài rõ lời và máy yếu.', size: '≈ 40 MB', stars: 1 },
@@ -37,8 +37,7 @@ export async function openAiPanel({ t = null, kind = 'settings', onDone } = {}) 
   // With a song open the choices can be kept for that song only ('song') or changed for every song ('all').
   let scope = t && hasSongPrefs(t) ? 'song' : 'all';
   const tgt = () => (scope === 'song' ? t : null);
-  const SK = ['aiGenModel', 'aiModel', 'aiVocal', 'aiLang', 'trModel', 'trLang'];
-  const Y = () => { const y = { ...(prefs().lyrics || {}) }; for (const k of SK) y[k] = aiPref(k, tgt()); return y; };
+  const Y = () => { const y = { ...(prefs().lyrics || {}) }; for (const k of SONG_KEYS) y[k] = aiPref(k, tgt()); return y; };
   const stars = (n) => `<span class="aip-stars" aria-label="${n} trên 4">${'●'.repeat(n)}<i>${'●'.repeat(4 - n)}</i></span>`;
   const card = (group, key, m, { on, badge, extra = '' }) => `<button class="aip-card${on ? ' on' : ''}" data-${group}="${key}" role="radio" aria-checked="${on}">
       <span class="aip-radio" aria-hidden="true">${on ? icon('check') : ''}</span>
