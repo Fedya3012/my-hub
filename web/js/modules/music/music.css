@@ -108,6 +108,14 @@
   .mdock-seek.d-only { display: flex !important; order: 10; flex: 1 1 100%; align-items: center; gap: 8px; font-size: .72rem; color: var(--muted); min-width: 0; }
   .mdock-seek input { flex: 1; min-width: 0; }
   .mdock-line { display: none; }
+  /* Fold and close stacked in a narrow column at the left, so the song title, badges and play button keep their room. */
+  .mdock:not(.is-folded) { padding-left: 38px; }
+  .mdock:not(.is-folded) > .mdock-fold, .mdock:not(.is-folded) > .mdock-close { position: absolute; left: 4px; width: 30px; height: 28px; }
+  .mdock:not(.is-folded) > .mdock-fold { top: 6px; }
+  .mdock:not(.is-folded) > .mdock-close { top: 34px; }
+  /* Badges that do not fit wrap onto a hidden second line instead of sliding under the play button. */
+  .mdock-s .mbadges { min-width: 0; flex-shrink: 1; flex-wrap: wrap !important; max-height: 20px; overflow: hidden; align-self: flex-start; }
+  .mdock-s .mbadges > * { flex-shrink: 0; }
 }
 @media (min-width: 861px) {
   .mdock { left: var(--sidebar); right: 0; bottom: 0; border-radius: 0; border-width: 1px 0 0; padding: 10px 20px; gap: 18px;
