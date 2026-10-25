@@ -16,7 +16,6 @@ import { parseLyrics } from './lyrics.js';
 export const TR_LANGS = { vi: 'Tiếng Việt', en: 'Tiếng Anh', ja: 'Tiếng Nhật', ko: 'Tiếng Hàn', zh: 'Tiếng Trung', fr: 'Tiếng Pháp', es: 'Tiếng Tây Ban Nha', de: 'Tiếng Đức' };
 export const TR_MODELS = { fast: { label: 'Nhanh', size: '≈ 600 MB' }, best: { label: 'Chính xác', size: '≈ 1 GB' } };
 const LLM = 'onnx-community/Qwen2.5-1.5B-Instruct';
-const LLM_SMALL = 'onnx-community/Qwen2.5-0.5B-Instruct';
 const NLLB = { id: 'Xenova/nllb-200-distilled-600M', code: { vi: 'vie_Latn', en: 'eng_Latn', ja: 'jpn_Jpan', ko: 'kor_Hang', zh: 'zho_Hans', fr: 'fra_Latn', es: 'spa_Latn', de: 'deu_Latn', el: 'ell_Grek', ru: 'rus_Cyrl', th: 'tha_Thai', ar: 'arb_Arab', he: 'heb_Hebr', hi: 'hin_Deva' } };
 // The script of one line tells its language when it is not Latin (lyrics often mix languages).
 const SCRIPT = [[/[\u0370-\u03FF]/, 'el'], [/[\u0400-\u04FF]/, 'ru'], [/[\u0E00-\u0E7F]/, 'th'], [/[\u0600-\u06FF]/, 'ar'], [/[\u0590-\u05FF]/, 'he'], [/[\u0900-\u097F]/, 'hi'], [/[\uAC00-\uD7AF]/, 'ko'], [/[\u3040-\u30FF]/, 'ja'], [/[\u4E00-\u9FFF]/, 'zh']];
@@ -87,7 +86,7 @@ async function loadModel(mid, task, label, { pipeline = 'translation', tries } =
   if (worker && !waits.size) { worker.terminate(); worker = null; loadedId = ''; }
   try { await callWorker({ type: 'load', lib: LIB, wasm: LIB.slice(0, LIB.lastIndexOf('/') + 1), mid, tries, task: pipeline }); loadedId = mid; }
   catch (e) {
-    if (worker && !waits.size) { worker.terminate(); worker = null; loadedId = ''; } throw new Error(`Không nạp được mô hình dịch ${mid.split('/')[1]}${e.errs?.length ? ' — ' + (/^\d+$/.test(String(e.errs[0]).trim()) ? 'thiết bị không đủ bộ nhớ' : e.errs[0]) : ''}`); }
+    if (worker && !waits.size) { worker.terminate(); worker = null; loadedId = ''; } throw new Error(`Không nạp được mô hình dịch ${mid.split('/')[1]}${e.errs?.length ? ' — ' + (/^\d+$/.test(String(e.errs[0]).trim()) ? `lỗi bên trong bộ chạy mô hình (mã ${String(e.errs[0]).trim()}), thường do vượt giới hạn bộ nhớ WebAssembly của trình duyệt/WebView, khác với RAM còn trống của máy` : e.errs[0]) : ''}`); }
   finally { onLoadProgress = null; }
 }
 
@@ -188,10 +187,8 @@ export function translateLyrics(t, { model = null, lang = null } = {}) {
       let out, name;
       const ctx = [t.title, t.artist].filter(Boolean).join(' – ');
       const llmTries = [{ dtype: 'q4' }, { dtype: 'q4', session_options: { graphOptimizationLevel: 'disabled' } }, { dtype: 'q8' }];
-      // Phones often run out of wasm memory on the 1.5B model, so step down to 0.5B, then NLLB.
-      const plan = (TR_MODELS[model] ? model : modelKey(t)) === 'best'
-        ? [[LLM, 'Qwen2.5 1.5B (Chính xác)'], [LLM_SMALL, 'Qwen2.5 0.5B (Chính xác, bản nhẹ)'], [NLLB.id, 'NLLB-200 600M (Nhanh)']]
-        : [[NLLB.id, 'NLLB-200 600M (Nhanh)']];
+      // Only the model the user chose is downloaded and loaded: no silent step-down to other models.
+      const plan = (TR_MODELS[model] ? model : modelKey(t)) === 'best' ? [[LLM, 'Qwen2.5 1.5B (Chính xác)']] : [[NLLB.id, 'NLLB-200 600M (Nhanh)']];
       for (let i = 0; i < plan.length; i++) {
         const [mid, label] = plan[i], llm = mid !== NLLB.id;
         try {
