@@ -27,7 +27,7 @@ export async function mount(el, context, sub = '') {
   root = el; ctx = context;
   definePrefs();
   document.body.classList.add('fx-has-bottom');
-  if (!document.querySelector('link[href*="fanfic/fanfic.css"]')) document.head.append(Object.assign(document.createElement('link'), { rel: 'stylesheet', href: new URL('./fanfic.css', import.meta.url).href }));
+  if (!document.querySelector('link[href*="fanfic/fanfic.css"]')) document.head.append(Object.assign(document.createElement('link'), { rel: 'stylesheet', href: Object.assign(new URL('./fanfic.css', import.meta.url), { search: new URL(import.meta.url).search }).href }));
   const soon = debounce(() => { if (root?.isConnected && !writer) render(); }, 150);
   offs.push(ctx.bus.on('fanfic:changed', soon), ctx.bus.on('sync:done', soon), ctx.bus.on('progress:pulled', soon));
   offs.push(watchBackup());

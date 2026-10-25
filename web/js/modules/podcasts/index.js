@@ -31,7 +31,7 @@ export async function mount(el, context, sub = '') {
   root = el; ctx = context;
   definePrefs();
   document.body.classList.add('pc-has-bottom');
-  if (!document.querySelector('link[href*="podcasts/podcasts.css"]')) document.head.append(Object.assign(document.createElement('link'), { rel: 'stylesheet', href: new URL('./podcasts.css', import.meta.url).href }));
+  if (!document.querySelector('link[href*="podcasts/podcasts.css"]')) document.head.append(Object.assign(document.createElement('link'), { rel: 'stylesheet', href: Object.assign(new URL('./podcasts.css', import.meta.url), { search: new URL(import.meta.url).search }).href }));
   const soon = debounce(() => { if (root?.isConnected && !['play', 'discover', 'settings'].includes(route.split('/')[0])) render(); }, 200);
   offs.push(ctx.bus.on('podcasts:changed', soon), ctx.bus.on('podcasts:queue', soon), ctx.bus.on('sync:done', soon), ctx.bus.on('progress:pulled', soon));
   offs.push(dropFiles(el, { overlay: 'Thả tệp âm thanh (MP3, M4A, M4B…) hoặc tệp OPML để thêm vào Podcast', onFiles: async (files) => (await import('./ui/settings.js')).importAny(files, ctx) }));

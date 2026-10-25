@@ -35,7 +35,7 @@ export function ensureLyricsCss() {
   if (cssDone || typeof document === 'undefined') return;
   cssDone = true;
   const l = document.createElement('link');
-  l.rel = 'stylesheet'; l.href = new URL('../lyrics.css', import.meta.url).href; l.dataset.lyricsCss = '1';
+  l.rel = 'stylesheet'; l.href = Object.assign(new URL('../lyrics.css', import.meta.url), { search: new URL(import.meta.url).search }).href; l.dataset.lyricsCss = '1';
   document.head.appendChild(l);
 }
 

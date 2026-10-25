@@ -27,10 +27,10 @@ export async function start(context) {
   import('./lib/native.js').then(m => m.start(player)).catch(() => {});
   css = document.createElement('link');
   css.rel = 'stylesheet';
-  css.href = new URL('./music.css', import.meta.url).href;
+  css.href = Object.assign(new URL('./music.css', import.meta.url), { search: new URL(import.meta.url).search }).href;
   document.head.appendChild(css);
   // Audio path panels (31-band EQ, Hi-Res, outputs, timers, ambient) keep their own stylesheet.
-  css.audio = Object.assign(document.createElement('link'), { rel: 'stylesheet', href: new URL('./audio.css', import.meta.url).href });
+  css.audio = Object.assign(document.createElement('link'), { rel: 'stylesheet', href: Object.assign(new URL('./audio.css', import.meta.url), { search: new URL(import.meta.url).search }).href });
   document.head.appendChild(css.audio);
   await loadPrefs();
   await player.init();

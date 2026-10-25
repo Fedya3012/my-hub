@@ -38,7 +38,7 @@ export async function mount(el, context, sub = '') {
   root = el; ctx = context;
   definePrefs();
   document.body.classList.add('bk-has-bottom');
-  if (!document.querySelector('link[href*="books/books.css"]')) document.head.append(Object.assign(document.createElement('link'), { rel: 'stylesheet', href: new URL('./books.css', import.meta.url).href }));
+  if (!document.querySelector('link[href*="books/books.css"]')) document.head.append(Object.assign(document.createElement('link'), { rel: 'stylesheet', href: Object.assign(new URL('./books.css', import.meta.url), { search: new URL(import.meta.url).search }).href }));
   await store.ensureRows();
   await store.ensureDefaultShelves();
   const soon = debounce(() => { if (root?.isConnected && !reader) render(); }, 150);
@@ -102,7 +102,7 @@ export async function scoped() {
 async function openReader(id) {
   if (reader?.id === id && !/[?&]r=/.test(location.hash)) return;
   closeReader();
-  readerCss ||= document.head.appendChild(Object.assign(document.createElement('link'), { rel: 'stylesheet', href: new URL('./reader.css', import.meta.url).href }));
+  readerCss ||= document.head.appendChild(Object.assign(document.createElement('link'), { rel: 'stylesheet', href: Object.assign(new URL('./reader.css', import.meta.url), { search: new URL(import.meta.url).search }).href }));
   const r = reader = { id, close: null };   // set before any await: leaving while it loads closes it once ready
   const { openReader: open } = await import('./reader/reader.js');
   const close = await open(root, id, { ctx, onClose: () => { const back = history.length > 1 && reader?.fromApp; if (reader === r) reader = null; if (back) history.back(); else go('book/' + id); } });

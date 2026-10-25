@@ -12,7 +12,7 @@ const img = (name) => new URL('./img/' + name, import.meta.url).href;
 
 export async function mount(el, ctx, rest = '') {
   root = el;
-  if (!document.querySelector('link[href*="guides/guides.css"]')) document.head.append(Object.assign(document.createElement('link'), { rel: 'stylesheet', href: new URL('./guides.css', import.meta.url).href }));
+  if (!document.querySelector('link[href*="guides/guides.css"]')) document.head.append(Object.assign(document.createElement('link'), { rel: 'stylesheet', href: Object.assign(new URL('./guides.css', import.meta.url), { search: new URL(import.meta.url).search }).href }));
   root.innerHTML = `<section class="page gd${pref() ? ' gd-mini' : ''}">
     <aside class="gd-side" aria-label="Mục lục">
       <div class="gd-side-h"><b>Mục lục</b><button type="button" class="gd-btn" data-act="hide" aria-label="Thu gọn mục lục" title="Thu gọn mục lục">‹</button></div>

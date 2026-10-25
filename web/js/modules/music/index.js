@@ -33,7 +33,7 @@ export async function mount(el, context, sub = '') {
   setTimeout(() => store.upgradeThumbs().catch(() => {}), 6000);
   // Styles of the tag editor, artwork, folder browser and statistics (separate from music.css).
   if (!document.querySelector('link[data-music-library-css]')) {
-    libCss = Object.assign(document.createElement('link'), { rel: 'stylesheet', href: new URL('./library.css', import.meta.url).href });
+    libCss = Object.assign(document.createElement('link'), { rel: 'stylesheet', href: Object.assign(new URL('./library.css', import.meta.url), { search: new URL(import.meta.url).search }).href });
     libCss.dataset.musicLibraryCss = '1';
     document.head.appendChild(libCss);
   }

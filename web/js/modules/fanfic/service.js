@@ -16,7 +16,7 @@ let offs = [], css = null, ctx = null;
 export async function start(context) {
   ctx = context;
   definePrefs();
-  css = Object.assign(document.createElement('link'), { rel: 'stylesheet', href: new URL('./fanfic.css', import.meta.url).href });
+  css = Object.assign(document.createElement('link'), { rel: 'stylesheet', href: Object.assign(new URL('./fanfic.css', import.meta.url), { search: new URL(import.meta.url).search }).href });
   document.head.appendChild(css);
   offs.push(extend('library.drawer', drawerBlock));
   ctx.services.provide('fanfic', {
