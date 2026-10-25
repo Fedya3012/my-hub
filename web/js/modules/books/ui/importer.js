@@ -175,10 +175,12 @@ export function candidatesHtml(list) {
 // ── Paper book by ISBN / barcode ─────────────────────────────────
 export async function addPaperBook(ctx) {
   const body = h(`<form class="stack bk-paper">
-    <p class="muted">Nhập ISBN (hoặc quét mã vạch sau bìa), app tìm thông tin trên Open Library và Google Books. Hoặc nhập tay.</p>
+    <p class="muted">Nhập ISBN (hoặc quét mã vạch sau bìa), app tìm thông tin trên Open Library và Google Books. Sách Việt: chụp bìa hoặc gõ tên sách, app tìm trên Tiki. Hoặc nhập tay.</p>
     <div class="bk-isbn-row"><input name="isbn" inputmode="numeric" placeholder="ISBN 10 hoặc 13 số" aria-label="ISBN">
       ${'BarcodeDetector' in window ? `<button type="button" class="btn" data-scan>${icon('b-scan')}Quét</button>` : ''}
       <button type="button" class="btn" data-find>${icon('search')}Tìm</button></div>
+    <label class="btn bk-ocr-btn">${icon('b-image')}Chụp bìa để đọc tên sách (OCR)<input type="file" accept="image/*" capture="environment" data-ocr hidden></label>
+    <p class="hint" data-ocr-st hidden></p>
     <video class="bk-scan" playsinline muted hidden></video>
     <div class="bk-cands" aria-live="polite"></div>
     <label>Tên sách<input name="title" placeholder="Tìm theo tên, hoặc nhập tay"></label><label>Tác giả<input name="author"></label>
@@ -192,7 +194,7 @@ export async function addPaperBook(ctx) {
     cands.innerHTML = candidatesHtml(list);
     cands.querySelectorAll('[data-i]').forEach(b => b.onclick = async () => {
       const c = list[+b.dataset.i];
-      const id = await store.createBook({ ...c, physical: body.querySelector('[name=ebook]').checked ? 0 : 1, coverUrl: '' }, { quiet: true });
+      const id = await store.createBook({ ...c, isbn: c.isbn || validIsbn(body.querySelector('[name=isbn]').value), physical: body.querySelector('[name=ebook]').checked ? 0 : 1, coverUrl: '' }, { quiet: true });
       const blob = await fetchCover(c.coverUrl);
       if (blob) await setCover(id, blob); else if (c.coverUrl) await store.updateBook(id, { coverUrl: c.coverUrl });
       store.changed([id]); s.close(); toast(`Đã thêm “${c.title}”`); ctx.go('books/book/' + id);
@@ -203,7 +205,10 @@ export async function addPaperBook(ctx) {
     const title = body.querySelector('[name=title]').value.trim(), author = body.querySelector('[name=author]').value.trim();
     if (!isbn && !title) { toast('Nhập ISBN hoặc tên sách', 'warn'); return; }
     cands.innerHTML = '<p class="muted">Đang tìm…</p>';
-    try { show(await lookup({ isbn, title, author })); } catch (e) { cands.innerHTML = `<p class="hint">Không tìm được (${esc(e.message)}). Kiểm tra mạng hoặc nhập tay.</p>`; }
+    try {
+      const list = await lookup({ isbn, title: isbn ? '' : title, author: isbn ? '' : author });
+      if (!list.length && isbn) { cands.innerHTML = '<p class="hint">Không có sách này trên Open Library / Google Books (thường gặp với sách Việt). Gõ tên sách hoặc chụp bìa, app sẽ tìm trên Tiki; ISBN vẫn được lưu.</p>'; body.querySelector('[name=title]').focus(); return; }
+      show(list); } catch (e) { cands.innerHTML = `<p class="hint">Không tìm được (${esc(e.message)}). Kiểm tra mạng hoặc nhập tay.</p>`; }
   };
   body.querySelector('[data-find]').onclick = () => find(false);
   body.querySelector('[data-find2]').onclick = () => find(true);
@@ -223,6 +228,19 @@ export async function addPaperBook(ctx) {
       loop();
     } catch (e) { toast('Không mở được camera: ' + e.message, 'error'); }
   });
+  body.querySelector('[data-ocr]').onchange = async (e) => {
+    const f = e.target.files?.[0]; if (!f) return;
+    const st = body.querySelector('[data-ocr-st]'); st.hidden = false; st.textContent = 'Đang đọc chữ trên bìa… (lần đầu tải bộ đọc chữ khoảng 5 MB)';
+    try {
+      const r = await (await import('../lib/ocr.js')).readCover(f, { onProgress: (x) => { st.textContent = `Đang đọc chữ trên bìa… ${Math.round(x * 100)}%`; } });
+      if (!r.title) { st.textContent = 'Không đọc được chữ trên ảnh. Thử chụp thẳng, đủ sáng, hoặc gõ tên sách.'; return; }
+      body.querySelector('[name=title]').value = r.title;
+      body.querySelector('[name=author]').value = r.author;
+      st.textContent = `Đọc được: “${r.title}”${r.author ? ' · ' + r.author : ''}. Sửa nếu sai rồi bấm Tìm theo tên.`;
+      find(true);
+    } catch (err) { st.textContent = err.message; }
+    e.target.value = '';
+  };
   body.onsubmit = async (e) => {
     e.preventDefault();
     const title = body.querySelector('[name=title]').value.trim();

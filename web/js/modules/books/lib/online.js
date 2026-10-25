@@ -5,6 +5,9 @@
 // PHASE 2: Comic Vine needs an API key and blocks browser requests (needs a small proxy).
 const OL = 'https://openlibrary.org';
 const GB = 'https://www.googleapis.com/books/v1/volumes';
+// Tiki (Vietnamese bookshop) has the best data for Vietnamese books, but searches by title only (no ISBN field).
+// Its API allows no CORS: the Windows / Android apps call it through the shell (core/storage/http.js).
+const TIKI = 'https://tiki.vn/api/v2/products';
 
 async function getJson(url, signal) {
   const r = await fetch(url, { signal });
@@ -64,13 +67,44 @@ async function googleBooks({ isbn, title, author }, signal) {
   });
 }
 
+async function tikiJson(url, signal) {
+  const { http, nativeShell } = await import('../../../core/storage/http.js');
+  const r = await http(url, { signal, viaShell: nativeShell(), headers: { Accept: 'application/json' } });
+  if (!r.ok) throw new Error(`tiki.vn: ${r.status}`);
+  return JSON.parse(await r.text());
+}
+const strip = (html) => { const d = new DOMParser().parseFromString(String(html || ''), 'text/html'); return d.body.textContent.replace(/\s+\n/g, '\n').trim(); };
+export async function tiki({ title, author }, signal) {
+  const q = [title, author].filter(Boolean).join(' ');
+  if (!q) return [];
+  const j = await tikiJson(`${TIKI}?limit=8&q=${encodeURIComponent(q)}`, signal);
+  // Only books (Tiki also sells bookmarks, covers…); details for the first few: author, publisher, pages, description.
+  const hits = (j.data || []).filter(p => /sách|book|truyện/i.test(p.primary_category_path || p.primary_category_name || '') || p.brand_name).slice(0, 5);
+  const out = await Promise.all(hits.map(async (p) => {
+    let d = {};
+    try { d = await tikiJson(`${TIKI}/${p.id}`, signal); } catch {}
+    const spec = {};
+    for (const g of d.specifications || []) for (const a of g.attributes || []) spec[a.name] = a.value;
+    const authors = (d.authors || []).map(a => a.name).filter(Boolean);
+    return {
+      source: 'Tiki', title: String(d.name || p.name || '').replace(/^Sách\s+/i, ''), authors: authors.length ? authors : (p.brand_name && !/^oem$/i.test(p.brand_name) ? [p.brand_name] : []),
+      isbn: '', pages: +spec['Số trang'] || 0, published: String(spec['Ngày xuất bản'] || '').slice(0, 10),
+      publisher: spec['Nhà xuất bản'] || spec['Công ty phát hành'] || '', description: strip(d.description).slice(0, 4000),
+      genres: [], language: 'vi', coverUrl: d.images?.[0]?.base_url || p.thumbnail_url || '', url: 'https://tiki.vn/' + (p.url_path || ''),
+    };
+  }));
+  return out.filter(c => c.title);
+}
+
 // Both sources in parallel; a source that fails (offline, rate limit) is skipped.
 export async function lookup({ isbn = '', title = '', author = '' } = {}, { signal } = {}) {
   isbn = validIsbn(isbn);
   if (isbn.length === 10) isbn = isbn10to13(isbn);
   const args = { isbn, title: isbn ? '' : title, author: isbn ? '' : author };
-  const res = await Promise.allSettled([openLibrary(args, signal), googleBooks(args, signal)]);
-  const out = res.flatMap(r => r.status === 'fulfilled' ? r.value : []);
+  const res = await Promise.allSettled([openLibrary(args, signal), googleBooks(args, signal), args.title ? tiki(args, signal) : Promise.resolve([])]);
+  let out = res.flatMap(r => r.status === 'fulfilled' ? r.value : []);
+  // Vietnamese titles: Tiki first (Open Library / Google Books rarely have Vietnamese editions).
+  if (/[ăâđêôơưạảấầẩẫậắằẳẵặẹẻẽếềểễệỉịọỏốồổỗộớờởỡợụủứừửữựỳỵỷỹ]/i.test(args.title + args.author)) out = [...out.filter(c => c.source === 'Tiki'), ...out.filter(c => c.source !== 'Tiki')];
   if (!out.length && res.every(r => r.status === 'rejected')) throw res[0].reason;
   return out;
 }
