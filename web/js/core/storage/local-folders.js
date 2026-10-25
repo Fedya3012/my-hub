@@ -112,11 +112,11 @@ export async function scanLocal(track = (h) => h) {
         const { path } = await P.copyToCache({ uri: e.saf.uri, name: e.name });
         const blob = await (await fetch(window.Capacitor.convertFileSrc('file://' + path))).blob();
         const file = Object.assign(new File([blob], e.name, { type: blob.type }), { relPath: e.relPath });
-        await (e.music ? music.importFiles([file], { kind: 'music', localFolder: e.f.id }) : books.importFiles([file], { localFolder: e.f.id }));
+        { const r = (e.music ? music.importFiles([file], { kind: 'music', localFolder: e.f.id }) : books.importFiles([file], { localFolder: e.f.id })); if (e.music && r?.failed?.length) throw new Error(String(r.failed[0]).replace(/^[^:]*:\s*/, '')); }
         await P.clearCache();
       } else {
         const item = { handle: e.handle, name: e.name, size: e.size, relPath: e.relPath };
-        await (e.music ? music.importFiles([item], { kind: 'music', localFolder: e.f.id }) : books.importFiles([item], { localFolder: e.f.id }));
+        { const r = (e.music ? music.importFiles([item], { kind: 'music', localFolder: e.f.id }) : books.importFiles([item], { localFolder: e.f.id })); if (e.music && r?.failed?.length) throw new Error(String(r.failed[0]).replace(/^[^:]*:\s*/, '')); }
       }
       done[e.key] = e.size;
       res.added++;

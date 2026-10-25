@@ -235,6 +235,16 @@ async function redoUnread(mode, found, done) {
   await setSetting('sync.folderDone', done);
 }
 
+// The app was in the background at some point since `since` (or is now).
+let hiddenAt = 0;
+document.addEventListener('visibilitychange', () => { if (document.hidden) hiddenAt = Date.now(); });
+const wasHidden = (since) => document.hidden || hiddenAt >= since - 2000;
+const untilVisible = () => new Promise(res => {
+  if (!document.hidden) return setTimeout(res, 800);   // back already: let the network wake up
+  const on = () => { if (!document.hidden) { document.removeEventListener('visibilitychange', on); setTimeout(res, 800); } };
+  document.addEventListener('visibilitychange', on);
+});
+
 const coverTried = new Set();
 async function repairCovers(mode, found, d, dirOf, sidecar, IMG) {
   const albums = (await db.albums.toArray()).filter(a => !a.deleted);
@@ -337,11 +347,11 @@ async function runDrive(mode, { pruneOnly = false } = {}) {
   const task = track(tasks.start({ label: `Đang nhập ${todo.length} tệp từ ${d.label}`, total: todo.length, unit: 'items', cancellable: true }));
   const music = await import('../../modules/music/lib/store.js');
   const books = await import('../../modules/books/ui/importer.js');
-  const res = { added: 0, failed: [], removed, missing };
+  const res = { added: 0, failed: [], removed, missing }, retries = {};
   try {
   for (let i = 0; i < todo.length; i++) {
     task.check();
-    const e = todo[i];
+    const e = todo[i], t0 = Date.now();
     task.update({ done: i, detail: `${e.name} · ${Math.round(i / todo.length * 100)}%` });
     try {
       // Music: only the parts the tag reader asks for. Books are parsed whole, so they are downloaded.
@@ -355,7 +365,8 @@ async function runDrive(mode, { pruneOnly = false } = {}) {
         const side = (sideByDir.get(dirOf(e.path)) || []).filter(x => IMG.test(x.name) || stem(x.name) === stem(e.name));
         const extra = (await Promise.all(side.map(x => sidecar(x, task.signal).catch(() => null)))).filter(Boolean);
         if (!file.relPath) file.relPath = e.path;
-        await music.importFiles([file, ...extra], { kind: 'music', remote });
+        const r = await music.importFiles([file, ...extra], { kind: 'music', remote });
+        if (r?.failed?.length) throw new Error(String(r.failed[0]).replace(/^[^:]*:\s*/, ''));   // not marked done: retried next sync
       }
       else await books.importFiles([file], { remote });
       done[e.path] = e.size;
@@ -364,6 +375,13 @@ async function runDrive(mode, { pruneOnly = false } = {}) {
       if (res.added % 25 === 0) await setSetting('sync.folderDone', done);
     } catch (err) {
       if (err?.name === 'AbortError') break;
+      // Android cuts the network of an app in the background: a read that failed while (or right after) the app
+      // was hidden is not the file's fault. Wait until the app is back, then try the same file again.
+      if (wasHidden(t0) && (retries[e.path] = (retries[e.path] || 0) + 1) <= 3) {
+        task.update({ detail: 'Tạm chờ: mở lại My Hub để tiếp tục nhập' });
+        await untilVisible();
+        i--; continue;
+      }
       res.failed.push(`${e.name}: ${err.message}`);
     }
   }
