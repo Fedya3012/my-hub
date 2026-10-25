@@ -235,11 +235,27 @@ async function redoUnread(mode, found, done) {
   await setSetting('sync.folderDone', done);
 }
 
+// Android: on Wi-Fi the import goes on in the background, kept alive by a foreground service with a progress
+// notification (BackgroundSyncPlugin). On mobile data it waits for the app to come back, as before.
+const bgPlugin = () => window.Capacitor?.isNativePlatform?.() && window.Capacitor.Plugins?.BackgroundSync || null;
+export async function backgroundImport(title) {
+  const P = bgPlugin();
+  if (!P) return null;
+  let on = false, last = 0;
+  try { on = (await P.onWifi()).wifi && !!(await P.start({ title, text: '', done: 0, total: 0 }).then(() => true)); } catch { on = false; }
+  if (!on) return null;
+  return {
+    update(done, total, text) { const t = Date.now(); if (t - last < 1500) return; last = t; P.update({ title, text: text || '', done, total }).catch(() => {}); },
+    stop() { P.stop().catch(() => {}); },
+  };
+}
+
 // The app was in the background at some point since `since` (or is now).
 let hiddenAt = 0;
 document.addEventListener('visibilitychange', () => { if (document.hidden) hiddenAt = Date.now(); });
 const wasHidden = (since) => document.hidden || hiddenAt >= since - 2000;
-const untilVisible = () => new Promise(res => {
+const untilVisible = (bg) => new Promise(res => {
+  if (bg) return setTimeout(res, 4000);   // running in the background on Wi-Fi: just try again shortly
   if (!document.hidden) return setTimeout(res, 800);   // back already: let the network wake up
   const on = () => { if (!document.hidden) { document.removeEventListener('visibilitychange', on); setTimeout(res, 800); } };
   document.addEventListener('visibilitychange', on);
@@ -348,11 +364,13 @@ async function runDrive(mode, { pruneOnly = false } = {}) {
   const music = await import('../../modules/music/lib/store.js');
   const books = await import('../../modules/books/ui/importer.js');
   const res = { added: 0, failed: [], removed, missing }, retries = {};
+  const bg = await backgroundImport(`Đang nhập ${todo.length} tệp từ ${d.label}`);
   try {
   for (let i = 0; i < todo.length; i++) {
     task.check();
     const e = todo[i], t0 = Date.now();
     task.update({ done: i, detail: `${e.name} · ${Math.round(i / todo.length * 100)}%` });
+    bg?.update(i, todo.length, `${i}/${todo.length} · ${e.name}`);
     try {
       // Music: only the parts the tag reader asks for. Books are parsed whole, so they are downloaded.
       const lazy = MUSIC.test(e.name) && d.getRange && e.id && e.size > 0;
@@ -378,14 +396,14 @@ async function runDrive(mode, { pruneOnly = false } = {}) {
       // Android cuts the network of an app in the background: a read that failed while (or right after) the app
       // was hidden is not the file's fault. Wait until the app is back, then try the same file again.
       if (wasHidden(t0) && (retries[e.path] = (retries[e.path] || 0) + 1) <= 3) {
-        task.update({ detail: 'Tạm chờ: mở lại My Hub để tiếp tục nhập' });
-        await untilVisible();
+        task.update({ detail: bg ? 'Mạng chập chờn, đang thử lại…' : 'Tạm chờ: mở lại My Hub để tiếp tục nhập' });
+        await untilVisible(bg);
         i--; continue;
       }
       res.failed.push(`${e.name}: ${err.message}`);
     }
   }
-  } finally { await setSetting('sync.folderDone', done); }   // also after a cancel / error
+  } finally { bg?.stop(); await setSetting('sync.folderDone', done); }   // also after a cancel / error
   task.finish(`Đã nhập ${res.added}/${todo.length}`);
   await covers();
   return res;

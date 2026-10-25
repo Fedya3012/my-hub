@@ -4,7 +4,7 @@
 // is copied into the app once, because the WebView cannot stream content:// addresses.
 import { db, getSetting, setSetting } from '../db.js';
 import { tasks } from '../tasks.js';
-import { MUSIC, APPS, autoRemove, removeRows } from './folders.js';
+import { MUSIC, APPS, autoRemove, removeRows, backgroundImport } from './folders.js';
 import { storage } from './index.js';
 import { esc } from '../ui.js';
 
@@ -102,11 +102,13 @@ export async function scanLocal(track = (h) => h) {
   const music = await import('../../modules/music/lib/store.js');
   const books = await import('../../modules/books/ui/importer.js');
   const P = nativeRoot();
+  const bg = await backgroundImport(`Đang nhập ${todo.length} tệp từ máy`);
   try {
   for (let i = 0; i < todo.length; i++) {
     task.check();
     const e = todo[i];
     task.update({ done: i, detail: `${e.name} · ${Math.round(i / todo.length * 100)}%` });
+    bg?.update(i, todo.length, `${i}/${todo.length} · ${e.name}`);
     try {
       if (e.saf) {
         const { path } = await P.copyToCache({ uri: e.saf.uri, name: e.name });
@@ -126,7 +128,7 @@ export async function scanLocal(track = (h) => h) {
       res.failed.push(`${e.name}: ${err.message}`);
     }
   }
-  } finally { await setSetting(DONE, done); }
+  } finally { bg?.stop(); await setSetting(DONE, done); }
   task.finish(`Đã nhập ${res.added}/${todo.length}`);
   return res;
 }
