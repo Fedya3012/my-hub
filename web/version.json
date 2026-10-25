@@ -1,7 +1,14 @@
 {
-  "app": "0.9.22.12",
+  "app": "0.9.22.13",
   "released": "2026-10-25",
   "changelog": [
+    {
+      "version": "0.9.22.13",
+      "date": "2026-10-25",
+      "notes": [
+        "Đồng bộ thư mục: nhập file trước, sửa ảnh bìa sau như một tác vụ riêng có thể huỷ; không còn trông như bị treo sau khi quét"
+      ]
+    },
     {
       "version": "0.9.22.12",
       "date": "2026-10-25",
