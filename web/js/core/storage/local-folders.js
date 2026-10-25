@@ -4,7 +4,8 @@
 // is copied into the app once, because the WebView cannot stream content:// addresses.
 import { db, getSetting, setSetting } from '../db.js';
 import { tasks } from '../tasks.js';
-import { MUSIC, APPS } from './folders.js';
+import { MUSIC, APPS, autoRemove, removeRows } from './folders.js';
+import { storage } from './index.js';
 import { esc } from '../ui.js';
 
 const KEY = 'sync.localFolders', DONE = 'sync.localDone';
@@ -66,6 +67,7 @@ export async function scanLocal(track = (h) => h) {
   const res = { added: 0, failed: [] };
   const scan = track(tasks.start({ label: 'Đang quét thư mục trên máy', unit: 'items', cancellable: true, delay: 300 }));
   const todo = [];
+  const listed = [];   // [folder, entries] read in full: used to drop library files that left the folder
   try {
     for (const f of folders) {
       scan.check();
@@ -80,6 +82,7 @@ export async function scanLocal(track = (h) => h) {
         await listHandle(handle, f.name + '/', raw);
         entries = raw;
       }
+      listed.push([f, entries]);
       for (const e of entries) {
         const music = MUSIC.test(e.name), book = !music && isBookFile({ name: e.name });
         if (!((music && f.apps.includes('music')) || (book && f.apps.includes('books')))) continue;
@@ -92,6 +95,7 @@ export async function scanLocal(track = (h) => h) {
     }
   } catch (e) { scan.fail(e); throw e; }
   scan.finish(`Quét xong: ${todo.length} tệp mới`);
+  res.removed = await pruneLocal(listed, done).catch((e) => { console.warn('[local folders] prune', e); return 0; });
   if (!todo.length) return res;
 
   const task = track(tasks.start({ label: `Đang nhập ${todo.length} tệp từ máy`, total: todo.length, unit: 'items', cancellable: true }));
@@ -125,6 +129,31 @@ export async function scanLocal(track = (h) => h) {
   } finally { await setSetting(DONE, done); }
   task.finish(`Đã nhập ${res.added}/${todo.length}`);
   return res;
+}
+
+// Files imported from a folder that the scan no longer finds there (renamed, moved or deleted on the device).
+// A renamed / moved song or book comes back on the import that follows: it is recognised by its tags.
+// Rows from before localKey existed are matched by file name. An empty listing never removes anything.
+async function pruneLocal(listed, done) {
+  if (!(await autoRemove())) return 0;
+  const gone = [];
+  for (const [f, entries] of listed) {
+    if (!entries.length) continue;
+    const keys = new Set(entries.map(e => `${f.id}/${e.relPath}`)), names = new Set(entries.map(e => e.name));
+    for (const r of await db.files.filter(r => r.localFolder === f.id && r.role === 'main').toArray()) {
+      if (r.localKey ? !keys.has(r.localKey) : !names.has(r.name)) gone.push(r);
+    }
+  }
+  if (!gone.length) return 0;
+  const goneIds = new Set(gone.map(r => r.id)), whole = [];
+  for (const r of gone) {
+    if (r.localKey) delete done[r.localKey];
+    // The entry keeps another copy this device can open: only this file goes, the song / book stays.
+    const others = (await db.files.where('itemId').equals(r.itemId).toArray()).filter(o => o.role === 'main' && !goneIds.has(o.id) && o.locations?.local);
+    if (others.length) await storage.removeFile(r).catch(() => {}); else whole.push(r);
+  }
+  await setSetting(DONE, done);
+  return removeRows(whole);
 }
 
 // Settings page body for the local mode: the chosen folders, which app each one feeds, add / remove.

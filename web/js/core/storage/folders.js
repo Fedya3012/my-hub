@@ -79,7 +79,7 @@ async function removeLinked(mode, gone) {
 }
 
 // Deletes the library entries (music tracks / books) behind these file rows.
-async function removeRows(gone) {
+export async function removeRows(gone) {
   const ids = { music: [], books: [] };
   for (const f of gone) {
     const item = await db.items.get(f.itemId);
