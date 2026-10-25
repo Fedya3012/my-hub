@@ -80,9 +80,14 @@ async function loadModel(mid, task, label, { pipeline = 'translation', tries } =
     for (const [a, b] of files.values()) { done += a; total += b; }
     task.update({ done, total, unit: 'bytes', detail: `Đang tải mô hình dịch (${label}, chỉ lần đầu)…` });
   };
-  tries ||= [{}, { dtype: 'fp32' }, { dtype: 'q8', session_options: { graphOptimizationLevel: 'disabled' } }];
+  // Smallest first: the full-precision NLLB (2.4 GB) never fits a phone and only used up the memory for the 8-bit one.
+  tries ||= [{ dtype: 'q8' }, { dtype: 'q8', session_options: { graphOptimizationLevel: 'disabled' } }, { dtype: 'q4' }];
+  // WebAssembly memory never shrinks: a model that failed to load (Qwen out of memory) leaves the worker full,
+  // so the next model always starts in a fresh worker.
+  if (worker && !waits.size) { worker.terminate(); worker = null; loadedId = ''; }
   try { await callWorker({ type: 'load', lib: LIB, wasm: LIB.slice(0, LIB.lastIndexOf('/') + 1), mid, tries, task: pipeline }); loadedId = mid; }
-  catch (e) { throw new Error(`Không nạp được mô hình dịch ${mid.split('/')[1]}${e.errs?.length ? ' — ' + (/^\d+$/.test(String(e.errs[0]).trim()) ? 'thiết bị không đủ bộ nhớ' : e.errs[0]) : ''}`); }
+  catch (e) {
+    if (worker && !waits.size) { worker.terminate(); worker = null; loadedId = ''; } throw new Error(`Không nạp được mô hình dịch ${mid.split('/')[1]}${e.errs?.length ? ' — ' + (/^\d+$/.test(String(e.errs[0]).trim()) ? 'thiết bị không đủ bộ nhớ' : e.errs[0]) : ''}`); }
   finally { onLoadProgress = null; }
 }
 
