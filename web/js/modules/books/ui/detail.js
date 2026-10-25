@@ -133,6 +133,7 @@ export async function render(el, { ctx, snap, arg: id, go, rerender }) {
     { label: 'Tìm thông tin trên mạng', icon: 'b-globe', run: async () => (await import('./editor.js')).onlineSheet(b) },
     { label: 'Đổi ảnh bìa', icon: 'b-image', run: async () => (await import('./editor.js')).pickCover(b) },
     b.main && !b.main.virtual ? { label: 'Tải tệp sách về máy', icon: 'download', run: async () => download(b.main.name, await storage.open(b.main)) } : null,
+    !b.fanfic && (b.main || b.parts) ? { label: 'Thêm chương', icon: 'plus', run: async () => { const v = await (await import('./volume.js')).addChapters(b, snap.all); if (v && v !== b.id) go('book/' + v); } } : null,
     b.parts ? { label: 'Quản lý Volume', icon: 'book', run: async () => (await import('./volume.js')).editVolume(b, snap.all) } : null,
     b.parts ? { label: 'Tách Volume thành chương lẻ', icon: 'link', run: async () => { if (await (await import('./volume.js')).ungroup(b)) go('library'); } } : null,
     b.fanfic ? { label: 'Sửa trong Xưởng Viết', icon: 'quill', run: () => ctx.services.get('fanfic')?.show(b.id) } : null,

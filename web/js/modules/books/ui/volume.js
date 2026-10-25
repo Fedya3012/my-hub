@@ -28,7 +28,8 @@ async function editor({ title, parts, snap, heading, ok }) {
     <div class="bk-vol-tools">
       <button class="btn small" data-v="sort">Xếp theo số chương</button>
       <button class="btn small" data-v="rev">Đảo thứ tự</button>
-      <button class="btn small" data-v="add">${icon('plus')}Thêm chương</button>
+      <button class="btn small" data-v="add">${icon('plus')}Thêm chương từ Thư viện</button>
+      <button class="btn small" data-v="up">${icon('upload')}Tải tệp chương lên</button>
     </div>
     <ol class="bk-vol-list"></ol>
     <p class="hint">Kéo thả hoặc dùng ↑ ↓ để đổi thứ tự. Chương trong Volume được ẩn khỏi Thư viện (vẫn tìm được bằng ô tìm kiếm).</p>
@@ -69,6 +70,17 @@ async function editor({ title, parts, snap, heading, ok }) {
     const ids = await modal({ title: 'Thêm chương vào Volume', body: pb, actions: [{ label: 'Huỷ', value: null }, { label: 'Thêm', kind: 'primary', value: (el) => [...el.querySelectorAll('input[type=checkbox]:checked')].map(c => c.value) }] });
     if (ids?.length) { order.push(...ids.map(id => snap.byId.get(id))); draw(); }
   };
+  // New chapter files straight into this volume: imported as books (hidden in the Library once grouped).
+  body.querySelector('[data-v="up"]').onclick = async () => {
+    const imp = await import('./importer.js');
+    const files = await imp.pickFiles();
+    if (!files.length) return;
+    const ids = await imp.importFiles(files);
+    const fresh = await store.snapshot();
+    const have = new Set(order.map(b => b.id));
+    const add = ids.map(id => fresh.byId.get(id)).filter(b => b && !have.has(b.id)).sort(natural);
+    order.push(...add); draw();
+  };
   draw();
   const r = await modal({ title: heading, body, actions: [{ label: 'Huỷ', value: null }, { label: ok, kind: 'primary', value: (el) => ({ title: el.querySelector('[data-v="title"]').value.trim() || 'Volume', parts: order.map(b => b.id) }) }] });
   if (r && r.parts.length < 1) { toast('Volume cần ít nhất 1 chương', 'warn'); return null; }
@@ -100,4 +112,16 @@ export async function ungroup(b) {
   await store.ungroupVolume(b.id);
   toast('Đã tách Volume');
   return true;
+}
+
+// A single book gets more chapters: it becomes the first chapter of a new volume with the same title,
+// and the editor opens so chapters can be uploaded or picked.
+export async function addChapters(b, snap) {
+  if (b.parts) return editVolume(b, snap);
+  if (b.partOf) { const v = snap.byId.get(b.partOf); if (v) return editVolume(v, snap); }
+  const r = await editor({ title: b.title, parts: [b.id], snap, heading: 'Thêm chương', ok: 'Lưu thành Volume' });
+  if (!r) return null;
+  const id = await store.createVolume(r.title, r.parts, { authors: b.authors, series: b.series });
+  toast(`Đã tạo Volume “${r.title}” với ${r.parts.length} chương`);
+  return id;
 }

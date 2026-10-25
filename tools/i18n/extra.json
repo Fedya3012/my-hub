@@ -2504,5 +2504,8 @@
   "Chụp bìa để đọc tên sách (OCR)": "Photograph the cover to read the title (OCR)",
   "Không có sách này trên Open Library / Google Books (thường gặp với sách Việt). Gõ tên sách hoặc chụp bìa, app sẽ tìm trên Tiki; ISBN vẫn được lưu.": "This book is not on Open Library / Google Books (common for Vietnamese books). Type the title or photograph the cover and the app searches Tiki; the ISBN is still saved.",
   "Không đọc được chữ trên ảnh. Thử chụp thẳng, đủ sáng, hoặc gõ tên sách.": "Could not read text in the photo. Shoot straight on with good light, or type the title.",
-  "Không tải được bộ đọc chữ (cần mạng lần đầu)": "Could not load the text reader (needs internet the first time)"
+  "Không tải được bộ đọc chữ (cần mạng lần đầu)": "Could not load the text reader (needs internet the first time)",
+  "Thêm chương từ Thư viện": "Add chapters from the Library",
+  "Tải tệp chương lên": "Upload chapter files",
+  "Lưu thành Volume": "Save as volume"
 }
