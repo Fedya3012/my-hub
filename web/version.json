@@ -1,7 +1,15 @@
 {
-  "app": "0.9.22.15",
+  "app": "0.9.22.16",
   "released": "2026-10-25",
   "changelog": [
+    {
+      "version": "0.9.22.16",
+      "date": "2026-10-25",
+      "notes": [
+        "Widget nhạc Android: nền mờ theo ảnh bìa, ảnh bìa lớn bo góc, thanh tiến độ trắng, nút phát tròn, icon mới",
+        "Widget nhạc: lời bài hát đồng bộ trực tiếp (dòng hiện tại, bản dịch và dòng kế tiếp khi widget đủ cao), thời gian đã phát và tổng thời lượng; widget tự cập nhật khi đang phát"
+      ]
+    },
     {
       "version": "0.9.22.15",
       "date": "2026-10-25",
@@ -912,7 +920,7 @@
     },
     "music": {
       "name": "Trình phát nhạc",
-      "version": "0.7.13",
+      "version": "0.7.14",
       "minApp": "0.3.0",
       "files": [
         "js/modules/music/index.js",
