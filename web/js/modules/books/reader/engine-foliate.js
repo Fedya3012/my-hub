@@ -149,7 +149,9 @@ export async function open(host, source, { lastLocation = null, prefs, rtl = fal
     r.setStyles?.(css(p));
   };
   applyPrefs(prefs);
-  await view.init({ lastLocation, showTextStart: !lastLocation });
+  // A saved place that no longer fits the book (a volume rebuilt, a file replaced) must not stop it opening.
+  try { await view.init({ lastLocation, showTextStart: !lastLocation }); }
+  catch (e) { if (!lastLocation) throw e; console.warn('[reader] saved place not found, opening at the start', e); await view.init({ showTextStart: true }); }
 
   // TTS: foliate splits the visible section into SSML blocks; we speak their text.
   const ssmlText = (s) => s ? new DOMParser().parseFromString(s, 'application/xml').documentElement.textContent.replace(/\s+/g, ' ').trim() : null;
