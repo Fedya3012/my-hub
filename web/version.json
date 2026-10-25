@@ -1,7 +1,15 @@
 {
-  "app": "0.9.22.11",
+  "app": "0.9.22.12",
   "released": "2026-10-25",
   "changelog": [
+    {
+      "version": "0.9.22.12",
+      "date": "2026-10-25",
+      "notes": [
+        "Thư viện: đồng bộ thư mục sửa lại ảnh bìa album cho các bài đã nhập trước đó",
+        "Giao diện: mỗi module tải tệp giao diện đúng phiên bản, không còn dùng bản cũ đã lưu"
+      ]
+    },
     {
       "version": "0.9.22.11",
       "date": "2026-10-25",
@@ -880,7 +888,7 @@
     },
     "music": {
       "name": "Trình phát nhạc",
-      "version": "0.7.11",
+      "version": "0.7.12",
       "minApp": "0.3.0",
       "files": [
         "js/modules/music/index.js",
@@ -968,7 +976,7 @@
     },
     "podcasts": {
       "name": "Podcast",
-      "version": "0.1.7",
+      "version": "0.1.8",
       "minApp": "0.9.11.0",
       "files": [
         "js/modules/podcasts/index.js",
@@ -998,7 +1006,7 @@
     },
     "books": {
       "name": "Sách",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "minApp": "0.9.0.0",
       "files": [
         "js/modules/books/index.js",
@@ -1074,7 +1082,7 @@
     },
     "fanfic": {
       "name": "Xưởng Viết",
-      "version": "0.1.2",
+      "version": "0.1.3",
       "minApp": "0.9.9.1",
       "files": [
         "js/modules/fanfic/fanfic.css",
@@ -1118,7 +1126,7 @@
     },
     "guides": {
       "name": "Hướng dẫn sử dụng",
-      "version": "0.1.4",
+      "version": "0.1.5",
       "minApp": "0.9.9.1",
       "files": [
         "js/modules/guides/content.js",

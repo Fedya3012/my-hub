@@ -3,7 +3,7 @@
 export default {
   id: 'music',
   name: 'Trình phát nhạc',
-  version: '0.7.11',
+  version: '0.7.12',
   status: 'available',
   icon: 'music',
   route: 'music',

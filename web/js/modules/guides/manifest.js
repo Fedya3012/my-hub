@@ -3,7 +3,7 @@
 export default {
   id: 'guides',
   name: 'Hướng dẫn sử dụng',
-  version: '0.1.4',
+  version: '0.1.5',
   status: 'available',
   icon: 'guide',
   route: 'guides',
