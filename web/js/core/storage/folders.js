@@ -232,8 +232,12 @@ async function repairCovers(mode, found, d, dirOf, sidecar, IMG) {
   const imgByDir = new Map(found.filter(e => IMG.test(e.name)).map(e => [dirOf(e.path), e]));
   const music = await import('../../modules/music/lib/store.js');
   const { readAudioMeta } = await import('../../modules/music/lib/meta.js');
-  let fixed = 0;
+  let fixed = 0, n = 0;
+  const task = track(tasks.start({ label: 'Đang sửa ảnh bìa album', total: broken.length, unit: 'items', cancellable: true, delay: 500 }));
+  try {
   for (const al of broken) {
+    if (task.cancelled) break;
+    task.update({ done: n++, detail: al.title || '' });
     const tracks = (await db.tracks.where('albumId').equals(al.id).toArray()).filter(t => !t.deleted);
     let tried = false;
     for (const t of tracks) {
@@ -256,6 +260,7 @@ async function repairCovers(mode, found, d, dirOf, sidecar, IMG) {
     }
     if (tried) coverTried.add(al.id);   // a song without any art is read once per session, not on every sync
   }
+  } finally { task.finish(fixed ? `Đã sửa ảnh bìa ${fixed} album` : 'Không có ảnh bìa nào cần sửa'); }
   if (fixed) music.invalidate?.();
 }
 
@@ -308,9 +313,11 @@ async function runDrive(mode, { pruneOnly = false } = {}) {
   // A music file is imported only when a chosen folder above it feeds music; a book only when one feeds books.
   // Songs imported before covers were picked up (or whose file has no embedded art): give their album the folder cover.
   await fillFolderCovers(mode, found.filter(e => IMG.test(e.name)), d, dirOf, sidecar);
-  await repairCovers(mode, found, d, dirOf, sidecar, IMG).catch(e => console.warn('[folders] covers', e));
   const todo = found.filter(e => ((MUSIC.test(e.name) && allows(e.path, 'music')) || (!MUSIC.test(e.name) && isBookFile({ name: e.name }) && allows(e.path, 'books'))) && done[e.path] !== e.size);
-  if (!todo.length) return { added: 0, failed: [], removed, missing };
+  // Covers are repaired after the import, as their own task: done before it, a big library sat for minutes with no
+  // progress and the import never seemed to start.
+  const covers = () => repairCovers(mode, found, d, dirOf, sidecar, IMG).catch(e => console.warn('[folders] covers', e));
+  if (!todo.length) { await covers(); return { added: 0, failed: [], removed, missing }; }
 
   const task = track(tasks.start({ label: `Đang nhập ${todo.length} tệp từ ${d.label}`, total: todo.length, unit: 'items', cancellable: true }));
   const music = await import('../../modules/music/lib/store.js');
@@ -347,5 +354,6 @@ async function runDrive(mode, { pruneOnly = false } = {}) {
   }
   } finally { await setSetting('sync.folderDone', done); }   // also after a cancel / error
   task.finish(`Đã nhập ${res.added}/${todo.length}`);
+  await covers();
   return res;
 }
