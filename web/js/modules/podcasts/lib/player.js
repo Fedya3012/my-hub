@@ -131,6 +131,13 @@ class PodPlayer extends EventTarget {
   // ── Transport ─────────────────────────────────────────────────
   async play() { if (!this.el) return; try { await this.el.play(); } catch (e) { if (e?.name !== 'AbortError') console.warn(e); } }
   pause() { this.el?.pause(); }
+  // Close the player: stop, drop the episode and forget the resume point so the mini player disappears.
+  async close() {
+    this.pause(); this._teardown();
+    this.ep = null; this.show = null;
+    await progress.save({ id: SESSION, moduleId: 'podcasts' }, { position: 0, total: 0, extra: { virtual: true, episodeId: null } });
+    this._emit('state');
+  }
   toggle() { this.playing ? this.pause() : this.play(); }
   seek(t) { if (this.el) this.el.currentTime = Math.max(0, Math.min(t, this.duration || t)); this._emit('time'); }
   seekBy(d) { this.seek(this.time + d); }

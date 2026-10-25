@@ -78,6 +78,7 @@ function mountMini() {
     <button class="pc-mini-play" data-k="toggle" aria-label="Phát">${icon('pc-play')}</button>
     <button class="icon-btn" data-k="fwd" aria-label="Tới">${icon('pc-fwd')}</button>
     <button class="icon-btn pc-mini-fold" data-k="fold" aria-label="Thu nhỏ thanh phát" aria-expanded="true">${icon('pc-fold')}</button>
+    <button class="icon-btn pc-mini-close" data-k="close" aria-label="Đóng trình phát">${icon('x')}</button>
     <i class="pc-mini-bar"><i></i></i>`;
   mini.classList.toggle('is-folded', miniFolded());
   mini.addEventListener('click', (e) => {
@@ -85,7 +86,7 @@ function mountMini() {
     if (!k) return;
     e.preventDefault();
     if (k === 'fold') { setMiniFolded(!mini.classList.contains('is-folded')); return; }
-    player[k]();
+    player[k]();   // back / toggle / fwd / close
   });
   document.body.appendChild(mini);
   dragOff = draggableBubble(mini);   // the folded bubble can be moved

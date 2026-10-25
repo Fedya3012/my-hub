@@ -251,6 +251,8 @@ body.pc-np-open .pc-mini { display: none; }
   display: grid; grid-template-columns: 1fr auto auto auto auto; align-items: center; gap: 4px; padding: 6px 8px 8px 6px; border-radius: 16px;
   background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--line); box-shadow: var(--shadow); overflow: hidden; }
 .pc-mini[hidden] { display: none; }
+.pc-mini-close { width: 34px; height: 34px; color: var(--muted); }
+.pc-mini.is-folded .pc-mini-close { display: none; }
 .pc-mini-fold { width: 34px; height: 34px; color: var(--muted); }
 .pc-mini-fold .ic { transition: transform .2s; }
 .pc-mini-fold[aria-expanded="false"] .ic { transform: rotate(180deg); }

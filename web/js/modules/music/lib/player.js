@@ -133,6 +133,13 @@ class Player extends EventTarget {
     return this.engine.toggle();
   }
   pause() { this.engine.pause(); }
+  // Close the player: save the place, stop the sound and empty the queue, so the mini player disappears.
+  async close() {
+    await this._commitPlay();
+    this.engine.stop();
+    this.queue = []; this.order = null; this.index = -1; this._main = null;
+    this._emit('queue'); this._emit('track'); this._emit('state');
+  }
   seek(t) { this.engine.seek(t); this._saveSoon(); this._emit('time'); }   // debounced: dragging a timeline seeks many times a second
   seekBy(d) { this.seek(this.time + d); }
 

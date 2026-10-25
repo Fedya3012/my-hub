@@ -66,6 +66,7 @@ async function render() {
   el.innerHTML = `
     <div class="mdock-line" aria-hidden="true"><i></i></div>
     <button class="icon-btn mdock-fold" data-fold aria-label="Thu nhỏ thanh phát" aria-expanded="${!miniFolded()}">${icon('minimize')}</button>
+    <button class="icon-btn mdock-close" data-close aria-label="Đóng trình phát">${icon('x')}</button>
     <button class="mdock-now" data-open aria-label="Mở Đang phát">
       ${artHtml(L.coverOf(t), t.album || t.title, { cls: 'sm' })}
       <span class="mdock-meta"><span class="mdock-t">${esc(t.title)}</span>
@@ -92,6 +93,7 @@ async function render() {
     </div>`;
   hydrate(el);
   el.querySelector('[data-open]').onclick = () => open();
+  el.querySelector('[data-close]').onclick = () => player.close();
   el.querySelector('[data-fold]').onclick = () => setMiniFolded(!miniFolded());
   el.classList.toggle('is-folded', miniFolded());
   const A = (k, f) => el.querySelector(`[data-act="${k}"]`).onclick = f;
