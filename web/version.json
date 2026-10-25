@@ -1,7 +1,15 @@
 {
-  "app": "0.9.22.13",
+  "app": "0.9.22.14",
   "released": "2026-10-25",
   "changelog": [
+    {
+      "version": "0.9.22.14",
+      "date": "2026-10-25",
+      "notes": [
+        "Đồng bộ thư mục: file nhạc có thẻ không đọc được sẽ báo lỗi thay vì ghi là Nghệ sĩ không rõ; nhập lại các bài đã nhập thiếu thông tin âm thanh",
+        "Trình phát nhạc: thông tin bài hát đọc từ thẻ Drive chính xác hơn"
+      ]
+    },
     {
       "version": "0.9.22.13",
       "date": "2026-10-25",
@@ -895,7 +903,7 @@
     },
     "music": {
       "name": "Trình phát nhạc",
-      "version": "0.7.12",
+      "version": "0.7.13",
       "minApp": "0.3.0",
       "files": [
         "js/modules/music/index.js",
