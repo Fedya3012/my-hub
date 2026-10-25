@@ -6,6 +6,7 @@ import { namespaceHtml, bindParams } from '../../../core/params-ui.js';
 import { h } from '../../../core/ui.js';
 import { sheet } from './common.js';
 import { target, setTarget, connected, backupAll, SUPPORTED } from '../lib/backup.js';
+import { drives } from '../../../core/storage/index.js';
 
 const GROUPS = [
   ['fx-type', 'Chữ và trang viết', ['font', 'fontSize', 'lineHeight', 'width', 'margin', 'paper']],

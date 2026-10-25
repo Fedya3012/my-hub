@@ -869,7 +869,7 @@
     },
     "music": {
       "name": "Trình phát nhạc",
-      "version": "0.7.10",
+      "version": "0.7.11",
       "minApp": "0.3.0",
       "files": [
         "js/modules/music/index.js",
@@ -1063,7 +1063,7 @@
     },
     "fanfic": {
       "name": "Xưởng Viết",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "minApp": "0.9.9.1",
       "files": [
         "js/modules/fanfic/fanfic.css",

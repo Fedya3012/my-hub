@@ -473,11 +473,10 @@ async function saveTrack(item, meta, { file, folder = '', lrcText, folderImg, ar
   const pic = meta?.picture ? new Blob([meta.picture.data], { type: meta.picture.mime || 'image/jpeg' }) : folderImg || null;
   let coverFileId = null;
   if (pic && !al.coverFileId) await setAlbumCover(albumId, pic);
-  else if (pic && al.coverFileId) await repairAlbumCover(al, pic);
   else if (pic && al.coverFileId && meta?.picture && al.coverSize && Math.abs(al.coverSize - pic.size) > 2048) {
     // Track has its own, different artwork (singles, compilations).
     coverFileId = (await storage.addFile(item.id, pic, { role: 'cover', name: 'cover.jpg' })).id;
-  }
+  } else if (pic && al.coverFileId) await repairAlbumCover(al, pic);
   const track = {
     itemId: item.id, albumId, artistId: artistIdOf(artists[0] || albumArtist), artistIds: artists.map(artistIdOf),
     albumArtistId: artistIdOf(albumArtist), artist: artistName, album: albumTitle, albumArtist,

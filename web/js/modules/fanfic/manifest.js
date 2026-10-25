@@ -3,7 +3,7 @@
 export default {
   id: 'fanfic',
   name: 'Xưởng Viết',
-  version: '0.1.1',
+  version: '0.1.2',
   status: 'available',
   icon: 'quill',
   route: 'fanfic',
