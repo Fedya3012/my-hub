@@ -21,6 +21,10 @@ const HUB_STATUS = { want: 'new', reading: 'in-progress', onhold: 'in-progress',
 const FROM_HUB = { new: 'want', 'in-progress': 'reading', done: 'finished' };
 
 // StoryGraph-style vocabularies (free text is allowed too: these are the suggestions).
+// What a book is within a long series: a complete book, a volume (tankōbon) or a single chapter.
+export const KINDS = { book: 'Sách hoàn chỉnh', volume: 'Volume / Tập', chapter: 'Chương lẻ' };
+// The copy you read: a file in the app, Kindle, paper, audiobook…
+export const EDITIONS = { ebook: 'Ebook trong app', kindle: 'Kindle', paper: 'Sách giấy', audio: 'Sách nói', library: 'Mượn thư viện', web: 'Đọc online', other: 'Khác' };
 export const MOODS = {
   adventurous: 'Phiêu lưu', challenging: 'Thử thách', dark: 'U tối', emotional: 'Cảm xúc', funny: 'Hài hước',
   hopeful: 'Hy vọng', informative: 'Bổ ích', inspiring: 'Truyền cảm hứng', lighthearted: 'Nhẹ nhàng',
@@ -97,6 +101,8 @@ export function view(item, book, { A, S, P, F }) {
     main, cover, files, progress: p, percent: book.status === 'finished' ? 100 : Math.round(p?.percent || book.manualPercent || 0),
     pages: book.pages || 0, favorite: !!item.favorite, tags: item.tags || [], fanfic: item.type === 'fanfic',
     parts: book.parts || null, partOf: book.partOf || null,
+    kind: book.kind || (book.parts?.length ? 'volume' : book.partOf ? 'chapter' : 'book'),
+    edition: book.edition || (book.physical ? 'paper' : main ? 'ebook' : ''),
   };
 }
 

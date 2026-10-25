@@ -23,21 +23,21 @@ function guessTitle(list) {
 // The editor: returns { title, parts } or null.
 async function editor({ title, parts, snap, heading, ok }) {
   let order = parts.map(id => snap.byId.get(id)).filter(Boolean);
-  const body = h(`<div class="bk-vol">
+  const body = h(`<div class="bk-volx">
     <label>Tên Volume<input data-v="title" value="${esc(title)}"></label>
-    <div class="bk-vol-tools">
+    <div class="bk-volx-tools">
       <button class="btn small" data-v="sort">Xếp theo số chương</button>
       <button class="btn small" data-v="rev">Đảo thứ tự</button>
       <button class="btn small" data-v="add">${icon('plus')}Thêm chương từ Thư viện</button>
       <button class="btn small" data-v="up">${icon('upload')}Tải tệp chương lên</button>
     </div>
-    <ol class="bk-vol-list"></ol>
+    <ol class="bk-volx-list"></ol>
     <p class="hint">Kéo thả hoặc dùng ↑ ↓ để đổi thứ tự. Chương trong Volume được ẩn khỏi Thư viện (vẫn tìm được bằng ô tìm kiếm).</p>
   </div>`);
-  const list = body.querySelector('.bk-vol-list');
+  const list = body.querySelector('.bk-volx-list');
   const draw = () => {
     list.innerHTML = order.map((b, i) => `<li draggable="true" data-i="${i}">
-      <span class="num muted">${i + 1}</span><input class="bk-vol-t" data-rn="${i}" value="${esc(b.title)}" aria-label="Tên chương ${i + 1}">
+      <span class="num muted">${i + 1}</span><input class="bk-volx-t" data-rn="${i}" value="${esc(b.title)}" aria-label="Tên chương ${i + 1}">
       <button class="icon-btn sm" data-up="${i}" aria-label="Lên" ${i ? '' : 'disabled'}>↑</button>
       <button class="icon-btn sm" data-dn="${i}" aria-label="Xuống" ${i < order.length - 1 ? '' : 'disabled'}>↓</button>
       <button class="icon-btn sm" data-rm="${i}" aria-label="Bỏ khỏi Volume">${icon('x')}</button></li>`).join('') || '<li class="muted">Chưa có chương nào.</li>';
@@ -65,7 +65,7 @@ async function editor({ title, parts, snap, heading, ok }) {
     const have = new Set(order.map(b => b.id));
     const pool = snap.list.filter(b => !have.has(b.id) && !b.parts && !b.fanfic && b.main && !b.main.virtual).sort(natural);
     if (!pool.length) { toast('Không còn sách nào để thêm', 'warn'); return; }
-    const pb = h(`<div class="bk-vol"><input data-q placeholder="Lọc theo tên…"><ul class="bk-vol-pick">${pool.map(b => `<li><label><input type="checkbox" value="${esc(b.id)}"> ${esc(b.title)}${b.partOf ? ' <span class="muted">(đang ở Volume khác)</span>' : ''}</label></li>`).join('')}</ul></div>`);
+    const pb = h(`<div class="bk-volx"><input data-q placeholder="Lọc theo tên…"><ul class="bk-volx-pick">${pool.map(b => `<li><label><input type="checkbox" value="${esc(b.id)}"> ${esc(b.title)}${b.partOf ? ' <span class="muted">(đang ở Volume khác)</span>' : ''}</label></li>`).join('')}</ul></div>`);
     pb.querySelector('[data-q]').oninput = (e) => { const q = store.fold(e.target.value); pb.querySelectorAll('li').forEach(li => { li.hidden = q && !store.fold(li.textContent).includes(q); }); };
     const ids = await modal({ title: 'Thêm chương vào Volume', body: pb, actions: [{ label: 'Huỷ', value: null }, { label: 'Thêm', kind: 'primary', value: (el) => [...el.querySelectorAll('input[type=checkbox]:checked')].map(c => c.value) }] });
     if (ids?.length) { order.push(...ids.map(id => snap.byId.get(id))); draw(); }

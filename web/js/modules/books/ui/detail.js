@@ -49,6 +49,11 @@ export async function render(el, { ctx, snap, arg: id, go, rerender }) {
           <button class="btn" data-a="fav" aria-pressed="${b.favorite}">${icon(b.favorite ? 'b-star-fill' : 'star')}<span>${b.favorite ? 'Đã thích' : 'Yêu thích'}</span></button>
           <button class="icon-btn" data-a="more" aria-label="Thêm thao tác">${icon('b-more')}</button>
         </div>
+        <div class="bk-kind-row">
+          <label>Loại<select data-a="kind">${Object.entries(store.KINDS).map(([k, l]) => `<option value="${k}" ${b.kind === k ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></label>
+          <label>Đọc bằng bản<select data-a="edition"><option value="">Chưa chọn</option>${Object.entries(store.EDITIONS).map(([k, l]) => `<option value="${k}" ${b.edition === k ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></label>
+          ${b.series ? `<label>Số tập / chương<input type="number" min="0" step="any" data-a="sidx" value="${b.seriesIndex ?? ''}" placeholder="?"></label>` : `<button class="btn small" data-a="toseries">${icon('b-series')}Đưa vào bộ sách</button>`}
+        </div>
         ${dnfSel ? `<label class="bk-dnf">Lý do bỏ dở<input list="bk-dnf-list" data-f="dnfReason" value="${esc(b.book.dnfReason || '')}" placeholder="Vì sao bỏ dở?"><datalist id="bk-dnf-list">${store.DNF_REASONS.map(r => `<option value="${esc(r)}">`).join('')}</datalist></label>` : ''}
       </div>
     </div>
@@ -127,6 +132,15 @@ export async function render(el, { ctx, snap, arg: id, go, rerender }) {
     toast(store.STATUSES[v]);
   };
   $('[data-a="vol"]')?.addEventListener('click', async () => (await import('./volume.js')).editVolume(b, snap.all));
+  $('[data-a="kind"]').onchange = (e) => store.updateBook(id, { kind: e.target.value });
+  $('[data-a="edition"]').onchange = (e) => store.updateBook(id, { edition: e.target.value });
+  $('[data-a="sidx"]')?.addEventListener('change', (e) => store.updateBook(id, { seriesIndex: e.target.value === '' ? null : +e.target.value }));
+  $('[data-a="toseries"]')?.addEventListener('click', async () => {
+    const names = snap.all.seriesList.map(x => x.name);
+    const body = h(`<div class="stack"><label>Tên bộ sách / series<input id="sn" list="bk-sn" placeholder="Ví dụ: One Piece"><datalist id="bk-sn">${names.map(n => `<option value="${esc(n)}">`).join('')}</datalist></label><label>Số tập / chương<input id="si" type="number" min="0" step="any"></label></div>`);
+    const r = await modal({ title: 'Đưa vào bộ sách', body, actions: [{ label: 'Huỷ', value: null }, { label: 'Lưu', kind: 'primary', value: (f) => ({ series: f.querySelector('#sn').value.trim(), idx: f.querySelector('#si').value }) }] });
+    if (r?.series) await store.updateBook(id, { series: r.series, seriesIndex: r.idx === '' ? null : +r.idx });
+  });
   $('[data-a="fav"]').onclick = () => store.updateBook(id, { favorite: !b.favorite });
   $('[data-a="more"]').onclick = (e) => menu(e.currentTarget, [
     { label: 'Sửa thông tin', icon: 'b-edit', run: async () => (await import('./editor.js')).editBook(b, snap) },
