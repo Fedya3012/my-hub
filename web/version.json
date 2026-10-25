@@ -1,7 +1,16 @@
 {
-  "app": "0.9.22.14",
+  "app": "0.9.22.15",
   "released": "2026-10-25",
   "changelog": [
+    {
+      "version": "0.9.22.15",
+      "date": "2026-10-25",
+      "notes": [
+        "Đồng bộ thư mục: bài nhập lỗi không bị đánh dấu xong, sẽ thử lại ở lần đồng bộ sau",
+        "Đồng bộ thư mục: đọc file lỗi khi ứng dụng ở nền Android sẽ chờ và thử lại",
+        "Android: đồng bộ thư mục tiếp tục nhập file ở nền khi có Wi-Fi, có thông báo tiến độ"
+      ]
+    },
     {
       "version": "0.9.22.14",
       "date": "2026-10-25",
