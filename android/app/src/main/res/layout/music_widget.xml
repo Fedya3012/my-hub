@@ -11,7 +11,7 @@
         android:src="@drawable/music_widget_scrim" android:scaleType="fitXY" android:contentDescription="@null" />
     <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent"
         android:orientation="vertical" android:paddingStart="18dp" android:paddingEnd="18dp" android:paddingTop="16dp" android:paddingBottom="10dp">
-        <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
             android:orientation="horizontal" android:gravity="center_vertical">
             <ImageView android:id="@+id/mw_art" android:layout_width="68dp" android:layout_height="68dp"
                 android:scaleType="centerCrop" android:background="@drawable/music_widget_art_bg"
@@ -26,10 +26,29 @@
                     android:singleLine="true" android:ellipsize="end" android:text="Chưa phát nhạc" />
             </LinearLayout>
         </LinearLayout>
+        <!-- Synced lyrics: the line being sung and, when the widget is tall enough, the next one. -->
+        <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+            android:orientation="vertical" android:gravity="center_vertical">
+            <TextView android:id="@+id/mw_lyric" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:textColor="#F2FFFFFF" android:textSize="15sp" android:fontFamily="sans-serif-medium"
+                android:maxLines="2" android:ellipsize="end" android:visibility="gone" />
+            <TextView android:id="@+id/mw_lyric_tr" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:textColor="#99FFFFFF" android:textSize="12sp" android:textStyle="italic"
+                android:singleLine="true" android:ellipsize="end" android:visibility="gone" />
+            <TextView android:id="@+id/mw_lyric_next" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="4dp" android:textColor="#66FFFFFF" android:textSize="13sp"
+                android:singleLine="true" android:ellipsize="end" android:visibility="gone" />
+        </LinearLayout>
         <ProgressBar android:id="@+id/mw_progress" style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="match_parent" android:layout_height="3dp" android:layout_marginTop="12dp"
+            android:layout_width="match_parent" android:layout_height="3dp" android:layout_marginTop="8dp"
             android:max="1000" android:progress="0" android:progressDrawable="@drawable/music_widget_progress" />
-        <LinearLayout android:layout_width="match_parent" android:layout_height="60dp" android:layout_marginTop="4dp"
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:orientation="horizontal">
+            <TextView android:id="@+id/mw_pos" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+                android:textColor="#8CFFFFFF" android:textSize="11sp" android:fontFeatureSettings="tnum" android:text="0:00" />
+            <TextView android:id="@+id/mw_dur" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:textColor="#8CFFFFFF" android:textSize="11sp" android:fontFeatureSettings="tnum" android:text="0:00" />
+        </LinearLayout>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="0dp"
             android:orientation="horizontal" android:gravity="center">
             <ImageButton android:id="@+id/mw_prev" android:layout_width="56dp" android:layout_height="48dp"
                 android:background="@null" android:src="@drawable/ic_w_prev" android:alpha="0.9" android:contentDescription="Bài trước" />

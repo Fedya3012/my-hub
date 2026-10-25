@@ -99,6 +99,23 @@ async function applyUsb(player, { quiet = true } = {}) {
 }
 export async function usbInfo() { return P()?.UsbAudio ? P().UsbAudio.info() : null; }
 
+// The synced lyrics of the current song go to the home-screen widget once; it follows the line by itself
+// (the widget keeps time natively, so it works with the app in the background). Translation rides along.
+async function sendLyrics(N, player) {
+  if (!N.setLyrics) return;
+  const t = player.track;
+  let lines = [];
+  if (t) {
+    const [{ getLyricsRow }, { parseLyrics, mergeTranslation }] = await Promise.all([import('./lyrics-sources.js'), import('./lyrics.js')]);
+    const row = await getLyricsRow(t.id).catch(() => null);
+    if (player.track?.id !== t.id) return;
+    const p = row?.text ? mergeTranslation(parseLyrics(row.text, t.duration), row.trText) : null;
+    const off = +row?.offset || 0;
+    if (p?.synced) lines = p.lines.filter(l => l.t != null).map(l => ({ t: Math.max(0, l.t - off), text: l.text || '', tr: l.tr || '' }));
+  }
+  await N.setLyrics({ lines });
+}
+
 let started = false;
 export async function start(player) {
   const N = P()?.NativeMedia;
@@ -106,7 +123,8 @@ export async function start(player) {
   started = true;
   if (N) {
     N.addListener('command', (c) => command(player, c).catch(e => toast(e.message, 'warn')));
-    player.addEventListener('track', () => { sendTrack(N, player).catch(() => {}); sendState(N, player); });
+    player.addEventListener('track', () => { sendTrack(N, player).catch(() => {}); sendState(N, player); sendLyrics(N, player).catch(() => {}); });
+    bus.on('music:lyrics', (e) => { if (e?.id === player.track?.id) sendLyrics(N, player).catch(() => {}); });
     player.addEventListener('state', () => sendState(N, player));
     let lastT = 0;
     player.addEventListener('time', () => { const now = Date.now(); if (now - lastT > 5000) { lastT = now; sendState(N, player); } });
@@ -115,7 +133,7 @@ export async function start(player) {
     player.addEventListener('queue', tree);
     bus.on('music:changed', tree);
     tree();
-    if (player.track) { sendTrack(N, player).catch(() => {}); sendState(N, player); }
+    if (player.track) { sendTrack(N, player).catch(() => {}); sendState(N, player); sendLyrics(N, player).catch(() => {}); }
     await N.ready().catch(() => {});
   }
   if (P().UsbAudio) {

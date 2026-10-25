@@ -20,6 +20,8 @@
             <TextView android:id="@+id/mw_artist" android:layout_width="match_parent" android:layout_height="wrap_content"
                 android:textColor="#A6FFFFFF" android:textSize="12sp"
                 android:singleLine="true" android:ellipsize="end" android:text="Chưa phát nhạc" />
+            <TextView android:id="@+id/mw_lyric" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:textColor="#E6FFFFFF" android:textSize="12sp" android:singleLine="true" android:ellipsize="end" android:visibility="gone" />
             <ProgressBar android:id="@+id/mw_progress" style="?android:attr/progressBarStyleHorizontal"
                 android:layout_width="match_parent" android:layout_height="2dp" android:layout_marginTop="6dp"
                 android:max="1000" android:progress="0" android:progressDrawable="@drawable/music_widget_progress" />

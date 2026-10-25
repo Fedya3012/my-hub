@@ -79,6 +79,23 @@ public class NativeMediaPlugin extends Plugin {
     call.resolve();
   }
 
+  // { lines: [ { t (s), text, tr } ] } for the current song; [] when it has no synced lyrics. Shown on the widget.
+  @PluginMethod
+  public void setLyrics(PluginCall call) {
+    org.json.JSONArray a = call.getArray("lines", new com.getcapacitor.JSArray());
+    int n = a == null ? 0 : Math.min(a.length(), 600);
+    long[] t = new long[n]; String[] x = new String[n], tr = new String[n];
+    for (int i = 0; i < n; i++) {
+      JSONObject l = a.optJSONObject(i);
+      t[i] = l == null ? 0 : (long) (l.optDouble("t", 0) * 1000);
+      x[i] = l == null ? "" : l.optString("text", "");
+      tr[i] = l == null ? "" : l.optString("tr", "");
+    }
+    MusicWidgetProvider.setLyrics(t, x, tr);
+    MusicWidgetProvider.refresh(getContext());
+    call.resolve();
+  }
+
   // { tree: { parentId: [ { id, title, subtitle, playable, browsable } ] } }
   @PluginMethod
   public void setTree(PluginCall call) {

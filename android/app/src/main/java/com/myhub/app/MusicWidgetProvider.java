@@ -8,6 +8,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.view.View;
 import android.os.SystemClock;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.MediaMetadataCompat;
@@ -23,6 +26,40 @@ public class MusicWidgetProvider extends AppWidgetProvider {
   private static MediaMetadataCompat artFor = null;   // the metadata whose cover is cached in `art`
   private static Bitmap art = null;
 
+  // ── Synced lyrics, sent by the web player for the current song (NativeMedia.setLyrics) ──
+  private static long[] lyT = new long[0];       // start of each line, ms
+  private static String[] lyX = new String[0], lyTr = new String[0];
+  static void setLyrics(long[] t, String[] x, String[] tr) { lyT = t; lyX = x; lyTr = tr; lastLine = -2; }
+  private static int lineAt(long pos) {
+    int lo = 0, hi = lyT.length - 1, i = -1;
+    while (lo <= hi) { int mid = (lo + hi) >>> 1; if (lyT[mid] <= pos) { i = mid; lo = mid + 1; } else hi = mid - 1; }
+    return i;
+  }
+  private static long nowPos() {
+    long pos = MediaPlaybackService.position;
+    if (MediaPlaybackService.playing) pos += (long) ((SystemClock.elapsedRealtime() - MediaPlaybackService.updatedAt) * MediaPlaybackService.rate);
+    return pos;
+  }
+  private static String clock(long ms) { long s = Math.max(0, ms / 1000); return s / 60 + ":" + (s % 60 < 10 ? "0" : "") + s % 60; }
+
+  // While playing, the widget redraws on its own: each second for the clock, at once when a new lyric line starts.
+  private static final Handler tick = new Handler(Looper.getMainLooper());
+  private static Context appCtx;
+  private static int lastLine = -2;
+  private static long lastDraw = 0;
+  private static final Runnable ticker = new Runnable() { public void run() {
+    if (appCtx == null || !MediaPlaybackService.playing || !any(appCtx)) return;
+    int line = lyT.length > 0 ? lineAt(nowPos()) : -1;
+    long t = SystemClock.elapsedRealtime();
+    if (line != lastLine || t - lastDraw >= 1000) drawAll(appCtx);
+    tick.postDelayed(this, 250);
+  } };
+  private static void schedule() { tick.removeCallbacks(ticker); if (MediaPlaybackService.playing) tick.postDelayed(ticker, 250); }
+  private static void drawAll(Context ctx) {
+    AppWidgetManager mgr = AppWidgetManager.getInstance(ctx);
+    for (int id : mgr.getAppWidgetIds(new ComponentName(ctx, MusicWidgetProvider.class))) draw(ctx, mgr, id);
+  }
+
   @Override
   public void onUpdate(Context ctx, AppWidgetManager mgr, int[] ids) { for (int id : ids) draw(ctx, mgr, id); }
 
@@ -31,6 +68,8 @@ public class MusicWidgetProvider extends AppWidgetProvider {
 
   // Called by MediaPlaybackService whenever the song or the play state changes (and every few seconds while playing).
   static void refresh(Context ctx) {
+    appCtx = ctx.getApplicationContext();
+    schedule();
     AppWidgetManager mgr = AppWidgetManager.getInstance(ctx);
     int[] ids = mgr.getAppWidgetIds(new ComponentName(ctx, MusicWidgetProvider.class));
     for (int id : ids) draw(ctx, mgr, id);
@@ -84,8 +123,29 @@ public class MusicWidgetProvider extends AppWidgetProvider {
     if (bg != null) v.setImageViewBitmap(R.id.mw_bg, bg); else v.setImageViewBitmap(R.id.mw_bg, null);
 
     long dur = m != null ? m.getLong(MediaMetadataCompat.METADATA_KEY_DURATION) : 0;
-    long pos = MediaPlaybackService.position;
-    if (MediaPlaybackService.playing) pos += (long) ((SystemClock.elapsedRealtime() - MediaPlaybackService.updatedAt) * MediaPlaybackService.rate);
+    long pos = nowPos();
+    lastDraw = SystemClock.elapsedRealtime();
+    int line = lyT.length > 0 ? lineAt(pos) : -1;
+    lastLine = line;
+    String cur = line >= 0 && line < lyX.length ? lyX[line] : (lyT.length > 0 ? "♪" : "");
+    String tr = line >= 0 && line < lyTr.length ? lyTr[line] : "";
+    String next = line + 1 < lyX.length ? lyX[line + 1] : "";
+    boolean ly = lyT.length > 0;
+    int h = o != null ? o.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 180) : 180;
+    if (compact) {
+      v.setViewVisibility(R.id.mw_lyric, ly && !cur.isEmpty() ? View.VISIBLE : View.GONE);
+      v.setViewVisibility(R.id.mw_artist, ly && !cur.isEmpty() ? View.GONE : View.VISIBLE);
+      v.setTextViewText(R.id.mw_lyric, cur);
+    } else {
+      v.setViewVisibility(R.id.mw_lyric, ly ? View.VISIBLE : View.GONE);
+      v.setTextViewText(R.id.mw_lyric, cur);
+      v.setViewVisibility(R.id.mw_lyric_tr, ly && tr != null && !tr.isEmpty() && h >= 200 ? View.VISIBLE : View.GONE);
+      v.setTextViewText(R.id.mw_lyric_tr, tr == null ? "" : tr);
+      v.setViewVisibility(R.id.mw_lyric_next, ly && !next.isEmpty() && h >= 230 ? View.VISIBLE : View.GONE);
+      v.setTextViewText(R.id.mw_lyric_next, next);
+      v.setTextViewText(R.id.mw_pos, clock(pos));
+      v.setTextViewText(R.id.mw_dur, dur > 0 ? clock(dur) : "");
+    }
     v.setProgressBar(R.id.mw_progress, 1000, dur > 0 ? (int) Math.min(1000, pos * 1000 / dur) : 0, false);
     v.setImageViewResource(R.id.mw_play, MediaPlaybackService.playing ? R.drawable.ic_w_pause : R.drawable.ic_w_play);
 
