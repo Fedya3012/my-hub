@@ -2527,5 +2527,21 @@
   "Loại tệp": "File type",
   "Loại": "Type",
   "Chưa chọn": "Not set",
-  "Tên bộ sách / series": "Series name"
+  "Tên bộ sách / series": "Series name",
+  "Áp dụng cài đặt cho": "Apply settings to",
+  "Chỉ bài này": "This song only",
+  "Tất cả bài hát": "All songs",
+  "Bỏ cài đặt riêng của bài này": "Remove this song's own settings",
+  "Bài này dùng lại cài đặt chung": "This song uses the shared settings again",
+  "Bài này đang dùng cài đặt riêng. Mục nào không đổi thì theo cài đặt chung.": "This song has its own settings. Anything not changed follows the shared settings.",
+  "Chọn bên dưới để lưu riêng cho bài này; cài đặt chung giữ nguyên.": "Pick below to save for this song only; the shared settings stay as they are.",
+  "Đang sửa cài đặt chung. Bài này vẫn có cài đặt riêng, chọn “Chỉ bài này” để xem.": "Editing the shared settings. This song still has its own; pick “This song only” to see them.",
+  "Thay đổi áp dụng cho mọi bài chưa có cài đặt riêng.": "Changes apply to every song without its own settings.",
+  "Chỉ cho bài này": "For this song only",
+  "Cho tất cả bài hát": "For all songs",
+  "Lưu lựa chọn riêng cho bài này, cài đặt chung giữ nguyên": "Save the choice for this song only; shared settings stay",
+  "Đổi cài đặt chung (bài này vẫn giữ cài đặt riêng)": "Change the shared settings (this song keeps its own)",
+  "Đổi cài đặt chung cho mọi bài": "Change the shared settings for every song",
+  "Dùng lại cài đặt chung": "Use the shared settings again",
+  "Bấm để đổi ngôn ngữ đích": "Tap to change the target language"
 }

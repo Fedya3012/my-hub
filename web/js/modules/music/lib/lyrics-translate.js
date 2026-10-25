@@ -8,6 +8,7 @@
 // row.trText with trSource 'ai', so it shows under each line exactly like an imported translation.
 import { tasks } from '../../../core/tasks.js';
 import { confirmBox, toast } from '../../../core/ui.js';
+import { aiPref } from './ai-prefs.js';
 import { prefs, setPref } from './prefs.js';
 import { loadLyrics, saveLyrics } from './lyrics-sources.js';
 import { parseLyrics } from './lyrics.js';
@@ -22,20 +23,20 @@ const SCRIPT = [[/[\u0370-\u03FF]/, 'el'], [/[\u0400-\u04FF]/, 'ru'], [/[\u0E00-
 const lineLang = (text, dflt) => SCRIPT.find(([re]) => re.test(text))?.[1] || dflt;
 
 const Y = () => prefs().lyrics || {};
-const modelKey = () => (TR_MODELS[Y().trModel] ? Y().trModel : 'fast');
+const modelKey = (t) => (TR_MODELS[aiPref('trModel', t)] ? aiPref('trModel', t) : 'fast');
 const LANG_EN = { vi: 'Vietnamese', en: 'English', ja: 'Japanese', ko: 'Korean', zh: 'Chinese', fr: 'French', es: 'Spanish', de: 'German' };
-const targetLang = () => (TR_LANGS[Y().trLang] ? Y().trLang : 'vi');
+const targetLang = (t) => (TR_LANGS[aiPref('trLang', t)] ? aiPref('trLang', t) : 'vi');
 
 // Which language the lyrics are in, from the writing system (and Vietnamese diacritics); Latin text is
 // taken as English unless the person picked another language in the AI language setting.
-export function detectLang(text) {
+export function detectLang(text, t = null) {
   const n = (re) => (text.match(re) || []).length;
   const k = { ko: n(/[가-힯]/g), ja: n(/[぀-ヿ]/g), zh: n(/[一-鿿]/g), vi: n(/[ăâđêôơưàáảãạằắẳẵặầấẩẫậèéẻẽẹềếểễệìíỉĩịòóỏõọồốổỗộờớởỡợùúủũụừứửữựỳýỷỹỵ]/gi) };
   if (k.ko > 1) return 'ko';
   if (k.ja > 1) return 'ja';
   if (k.zh > 1) return 'zh';
   if (k.vi > 3) return 'vi';
-  return /[a-z]/i.test(text) ? (TR_LANGS[Y().aiLang] ? Y().aiLang : 'en') : 'en';
+  return /[a-z]/i.test(text) ? (TR_LANGS[aiPref('aiLang', t)] ? aiPref('aiLang', t) : 'en') : 'en';
 }
 
 // The model runs in translate-worker.js: the page sends a few lines at a time and receives the translations.
@@ -164,7 +165,8 @@ export async function ensureConsent() {
   return !!ok;
 }
 
-export function translateLyrics(t) {
+// opts.model / opts.lang: what the panel showed (the song's own choice or the shared one); else the song's effective setting.
+export function translateLyrics(t, { model = null, lang = null } = {}) {
   if (running.has(t.id)) return running.get(t.id);
   const job = (async () => {
     const row = await loadLyrics(t, { allowOnline: false });
@@ -175,14 +177,14 @@ export function translateLyrics(t) {
       const parsed = parseLyrics(row.text, t.duration);
       const lines = parsed.lines.filter(l => l.text);
       if (!lines.length) throw new Error('Bài này chưa có lời để dịch');
-      const src = detectLang(lines.map(l => l.text).join('\n')), tgt = targetLang();
+      const src = detectLang(lines.map(l => l.text).join('\n'), t), tgt = TR_LANGS[lang] ? lang : targetLang(t);
       if (src === tgt) { task.finish(`Lời đã bằng ${TR_LANGS[tgt].toLowerCase()}, không cần dịch`); return null; }
       const texts = lines.map(l => l.text);
       let out, name;
       const ctx = [t.title, t.artist].filter(Boolean).join(' – ');
       const llmTries = [{ dtype: 'q4' }, { dtype: 'q4', session_options: { graphOptimizationLevel: 'disabled' } }, { dtype: 'q8' }];
       // Phones often run out of wasm memory on the 1.5B model, so step down to 0.5B, then NLLB.
-      const plan = modelKey() === 'best'
+      const plan = (TR_MODELS[model] ? model : modelKey(t)) === 'best'
         ? [[LLM, 'Qwen2.5 1.5B (Chính xác)'], [LLM_SMALL, 'Qwen2.5 0.5B (Chính xác, bản nhẹ)'], [NLLB.id, 'NLLB-200 600M (Nhanh)']]
         : [[NLLB.id, 'NLLB-200 600M (Nhanh)']];
       for (let i = 0; i < plan.length; i++) {

@@ -1022,3 +1022,11 @@ body.m-has-bottom.has-dock main#view { padding-bottom: calc(var(--dock-h, 0px) +
 .aip .aip-opt { flex-direction: row; align-items: center; justify-content: flex-start; text-align: left; width: auto; }
 .aip .aip-opt > span { align-items: flex-start; }
 .aip .aip-opt input[type=checkbox] { margin: 0; }
+/* AI panel: keep the choices for this song only or for every song */
+.aip-scope { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0 0 14px; padding: 12px 14px; border-radius: 14px; background: var(--surface-2); }
+.aip-scope-l { font-weight: 600; font-size: .9rem; }
+.aip-seg { display: inline-flex; padding: 3px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); }
+.aip-seg button { border: 0; background: none; color: var(--muted); font: inherit; font-size: .86rem; font-weight: 600; padding: 6px 14px; border-radius: 999px; cursor: pointer; }
+.aip-seg button.on { background: var(--accent); color: #fff; }
+.aip-scope small { flex: 1 1 100%; color: var(--muted); font-size: .8rem; }
+.aip-scope [data-unown] { margin-left: auto; }

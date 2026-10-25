@@ -5,6 +5,7 @@ import { sheet } from './sheets.js';
 import { icon } from '../../../core/icons.js';
 import { toast, esc } from '../../../core/ui.js';
 import { prefs, setPref } from '../lib/prefs.js';
+import { aiPref, setAiPref, hasSongPrefs, clearSongPrefs } from '../lib/ai-prefs.js';
 
 const REC = {
   tiny: { name: 'Tiny', tag: 'Rất nhanh', desc: 'Nhẹ nhất, hợp bài rõ lời và máy yếu.', size: '≈ 40 MB', stars: 1 },
@@ -33,7 +34,11 @@ export async function openAiPanel({ t = null, kind = 'settings', onDone } = {}) 
   const showTr = kind === 'translate' || kind === 'settings';
   const titles = { gen: 'Tạo lời tự động', sync: 'Tự đồng bộ từng chữ', translate: 'Dịch lời bằng AI', settings: 'Cài đặt AI cho lời' };
   let s;
-  const Y = () => prefs().lyrics || {};
+  // With a song open the choices can be kept for that song only ('song') or changed for every song ('all').
+  let scope = t && hasSongPrefs(t) ? 'song' : 'all';
+  const tgt = () => (scope === 'song' ? t : null);
+  const SK = ['aiGenModel', 'aiModel', 'aiVocal', 'aiLang', 'trModel', 'trLang'];
+  const Y = () => { const y = { ...(prefs().lyrics || {}) }; for (const k of SK) y[k] = aiPref(k, tgt()); return y; };
   const stars = (n) => `<span class="aip-stars" aria-label="${n} trên 4">${'●'.repeat(n)}<i>${'●'.repeat(4 - n)}</i></span>`;
   const card = (group, key, m, { on, badge, extra = '' }) => `<button class="aip-card${on ? ' on' : ''}" data-${group}="${key}" role="radio" aria-checked="${on}">
       <span class="aip-radio" aria-hidden="true">${on ? icon('check') : ''}</span>
@@ -51,8 +56,17 @@ export async function openAiPanel({ t = null, kind = 'settings', onDone } = {}) 
           ${card('m', pk + '|custom', { name: 'Mô hình tự chọn', tag: ai.AI_MODELS.custom ? ai.AI_MODELS.custom.id : 'Hugging Face', desc: 'Dán tên kho Whisper ONNX bất kỳ, ví dụ onnx-community/whisper-medium.', size: 'tuỳ mô hình', stars: 3 }, { on: cur === 'custom' && !!ai.AI_MODELS.custom, badge: ai.AI_MODELS.custom ? badge('custom') : '' })}
         </div></section>`; };
     const trm = y.trModel === 'best' ? 'best' : 'fast';
+    const own = t && hasSongPrefs(t);
     const body = `
-      ${t ? `<p class="aip-song">${icon('music')}<span>${esc(t.title || 'Bài hát')}${t.artist ? ' · ' + esc(t.artist) : ''}</span></p>` : ''}
+      ${t ? `<p class="aip-song">${icon('music')}<span>${esc(t.title || 'Bài hát')}${t.artist ? ' · ' + esc(t.artist) : ''}</span></p>
+      <div class="aip-scope"><span class="aip-scope-l">Áp dụng cài đặt cho</span>
+        <div class="aip-seg" role="radiogroup" aria-label="Áp dụng cài đặt cho">
+          <button role="radio" aria-checked="${scope === 'song'}" class="${scope === 'song' ? 'on' : ''}" data-scope="song">Chỉ bài này</button>
+          <button role="radio" aria-checked="${scope === 'all'}" class="${scope === 'all' ? 'on' : ''}" data-scope="all">Tất cả bài hát</button>
+        </div>
+        <small>${scope === 'song' ? (own ? 'Bài này đang dùng cài đặt riêng. Mục nào không đổi thì theo cài đặt chung.' : 'Chọn bên dưới để lưu riêng cho bài này; cài đặt chung giữ nguyên.') : own ? 'Đang sửa cài đặt chung. Bài này vẫn có cài đặt riêng, chọn “Chỉ bài này” để xem.' : 'Thay đổi áp dụng cho mọi bài chưa có cài đặt riêng.'}</small>
+        ${own ? `<button class="btn small" data-unown>${icon('x')}Bỏ cài đặt riêng của bài này</button>` : ''}
+      </div>` : ''}
       ${showGen ? recSection('aiGenModel', 'Mô hình tạo lời', 'Whisper, chạy trên máy; nghe cả bài và viết lời có mốc theo dòng') : ''}
       ${showSync ? recSection('aiModel', 'Mô hình đồng bộ từng chữ', 'Whisper, chạy trên máy; cần bản có giờ từng chữ') : ''}
       ${showRec ? `<section class="aip-sec">
@@ -75,23 +89,25 @@ export async function openAiPanel({ t = null, kind = 'settings', onDone } = {}) 
     s.el.querySelectorAll('[data-m]').forEach(b => b.onclick = async () => {
       const [pk, k] = b.dataset.m.split('|');
       if (k === 'custom' && !ai.AI_MODELS.custom) { customFor = pk; const c = q('.aip-custom'); c.hidden = false; c.querySelector('input').focus(); return; }
-      await setPref('lyrics.' + pk, k); draw();
+      await setAiPref(pk, k, tgt()); draw();
     });
-    s.el.querySelectorAll('[data-t]').forEach(b => b.onclick = async () => { await setPref('lyrics.trModel', b.dataset.t); draw(); });
+    s.el.querySelectorAll('[data-t]').forEach(b => b.onclick = async () => { await setAiPref('trModel', b.dataset.t, tgt()); draw(); });
+    s.el.querySelectorAll('[data-scope]').forEach(b => b.onclick = () => { scope = b.dataset.scope; draw(); });
+    q('[data-unown]')?.addEventListener('click', async () => { await clearSongPrefs(t); scope = 'all'; toast('Bài này dùng lại cài đặt chung'); draw(); });
     q('[data-custom]')?.addEventListener('click', async () => {
       const id = q('[name=custom]').value.trim();
       if (!/^[\w.-]+\/[\w.-]+$/.test(id)) return toast('Tên kho không hợp lệ, cần dạng tác-giả/tên', 'warn');
-      await setPref('lyrics.aiCustom', id); ai.syncCustom(); await setPref('lyrics.' + customFor, 'custom'); draw();
+      await setPref('lyrics.aiCustom', id); ai.syncCustom(); await setAiPref(customFor, 'custom', tgt()); draw();
     });
-    q('[data-vocal]')?.addEventListener('change', (e) => setPref('lyrics.aiVocal', e.target.checked ? 1 : 0));
+    q('[data-vocal]')?.addEventListener('change', (e) => setAiPref('aiVocal', e.target.checked ? 1 : 0, tgt()).then(draw));
     q('[data-auto]')?.addEventListener('change', (e) => setPref('lyrics.aiAuto', e.target.checked ? 1 : 0));
-    q('[data-lang]')?.addEventListener('change', (e) => setPref('lyrics.aiLang', e.target.value));
-    q('[data-tlang]')?.addEventListener('change', (e) => setPref('lyrics.trLang', e.target.value));
+    q('[data-lang]')?.addEventListener('change', (e) => setAiPref('aiLang', e.target.value, tgt()).then(draw));
+    q('[data-tlang]')?.addEventListener('change', (e) => setAiPref('trLang', e.target.value, tgt()).then(draw));
     q('[data-x]')?.addEventListener('click', () => s.close());
     q('[data-go]')?.addEventListener('click', () => {
       s.close();
       const done = (e) => { if (e) toast(e.message || 'Không thực hiện được', 'warn'); onDone?.(e); };
-      if (kind === 'translate') return tr.translateLyrics(t).then(() => done(), done);
+      if (kind === 'translate') return tr.translateLyrics(t, { model: Y().trModel, lang: Y().trLang }).then(() => done(), done);
       const y = Y(), mk = kind === 'gen' ? (y.aiGenModel ?? y.aiModel) : y.aiModel;
       const model = ai.AI_MODELS[mk] ? mk : 'base', vocal = y.aiVocal === 1;
       (kind === 'sync' ? ai.autoWordSync(t, { model, vocal }) : ai.generate(t, { model, vocal })).then(() => done(), done);

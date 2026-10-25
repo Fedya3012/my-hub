@@ -891,6 +891,7 @@
         "js/modules/music/ui/nowplaying.js",
         "js/modules/music/ui/sheets.js",
         "js/modules/music/ui/ai-menu.js",
+        "js/modules/music/lib/ai-prefs.js",
         "js/modules/music/ui/ai-panel.js",
         "js/modules/music/ui/eq-panel.js",
         "js/modules/music/ui/coverflow.js",

@@ -7,6 +7,20 @@ import { saveLyrics } from '../lib/lyrics-sources.js';
 import { parseLyrics, toModel, toLrc } from '../lib/lyrics.js';
 import { db } from '../../../core/db.js';
 import { prefs, setPref } from '../lib/prefs.js';
+import { aiPref, setAiPref, hasSongPrefs, clearSongPrefs } from '../lib/ai-prefs.js';
+
+// Phones: the first rows of each AI menu choose whether a pick is kept for this song only or for every song.
+const scopes = new Map();   // track id → 'song' | 'all' (this session)
+const scopeOf = (t) => scopes.get(t.id) || (hasSongPrefs(t) ? 'song' : 'all');
+const scopeRows = (t, again) => {
+  const sc = scopeOf(t);
+  return [
+    { icon: 'music', label: 'Chỉ cho bài này', desc: 'Lưu lựa chọn riêng cho bài này, cài đặt chung giữ nguyên', on: sc === 'song', act: () => { scopes.set(t.id, 'song'); again(); } },
+    { icon: 'list', label: 'Cho tất cả bài hát', desc: hasSongPrefs(t) ? 'Đổi cài đặt chung (bài này vẫn giữ cài đặt riêng)' : 'Đổi cài đặt chung cho mọi bài', on: sc === 'all', act: () => { scopes.set(t.id, 'all'); again(); } },
+    hasSongPrefs(t) && { icon: 'x', label: 'Bỏ cài đặt riêng của bài này', desc: 'Dùng lại cài đặt chung', act: async () => { await clearSongPrefs(t); scopes.set(t.id, 'all'); toast('Bài này dùng lại cài đặt chung'); again(); } },
+    '-',
+  ];
+};
 
 const MODEL_DESC = {
   tiny: 'Rất nhanh, chính xác vừa, tải thêm ≈ 40 MB',
@@ -22,11 +36,12 @@ export async function aiPick(t, kind, { anchor = null, onDone } = {}) {
   const ai = await import('../lib/lyrics-ai.js');
   ai.syncCustom();
   const Y = prefs().lyrics || {};
-  const pk = kind === 'gen' ? 'aiGenModel' : 'aiModel', ck = pk === 'aiGenModel' ? (Y.aiGenModel ?? Y.aiModel) : Y.aiModel;
+  const tg = scopeOf(t) === 'song' ? t : null;
+  const pk = kind === 'gen' ? 'aiGenModel' : 'aiModel', ck = pk === 'aiGenModel' ? (aiPref('aiGenModel', tg) ?? aiPref('aiModel', tg)) : aiPref('aiModel', tg);
   const cur = ai.AI_MODELS[ck] ? ck : 'base';
-  const vocal = Y.aiVocal === 1;
-  const run = (model) => {
-    setPref('lyrics.' + pk, model);
+  const vocal = aiPref('aiVocal', tg) === 1;
+  const run = async (model) => {
+    await setAiPref(pk, model, tg);
     const p = kind === 'sync' ? ai.autoWordSync(t, { model, vocal }) : ai.generate(t, { model, vocal });
     p.then(() => onDone?.(), (e) => { toast(e?.message || (kind === 'sync' ? 'Không đồng bộ được' : 'Không tạo được lời'), 'warn'); onDone?.(e); });
   };
@@ -40,7 +55,8 @@ export async function aiPick(t, kind, { anchor = null, onDone } = {}) {
     if (id) run('custom'); else again();
   };
   menu(anchor, [
-    { icon: 'lyrics', label: 'Tách giọng hát khỏi nhạc nền', desc: vocal ? 'Đang bật: nghe rõ hơn với bài nhạc nền dày, lâu hơn một chút' : 'Đang tắt: bấm để bật (hiệu quả với bài stereo)', on: vocal, act: async () => { await setPref('lyrics.aiVocal', vocal ? 0 : 1); again(); } },
+    ...scopeRows(t, again),
+    { icon: 'lyrics', label: 'Tách giọng hát khỏi nhạc nền', desc: vocal ? 'Đang bật: nghe rõ hơn với bài nhạc nền dày, lâu hơn một chút' : 'Đang tắt: bấm để bật (hiệu quả với bài stereo)', on: vocal, act: async () => { await setAiPref('aiVocal', vocal ? 0 : 1, tg); again(); } },
     '-',
     ...Object.keys(ai.AI_MODELS).filter(k => k !== 'custom').map(k => ({ icon: 'lyrics', label: ai.modelName(k), desc: MODEL_DESC[k], on: k === cur, act: () => run(k) })),
     ai.AI_MODELS.custom && { icon: 'lyrics', label: ai.modelName('custom'), desc: 'Mô hình bạn đã nhập', on: cur === 'custom', act: () => run('custom') },
@@ -53,13 +69,18 @@ export const aiSettings = () => openAiPanel({ kind: 'settings' });
 export async function aiTranslate(t, anchor = null, onDone) {
   if (wide()) return openAiPanel({ t, kind: 'translate', onDone });
   const lib = await import('../lib/lyrics-translate.js');
-  const cur = prefs().lyrics?.trModel || 'fast';
-  const lang = lib.TR_LANGS[prefs().lyrics?.trLang] || lib.TR_LANGS.vi;
+  const tg = scopeOf(t) === 'song' ? t : null;
+  const cur = aiPref('trModel', tg) || 'fast';
+  const lk = lib.TR_LANGS[aiPref('trLang', tg)] ? aiPref('trLang', tg) : 'vi', lang = lib.TR_LANGS[lk];
+  const again = () => aiTranslate(t, anchor, onDone);
   const go = async (k) => {
-    await setPref('lyrics.trModel', k);
-    lib.translateLyrics(t).then(() => onDone?.(), e => { toast(e.message || 'Không dịch được', 'warn'); onDone?.(e); });
+    await setAiPref('trModel', k, tg);
+    lib.translateLyrics(t, { model: k, lang: lk }).then(() => onDone?.(), e => { toast(e.message || 'Không dịch được', 'warn'); onDone?.(e); });
   };
+  const pickLang = () => menu(anchor, Object.entries(lib.TR_LANGS).map(([k, v]) => ({ icon: 'translate', label: v, on: k === lk, act: async () => { await setAiPref('trLang', k, tg); again(); } })), { title: 'Dịch sang' });
   menu(anchor, [
+    ...scopeRows(t, again),
+    { icon: 'translate', label: 'Dịch sang: ' + lang, desc: 'Bấm để đổi ngôn ngữ đích', act: pickLang },
     { icon: 'translate', label: 'Dịch nhanh', desc: `NLLB-200, dịch từng dòng, ≈ 600 MB (đích: ${lang})`, on: cur === 'fast', act: () => go('fast') },
     { icon: 'translate', label: 'Dịch chính xác', desc: 'Qwen2.5 1.5B, đọc cả bài nên sát nghĩa và tự nhiên hơn, chậm hơn, ≈ 1 GB', on: cur === 'best', act: () => go('best') },
   ], { title: 'Dịch lời bằng AI' });

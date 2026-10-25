@@ -10,6 +10,7 @@ import { tasks } from '../../../core/tasks.js';
 import { bus } from '../../../core/bus.js';
 import { prefs, setPref } from './prefs.js';
 import { confirmBox, toast } from '../../../core/ui.js';
+import { aiPref } from './ai-prefs.js';
 import { saveLyrics, loadLyrics } from './lyrics-sources.js';
 import { parseLyrics, toModel, toLrc } from './lyrics.js';
 import { mainFile } from './store.js';
@@ -71,10 +72,10 @@ export async function ensureConsent(model = '') {
   return true;
 }
 const bigAsked = new Set();
-const modelKey = () => { syncCustom(); return AI_MODELS[Y().aiModel] ? Y().aiModel : 'base'; };
-const vocalOn = () => Y().aiVocal === 1;
+const modelKey = (t) => { syncCustom(); const k = aiPref('aiModel', t); return AI_MODELS[k] ? k : 'base'; };
+const vocalOn = (t) => aiPref('aiVocal', t) === 1;
 // Making lyrics has its own model choice (lyrics.aiGenModel); older settings only had lyrics.aiModel.
-const genKey = () => { syncCustom(); const k = Y().aiGenModel ?? Y().aiModel; return AI_MODELS[k] ? k : 'base'; };
+const genKey = (t) => { syncCustom(); const k = aiPref('aiGenModel', t) ?? aiPref('aiModel', t); return AI_MODELS[k] ? k : 'base'; };
 
 let asr = null, asrKey = '', loading = null;
 window.addEventListener('online', () => { modelFailed = ''; });
@@ -186,7 +187,7 @@ const JUNK = /^[\s[(♪*#.…-]*(music|nhạc|instrumental|applause|vỗ tay|♪
 const stamp = (s) => { const m = Math.floor(s / 60), x = s - m * 60; return `[${String(m).padStart(2, '0')}:${x.toFixed(2).padStart(5, '0')}]`; };
 
 // → LRC text, or '' when no singing was heard.
-export async function transcribe(t, { task, model = genKey(), vocal = vocalOn() } = {}) {
+export async function transcribe(t, { task, model = genKey(t), vocal = vocalOn(t) } = {}) {
   const audio = await samples(t, { vocal, task });
   const asr = await recognizer(task, false, model);
   const n = Math.ceil(audio.length / (PIECE * RATE));
@@ -197,7 +198,7 @@ export async function transcribe(t, { task, model = genKey(), vocal = vocalOn() 
     task?.update({ done: i, total: n, unit: 'items', detail: `Đang nghe lời hát · ${Math.round(i / n * 100)}%` });
     const piece = audio.subarray(i * PIECE * RATE, Math.min(audio.length, (i + 1) * PIECE * RATE));
     if (piece.length < RATE) continue;
-    const out = await asr(piece, { return_timestamps: true, ...(Y().aiLang ? { language: Y().aiLang } : {}), task: 'transcribe' });
+    const out = await asr(piece, { return_timestamps: true, ...(aiPref('aiLang', t) ? { language: aiPref('aiLang', t) } : {}), task: 'transcribe' });
     for (const c of out.chunks || [{ timestamp: [0], text: out.text }]) {
       const text = String(c.text || '').replace(/\s+/g, ' ').trim();
       if (!text || JUNK.test(text) || text === last) continue;
@@ -217,7 +218,7 @@ function releaseSoon() {
   relT = setTimeout(() => { if (!running.size && worker) { worker.terminate(); worker = null; asr = null; asrKey = ''; waits.clear(); } }, 60_000);
 }
 // Makes and saves lyrics for t, with a progress task. → the saved row, or null (nothing sung / cancelled).
-export function generate(t, { quiet = false, model = genKey(), vocal = vocalOn() } = {}) {
+export function generate(t, { quiet = false, model = genKey(t), vocal = vocalOn(t) } = {}) {
   if (running.has(t.id)) return running.get(t.id);
   const job = (async () => {
     if (!(await ensureConsent(model))) { running.delete(t.id); return null; }
@@ -257,8 +258,8 @@ export function watch(player) {
     timer = setTimeout(async () => {
       // On a phone the automatic mode only uses the small bundled models and short songs: decoding a long song and a
       // 250 MB to 1 GB model together is what gets the app closed for memory.
-      if ((t.duration || 0) > 600 || (matchMedia('(pointer: coarse)').matches && !['tiny', 'base'].includes(genKey()))) return;
-      if (player.track?.id !== t.id || !player.playing || running.size || modelFailed === genKey() || (!asr && !navigator.onLine)) return;
+      if ((t.duration || 0) > 600 || (matchMedia('(pointer: coarse)').matches && !['tiny', 'base'].includes(genKey(t)))) return;
+      if (player.track?.id !== t.id || !player.playing || running.size || modelFailed === genKey(t) || (!asr && !navigator.onLine)) return;
       if ((await getSetting(MISS, {}))?.[t.id]) return;
       if (await loadLyrics(t, { allowOnline: !!Y().online })) return;
       generate(t).catch(() => {});
@@ -311,7 +312,7 @@ async function heardWords(t, task, model, vocal) {
     task.update({ done: i, total: n, unit: 'items', detail: `Đang nghe từng chữ · ${Math.round(i / n * 100)}%` });
     const piece = audio.subarray(i * PIECE * RATE, Math.min(audio.length, (i + 1) * PIECE * RATE));
     if (piece.length < RATE) continue;
-    const r = await asr(piece, { return_timestamps: 'word', ...(Y().aiLang ? { language: Y().aiLang } : {}), task: 'transcribe' });
+    const r = await asr(piece, { return_timestamps: 'word', ...(aiPref('aiLang', t) ? { language: aiPref('aiLang', t) } : {}), task: 'transcribe' });
     for (const c of r.chunks || []) {
       const [a, b] = c.timestamp || [];
       for (const w of String(c.text || '').split(/\s+/).map(norm).filter(Boolean)) if (a != null) out.push({ w, t: i * PIECE + a, end: i * PIECE + (b ?? a + 0.3) });
@@ -321,7 +322,7 @@ async function heardWords(t, task, model, vocal) {
 }
 
 // Word-syncs the saved lyrics of t. → { matched, total } after saving, or null (cancelled / too few matched).
-export function autoWordSync(t, { model = modelKey(), vocal = vocalOn() } = {}) {
+export function autoWordSync(t, { model = modelKey(t), vocal = vocalOn(t) } = {}) {
   const key = 'w:' + t.id;
   if (running.has(key)) return running.get(key);
   const job = (async () => {
