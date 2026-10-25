@@ -112,7 +112,7 @@ export async function openReader(root, id, { ctx, onClose }) {
       source = await (await import('./text-book.js')).volumeBook({
         title: b.title, author: b.authors[0],
         parts: parts.map(p => ({ title: p.title, name: p.main.name, engine: engineOf(formatOf(p.main.name)), vendor: vendor('foliate/view.js'), main: p.main })),
-        open: async (p) => { t.update({ done: ++n }); const bl = await storage.open(p.main).catch(() => null); return bl && asNamedFile(bl, p.name); },
+        open: async (p) => { t.update({ done: ++n }); const bl = await storage.open(p.main); return bl && asNamedFile(bl, p.name); },
       });
       t.finish();
     }

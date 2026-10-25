@@ -144,8 +144,9 @@ export async function bookFromText(blob, { name = '', title = '', author = '' } 
 export async function volumeBook({ title, author, parts, open }) {
   const chapters = [];
   for (const p of parts) {
-    const file = await open(p);
-    if (!file) { chapters.push({ title: p.title, html: '<p>(Không mở được tệp của chương này trên máy này.)</p>' }); continue; }
+    let file = null, why = '';
+    try { file = await open(p); } catch (e) { why = e.message || String(e); }
+    if (!file) { chapters.push({ title: p.title, html: `<p>(Không mở được tệp của chương này: ${esc(why || 'không tìm thấy tệp')}. Thử mở riêng chương “${esc(p.title)}” trong Thư viện; nếu vẫn lỗi, gắn lại tệp cho chương đó.)</p>` }); continue; }
     let list, found = false;
     if (p.engine === 'pdf') {
       const img = await (await import('./engine-pdf.js')).pdfImagePart(file);
