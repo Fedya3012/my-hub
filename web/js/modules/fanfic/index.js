@@ -12,6 +12,7 @@ import { icon } from '../../core/icons.js';
 import { debounce } from '../../core/perf.js';
 import { dropFiles } from '../../core/dnd.js';
 import { definePrefs } from './lib/prefs.js';
+import { watch as watchBackup } from './lib/backup.js';
 
 export const NAME = 'Xưởng Viết';
 const TABS = [['', 'fx-desk', 'Bàn viết'], ['works', 'fx-works', 'Tác phẩm'], ['fandoms', 'fx-fandom', 'Fandom'], ['stats', 'fx-stats', 'Thống kê'], ['tools', 'upload', 'Thêm & nhập'], ['settings', 'settings', 'Cài đặt']];
@@ -29,6 +30,7 @@ export async function mount(el, context, sub = '') {
   if (!document.querySelector('link[href*="fanfic/fanfic.css"]')) document.head.append(Object.assign(document.createElement('link'), { rel: 'stylesheet', href: new URL('./fanfic.css', import.meta.url).href }));
   const soon = debounce(() => { if (root?.isConnected && !writer) render(); }, 150);
   offs.push(ctx.bus.on('fanfic:changed', soon), ctx.bus.on('sync:done', soon), ctx.bus.on('progress:pulled', soon));
+  offs.push(watchBackup());
   offs.push(dropFiles(el, { overlay: 'Thả tệp TXT, Markdown hoặc HTML (AO3) để thêm vào Xưởng Viết', onFiles: async (files) => (await import('./lib/io.js')).importFiles(files, ctx), when: () => !writer }));
   await navigate(sub);
 }

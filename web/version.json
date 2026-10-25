@@ -1049,6 +1049,7 @@
         "js/modules/fanfic/fanfic.css",
         "js/modules/fanfic/index.js",
         "js/modules/fanfic/lib/analyze.js",
+        "js/modules/fanfic/lib/backup.js",
         "js/modules/fanfic/lib/docx.js",
         "js/modules/fanfic/lib/icons.js",
         "js/modules/fanfic/lib/io.js",

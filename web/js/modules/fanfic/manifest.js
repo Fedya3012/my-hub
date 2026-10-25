@@ -37,5 +37,6 @@ export default {
     'js/modules/fanfic/ui/writer-tools.js',
     'js/modules/fanfic/ui/stats.js',
     'js/modules/fanfic/ui/settings.js',
+    'js/modules/fanfic/lib/backup.js',
   ],
 };

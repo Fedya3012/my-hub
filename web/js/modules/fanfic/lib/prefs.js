@@ -62,6 +62,7 @@ export function definePrefs() {
       worksSort: { type: 'string', default: 'edited', ui: false },
       binderOpen: { type: 'bool', default: 1, ui: false },
       pinOpen: { type: 'bool', default: 0, ui: false },
+      backupTarget: { type: 'string', default: '', ui: false, scope: 'sync' },
     },
   });
 }
