@@ -12,6 +12,28 @@ import { lookup, merge, fetchCover, validIsbn } from '../lib/online.js';
 import { parseCsv, detect, toRecords } from '../lib/csv.js';
 import { setCover, sheet } from './common.js';
 
+const norm = (s) => String(s ?? '').normalize('NFC').toLowerCase().replace(/\s+/g, ' ').trim();
+function hash36(s) {   // FNV-1a, same as the music ids: stable across devices
+  let h1 = 0x811c9dc5, h2 = 0x01000193;
+  for (let i = 0; i < s.length; i++) { const c = s.charCodeAt(i); h1 = Math.imul(h1 ^ c, 16777619) >>> 0; h2 = Math.imul(h2 ^ (c * 31), 2246822519) >>> 0; }
+  return h1.toString(36) + (h2 & 0xfffff).toString(36);
+}
+// A book is recognised by title + authors + volume + publication date + language, so a renamed or moved file
+// (or one deleted in the app and synced again) finds its old entry with its progress, notes and highlights.
+const bookKey = (title, authors, vol, published, lang) => (title ? [title, [...authors].map(norm).sort().join(','), vol ?? '', published || '', lang || ''].map(norm).join('\u0001') : null);
+async function bookIndex() {
+  const items = new Map((await db.items.where('moduleId').equals('books').toArray()).map(it => [it.id, it]));
+  const names = new Map((await db.authors.toArray()).map(a => [a.id, a.name]));
+  const m = new Map();
+  for (const b of await db.books.toArray()) {
+    const it = items.get(b.itemId);
+    if (!it || it.type === 'fanfic') continue;
+    const k = bookKey(it.title, (b.authorIds || []).map(id => names.get(id)).filter(Boolean), b.seriesIndex, b.published, b.language);
+    if (k && (!m.has(k) || !b.deleted)) m.set(k, b.itemId);
+  }
+  return m;
+}
+
 // ── Files ────────────────────────────────────────────────────────
 // files: File[] (relPath kept for folders) or [{ handle, name, size, relPath }] for linked files.
 export async function importFiles(files, { remote = null, localFolder = null } = {}) {
@@ -25,7 +47,7 @@ export async function importFiles(files, { remote = null, localFolder = null } =
   const total = list.reduce((s, f) => s + (f.size || 0), 0);
   const task = tasks.start({ label: `Đang thêm ${list.length} sách`, unit: 'bytes', total, cancellable: true, delay: total < 3e6 ? 300 : 0 });
   const added = [];
-  let base = 0, dup = 0;
+  let base = 0, dup = 0, byKey = null;
   for (let i = 0; i < list.length; i++) {
     const f = list[i];
     if (task.cancelled) break;
@@ -50,11 +72,23 @@ export async function importFiles(files, { remote = null, localFolder = null } =
       const meta = await extractMeta(asNamedFile(file, f.name), { signal: task.signal });
       const folder = f.relPath?.includes('/') ? f.relPath.split('/').slice(0, -1) : [];
       const { coverBlob, ...data } = meta;
+      const key = bookKey(data.title, data.authors || [], data.seriesIndex, data.published, data.language);
+      const known = key && (byKey ||= await bookIndex()).get(key);
+      if (known) {
+        // Same book under a new file name / folder: bring the entry back if it was deleted and attach this file.
+        await db.items.update(known, { deleted: 0 });
+        await db.books.update(known, { deleted: 0 });
+        await storage.addFile(known, f.handle ? { handle: f.handle } : file, { role: 'main', name: f.name, signal: task.signal, ...(remote ? { remote: { key: remote(f), drive: remote.drive } } : {}), ...(localFolder ? { localFolder } : {}) });
+        added.push(known);
+        base += f.size || 0; task.update({ done: base }); continue;
+      }
+      if (key) data.id = 'bk-' + hash36(key);   // same id on every device that imports this book
       id = await store.createBook({ ...data, tags: folder.length ? [folder[folder.length - 1]] : [], relPath: f.relPath || '' }, { file: true, quiet: true });
       await storage.addFile(id, f.handle ? { handle: f.handle } : file, { role: 'main', name: f.name, signal: task.signal, ...(remote ? { remote: { key: remote(f), drive: remote.drive } } : {}), ...(localFolder ? { localFolder } : {}),
         onProgress: ({ done, total: n }) => task.update({ done: base + (n ? done / n : 1) * (f.size || 0) }) });
       if (coverBlob) await setCover(id, coverBlob);
       added.push(id);
+      if (key) byKey?.set(key, id);
     } catch (e) {
       if (id) await store.removeBooks([id]).catch(() => {});
       if (e?.name === 'AbortError' || task.cancelled) break;

@@ -13,7 +13,7 @@ import { cmpVi, cmpViNum, yieldToMain } from '../../../core/perf.js';
 
 // ── Ids & names ─────────────────────────────────────────────────
 export const norm = (s) => String(s || '').normalize('NFC').toLowerCase().replace(/\s+/g, ' ').trim();
-function hash36(s) {
+export function hash36(s) {
   // FNV-1a 52-bit: stable across devices so the same album gets the same id everywhere.
   let h1 = 0x811c9dc5, h2 = 0x01000193;
   for (let i = 0; i < s.length; i++) {
@@ -353,6 +353,14 @@ async function importFilesNow(files, { onProgress, sample = false, kind = 'music
   // file, so two devices importing before they sync still agree; an entry already known (synced from another
   // device) only gets this device's file attached.
   const existing = new Map((await db.tracks.toArray()).filter(t => !t.deleted).map(t => [t.fileName + '|' + t.size, t.itemId]));
+  let byTags = null;   // tag key → itemId, deleted entries included (built on first need)
+  const tagIndex = async () => {
+    if (byTags) return byTags;
+    const titles = new Map((await db.items.where('moduleId').equals('music').toArray()).map(it => [it.id, it.title]));
+    byTags = new Map();
+    for (const t of await db.tracks.toArray()) { const k = tagKey(titles.get(t.itemId), t.albumArtist, t.album); if (k && (!byTags.has(k) || !t.deleted)) byTags.set(k, t.itemId); }
+    return byTags;
+  };
   const res = { added: 0, skipped: 0, failed: [] };
   for (let i = 0; i < audio.length; i++) {
     if (signal?.aborted) { res.cancelled = true; break; }
@@ -373,8 +381,19 @@ async function importFilesNow(files, { onProgress, sample = false, kind = 'music
     try {
       const meta = await readAudioMeta(file, { name: file.name });
       const t = meta.tags || {};
+      const tk = sample ? null : metaKey(t);
+      const same = tk && (await tagIndex()).get(tk);
+      if (same) {
+        // Known song under a new file name / folder: bring the entry back if it was deleted, point it at this file.
+        await db.items.update(same, { deleted: 0 });
+        const row = await storage.addFile(same, handle ? { handle } : file, { role: 'main', name: file.name, ...(remote ? { remote: { key: remote(file), drive: remote.drive } } : {}), ...(localFolder ? { localFolder } : {}) });
+        await db.tracks.update(same, { deleted: 0, fileName: file.name, size: file.size, fileId: row.id, folder: dirOf(file) });
+        existing.set(file.name + '|' + file.size, same);
+        res.linked = (res.linked || 0) + 1;
+        continue;
+      }
       const item = {
-        id: sample ? uid() : songId(file), type: kind, moduleId: 'music', title: t.title || base(file.name).replace(/^\d+[\s.-]+/, '').replace(/_/g, ' '),
+        id: sample ? uid() : tk ? 'mu-' + hash36('t\u0001' + tk) : songId(file), type: kind, moduleId: 'music', title: t.title || base(file.name).replace(/^\d+[\s.-]+/, '').replace(/_/g, ' '),
         subtitle: '', tags: [], status: 'new', favorite: 0, deleted: 0, rating: 0, createdAt: now(),
         meta: { originalName: file.name, ...(sample ? { sample: true } : {}) },
       };
@@ -389,6 +408,7 @@ async function importFilesNow(files, { onProgress, sample = false, kind = 'music
       await logActivity(item.id, 'music', 'import');
       await yieldToMain();
       existing.set(file.name + '|' + file.size, item.id);
+      if (tk) (await tagIndex()).set(tk, item.id);
       res.added++;
     } catch (e) { console.error(e); res.failed.push(`${file.name}: ${e.message}`); }
   }
@@ -413,6 +433,11 @@ async function repairKnownCover(itemId, file, folderImg) {
 
 // Same file name + size → same id on every device (see importFilesNow).
 const songId = (file) => 'mu-' + hash36(norm(file.name) + '|' + file.size);
+// A song is recognised by its tags: title + album artist + album. A renamed or moved file (or one deleted in the
+// app and synced again) finds its old entry, with its plays, lyrics and progress. Without a title tag the file
+// name + size stays the identity.
+const tagKey = (title, albumArtist, album) => title ? [title, albumArtist || UNKNOWN_ARTIST, album || UNKNOWN_ALBUM].map(norm).join('\u0001') : null;
+const metaKey = (t) => tagKey(t.title, t.albumArtist || splitArtists(t.artist || '')[0], t.album);
 // A file row this device can open: its own copy / link (rows synced from elsewhere arrive without
 // locations.local), or a file left on a drive this device is connected to.
 const usableHere = (f) => !!f.locations?.local || (!!f.linked && Object.keys(f.locations || {}).some(k => drives[k]?.connected?.()));
