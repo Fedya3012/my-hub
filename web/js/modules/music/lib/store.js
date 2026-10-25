@@ -503,7 +503,7 @@ async function saveTrack(item, meta, { file, folder = '', lrcText, folderImg, ar
 // The album row (and its cover file row) came from another device through account sync, but that device's
 // image is not on this one: put this device's copy under the same file ids, so the cover shows here too
 // without changing the rows every device shares.
-async function repairAlbumCover(al, pic) {
+export async function repairAlbumCover(al, pic) {
   const cover = await db.files.get(al.coverFileId);
   if (!cover || storage.hasLocal(cover) || Object.keys(cover.locations || {}).some(k => k !== 'local' && drives[k]?.connected?.())) return;
   await storage.attachLocal(cover, pic);

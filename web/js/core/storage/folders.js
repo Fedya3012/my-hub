@@ -218,6 +218,47 @@ async function fillFolderCovers(mode, images, d, dirOf, sidecar) {
   }
 }
 
+// Albums whose cover is a row synced from another device (bytes not on this device), or gone: songs already
+// imported are skipped by the scan, so nothing else would fix them. Each such album gets this device's copy from
+// one of its songs in the folder: the folder image, else the picture embedded in the song (read by range).
+const coverTried = new Set();
+async function repairCovers(mode, found, d, dirOf, sidecar, IMG) {
+  const albums = (await db.albums.toArray()).filter(a => !a.deleted);
+  const covers = new Map((await db.files.bulkGet(albums.map(a => a.coverFileId).filter(Boolean))).filter(Boolean).map(f => [f.id, f]));
+  const onDrive = (c) => Object.keys(c.locations || {}).some(k => k !== 'local' && drives[k]?.connected?.());
+  const broken = albums.filter(a => !coverTried.has(a.id) && (!a.coverFileId || (c => !c || (!c.locations?.local && !onDrive(c)))(covers.get(a.coverFileId))));
+  if (!broken.length) return;
+  const byPath = new Map(found.map(e => [e.path, e]));
+  const imgByDir = new Map(found.filter(e => IMG.test(e.name)).map(e => [dirOf(e.path), e]));
+  const music = await import('../../modules/music/lib/store.js');
+  const { readAudioMeta } = await import('../../modules/music/lib/meta.js');
+  let fixed = 0;
+  for (const al of broken) {
+    const tracks = (await db.tracks.where('albumId').equals(al.id).toArray()).filter(t => !t.deleted);
+    let tried = false;
+    for (const t of tracks) {
+      const row = (await db.files.where('itemId').equals(t.itemId).toArray()).find(f => f.role === 'main' && f.locations?.[mode]?.key && byPath.has(f.locations[mode].key));
+      if (!row) continue;
+      tried = true;
+      const e = byPath.get(row.locations[mode].key), img = imgByDir.get(dirOf(e.path));
+      let pic = img ? await sidecar(img).catch(() => null) : null;
+      if (!pic && d.getRange && e.id && e.size > 0) {
+        const m = await readAudioMeta(remoteFile(e.name, e.size, (a, b) => d.getRange(e.id, a, b), e.path), { name: e.name }).catch(() => null);
+        if (m?.picture) pic = new Blob([m.picture.data], { type: m.picture.mime || 'image/jpeg' });
+      }
+      if (!pic) continue;
+      try {
+        if (al.coverFileId && covers.get(al.coverFileId)) await music.repairAlbumCover(al, pic);   // keep the synced row
+        else await music.setAlbumCover(al.id, pic);
+        fixed++;
+      } catch { /* next sync */ }
+      break;
+    }
+    if (tried) coverTried.add(al.id);   // a song without any art is read once per session, not on every sync
+  }
+  if (fixed) music.invalidate?.();
+}
+
 async function runDrive(mode, { pruneOnly = false } = {}) {
   const d = drives[mode];
   if (!d || !d.listDir) return { skipped: 'no-folders' };
@@ -267,6 +308,7 @@ async function runDrive(mode, { pruneOnly = false } = {}) {
   // A music file is imported only when a chosen folder above it feeds music; a book only when one feeds books.
   // Songs imported before covers were picked up (or whose file has no embedded art): give their album the folder cover.
   await fillFolderCovers(mode, found.filter(e => IMG.test(e.name)), d, dirOf, sidecar);
+  await repairCovers(mode, found, d, dirOf, sidecar, IMG).catch(e => console.warn('[folders] covers', e));
   const todo = found.filter(e => ((MUSIC.test(e.name) && allows(e.path, 'music')) || (!MUSIC.test(e.name) && isBookFile({ name: e.name }) && allows(e.path, 'books'))) && done[e.path] !== e.size);
   if (!todo.length) return { added: 0, failed: [], removed, missing };
 
