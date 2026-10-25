@@ -188,7 +188,7 @@ function remoteFile(name, size, range, relPath = '') {
   // Both ends are requested at once on first use; anything else is fetched when asked for.
   const parts = [{ from: 0, to: Math.min(size, HEAD) }, { from: Math.max(Math.min(size, HEAD), size - TAIL), to: size }].filter(w => w.to > w.from)
     .map(w => Object.assign(w, { buf: null }));
-  const load = (w) => (w.buf ||= range(w.from, w.to).then(b => new Uint8Array(b)));
+  const load = (w) => (w.buf ||= range(w.from, w.to).then(b => new Uint8Array(b), (e) => { w.buf = null; throw e; }));
   const bytes = async (a, b) => {
     let w = parts.find(x => a >= x.from && b <= x.to);
     if (!w) { w = { from: a, to: Math.min(size, Math.max(b, a + 384 * 1024)), buf: null }; parts.push(w); }
@@ -196,7 +196,7 @@ function remoteFile(name, size, range, relPath = '') {
     const buf = await load(w);
     return buf.slice(a - w.from, b - w.from).buffer;
   };
-  return { name, size, type: '', relPath, slice: (a = 0, b = size) => ({ arrayBuffer: () => bytes(Math.max(0, a), Math.min(size, b)) }) };
+  return { name, size, type: '', relPath, retry: () => remoteFile(name, size, range, relPath), slice: (a = 0, b = size) => ({ arrayBuffer: () => bytes(Math.max(0, a), Math.min(size, b)) }) };
 }
 
 // Albums without a cover whose songs sit next to a cover image on the drive get that image.
@@ -221,6 +221,20 @@ async function fillFolderCovers(mode, images, d, dirOf, sidecar) {
 // Albums whose cover is a row synced from another device (bytes not on this device), or gone: songs already
 // imported are skipped by the scan, so nothing else would fix them. Each such album gets this device's copy from
 // one of its songs in the folder: the folder image, else the picture embedded in the song (read by range).
+// Songs whose file could not be read when they were imported (no audio info at all: they show up under
+// "Nghệ sĩ không rõ") are removed and imported again from the drive, this time with their tags.
+async function redoUnread(mode, found, done) {
+  const here = new Set(found.map(e => e.path));
+  const bad = await db.tracks.filter(t => !t.deleted && !t.tech && !!t.fileId).toArray();
+  if (!bad.length) return;
+  const rows = new Map((await db.files.bulkGet(bad.map(t => t.fileId))).filter(Boolean).map(f => [f.itemId, f]));
+  const redo = bad.filter(t => { const k = rows.get(t.itemId)?.locations?.[mode]?.key; return k && here.has(k); });
+  if (!redo.length) return;
+  for (const t of redo) delete done[rows.get(t.itemId).locations[mode].key];
+  await (await import('../../modules/music/lib/store.js')).deleteTracks(redo.map(t => t.itemId));
+  await setSetting('sync.folderDone', done);
+}
+
 const coverTried = new Set();
 async function repairCovers(mode, found, d, dirOf, sidecar, IMG) {
   const albums = (await db.albums.toArray()).filter(a => !a.deleted);
@@ -298,6 +312,7 @@ async function runDrive(mode, { pruneOnly = false } = {}) {
 
   const { isBookFile } = await import('../../modules/books/lib/formats.js');
   const done = (await getSetting('sync.folderDone', {})) || {};
+  await redoUnread(mode, found, done).catch(e => console.warn('[folders] redo', e));
   // Next to a song: its folder cover (cover.jpg…) and lyrics (.lrc…). The music import looks for them by folder, so
   // they travel with the song; each is downloaded once.
   const IMG = /^(cover|folder|front|album|albumart)\.(jpe?g|png|webp)$/i, LYR = /\.(lrc|ttml|srt)$/i;

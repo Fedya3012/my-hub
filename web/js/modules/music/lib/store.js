@@ -379,7 +379,12 @@ async function importFilesNow(files, { onProgress, sample = false, kind = 'music
     }
     await yieldToMain();   // let the page draw and react between songs
     try {
-      const meta = await readAudioMeta(file, { name: file.name });
+      let meta = await readAudioMeta(file, { name: file.name });
+      // A file on a drive whose bytes could not be fetched (token, timeout, network) must not become an
+      // "Nghệ sĩ không rõ" entry: try once more, then fail so the folder sync retries it next time.
+      const readErr = (m) => m.warnings?.find(w => /^read error/.test(w));
+      if (remote && readErr(meta)) meta = await readAudioMeta(file.retry?.() || file, { name: file.name });
+      if (remote && readErr(meta)) throw new Error('không đọc được thẻ từ ổ đĩa (' + readErr(meta).replace(/^read error: /, '') + ')');
       const t = meta.tags || {};
       const tk = sample ? null : metaKey(t);
       const same = tk && (await tagIndex()).get(tk);
