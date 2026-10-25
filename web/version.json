@@ -1,7 +1,18 @@
 {
-  "app": "0.9.22.10",
+  "app": "0.9.22.11",
   "released": "2026-10-25",
   "changelog": [
+    {
+      "version": "0.9.22.11",
+      "date": "2026-10-25",
+      "notes": [
+        "Trình phát nhạc: lời bài hát bằng AI chọn được theo từng bài hoặc cho tất cả bài (tạo lời, đồng bộ từng từ, mô hình dịch, giọng hát, ngôn ngữ)",
+        "Trình phát nhạc: tải mô hình dịch lời chỉ khi được chọn; bớt lỗi hết bộ nhớ khi dịch",
+        "Trình phát nhạc trên điện thoại: thanh phát không còn bị thu nhỏ hoặc đóng chiếm chỗ",
+        "Writer Studio: chọn thư mục Dropbox hoặc OneDrive để nhập ổ đĩa, sửa lỗi không hiển thị",
+        "Trình phát nhạc: ảnh bìa theo từng bài hoạt động lại"
+      ]
+    },
     {
       "version": "0.9.22.10",
       "date": "2026-10-25",
