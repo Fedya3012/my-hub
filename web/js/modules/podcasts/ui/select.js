@@ -123,6 +123,12 @@ export function attach(root, opts = {}) {
   if (S.on) { paint(); drawBar(); }
 }
 
+// Start selecting with nothing picked yet (the Chọn button).
+export function begin() {
+  if (!S.on) { S.on = true; document.body.classList.add('pc-sel-on'); }
+  paint(); drawBar();
+}
+
 export function toggle(id) {
   if (!S.on) { S.on = true; document.body.classList.add('pc-sel-on'); }
   if (S.picked.has(id)) S.picked.delete(id); else S.picked.add(id);

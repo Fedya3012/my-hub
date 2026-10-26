@@ -588,7 +588,7 @@ body.pc-sel-on .pc-ep .pc-round, body.pc-sel-on .pc-ep [data-menu] { opacity: .5
 .pc-source.big { margin: 10px 0 2px; font-size: .8rem; gap: 6px; align-items: center; }
 .pc-source.big > span { min-width: 0; overflow-wrap: anywhere; }
 /* Toolbar: equal-width filter tabs, then search with the two icon tools, all the same height and radius. */
-.pc-toolbar { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px; margin: 18px 0 8px; }
+.pc-toolbar { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; margin: 18px 0 8px; }
 .pc-toolbar .pc-seg { grid-column: 1 / -1; width: 100%; border-radius: 14px; }
 .pc-toolbar .pc-seg button { flex: 1 1 0; min-height: 38px; border-radius: 11px; padding-inline: 4px; text-align: center; }
 .pc .pc-toolbar .pc-find { grid-column: 1; min-width: 0; min-height: 44px; border-radius: 14px; }
@@ -599,3 +599,18 @@ body.pc-sel-on .pc-ep .pc-round, body.pc-sel-on .pc-ep [data-menu] { opacity: .5
 .pc-ep-main small:first-child { font-size: .74rem; letter-spacing: .01em; }
 .pc-desc, .pc-source.big { text-align: center; justify-content: center; }
 .pc-desc summary { text-wrap: pretty; }
+
+/* Trang podcast: thẻ "Đang nghe dở" và dòng thống kê */
+.pc-stats-line { font-variant-numeric: tabular-nums; }
+.pc-resume { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; align-items: center; gap: 14px; margin: 12px 0 4px; padding: 12px 14px; border-radius: 20px; background: var(--surface); border: 1px solid var(--pc-hair); box-shadow: var(--pc-soft); text-align: left; }
+.pc-resume-art .pc-art { border-radius: 12px; }
+.pc-resume > div { display: grid; gap: 4px; min-width: 0; }
+.pc-resume .eyebrow { margin: 0; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--pc-accent-text); font-weight: 650; }
+.pc-resume b { font-size: .95rem; font-weight: 620; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.pc-resume .pc-bar { height: 4px; }
+.pc-resume small { font-size: .76rem; }
+.pc-resume .pc-round.big { width: 46px; height: 46px; box-shadow: 0 6px 16px color-mix(in srgb, var(--pc-accent) 34%, transparent); }
+.pc-toolbar .pc-seg { overflow-x: auto; }
+.pc-toolbar .pc-seg button { flex: 1 0 auto; padding-inline: 10px; }
+.pc-resume + .pc-desc { margin-top: 16px; }
+.pc-resume { margin-bottom: 4px; }

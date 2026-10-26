@@ -2553,5 +2553,16 @@
   "Đang phát": "Playing",
   "Làm mới": "Refresh",
   "Cài đặt": "Settings",
-  "Trang web": "Website"
+  "Trang web": "Website",
+  "Thêm": "More",
+  "Sắp xếp tập": "Sort episodes",
+  "Ngắn nhất trước": "Shortest first",
+  "Dài nhất trước": "Longest first",
+  "Tải 3 tập mới nhất chưa nghe": "Download the 3 newest unplayed",
+  "Đánh dấu tất cả đã nghe": "Mark all as played",
+  "Cài đặt riêng của podcast": "Podcast settings",
+  "Mở trang web": "Open website",
+  "Chưa có tập nào để chọn": "No episodes to select",
+  "Không có tập mới nào cần tải": "No new episodes to download",
+  "chưa nghe": "unplayed"
 }

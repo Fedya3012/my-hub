@@ -8,8 +8,10 @@ import { SOURCES } from '../lib/online.js';
 import { seen, sourceNames } from '../lib/online.js';
 import { normFeed } from '../lib/net.js';
 import { get } from '../lib/prefs.js';
-import { art, episodeList, bindEpisodes, notesHtml, stripHtml, pick } from './common.js';
+import { art, episodeList, bindEpisodes, notesHtml, stripHtml, pick, fmtLen } from './common.js';
+import * as sel from './select.js';
 
+const SORTS = { new: 'Mới nhất trước', old: 'Cũ nhất trước', short: 'Ngắn nhất trước', long: 'Dài nhất trước' };
 const filters = new Map();   // show id → { f, q, sort } for this session
 
 export async function render(el, { head, arg, go, ctx, rerender }) {
@@ -37,11 +39,19 @@ export async function render(el, { head, arg, go, ctx, rerender }) {
   if (st.f === 'unplayed') eps = eps.filter(e => !e.played && prog.get(e.id)?.state !== 'finished');
   if (st.f === 'progress') eps = eps.filter(e => !e.played && prog.get(e.id)?.position > 5 && prog.get(e.id)?.state !== 'finished');
   if (st.f === 'starred') eps = eps.filter(e => e.starred);
+  const dls = new Set((await store.downloads()).map(e => e.id));
+  if (st.f === 'downloaded') eps = eps.filter(e => dls.has(e.id));
   if (st.q) { const q = st.q.toLowerCase(); eps = eps.filter(e => (e.title + ' ' + stripHtml(e.description).slice(0, 400) + ' ' + (e.persons || []).map(p => p.name).join(' ')).toLowerCase().includes(q)); }
   if (st.sort === 'old') eps = [...eps].reverse();
+  if (st.sort === 'short') eps = [...eps].sort((a, b) => (a.duration || 0) - (b.duration || 0));
+  if (st.sort === 'long') eps = [...eps].sort((a, b) => (b.duration || 0) - (a.duration || 0));
   const local = s.feedUrl.startsWith('local:');
   const sets = s.settings || {};
   const desc = stripHtml(s.description);
+  const unplayed = all.filter(e => !e.played && prog.get(e.id)?.state !== 'finished').length;
+  const totalSec = all.reduce((a, e) => a + (e.duration || 0), 0);
+  const resume = all.find(e => !e.played && prog.get(e.id)?.position > 5 && prog.get(e.id)?.state !== 'finished');
+  const rp = resume && prog.get(resume.id);
   const hosts = (s.persons || []).filter(p => p.role === 'host' && p.name !== s.author);
   el.innerHTML = `
     <header class="pc-showhead" style="--bgimg:url('${esc(s.image || '')}')">
@@ -50,28 +60,30 @@ export async function render(el, { head, arg, go, ctx, rerender }) {
         <p class="eyebrow">${esc((s.categories || []).slice(0, 3).join(' · ') || 'Podcast')}</p>
         <h1>${esc(s.title)}</h1>
         <p class="muted pc-by">${esc(s.author)}${hosts.length ? ' · Dẫn: ' + hosts.map(h => esc(h.name)).join(', ') : ''}</p>
-        <p class="muted">${all.length} tập${s.rating ? ` · ★ ${(+s.rating).toFixed(1)}` : ''}${s.complete ? ' · Đã hoàn thành' : ''}${s.partial ? ' · <span title="RSS bị chặn, danh sách tập lấy từ Apple">từ Apple</span>' : ''}</p>
+        <p class="muted pc-stats-line">${all.length} tập${totalSec ? ' · ' + fmtLen(totalSec) : ''}${unplayed ? ` · ${unplayed} chưa nghe` : ''}${s.rating ? ` · ★ ${(+s.rating).toFixed(1)}` : ''}${s.complete ? ' · Đã hoàn thành' : ''}${s.partial ? ' · <span title="RSS bị chặn, danh sách tập lấy từ Apple">từ Apple</span>' : ''}</p>
         <div class="row-actions">
           ${all[0] ? `<button class="btn primary pc-orange pc-go" data-play="${esc((all.find(e => !e.played) || all[0]).id)}">${icon('pc-play')}Phát tập ${all.find(e => !e.played) ? 'mới nhất chưa nghe' : 'mới nhất'}</button>` : ''}
           <div class="pc-acts">
             ${local ? '' : s.subscribed ? `<button class="pc-act on" data-a="unsub">${icon('pc-check')}<span>Đã đăng ký</span></button>` : `<button class="pc-act" data-a="sub">${icon('pc-plus')}<span>Đăng ký</span></button>`}
             ${local ? '' : `<button class="pc-act" data-a="refresh">${icon('refresh')}<span>Làm mới</span></button>`}
-            <button class="pc-act" data-a="settings">${icon('settings')}<span>Cài đặt</span></button>
-            ${s.link ? `<a class="pc-act" href="${esc(s.link)}" target="_blank" rel="noopener">${icon('link')}<span>Trang web</span></a>` : ''}
+            <button class="pc-act" data-a="select">${icon('pc-check')}<span>Chọn</span></button>
+            <button class="pc-act" data-a="more">${icon('pc-more')}<span>Thêm</span></button>
           </div>
         </div>
       </div>
     </header>
+    ${resume ? `<div class="pc-resume"><span class="pc-resume-art">${art(resume.image || s.image, s.title, 'md')}</span><div><small class="eyebrow">Đang nghe dở</small><b>${esc(resume.title)}</b>
+      <span class="pc-bar"><i style="width:${rp.total ? Math.min(100, rp.position / rp.total * 100) : 0}%"></i></span><small class="muted">${rp.total ? 'Còn ' + fmtLen(rp.total - rp.position) : 'Nghe tiếp'}</small></div>
+      <button class="pc-round big" data-play="${esc(resume.id)}" aria-label="Nghe tiếp">${icon('pc-play')}</button></div>` : ''}
     ${desc ? `<details class="pc-desc"><summary>${esc(desc.slice(0, 220))}${desc.length > 220 ? '… <b>Xem thêm</b>' : ''}</summary><div>${notesHtml(s.description)}</div></details>` : ''}
     <p class="pc-source big">${icon('pc-wifi')}<span>Nguồn: <b>${esc(sourceNames(s.sources) || (local ? 'Tệp trên máy này' : 'Link RSS trực tiếp'))}</b>${local ? '' : ` · RSS: <a href="${esc(s.feedUrl)}" target="_blank" rel="noopener">${esc(hostOf(s.feedUrl))}</a>`}${s.itunesId ? ` · Apple ID ${esc(s.itunesId)}` : ''}${s.piId ? ` · Podcast Index ID ${esc(s.piId)}` : ''}</span></p>
     ${s.funding?.length ? `<p class="pc-fund">${icon('pc-star')} Ủng hộ: ${s.funding.map(f => `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.label || 'Ủng hộ')}</a>`).join(' · ')}</p>` : ''}
     ${Object.keys(sets).length ? `<p class="muted pc-sets">${[sets.speed && `Tốc độ ${sets.speed}×`, sets.skipIntro && `Bỏ ${sets.skipIntro}s đầu`, sets.skipOutro && `Bỏ ${sets.skipOutro}s cuối`, sets.autoDownload != null && (sets.autoDownload ? 'Tự tải' : 'Không tự tải')].filter(Boolean).join(' · ')}</p>` : ''}
     ${sourcesBox(s)}
     <div class="pc-toolbar">
-      <div class="pc-seg sm">${[['', 'Tất cả'], ['unplayed', 'Chưa nghe'], ['progress', 'Đang nghe'], ['starred', 'Có sao']].map(([k, l]) => `<button data-f="${k}" aria-current="${st.f === k}">${l}</button>`).join('')}</div>
+      <div class="pc-seg sm">${[['', 'Tất cả'], ['unplayed', 'Chưa nghe'], ['progress', 'Đang nghe'], ['starred', 'Có sao'], ['downloaded', 'Đã tải']].map(([k, l]) => `<button data-f="${k}" aria-current="${st.f === k}">${l}</button>`).join('')}</div>
       <label class="pc-find">${icon('search')}<input type="search" placeholder="Tìm trong ${all.length} tập" value="${esc(st.q)}" data-q></label>
-      <button class="icon-btn" data-a="sort" aria-label="${st.sort === 'new' ? 'Mới nhất trước' : 'Cũ nhất trước'}" title="${st.sort === 'new' ? 'Mới nhất trước' : 'Cũ nhất trước'}">${icon('pc-sort')}</button>
-      <button class="icon-btn" data-a="allplayed" aria-label="Đánh dấu tất cả đã nghe">${icon('pc-check')}</button>
+      <button class="icon-btn" data-a="sort" aria-label="Sắp xếp" title="Sắp xếp: ${SORTS[st.sort] || SORTS.new}">${icon('pc-sort')}</button>
     </div>
     <div data-eps>${await episodeList(eps.slice(0, 200), { showName: false, empty: 'Không có tập nào khớp.' })}</div>
     ${eps.length > 200 ? `<p class="muted">Hiện 200 / ${eps.length} tập. Dùng ô tìm để lọc.</p>` : ''}`;
@@ -92,7 +104,12 @@ export async function render(el, { head, arg, go, ctx, rerender }) {
     if (a === 'sub') { await store.subscribeCached(id); toast('Đã đăng ký'); }
     if (a === 'unsub' && await confirmBox('Huỷ đăng ký?', `Bỏ ${s.title} khỏi danh sách đăng ký. Tiến độ nghe vẫn được giữ.`, 'Huỷ đăng ký')) await store.unsubscribe(id);
     if (a === 'refresh') { try { const r = await tasks.run({ label: 'Làm mới podcast', detail: s.title, cancellable: true }, (t) => store.refresh(id, { signal: t.signal })); toast(r.fresh.length ? `${r.fresh.length} tập mới` : 'Không có tập mới'); } catch (e) { if (e?.name !== 'AbortError') toast(e.message, 'error'); } }
-    if (a === 'sort') return save({ sort: st.sort === 'new' ? 'old' : 'new' });
+    if (a === 'sort') {
+      const v = await pick('Sắp xếp tập', `<div class="pc-menu">${Object.entries(SORTS).map(([k, l]) => `<button class="btn ghost" data-v="${k}">${icon(k === (st.sort || 'new') ? 'pc-check' : 'pc-sort')}${l}</button>`).join('')}</div>`);
+      return v ? save({ sort: v }) : undefined;
+    }
+    if (a === 'select') { const first = el.querySelector('.pc-ep[data-ep]'); if (first) sel.begin(); else toast('Chưa có tập nào để chọn'); return; }
+    if (a === 'more') { await moreMenu(s, all, eps, local); rerender(); return; }
     if (a === 'allplayed' && await confirmBox('Đánh dấu tất cả đã nghe?', `${eps.filter(e => !e.played).length} tập sẽ được đánh dấu đã nghe.`, 'Đánh dấu', 'primary')) { for (const e of eps) if (!e.played) await store.setPlayed(e.id, true); }
     if (a === 'settings') await showSettings(s);
     rerender();
@@ -156,4 +173,34 @@ async function compareSources(el, s, rerender) {
     catch (e) { if (e?.name !== 'AbortError') toast('Không đổi được nguồn: ' + e.message, 'error'); }
     rerender();
   });
+}
+
+// "Thêm" menu of the podcast page: everything that is not used every day.
+async function moreMenu(s, all, eps, local) {
+  const acts = [
+    ['dlnew', 'download', 'Tải 3 tập mới nhất chưa nghe'],
+    ['allplayed', 'pc-check', 'Đánh dấu tất cả đã nghe'],
+    ['settings', 'settings', 'Cài đặt riêng của podcast'],
+    ...(local ? [] : [['share', 'link', 'Chép liên kết RSS']]),
+    ...(s.link ? [['web', 'link', 'Mở trang web']] : []),
+    ...(!local && s.subscribed ? [['unsub', 'pc-trash', 'Huỷ đăng ký']] : []),
+  ];
+  const v = await pick(s.title, `<div class="pc-menu">${acts.map(([k, ic, l]) => `<button class="btn ghost" data-v="${k}">${icon(ic)}${l}</button>`).join('')}</div>`);
+  if (v === 'settings') await showSettings(s);
+  if (v === 'share') { try { await navigator.clipboard.writeText(s.feedUrl); toast('Đã chép liên kết RSS'); } catch { toast('Không chép được liên kết', 'error'); } }
+  if (v === 'web') window.open(s.link, '_blank', 'noopener');
+  if (v === 'unsub' && await confirmBox('Huỷ đăng ký?', `Bỏ ${s.title} khỏi danh sách đăng ký. Tiến độ nghe vẫn được giữ.`, 'Huỷ đăng ký')) await store.unsubscribe(s.itemId);
+  if (v === 'allplayed' && await confirmBox('Đánh dấu tất cả đã nghe?', `${all.filter(e => !e.played).length} tập sẽ được đánh dấu đã nghe.`, 'Đánh dấu', 'primary')) for (const e of all) if (!e.played) await store.setPlayed(e.id, true);
+  if (v === 'dlnew') {
+    const todo = [];
+    for (const e of all.filter(x => !x.played && x.url)) { if (todo.length >= 3) break; if (!(await store.isDownloaded(e.id))) todo.push(e); }
+    if (!todo.length) return toast('Không có tập mới nào cần tải');
+    let ok = 0;
+    for (const e of todo) {
+      try { await tasks.run({ label: `Tải tập podcast (${ok + 1}/${todo.length})`, detail: e.title, cancellable: true }, (t) => store.download(e, t)); ok++; }
+      catch (err) { if (err?.name === 'AbortError') break; toast(`${e.title}: ${err.message}`, 'error'); }
+    }
+    if (ok) toast(`Đã tải ${ok} tập về máy`);
+  }
+  void eps;
 }
