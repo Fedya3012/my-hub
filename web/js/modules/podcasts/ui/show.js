@@ -49,16 +49,16 @@ export async function render(el, { head, arg, go, ctx, rerender }) {
       <div>
         <p class="eyebrow">${esc((s.categories || []).slice(0, 3).join(' · ') || 'Podcast')}</p>
         <h1>${esc(s.title)}</h1>
-        <p class="muted">${esc(s.author)}${hosts.length ? ' · Dẫn: ' + hosts.map(h => esc(h.name)).join(', ') : ''}</p>
+        <p class="muted pc-by">${esc(s.author)}${hosts.length ? ' · Dẫn: ' + hosts.map(h => esc(h.name)).join(', ') : ''}</p>
         <p class="muted">${all.length} tập${s.rating ? ` · ★ ${(+s.rating).toFixed(1)}` : ''}${s.complete ? ' · Đã hoàn thành' : ''}${s.partial ? ' · <span title="RSS bị chặn, danh sách tập lấy từ Apple">từ Apple</span>' : ''}</p>
         <div class="row-actions">
           ${all[0] ? `<button class="btn primary pc-orange pc-go" data-play="${esc((all.find(e => !e.played) || all[0]).id)}">${icon('pc-play')}Phát tập ${all.find(e => !e.played) ? 'mới nhất chưa nghe' : 'mới nhất'}</button>` : ''}
-          ${local ? '' : s.subscribed ? `<button class="btn pc-subbtn" data-a="unsub">${icon('pc-check')}Đã đăng ký</button>` : `<button class="btn primary pc-subbtn" data-a="sub">${icon('pc-plus')}Đăng ký</button>`}
-          <span class="pc-tools">
-            ${local ? '' : `<button class="icon-btn" data-a="refresh" aria-label="Làm mới" title="Làm mới">${icon('refresh')}</button>`}
-            <button class="icon-btn" data-a="settings" aria-label="Cài đặt riêng" title="Cài đặt riêng">${icon('settings')}</button>
-            ${s.link ? `<a class="icon-btn" href="${esc(s.link)}" target="_blank" rel="noopener" aria-label="Trang web" title="Trang web">${icon('link')}</a>` : ''}
-          </span>
+          <div class="pc-acts">
+            ${local ? '' : s.subscribed ? `<button class="pc-act on" data-a="unsub">${icon('pc-check')}<span>Đã đăng ký</span></button>` : `<button class="pc-act" data-a="sub">${icon('pc-plus')}<span>Đăng ký</span></button>`}
+            ${local ? '' : `<button class="pc-act" data-a="refresh">${icon('refresh')}<span>Làm mới</span></button>`}
+            <button class="pc-act" data-a="settings">${icon('settings')}<span>Cài đặt</span></button>
+            ${s.link ? `<a class="pc-act" href="${esc(s.link)}" target="_blank" rel="noopener">${icon('link')}<span>Trang web</span></a>` : ''}
+          </div>
         </div>
       </div>
     </header>

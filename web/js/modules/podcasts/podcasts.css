@@ -560,21 +560,23 @@ body.pc-sel-on .pc-ep .pc-round, body.pc-sel-on .pc-ep [data-menu] { opacity: .5
 .pc .pc-find { border-radius: 14px; background: color-mix(in srgb, var(--fg) 5%, var(--surface)); border: 1px solid var(--pc-hair); }
 .pc-desc { background: color-mix(in srgb, var(--fg) 4%, transparent); border-radius: 16px; padding: 12px 14px; }
 
-/* ── Trang podcast: bố cục đều và gọn (2026-10-26) ───────────── */
-/* Header: cover on the left, title block on the right, actions across the full width below. */
-.pc-showhead:not(.ep) { grid-template-columns: 116px minmax(0, 1fr); align-items: center; gap: 2px 18px; padding: 20px 16px 18px; justify-items: stretch; }
-.pc-showhead:not(.ep) > div { display: contents; }
-.pc-showhead:not(.ep) > .pc-art { grid-row: 1 / span 4; align-self: center; border-radius: 18px; }
-.pc-showhead:not(.ep) h1 { font-size: 1.35rem; margin: 2px 0 4px; }
-.pc-showhead:not(.ep) p { margin: 0; font-size: .86rem; }
-.pc-showhead:not(.ep) .eyebrow { font-size: .66rem; }
-.pc-showhead:not(.ep) .row-actions { grid-column: 1 / -1; margin-top: 16px; }
-@media (min-width: 561px) {
-  .pc-showhead:not(.ep) { grid-template-columns: 180px minmax(0, 1fr); }
-  .pc-showhead:not(.ep) > .pc-art { grid-row: 1 / span 5; }
-  .pc-showhead:not(.ep) .row-actions { grid-column: 2; }
-  .pc-showhead:not(.ep) h1 { font-size: 1.7rem; }
-}
+/* ── Trang podcast: phần đầu căn giữa (2026-10-26) ───────────── */
+.pc-showhead:not(.ep) { grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; gap: 0; padding: 26px 16px 8px; }
+.pc-showhead:not(.ep) > .pc-art.xl { width: min(144px, 40vw); border-radius: 22px; box-shadow: 0 16px 40px rgb(0 0 0 / .24), 0 2px 6px rgb(0 0 0 / .1); margin-bottom: 14px; }
+.pc-showhead:not(.ep) > div { display: grid; justify-items: center; gap: 4px; width: 100%; min-width: 0; }
+.pc-showhead:not(.ep) .eyebrow { font-size: .68rem; margin: 0; }
+.pc-showhead:not(.ep) h1 { font-size: 1.55rem; line-height: 1.15; margin: 0; text-wrap: balance; }
+.pc-showhead:not(.ep) p { margin: 0; font-size: .88rem; }
+.pc-showhead:not(.ep) .row-actions { display: grid; gap: 12px; width: 100%; max-width: 480px; margin-top: 18px; }
+.pc-showhead .pc-go { width: 100%; min-height: 50px; border-radius: 16px; font-weight: 650; box-shadow: 0 8px 22px color-mix(in srgb, var(--pc-accent) 34%, transparent); }
+.pc-acts { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 8px; }
+.pc-act { display: grid; justify-items: center; align-content: center; gap: 4px; min-height: 58px; padding: 8px 4px; border-radius: 16px; border: 1px solid var(--pc-hair); background: color-mix(in srgb, var(--surface) 90%, transparent); color: var(--fg); font: inherit; font-size: .74rem; font-weight: 560; text-decoration: none; cursor: pointer; transition: transform .15s, background .15s; }
+.pc-act:active { transform: scale(.97); }
+.pc-act .ic { width: 21px; height: 21px; }
+.pc-act.on { color: var(--pc-accent-text); }
+.pc-act.on .ic { stroke-width: 2.4; }
+.pc-act span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+@media (min-width: 561px) { .pc-showhead:not(.ep) { padding-top: 32px; } }
 /* The header's blurred cover fades into the page instead of ending on a hard edge. */
 .pc-showhead::before { -webkit-mask-image: linear-gradient(#000 55%, transparent); mask-image: linear-gradient(#000 55%, transparent); }
 .pc-showhead { overflow: visible; }
@@ -595,5 +597,5 @@ body.pc-sel-on .pc-ep .pc-round, body.pc-sel-on .pc-ep [data-menu] { opacity: .5
 .pc-eps { gap: 0; }
 .pc-ep { padding-block: 14px; }
 .pc-ep-main small:first-child { font-size: .74rem; letter-spacing: .01em; }
-.pc-showhead:not(.ep) > .pc-art.xl { width: 100%; min-width: 0; }
-.pc-showhead:not(.ep) { row-gap: 3px; }
+.pc-desc, .pc-source.big { text-align: center; justify-content: center; }
+.pc-desc summary { text-wrap: pretty; }

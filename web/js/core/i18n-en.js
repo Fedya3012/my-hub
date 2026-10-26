@@ -3977,4 +3977,6 @@ export default {"(Google cấp quyền theo từng giờ). Bấm một lần đ�
 "Các tập này đã có trên máy hoặc không có tệp để tải":"These episodes are already on this device or have no file to download",
 "Không có bản tải nào để xoá":"No downloads to delete",
 "Tệp đã thêm từ máy này sẽ biến mất khỏi thư viện. Tập từ podcast vẫn còn, chỉ xoá bản đã tải.":"Files added from this device disappear from the library. Podcast episodes stay; only the downloaded copy is removed.",
-"Tập vẫn còn trong podcast, bạn có thể tải lại sau.":"The episode stays in the podcast; you can download it again later."};
+"Tập vẫn còn trong podcast, bạn có thể tải lại sau.":"The episode stays in the podcast; you can download it again later.",
+"Làm mới":"Refresh",
+"Trang web":"Website"};
