@@ -5,6 +5,7 @@ import { tasks } from '../../../core/tasks.js';
 import { onHold } from '../../../core/longpress.js';
 import { hash } from '../lib/net.js';
 import * as store from '../lib/store.js';
+import * as sel from './select.js';
 import { player } from '../lib/player.js';
 
 export const fmtLen = (s) => {
@@ -67,6 +68,7 @@ export function episodeRow(e, { prog, showName = true, queued = false, downloade
   const left = prog && !played && prog.position > 5 ? `Còn ${fmtLen((prog.total || e.duration) - prog.position)}` : fmtLen(e.duration);
   const now = player.ep?.id === e.id && player.playing;
   return `<li class="pc-ep ${played ? 'played' : ''}" data-ep="${esc(e.id)}">
+    <span class="pc-chk" aria-hidden="true"></span>
     <a class="pc-ep-art" href="#podcasts/episode/${encodeURIComponent(e.id)}">${art(e.image || e.show?.image, e.show?.title || e.title)}</a>
     <a class="pc-ep-main" href="#podcasts/episode/${encodeURIComponent(e.id)}">
       <small class="muted">${showName && e.show ? esc(e.show.title) + ' · ' : ''}${fmtDate(e.pubDate)}${e.inbox ? ' · <b class="pc-new">Mới</b>' : ''}${e.starred ? ' ★' : ''}</small>
@@ -88,16 +90,25 @@ export async function episodeList(eps, opts = {}) {
 }
 
 // Click handling for play buttons, menus and timestamps inside `root`.
-export function bindEpisodes(root, { ctx, rerender, playlistId = null } = {}) {
+export function bindEpisodes(root, { ctx, rerender, playlistId = null, inQueue = false } = {}) {
+  const onPick = (ev) => {   // while selecting, a tap on a row picks it instead of opening or playing it
+    if (!sel.isSelecting()) return;
+    const row = ev.target.closest('.pc-ep');
+    if (!row || !root.contains(row)) return;
+    ev.preventDefault(); ev.stopPropagation();
+    sel.toggle(row.dataset.ep);
+  };
   const onClick = async (ev) => {
     const p = ev.target.closest('[data-play]');
     if (p) { ev.preventDefault(); const id = p.dataset.play; if (player.ep?.id === id) player.toggle(); else { const e = await store.episode(id); if (e) await player.playEpisode(e); } return; }
     const m = ev.target.closest('[data-menu]');
     if (m) { ev.preventDefault(); await episodeMenu(m.dataset.menu, { ctx, anchor: m, playlistId }); rerender?.(); }
   };
+  root.addEventListener('click', onPick, true);
   root.addEventListener('click', onClick);
-  onHold(root, '.pc-ep', async (row, e) => { if (e?.target?.closest?.('.pc-grip')) return; await episodeMenu(row.dataset.ep, { ctx, playlistId }); rerender?.(); });   // long press / right-click = the ⋯ menu
-  return () => root.removeEventListener('click', onClick);
+  sel.attach(root, { rerender, playlistId, inQueue });
+  onHold(root, '.pc-ep', (row, e) => { if (e?.target?.closest?.('.pc-grip')) return; sel.toggle(row.dataset.ep); });   // long press / right-click = start selecting (the ⋯ button still opens the menu)
+  return () => { root.removeEventListener('click', onClick); root.removeEventListener('click', onPick, true); };
 }
 
 // Long press / right-click a show card or result row: open, (un)subscribe, refresh, share the feed.
@@ -172,16 +183,19 @@ export async function runAction(v, e, ctx, { playlistId = null } = {}) {
   }
 }
 
-async function pickPlaylist(e) {
+export async function pickPlaylist(target) {
+  const ids = Array.isArray(target) ? target : [target.id];
   const lists = (await store.playlists()).filter(p => p.kind === 'list');
   const v = await pick('Thêm vào danh sách', `<div class="pc-menu">${lists.map(p => `<button class="btn ghost" data-v="${esc(p.id)}">${icon('pc-queue')}${esc(p.name)}</button>`).join('')}<button class="btn" data-v="__new">${icon('pc-plus')}Danh sách mới…</button></div>`);
-  if (!v) return;
+  if (!v) return false;
+  const what = ids.length > 1 ? `${ids.length} tập` : 'tập này';
   if (v === '__new') {
     const name = await askText('Danh sách mới', { placeholder: 'Tên danh sách', ok: 'Tạo' });
-    if (!name) return;
-    await store.savePlaylist({ name, kind: 'list', episodeIds: [e.id] });
-    toast(`Đã tạo “${name}” với tập này`);
-  } else { await store.addToPlaylist(v, e.id); toast('Đã thêm vào danh sách'); }
+    if (!name) return false;
+    await store.savePlaylist({ name, kind: 'list', episodeIds: ids });
+    toast(`Đã tạo “${name}” với ${what}`);
+  } else { for (const id of ids) await store.addToPlaylist(v, id); toast(`Đã thêm ${what} vào danh sách`); }
+  return true;
 }
 
 // Show card (subscriptions grid, search results, charts).

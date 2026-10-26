@@ -2543,5 +2543,12 @@
   "Đổi cài đặt chung (bài này vẫn giữ cài đặt riêng)": "Change the shared settings (this song keeps its own)",
   "Đổi cài đặt chung cho mọi bài": "Change the shared settings for every song",
   "Dùng lại cài đặt chung": "Use the shared settings again",
-  "Bấm để đổi ngôn ngữ đích": "Tap to change the target language"
+  "Bấm để đổi ngôn ngữ đích": "Tap to change the target language",
+  "Thao tác với các tập đã chọn": "Actions for the selected episodes",
+  "Phát tiếp theo": "Play next",
+  "Các tập này đã có trên máy hoặc không có tệp để tải": "These episodes are already on this device or have no file to download",
+  "Không có bản tải nào để xoá": "No downloads to delete",
+  "Tệp đã thêm từ máy này sẽ biến mất khỏi thư viện. Tập từ podcast vẫn còn, chỉ xoá bản đã tải.": "Files added from this device disappear from the library. Podcast episodes stay; only the downloaded copy is removed.",
+  "Tập vẫn còn trong podcast, bạn có thể tải lại sau.": "The episode stays in the podcast; you can download it again later.",
+  "Đang phát": "Playing"
 }

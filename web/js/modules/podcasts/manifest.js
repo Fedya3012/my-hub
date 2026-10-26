@@ -31,6 +31,7 @@ export default {
     'js/modules/podcasts/ui/lists.js',
     'js/modules/podcasts/ui/nowplaying.js',
     'js/modules/podcasts/ui/queue.js',
+    'js/modules/podcasts/ui/select.js',
     'js/modules/podcasts/ui/settings.js',
     'js/modules/podcasts/ui/show.js',
     'js/modules/podcasts/ui/subs.js',

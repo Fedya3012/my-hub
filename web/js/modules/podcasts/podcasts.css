@@ -505,3 +505,57 @@ html:has(body.pc-np-open), body.pc-np-open { background: #121014; }
   .pc-np .fold-bottom { grid-area: bottom; max-width: none; gap: 10px; }
   .pc-np-ctl { max-width: 520px; width: 100%; margin-inline: auto; }
 }
+
+/* ── Chọn nhiều tập (nhấn giữ một tập) ─────────────────────── */
+.pc-chk { display: none; }
+body.pc-sel-on .pc-chk { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; border: 2px solid color-mix(in srgb, var(--fg) 28%, transparent); transition: background .15s, border-color .15s; }
+body.pc-sel-on .pc-ep, body.pc-sel-on .pc-ep:has(.pc-grip) { grid-template-columns: 24px 56px minmax(0, 1fr) auto auto; cursor: pointer; }
+body.pc-sel-on .pc-grip { display: none; }
+body.pc-sel-on .pc-ep .pc-round, body.pc-sel-on .pc-ep [data-menu] { opacity: .5; pointer-events: none; }
+.pc-ep { transition: background .15s; }
+.pc-ep.sel { border-radius: 14px; border-bottom-color: transparent; }
+.pc-ep.sel { background: color-mix(in srgb, var(--pc-accent) 11%, transparent); box-shadow: -10px 0 0 color-mix(in srgb, var(--pc-accent) 11%, transparent), 10px 0 0 color-mix(in srgb, var(--pc-accent) 11%, transparent); }
+.pc-ep.sel .pc-chk { background: var(--pc-accent); border-color: var(--pc-accent); }
+.pc-ep.sel .pc-chk::after { content: ''; width: 5px; height: 9px; border: solid var(--pc-accent-fg); border-width: 0 2px 2px 0; transform: rotate(45deg) translate(-1px, -1px); }
+.pc-selbar { position: fixed; left: 12px; right: 12px; margin: 0 auto; max-width: 560px; z-index: 60; display: flex; align-items: center; gap: 2px; padding: 5px 8px;
+  border-radius: 22px; background: var(--surface); border: 1px solid var(--pc-hair, var(--line)); box-shadow: 0 14px 36px rgb(0 0 0 / .22);
+  bottom: calc(12px + var(--dock-h, 0px) + var(--sai-bottom, 0px)); animation: pcSelIn .18s ease-out; }
+@keyframes pcSelIn { from { opacity: 0; transform: translateY(8px); } }
+@media (max-width: 860px) { body.pc-has-bottom .pc-selbar { bottom: calc(76px + var(--dock-h, 0px) + var(--sai-bottom, 0px)); } }
+.pc-selbar .grow { flex: 1; }
+.pc-sel-t { font-size: .95rem; white-space: nowrap; padding: 0 6px; }
+.pc-sel-t b { color: var(--pc-accent-text, var(--accent)); font-variant-numeric: tabular-nums; }
+.pc-selbar .icon-btn { width: 40px; height: 40px; flex: none; }
+.pc-selbar .danger { color: var(--danger, #c0392b); }
+.pc-selbar button:disabled { opacity: .4; }
+@media (max-width: 480px) { .pc-selbar .pc-sel-x { display: none; } }
+
+/* ── Giao diện tinh tế hơn (2026-10-26) ─────────────────────── */
+/* Phones: the page starts right under the app bar (the empty tab header and the 28px page padding made a grey strip). */
+@media (max-width: 860px) {
+  .page.pc { padding-top: 0; gap: 0; }
+  .pc-head { display: none; }
+  .pc-page > :first-child:not(.pc-showhead):not(.pc-hero) { margin-top: 14px; }
+  .pc-hero { margin-top: 14px; }
+}
+/* Show header: one clear primary action, then subscribe and a tidy row of round tools. */
+.pc-showhead { gap: 14px 20px; padding: 26px 16px 20px; }
+.pc-showhead h1 { font-size: 1.6rem; line-height: 1.15; text-wrap: balance; }
+.pc-showhead .eyebrow { font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; font-weight: 650; }
+.pc-showhead .row-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 14px; }
+.pc-showhead .pc-go { flex: 1 1 100%; min-height: 48px; border-radius: 16px; font-weight: 650; box-shadow: 0 8px 22px color-mix(in srgb, var(--pc-accent) 34%, transparent); }
+.pc-showhead .pc-subbtn { min-height: 42px; border-radius: 14px; padding-inline: 16px; background: color-mix(in srgb, var(--surface) 88%, transparent); border: 1px solid var(--pc-hair); }
+.pc-showhead .pc-subbtn.primary { background: var(--fg); border-color: var(--fg); color: var(--bg); }
+.pc-showhead .pc-tools { display: flex; gap: 8px; margin-left: auto; }
+.pc-showhead .pc-tools .icon-btn { width: 42px; height: 42px; border-radius: 50%; background: color-mix(in srgb, var(--surface) 88%, transparent); border: 1px solid var(--pc-hair); display: grid; place-items: center; }
+@media (min-width: 561px) { .pc-showhead .pc-go { flex: 0 0 auto; padding-inline: 20px; } .pc-showhead .pc-tools { margin-left: 0; } }
+.pc-showhead .ic { width: 20px; height: 20px; }
+/* Episode rows: a softer play button and calmer spacing. */
+.pc-ep { padding: 12px 6px; margin-inline: -6px; }
+.pc-ep-art .pc-art { width: 56px; border-radius: 12px; }
+.pc-ep .pc-round { width: 42px; height: 42px; background: color-mix(in srgb, var(--pc-accent) 12%, var(--surface)); border-color: transparent; color: var(--pc-accent-text); box-shadow: none; }
+.pc-ep .pc-round.on, .pc-ep .pc-round:hover { background: var(--pc-accent); color: var(--pc-accent-fg); }
+.pc-ep .icon-btn { color: var(--muted); }
+.pc-toolbar { align-items: center; gap: 10px; margin: 6px 0 10px; }
+.pc .pc-find { border-radius: 14px; background: color-mix(in srgb, var(--fg) 5%, var(--surface)); border: 1px solid var(--pc-hair); }
+.pc-desc { background: color-mix(in srgb, var(--fg) 4%, transparent); border-radius: 16px; padding: 12px 14px; }

@@ -680,7 +680,7 @@ export default {"(Google cấp quyền theo từng giờ). Bấm một lần đ�
 "Phát qua:":"Play via:",
 "Phát thư mục này":"Play This Folder",
 "Phát tiếp":"Play Next",
-"Phát tiếp theo":"Play Next",
+"Phát tiếp theo":"Play next",
 "Phát trực tiếp":"Live Playback",
 "Phát trực tiếp (không Web Audio)":"Live playback (no Web Audio)",
 "Phát tất cả":"Play All",
@@ -1232,7 +1232,7 @@ export default {"(Google cấp quyền theo từng giờ). Bấm một lần đ�
 "Đang nhập bản sao lưu":"Importing backup",
 "Đang offline, sẽ đồng bộ khi có mạng":"Offline, will sync when a connection is available",
 "Đang offline: cần có mạng để đăng nhập.":"You're offline: a connection is needed to sign in.",
-"Đang phát":"Now Playing",
+"Đang phát":"Playing",
 "Đang phát nhạc nền cho “":"Playing background music for “",
 "Đang phát trực tiếp (không Web Audio) nên EQ không có tác dụng. Đổi Engine trong Tuỳ chỉnh → Phát.":"Playing directly (without Web Audio), so EQ has no effect. Change the Engine in Customize → Playback.",
 "Đang phát từ":"Playing from",
@@ -3972,4 +3972,9 @@ export default {"(Google cấp quyền theo từng giờ). Bấm một lần đ�
 "Đổi cài đặt chung (bài này vẫn giữ cài đặt riêng)":"Change the shared settings (this song keeps its own)",
 "Đổi cài đặt chung cho mọi bài":"Change the shared settings for every song",
 "Dùng lại cài đặt chung":"Use the shared settings again",
-"Bấm để đổi ngôn ngữ đích":"Tap to change the target language"};
+"Bấm để đổi ngôn ngữ đích":"Tap to change the target language",
+"Thao tác với các tập đã chọn":"Actions for the selected episodes",
+"Các tập này đã có trên máy hoặc không có tệp để tải":"These episodes are already on this device or have no file to download",
+"Không có bản tải nào để xoá":"No downloads to delete",
+"Tệp đã thêm từ máy này sẽ biến mất khỏi thư viện. Tập từ podcast vẫn còn, chỉ xoá bản đã tải.":"Files added from this device disappear from the library. Podcast episodes stay; only the downloaded copy is removed.",
+"Tập vẫn còn trong podcast, bạn có thể tải lại sau.":"The episode stays in the podcast; you can download it again later."};

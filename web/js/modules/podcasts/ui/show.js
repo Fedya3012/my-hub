@@ -52,11 +52,13 @@ export async function render(el, { head, arg, go, ctx, rerender }) {
         <p class="muted">${esc(s.author)}${hosts.length ? ' · Dẫn: ' + hosts.map(h => esc(h.name)).join(', ') : ''}</p>
         <p class="muted">${all.length} tập${s.rating ? ` · ★ ${(+s.rating).toFixed(1)}` : ''}${s.complete ? ' · Đã hoàn thành' : ''}${s.partial ? ' · <span title="RSS bị chặn, danh sách tập lấy từ Apple">từ Apple</span>' : ''}</p>
         <div class="row-actions">
-          ${local ? '' : s.subscribed ? `<button class="btn" data-a="unsub">${icon('pc-check')}Đã đăng ký</button>` : `<button class="btn primary" data-a="sub">${icon('pc-plus')}Đăng ký</button>`}
-          ${all[0] ? `<button class="btn" data-play="${esc((all.find(e => !e.played) || all[0]).id)}">${icon('pc-play')}Phát tập ${all.find(e => !e.played) ? 'mới nhất chưa nghe' : 'mới nhất'}</button>` : ''}
-          ${local ? '' : `<button class="icon-btn" data-a="refresh" aria-label="Làm mới">${icon('refresh')}</button>`}
-          <button class="icon-btn" data-a="settings" aria-label="Cài đặt riêng">${icon('settings')}</button>
-          ${s.link ? `<a class="icon-btn" href="${esc(s.link)}" target="_blank" rel="noopener" aria-label="Trang web">${icon('link')}</a>` : ''}
+          ${all[0] ? `<button class="btn primary pc-orange pc-go" data-play="${esc((all.find(e => !e.played) || all[0]).id)}">${icon('pc-play')}Phát tập ${all.find(e => !e.played) ? 'mới nhất chưa nghe' : 'mới nhất'}</button>` : ''}
+          ${local ? '' : s.subscribed ? `<button class="btn pc-subbtn" data-a="unsub">${icon('pc-check')}Đã đăng ký</button>` : `<button class="btn primary pc-subbtn" data-a="sub">${icon('pc-plus')}Đăng ký</button>`}
+          <span class="pc-tools">
+            ${local ? '' : `<button class="icon-btn" data-a="refresh" aria-label="Làm mới" title="Làm mới">${icon('refresh')}</button>`}
+            <button class="icon-btn" data-a="settings" aria-label="Cài đặt riêng" title="Cài đặt riêng">${icon('settings')}</button>
+            ${s.link ? `<a class="icon-btn" href="${esc(s.link)}" target="_blank" rel="noopener" aria-label="Trang web" title="Trang web">${icon('link')}</a>` : ''}
+          </span>
         </div>
       </div>
     </header>

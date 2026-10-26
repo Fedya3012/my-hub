@@ -36,5 +36,5 @@ export async function render(el, { head, ctx, rerender }) {
       h.addEventListener('pointermove', move); h.addEventListener('pointerup', up, { once: true });
     });
   });
-  return bindEpisodes(el, { ctx, rerender });
+  return bindEpisodes(el, { ctx, rerender, inQueue: true });
 }

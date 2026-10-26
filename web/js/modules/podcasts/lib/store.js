@@ -325,6 +325,14 @@ export async function download(e, task) {
   await db.pcDownloads.put({ episodeId: e.id, showId: e.showId, at: now(), size: blob.size, mime: blob.type });
   changed({ episodeId: e.id });
 }
+// Imported audio files exist only on this device: removing one deletes the file and the episode.
+export async function deleteLocal(ids) {
+  for (const id of ids) { await db.blobs.delete(blobKey(id)); await db.pcDownloads.delete(id); await db.pcEpisodes.update(id, { deleted: 1 }); }
+  await setQueue((await queue()).filter(x => !ids.includes(x)));
+  await db.items.update(LOCAL_SHOW, { 'meta.episodes': (await episodesOf(LOCAL_SHOW)).length });
+  changed({ showId: LOCAL_SHOW });
+}
+export const notify = () => changed({});
 export async function deleteDownload(id, { quiet = false } = {}) {
   if (id.startsWith('ep:') && (await db.pcEpisodes.get(id))?.showId === LOCAL_SHOW) return;   // imported files live only here
   await db.blobs.delete(blobKey(id)); await db.pcDownloads.delete(id);
