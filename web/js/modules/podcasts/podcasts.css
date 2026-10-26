@@ -559,3 +559,41 @@ body.pc-sel-on .pc-ep .pc-round, body.pc-sel-on .pc-ep [data-menu] { opacity: .5
 .pc-toolbar { align-items: center; gap: 10px; margin: 6px 0 10px; }
 .pc .pc-find { border-radius: 14px; background: color-mix(in srgb, var(--fg) 5%, var(--surface)); border: 1px solid var(--pc-hair); }
 .pc-desc { background: color-mix(in srgb, var(--fg) 4%, transparent); border-radius: 16px; padding: 12px 14px; }
+
+/* ── Trang podcast: bố cục đều và gọn (2026-10-26) ───────────── */
+/* Header: cover on the left, title block on the right, actions across the full width below. */
+.pc-showhead:not(.ep) { grid-template-columns: 116px minmax(0, 1fr); align-items: center; gap: 2px 18px; padding: 20px 16px 18px; justify-items: stretch; }
+.pc-showhead:not(.ep) > div { display: contents; }
+.pc-showhead:not(.ep) > .pc-art { grid-row: 1 / span 4; align-self: center; border-radius: 18px; }
+.pc-showhead:not(.ep) h1 { font-size: 1.35rem; margin: 2px 0 4px; }
+.pc-showhead:not(.ep) p { margin: 0; font-size: .86rem; }
+.pc-showhead:not(.ep) .eyebrow { font-size: .66rem; }
+.pc-showhead:not(.ep) .row-actions { grid-column: 1 / -1; margin-top: 16px; }
+@media (min-width: 561px) {
+  .pc-showhead:not(.ep) { grid-template-columns: 180px minmax(0, 1fr); }
+  .pc-showhead:not(.ep) > .pc-art { grid-row: 1 / span 5; }
+  .pc-showhead:not(.ep) .row-actions { grid-column: 2; }
+  .pc-showhead:not(.ep) h1 { font-size: 1.7rem; }
+}
+/* The header's blurred cover fades into the page instead of ending on a hard edge. */
+.pc-showhead::before { -webkit-mask-image: linear-gradient(#000 55%, transparent); mask-image: linear-gradient(#000 55%, transparent); }
+.pc-showhead { overflow: visible; }
+.pc-showhead::before { inset: -40px 0 -8px; }
+/* Description and source: plain text, no boxes. */
+.pc-desc { background: none; padding: 0; margin: 4px 0 0; border-radius: 0; font-size: .9rem; line-height: 1.5; }
+.pc-desc summary { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.pc-desc[open] summary { display: none; }
+.pc-source.big { margin: 10px 0 2px; font-size: .8rem; gap: 6px; align-items: center; }
+.pc-source.big > span { min-width: 0; overflow-wrap: anywhere; }
+/* Toolbar: equal-width filter tabs, then search with the two icon tools, all the same height and radius. */
+.pc-toolbar { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px; margin: 18px 0 8px; }
+.pc-toolbar .pc-seg { grid-column: 1 / -1; width: 100%; border-radius: 14px; }
+.pc-toolbar .pc-seg button { flex: 1 1 0; min-height: 38px; border-radius: 11px; padding-inline: 4px; text-align: center; }
+.pc .pc-toolbar .pc-find { grid-column: 1; min-width: 0; min-height: 44px; border-radius: 14px; }
+.pc-toolbar > .icon-btn { width: 44px; height: 44px; border-radius: 14px; background: color-mix(in srgb, var(--fg) 5%, var(--surface)); border: 1px solid var(--pc-hair); display: grid; place-items: center; color: var(--fg); }
+/* Episode list: one calm rhythm. */
+.pc-eps { gap: 0; }
+.pc-ep { padding-block: 14px; }
+.pc-ep-main small:first-child { font-size: .74rem; letter-spacing: .01em; }
+.pc-showhead:not(.ep) > .pc-art.xl { width: 100%; min-width: 0; }
+.pc-showhead:not(.ep) { row-gap: 3px; }
