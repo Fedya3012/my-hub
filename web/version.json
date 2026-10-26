@@ -1,7 +1,16 @@
 {
-  "app": "0.9.22.16",
-  "released": "2026-10-25",
+  "app": "0.9.22.17",
+  "released": "2026-10-26",
   "changelog": [
+    {
+      "version": "0.9.22.17",
+      "date": "2026-10-26",
+      "notes": [
+        "Podcast: chọn nhiều tập cùng lúc (phát, đưa vào hàng đợi, thêm vào danh sách, tải, xoá, đánh dấu đã nghe, gắn sao)",
+        "Podcast: trang chương trình có thẻ tiếp tục nghe, dòng thống kê, bộ lọc Đã tải và bốn kiểu sắp xếp; tải tập mới nhất và đánh dấu tất cả đã nghe",
+        "Podcast: bố cục điện thoại gọn hơn, không còn khoảng trống phía trên; phần đầu trang và các nút hành động được căn đều"
+      ]
+    },
     {
       "version": "0.9.22.16",
       "date": "2026-10-25",
@@ -1008,7 +1017,7 @@
     },
     "podcasts": {
       "name": "Podcast",
-      "version": "0.1.8",
+      "version": "0.1.9",
       "minApp": "0.9.11.0",
       "files": [
         "js/modules/podcasts/index.js",
@@ -1030,7 +1039,8 @@
         "js/modules/podcasts/ui/queue.js",
         "js/modules/podcasts/ui/settings.js",
         "js/modules/podcasts/ui/show.js",
-        "js/modules/podcasts/ui/subs.js"
+        "js/modules/podcasts/ui/subs.js",
+        "js/modules/podcasts/ui/select.js"
       ],
       "changelog": [
         "Phiên bản đầu: tìm podcast online (Podcast Index, Apple), đăng ký, RSS riêng, Trang chủ, Khám phá, Đang phát với waveform, chép lời, chương, dấu trang; tốc độ 0,5–3×, bỏ khoảng lặng, Voice Boost, hẹn giờ ngủ; hàng chờ, bộ lọc thông minh, tải về, nhập tệp âm thanh / sách nói, OPML."
