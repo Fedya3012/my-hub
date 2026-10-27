@@ -883,7 +883,7 @@ export default {"(Google cấp quyền theo từng giờ). Bấm một lần đ�
 "Trạng thái hiện tại":"Current Status",
 "Trễ":"Delay",
 "Trực tiếp (nhẹ, phát nền tốt trên iOS)":"Direct (lightweight, plays well in the background on iOS)",
-"Tuyển tập":"Compilation",
+"Tuyển tập":"Compilations",
 "Tuần bắt đầu từ":"Week Starts On",
 "Tuỳ chỉnh":"Custom",
 "Tuỳ chỉnh nhạc":"Music Customization",
@@ -3989,4 +3989,8 @@ export default {"(Google cấp quyền theo từng giờ). Bấm một lần đ�
 "Mở trang web":"Open website",
 "Chưa có tập nào để chọn":"No episodes to select",
 "Không có tập mới nào cần tải":"No new episodes to download",
-"chưa nghe":"unplayed"};
+"chưa nghe":"unplayed",
+"Bố cục":"Layout",
+"Bố cục trang nghệ sĩ":"Artist page layout",
+"Theo loại phát hành":"By release type",
+"Album · Singles & EP":"Albums · Singles & EPs"};

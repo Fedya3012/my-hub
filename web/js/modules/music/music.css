@@ -1030,3 +1030,4 @@ body.m-has-bottom.has-dock main#view { padding-bottom: calc(var(--dock-h, 0px) +
 .aip-seg button.on { background: var(--accent); color: #fff; }
 .aip-scope small { flex: 1 1 100%; color: var(--muted); font-size: .8rem; }
 .aip-scope [data-unown] { margin-left: auto; }
+.mlayout-sel { margin-right: auto; font: inherit; font-size: .86rem; color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 6px 10px; }

@@ -21,7 +21,7 @@ export const DEFAULTS = {
   desc: { songs: 0, albums: 0, artists: 0, genres: 0, playlists: 0 },
   gridSize: 'm',                 // s | m | l
   filters: { quality: '', codec: '', fav: 0, minRating: 0 },
-  showBadges: 1, showHiRes: 1, hiResRule: 'standard', homeCoverFlow: 1,
+  showBadges: 1, showHiRes: 1, hiResRule: 'standard', homeCoverFlow: 1, artistLayout: 'default',
   np: { art: 'vinyl', ambient: 1, albumTheme: 1, appAccent: 0, visualizer: 1, fakeKaraoke: 1, lyricsSize: 'm', layout: 'auto',
     // Background video behind the lyrics: show it, when (with the lyrics only / whole screen), darkening, blur, pause with the music
     // videoWhere: 'bg' (Đang phát) | 'lyrics' | 'both' ('always' = legacy 'both'); videoColors: tint UI from the clip

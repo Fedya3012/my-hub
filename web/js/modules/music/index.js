@@ -724,14 +724,27 @@ async function artistPage(c, L, id) {
   const songs = withCovers(L, sortList(a.tracks, 'artistSongs', sortKey('artistSongs', SONG_SORTS, 'plays')));
   const meta = [`${a.tracks.length} bài`, a.fullAlbums.length ? `${a.fullAlbums.length} album` : '', a.singles.length ? `${a.singles.length} single & EP` : '', a.appearsOn.length ? `xuất hiện trong ${a.appearsOn.length} album` : ''].filter(Boolean).join(' · ');
   const body = await hero(c, { cover: a.cover, round: true, kicker: 'Nghệ sĩ', title: a.name, sub: meta, meta: fmtTotal(a.duration), cls: 'is-album is-list', actions: heroActs() });
-  const albums = albumsHtml(a.fullAlbums, 'artistAlbums');
-  const singles = albumsHtml(a.singles, 'artistAlbums');
+  // Layout of the releases: 'default' (Album / Singles & EP) or 'kind' (one section per release type).
+  const layout = prefs().artistLayout === 'kind' ? 'kind' : 'default';
   const appears = albumsHtml(a.appearsOn, 'artistAlbums');
-  body.innerHTML = `<div class="mtool2 end">${xallBtn()}</div>
+  const KIND_IC = { album: 'album', ep: 'disc', single: 'disc', live: 'disc', compilation: 'list' };
+  const KIND_TITLE = { album: 'Album', ep: 'EP', single: 'Single', live: 'Live', compilation: 'Tuyển tập' };
+  let releases = '';
+  if (layout === 'kind') {
+    const own = [...a.fullAlbums, ...a.singles];
+    for (const k of ['album', 'ep', 'single', 'live', 'compilation']) {
+      const list = own.filter(x => (x.kind || 'album') === k);
+      if (list.length) releases += section('kind-' + k, KIND_TITLE[k], { ic: KIND_IC[k], count: list.length, body: albumsHtml(list, 'artistAlbums').html });
+    }
+  } else {
+    if (a.fullAlbums.length) releases += section('albums', 'Album', { ic: 'album', count: a.fullAlbums.length, body: albumsHtml(a.fullAlbums, 'artistAlbums').html });
+    if (a.singles.length) releases += section('singles', 'Singles & EP', { ic: 'disc', count: a.singles.length, body: albumsHtml(a.singles, 'artistAlbums').html });
+  }
+  body.innerHTML = `<div class="mtool2 end"><select class="mlayout-sel" data-layout aria-label="Bố cục trang nghệ sĩ"><option value="default" ${layout === 'default' ? 'selected' : ''}>Bố cục: Album · Singles & EP</option><option value="kind" ${layout === 'kind' ? 'selected' : ''}>Bố cục: Theo loại phát hành</option></select>${xallBtn()}</div>
     ${section('songs', 'Bài hát', { ic: 'music', count: a.tracks.length, body: toolbar('artistSongs', { sorts: SONG_SORTS, def: 'plays', filters: false }) + '<div class="mlist" data-songs></div>' })}
-    ${a.fullAlbums.length ? section('albums', 'Album', { ic: 'album', count: a.fullAlbums.length, body: albums.html }) : ''}
-    ${a.singles.length ? section('singles', 'Singles & EP', { ic: 'disc', count: a.singles.length, body: singles.html }) : ''}
+    ${releases}
     ${a.appearsOn.length ? section('appears', 'Xuất hiện trong', { ic: 'user', count: a.appearsOn.length, body: appears.html }) : ''}`;
+  body.querySelector('[data-layout]').onchange = async (e) => { await setPref('artistLayout', e.target.value); render(); };
   chunked(body.querySelector('[data-songs]'), songs, { source: src });
   bindToolbar(c); bindSections(c); bindCards(body);
   bindHero(c, songs, src, [artItem('artist', a.id)]);
