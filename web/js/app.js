@@ -204,7 +204,6 @@ async function boot() {
     if (current?.id === u.id) { try { current.mod.unmount?.(); } catch (e) { console.error(e); } current = null; render(); }
   });
   bus.on('storage:mode', renderStorageBadge);
-  bus.on('supabase:changed', renderStorageBadge);
   bus.on('account:changed', (e) => { if (e.reason !== 'refresh') renderStorageBadge(); });
   window.addEventListener('online', renderStorageBadge); window.addEventListener('offline', renderStorageBadge);
   // Sync progress itself is shown by the task tray (storage.sync); the badge mirrors it.

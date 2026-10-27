@@ -6,8 +6,6 @@ import { allThemes, currentTheme, applyTheme, saveCurrentAsTheme, exportTheme, i
 import { thisDevice, renameDevice } from '../../core/device.js';
 import { icon } from '../../core/icons.js';
 import { account } from '../../core/account.js';
-import { supa } from '../../core/supabase.js';
-import { supabaseDialog, afterSupabaseSignIn } from '../../core/supabase-ui.js';
 import { accountSummary, afterSignIn } from '../../core/account-ui.js';
 import { esc, h, modal, confirmBox, saveJson, pickJson, fmtBytes, fmtAgo } from '../../core/ui.js';
 import { skinSectionHtml, bindSkins } from '../../core/skin-ui.js';
@@ -187,7 +185,7 @@ async function renderPage() {
         ${Object.entries(MODES).map(([k, m]) => `
           <label class="mode-card${st.mode === k ? ' on' : ''}">
             <input type="radio" name="storage-mode" id="mode-${k}" value="${k}" ${st.mode === k ? 'checked' : ''}>
-            <span class="mode-icon">${icon(k === 'local' ? 'device' : k === 'github' ? 'user' : k === 'supabase' ? 'user' : 'cloud')}</span>
+            <span class="mode-icon">${icon(k === 'local' ? 'device' : k === 'github' ? 'user' : 'cloud')}</span>
             <strong>${m.label}</strong><span>${m.hint}</span></label>`).join('')}
       </div>
 
@@ -202,7 +200,7 @@ async function renderPage() {
           <dt>Chờ đồng bộ</dt><dd class="num">${st.pending} thay đổi · lần cuối ${fmtAgo(st.lastSync)}</dd>
           <dt>Tệp nhạc/sách</dt><dd>Tự tải lên ${esc(st.cloud.label)} sau khi thêm; máy khác tải về khi mở lần đầu</dd>
           <dt>Tiến độ nghe/đọc</dt><dd>Đồng bộ vài giây sau mỗi lần dừng · lần cuối ${fmtAgo(liveAt)}</dd>
-          ` : st.mode === 'supabase' ? supabaseRowsHtml() : st.mode !== 'local' ? `
+          ` : st.mode !== 'local' ? `
           <dt>Tài khoản GitHub</dt><dd>${!st.cloud.signedIn ? '<a class="btn small primary" href="#account">Đăng nhập</a>'
             : `<span class="pill ${st.cloud.needsReconnect ? 'warn' : 'ok'}">${st.cloud.needsReconnect ? 'Cần kết nối lại' : 'Đã đăng nhập'}</span> ${esc(account.email)} <a class="btn small" href="#account">Quản lý</a>`}</dd>
           <dt>Chờ đồng bộ</dt><dd class="num">${st.pending} thay đổi · lần cuối ${fmtAgo(st.lastSync)}</dd>
@@ -308,13 +306,6 @@ async function renderPage() {
   const on = (act, fn) => root.querySelector(`[data-act="${act}"]`)?.addEventListener('click', fn);
 
   root.querySelectorAll('input[name="storage-mode"]').forEach(r => r.onchange = async () => {
-    if (r.value === 'supabase') {   // My Hub account: sign in first, then sync this device with it
-      if (!supa.signedIn && !(await supabaseDialog())) { render(); return; }
-      await afterSupabaseSignIn();
-      ctx.toast('Chế độ lưu trữ: ' + MODES.supabase.label);
-      render();
-      return;
-    }
     if (isDrive(r.value)) {   // Dropbox / OneDrive / Google Drive: connect, then asks what to do with this device's data
       const { useDrive } = await import('../../core/storage/cloud-ui.js');
       await useDrive(r.value); render();
@@ -398,25 +389,6 @@ async function renderPage() {
     if (!(await confirmBox('Ngừng dùng ' + st.cloud.label + '?', 'App chuyển về chế độ Local, dữ liệu trên máy giữ nguyên và bản trên đám mây không bị xoá. Bật lại bất cứ lúc nào.', 'Chuyển về Local'))) return;
     await ctx.storage.setMode('local');
     ctx.toast('Chế độ lưu trữ: ' + MODES.local.label);
-    render();
-  });
-  on('supa-in', async () => {
-    if (!(await supabaseDialog())) return render();
-    await afterSupabaseSignIn();
-    render();
-  });
-  on('supa-out', async () => {
-    if (!(await confirmBox('Đăng xuất khỏi máy này?', 'Dữ liệu trên máy vẫn giữ nguyên. Tài khoản My Hub trên máy chủ không bị xoá, đăng nhập lại là có đủ dữ liệu.', 'Đăng xuất'))) return;
-    await supa.signOut();
-    await ctx.storage.setMode('local');
-    ctx.toast('Đã đăng xuất tài khoản My Hub');
-    render();
-  });
-  on('supa-delete', async () => {
-    if (!(await confirmBox('Xoá tài khoản My Hub?', 'Tài khoản và dữ liệu đồng bộ trên máy chủ của My Hub sẽ bị xoá vĩnh viễn. Dữ liệu trên máy này, trên GitHub, Dropbox hay OneDrive không bị xoá.', 'Tiếp tục'))) return;
-    if (!(await confirmBox('Xác nhận lần cuối', 'Không thể khôi phục tài khoản sau khi xoá.', 'Xoá tài khoản'))) return;
-    try { await supa.deleteAccount(); await ctx.storage.setMode('local'); ctx.toast('Đã xoá tài khoản My Hub'); }
-    catch (err) { ctx.toast(err.message, 'error'); }
     render();
   });
   on('cloudwipe', async () => {
@@ -513,16 +485,8 @@ async function signOutHere() {
   const { clouds } = await import('../../core/storage/clouds.js');
   for (const id of ['dropbox', 'onedrive']) clouds.set(id, null);
   await account.signOut({ reason: 'signout' });
-  await supa.signOut();
   try { await (await import('../music/lib/prefs.js')).setPref('qol.lbToken', ''); } catch { /* music app off */ }
   if ((await ctx.storage.mode()) !== 'local') await ctx.storage.setMode('local');
-}
-
-// Rows of the My Hub account in the Sync section (signed in: email and the sign-out / delete actions).
-function supabaseRowsHtml() {
-  return `<dt>Tài khoản My Hub</dt><dd>${supa.signedIn
-    ? `<span class="pill ok">Đã đăng nhập</span> ${esc(supa.email)} <button class="btn small" data-act="supa-out">Đăng xuất khỏi máy này</button> <button class="btn small danger" data-act="supa-delete">Xoá tài khoản</button>`
-    : '<button class="btn small primary" data-act="supa-in">Đăng nhập</button>'}</dd>`;
 }
 
 // Usage vs quota with a warning when nearly full (limit null = unlimited / unknown).

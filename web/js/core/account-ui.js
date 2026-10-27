@@ -4,7 +4,6 @@
 import { account } from './account.js';
 import { storage } from './storage/index.js';
 import { github } from './storage/github.js';
-import { supa } from './supabase.js';
 import { db, getSetting, setSetting } from './db.js';
 import { bus } from './bus.js';
 import { icon, registerIcons } from './icons.js';
@@ -32,7 +31,7 @@ export function avatar(u = account.user, cls = '') {
   return `<span class="acct-avatar ${cls}" aria-hidden="true">${esc(ch)}${img}</span>`;
 }
 
-const MODE_LABEL = { local: 'Trên máy', github: 'Tài khoản GitHub', supabase: 'Tài khoản My Hub', dropbox: 'Dropbox', onedrive: 'OneDrive', googledrive: 'Google Drive' };
+const MODE_LABEL = { local: 'Trên máy', github: 'Tài khoản GitHub', dropbox: 'Dropbox', onedrive: 'OneDrive', googledrive: 'Google Drive' };
 
 // The sync account and the folders (where music/book files live) are separate choices: the badge is about the
 // account, and the folders go in its tooltip. `folders` = e.g. 'Trên máy + Google Drive'.
@@ -40,11 +39,6 @@ const MODE_LABEL = { local: 'Trên máy', github: 'Tài khoản GitHub', supabas
 // Sidebar footer badge. s = storage.status(). Always links to the account page.
 export function badge(s, folders = '') {
   const tip = folders ? ` · Thư mục đồng bộ: ${folders}` : '';
-  if (s.mode === 'supabase') {   // My Hub account (email + password), set up in Settings
-    if (!supa.signedIn) return { href: '#settings', title: 'Tài khoản My Hub · Chưa đăng nhập, bấm để đăng nhập' + tip, html: `${icon('cloud')}<span class="acct-badge-t"><b>${esc(MODE_LABEL.supabase)}</b><small>Chưa đăng nhập</small></span>` };
-    const state = !navigator.onLine ? 'Offline · đồng bộ khi có mạng' : s.pending ? `${s.pending} chờ đồng bộ` : 'Đã đồng bộ';
-    return { href: '#settings', title: `${supa.email} · ${state}${tip}`, html: `${icon('cloud')}<span class="acct-badge-t"><b>${esc(supa.email || MODE_LABEL.supabase)}</b><small>${esc(state)}</small></span>` };
-  }
   if (s.cloud?.drive) {   // Dropbox / OneDrive
     const state = !s.cloud.connected ? 'Bấm để kết nối lại' : !navigator.onLine ? 'Offline · đồng bộ khi có mạng' : s.pending ? `${s.pending} chờ đồng bộ` : 'Đã đồng bộ';
     return { href: '#settings', title: `${MODE_LABEL[s.mode]} · ${state}${tip}`, html: `${icon('cloud')}<span class="acct-badge-t"><b>${esc(MODE_LABEL[s.mode])}</b><small>${esc(state)}</small></span>` };

@@ -20,25 +20,22 @@ import { local } from './local.js';
 import { github } from './github.js';
 import { dropbox } from './dropbox.js';
 import { onedrive } from './onedrive.js';
-import { supabase } from './supabase.js';
-import { supa } from '../supabase.js';
 import { googledrive } from './googledrive.js';
 
 // Cloud drives that also hold the files. The adapter in use follows the storage mode.
 export const drives = { dropbox, onedrive, googledrive };
 let activeMode = 'local';
 // Where the library snapshot and progress live: the signed-in GitHub account, or the chosen drive.
-// Modes that keep an account of their own (no file uploads): GitHub and My Hub (Supabase).
-const ACCOUNT_MODES = new Set(['github', 'supabase']);
-const cloud = () => activeMode === 'supabase' ? supabase : drives[activeMode] || github;
-const cloudReady = () => activeMode === 'supabase' ? supa.signedIn : activeMode === 'github' ? account.signedIn : !!drives[activeMode]?.connected();
-const cloudTokenOk = () => activeMode === 'supabase' ? supa.signedIn : activeMode === 'github' ? account.tokenValid() : !!drives[activeMode]?.connected();
-// Fresh access token for the active account mode (refreshes the Supabase session when needed).
-const accountToken = () => activeMode === 'supabase' ? supa.accessToken() : account.accessToken();
+// Modes that keep an account of their own (no file uploads): GitHub.
+const ACCOUNT_MODES = new Set(['github']);
+const cloud = () => drives[activeMode] || github;
+const cloudReady = () => activeMode === 'github' ? account.signedIn : !!drives[activeMode]?.connected();
+const cloudTokenOk = () => activeMode === 'github' ? account.tokenValid() : !!drives[activeMode]?.connected();
+// Fresh access token for the GitHub account mode.
+const accountToken = () => account.accessToken();
 
 export const MODES = {
   local:  { label: 'Chỉ trên máy', hint: 'Dữ liệu và tệp nằm trên thiết bị này. Không cần mạng, không cần tài khoản.' },
-  supabase: { label: 'Tài khoản My Hub', hint: 'Email và mật khẩu của My Hub: thư viện và tiến độ đồng bộ qua máy chủ của My Hub (dữ liệu riêng của bạn). Tệp nhạc/sách không đưa lên máy chủ, ở lại trên từng máy.' },
   github: { label: 'Tài khoản GitHub', hint: 'Đăng nhập GitHub (dán token): thư viện và tiến độ đồng bộ qua một kho riêng tư của bạn. Tệp nhạc/sách ở lại trên từng máy.' },
   dropbox: { label: 'Dropbox', hint: 'Đăng nhập Dropbox một lần: thư viện, tiến độ và cả tệp nhạc/sách đồng bộ qua thư mục riêng của app. Máy khác tải tệp về khi cần.' },
   onedrive: { label: 'OneDrive', hint: 'Đăng nhập OneDrive: thư viện, tiến độ và cả tệp nhạc/sách đồng bộ qua thư mục riêng của app (Apps/…). Máy khác tải tệp về khi cần.' },
@@ -176,7 +173,7 @@ export const storage = {
   async mode() {
     const m = await getSetting('storage.mode', 'local');
     if (MODES[m]) { activeMode = m; return m; }
-    // Older modes (Google Drive / hybrid / Supabase): GitHub when signed in with it, otherwise Local.
+    // Older modes (hybrid / Supabase, removed): GitHub when signed in with it, otherwise Local.
     activeMode = account.signedIn && account.provider === 'github' ? 'github' : 'local';
     return activeMode;
   },
@@ -348,69 +345,6 @@ export const storage = {
     })().finally(() => { this._running = null; });
     return this._running;
   },
-  // Incremental sync (My Hub account): pull only the rows written since the last sync, merge them like the
-  // snapshot, then push only this device's queued changes. The first run (or "Gộp") pushes everything once.
-  async _syncRows(task, signal, part) {
-    const c = cloud();
-    const since = await getSetting('sync.rowsSeq', 0);
-    const { rows, seq } = await c.pullRows(since, { signal, onProgress: part(0, 30) });
-    task.check();
-    task.update({ done: 30, detail: 'Đang gộp dữ liệu…' });
-    const lastQ = (await db.syncQueue.orderBy('seq').last())?.seq || 0;
-    const byTable = {}, remoteTombs = {};
-    for (const r of rows) {
-      if (r.deleted) (remoteTombs[r.tbl] ||= {})[r.id] = r.updatedAt;
-      else if (SYNCED_TABLES.includes(r.tbl)) (byTable[r.tbl] ||= []).push(r.data);
-    }
-    const tombs = mergeTombstones(remoteTombs, await pendingDeletes(lastQ));
-    let pulled = 0;
-    const changedAll = {}, removedAll = {};
-    for (let i = 0; i < SYNCED_TABLES.length; i++) {
-      const t = SYNCED_TABLES[i];
-      const { changed, removed } = await mergeTable(t, byTable[t], tombs[t]);
-      changedAll[t] = changed; removedAll[t] = removed; pulled += changed.length + removed.length;
-      task.update({ done: 30 + (i + 1) / SYNCED_TABLES.length * 15 });
-    }
-    task.check();
-    for (const id of removedAll.files || []) { const f = await db.files.get(id); if (f?.locations?.local) await local.remove(f.locations.local).catch(() => {}); }
-    await withoutSyncHooks(() => db.transaction('rw', SYNCED_TABLES.map(t => db.table(t)), async () => {
-      for (const t of SYNCED_TABLES) {
-        const rs = await stillNewer(t, changedAll[t]);
-        if (rs.length) await db.table(t).bulkPut(rs);
-        if (removedAll[t].length) await db.table(t).bulkDelete(removedAll[t]);
-      }
-    }));
-
-    // What to send: everything on the first run, otherwise the rows queued since the last sync.
-    const full = !(await getSetting('sync.rowsInit', false)) || (await getSetting('sync.fullPushNeeded', false));
-    const out = new Map();
-    const strip = (t, r) => {
-      if (t !== 'files' || !r.locations?.local) return r;
-      const { local: _mine, ...rest } = r.locations;   // where the bytes are on this device never travels
-      return { ...r, locations: rest };
-    };
-    const add = (t, r) => { const kp = db.table(t).schema.primKey.keyPath; out.set(tkey(t, r[kp]), { tbl: t, id: String(r[kp]), data: strip(t, r), updatedAt: r.updatedAt || 0 }); };
-    if (full) {
-      for (const t of SYNCED_TABLES) for (const r of await db.table(t).toArray()) add(t, r);
-      for (const [t, m] of Object.entries(tombs)) for (const [id, at] of Object.entries(m)) out.set(tkey(t, id), { tbl: t, id, deleted: true, updatedAt: at });
-    } else {
-      const q = await db.syncQueue.where('seq').belowOrEqual(lastQ).toArray();
-      for (const e of q) {
-        if (!SYNCED_TABLES.includes(e.entity)) continue;
-        if (e.op === 'delete') { out.set(tkey(e.entity, e.entityId), { tbl: e.entity, id: String(e.entityId), deleted: true, updatedAt: e.createdAt || now() }); continue; }
-        if (e.entityId == null) continue;   // queued with a bad key by an older build
-        const r = await db.table(e.entity).get(e.entityId).catch(() => null);
-        if (r) add(e.entity, r);
-      }
-    }
-    task.update({ done: 50, detail: pulled ? `Đã nhận ${pulled} thay đổi · đang đẩy ${out.size} bản ghi lên ${c.label}…` : out.size ? `Đang đẩy ${out.size} bản ghi lên ${c.label}…` : 'Không có thay đổi để đẩy' });
-    if (out.size) await c.pushRows([...out.values()], { signal, onProgress: part(50, 40) });
-    await db.syncQueue.where('seq').belowOrEqual(lastQ).delete();   // changes made during the sync go next time
-    await setSetting('sync.rowsSeq', seq);
-    await setSetting('sync.rowsInit', true);
-    await setSetting('sync.fullPushNeeded', false);
-    return pulled;
-  },
   async _sync({ quiet = false } = {}) {
     const mode = await this.mode();
     if (mode === 'local') return { skipped: 'local' };
@@ -428,8 +362,7 @@ export const storage = {
     const part = (from, span) => (d, n) => task.update({ done: from + (n ? Math.min(1, d / n) * span : 0) });
     try {
       let pulled = 0;
-      if (cloud().incremental) pulled = await this._syncRows(task, signal, part);
-      else {
+      {
         const remote = await cloud().readSnapshot('hub-db.json', { signal, onProgress: part(0, 30) });
         task.check();
         task.update({ done: 30, detail: 'Đang gộp dữ liệu…' });
@@ -548,7 +481,7 @@ export const storage = {
   },
   // Does the account already hold a library? (hub-db.json in the repo)
   async remoteHasData(mode = activeMode) {
-    const r = await (drives[mode] || (mode === 'supabase' ? supabase : github)).readSnapshot('hub-db.json');
+    const r = await (drives[mode] || github).readSnapshot('hub-db.json');
     return !!r.data && Object.values(r.data.tables || {}).some(rows => rows?.length);
   },
   // "Gộp": the next sync merges everything (newer wins) and uploads this device's files.
