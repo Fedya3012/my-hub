@@ -1,3 +1,5 @@
+> **Đã gỡ (2026-10-27):** chế độ tài khoản My Hub (Supabase) đã bị xoá khỏi app theo yêu cầu của Fedya, dự án Supabase cũng đã được Fedya xoá. Tài liệu dưới đây chỉ còn để tham khảo.
+
 # Thiết kế: tài khoản tự tạo (email + mật khẩu) với Supabase
 
 Trạng thái: đã duyệt (2026-10-23). Đã tạo bảng `hub_data` và hàm `delete_my_account` trên Supabase. Mã 6 số qua email tạm hoãn (xác nhận bằng link trước); chưa viết code app.
