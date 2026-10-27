@@ -1,7 +1,14 @@
 {
-  "app": "0.9.22.18",
+  "app": "0.9.22.19",
   "released": "2026-10-27",
   "changelog": [
+    {
+      "version": "0.9.22.19",
+      "date": "2026-10-27",
+      "notes": [
+        "Trình phát nhạc: trang nghệ sĩ có tuỳ chọn nhóm đĩa theo loại (Album, EP, Single, Live, Tuyển tập)"
+      ]
+    },
     {
       "version": "0.9.22.18",
       "date": "2026-10-27",
@@ -933,7 +940,7 @@
     },
     "music": {
       "name": "Trình phát nhạc",
-      "version": "0.7.14",
+      "version": "0.7.15",
       "minApp": "0.3.0",
       "files": [
         "js/modules/music/index.js",
@@ -995,7 +1002,8 @@
         "js/modules/music/lib/params-bridge.js",
         "js/modules/music/ui/dnd.js",
         "js/modules/music/lib/modes.js",
-        "js/modules/music/ui/select.js"
+        "js/modules/music/ui/select.js",
+        "js/modules/music/artist-kind.png"
       ],
       "changelog": [
         {
