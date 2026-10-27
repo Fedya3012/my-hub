@@ -1,7 +1,14 @@
 {
-  "app": "0.9.22.17",
-  "released": "2026-10-26",
+  "app": "0.9.22.18",
+  "released": "2026-10-27",
   "changelog": [
+    {
+      "version": "0.9.22.18",
+      "date": "2026-10-27",
+      "notes": [
+        "Cài đặt: bỏ chế độ đồng bộ qua tài khoản My Hub (Supabase): bỏ mục tuỳ chọn, hộp đăng nhập và nhãn trạng thái"
+      ]
+    },
     {
       "version": "0.9.22.17",
       "date": "2026-10-26",
@@ -826,9 +833,6 @@
       "js/core/storage/hash-worker.js",
       "js/core/storage/local.js",
       "js/core/storage/github.js",
-      "js/core/storage/supabase.js",
-      "js/core/supabase.js",
-      "js/core/supabase-ui.js",
       "js/core/storage/http.js",
       "js/core/storage/clouds.js",
       "js/core/atob-guard.js",
@@ -911,7 +915,7 @@
     },
     "settings": {
       "name": "Cài đặt",
-      "version": "0.5.2",
+      "version": "0.5.3",
       "minApp": "0.2.0",
       "files": [
         "js/modules/settings/index.js"
