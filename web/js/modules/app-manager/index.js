@@ -14,7 +14,7 @@ const POLICIES = { auto: 'Tự động cập nhật module', ask: 'Hỏi trướ
 function displayMode() {
   const native = nativeApp();
   if (native === 'windows') return { label: 'Ứng dụng Windows', native, updates: 'Tự tải bản mới từ GitHub Releases (bản portable chỉ báo có bản mới)' };
-  if (native === 'android') return { label: 'Ứng dụng Android', native, updates: 'Cài bản mới qua Obtainium (GitHub Releases)' };
+  if (native === 'android') return { label: 'Ứng dụng Android', native, updates: 'Tải và cài bản mới ngay trong app (GitHub Releases), Obtainium dự phòng' };
   const pwa = { updates: 'Lõi và từng module cập nhật riêng qua Service Worker' };
   if (matchMedia('(display-mode: standalone)').matches || navigator.standalone) return { ...pwa, label: 'Ứng dụng web đã cài (PWA)' };
   if (window.top !== window.self) return { ...pwa, label: 'Bản xem thử nhúng', embedded: true };

@@ -7,7 +7,7 @@
 //      no full app reinstall. Old module caches are deleted.
 // The Windows (Electron) and Android (Capacitor) apps carry every file inside the installer:
 // there a module cannot update on its own, the whole app updates (Windows: built-in updater,
-// Android: Obtainium), so only the app version is compared.
+// Android: downloaded and installed in-app, Obtainium as fallback), so only the app version is compared.
 import { APP_VERSION, VERSION_URL } from '../config.js';
 import { db, getSetting, setSetting, now } from './db.js';
 import { bus } from './bus.js';
@@ -142,11 +142,43 @@ export async function applyShellUpdate(to) {
     if (r.available) return `Đang tải bản ${r.version} ở nền. Xong sẽ hỏi khởi động lại.`;
     throw new Error('Chưa thấy bản cài mới trên GitHub (có thể đang build), thử lại sau vài phút.');
   }
-  if (nativeApp() === 'android') return `Mở Obtainium để cài bản ${to || 'mới'} (Obtainium lấy APK từ GitHub Releases).`;
+  if (nativeApp() === 'android') return androidUpdate(to);
   if (!registration) throw new Error('Service Worker chưa hoạt động trong môi trường này.');
   if (!registration.waiting) await registration.update();
   if (registration.waiting) registration.waiting.postMessage({ type: 'SKIP_WAITING' });
   else throw new Error('Bản mới đang tải, hãy thử lại sau ít phút.');
+}
+
+// Android: download the release APK inside the app (resumable, retried, with a progress bar), then open the system
+// installer. If the plugin is missing (old build) or the download fails for good, Obtainium remains the way.
+const APK_URL = (v) => `https://github.com/Fedya3012/my-hub/releases/download/v${v}/MyHub-${v}.apk`;
+let apkBusy = false;
+async function androidUpdate(to) {
+  const P = window.Capacitor?.Plugins?.ApkUpdate;
+  const fallback = `Mở Obtainium để cài bản ${to || 'mới'} (Obtainium lấy APK từ GitHub Releases).`;
+  if (!P || !to || !/^\d+(\.\d+)+$/.test(to)) return fallback;
+  if (apkBusy) return 'Đang tải bản cập nhật rồi.';
+  apkBusy = true;
+  const { tasks } = await import('./tasks.js');
+  const t = tasks.start({ label: `Tải bản cập nhật ${to}`, unit: 'bytes', cancellable: true, onCancel: () => P.cancel() });
+  const sub = await P.addListener('progress', e => {
+    t.update({ done: e.done, total: e.total > 0 ? e.total : 0, detail: e.retry ? `Mất kết nối, đang tải tiếp (lần ${e.retry + 1})…` : 'Đang tải APK từ GitHub…' });
+  });
+  try {
+    const r = await P.download({ url: APK_URL(to), name: `MyHub-${to}.apk` });
+    t.finish('Đã tải xong, mở trình cài đặt…');
+    try { await P.install({ path: r.path }); }
+    catch (e) {
+      if (String(e.message || e).includes('NEED_PERMISSION')) return 'Cho phép My Hub cài ứng dụng ở màn hình vừa mở, quay lại rồi bấm Cập nhật lại (không phải tải lại).';
+      throw e;
+    }
+    return 'Bấm "Cài đặt" ở hộp thoại của Android để hoàn tất.';
+  } catch (e) {
+    const m = String(e.message || e);
+    if (m.includes('CANCELLED')) { t.finish('Đã huỷ'); return 'Đã huỷ tải bản cập nhật.'; }
+    t.fail(e);
+    throw new Error('Không tải được bản cập nhật: ' + m + '. Có thể thử lại (tải tiếp từ chỗ dừng) hoặc cập nhật bằng Obtainium.');
+  } finally { sub.remove(); apkBusy = false; }
 }
 
 export async function rollbackModule(id) {

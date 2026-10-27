@@ -2564,5 +2564,12 @@
   "Mở trang web": "Open website",
   "Chưa có tập nào để chọn": "No episodes to select",
   "Không có tập mới nào cần tải": "No new episodes to download",
-  "chưa nghe": "unplayed"
+  "chưa nghe": "unplayed",
+  "Tải và cài bản mới ngay trong app (GitHub Releases), Obtainium dự phòng": "Download and install new versions inside the app (GitHub Releases), Obtainium as backup",
+  "Đang tải bản cập nhật rồi.": "Already downloading the update.",
+  "Đang tải APK từ GitHub…": "Downloading the APK from GitHub…",
+  "Đã tải xong, mở trình cài đặt…": "Downloaded, opening the installer…",
+  "Bấm \"Cài đặt\" ở hộp thoại của Android để hoàn tất.": "Tap \"Install\" in Android's dialog to finish.",
+  "Đã huỷ tải bản cập nhật.": "Update download cancelled.",
+  "Cho phép My Hub cài ứng dụng ở màn hình vừa mở, quay lại rồi bấm Cập nhật lại (không phải tải lại).": "Allow My Hub to install apps on the screen that just opened, come back and tap Update again (no need to download again)."
 }
